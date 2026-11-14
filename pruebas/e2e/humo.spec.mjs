@@ -23,6 +23,16 @@ test('nada se sale de la pantalla a lo ancho', async ({ page }) => {
   expect(desborde).toBeLessThanOrEqual(0);
 });
 
+test('tampoco en el telefono mas angosto: a 320 de ancho todo cabe', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('./');
+  const desborde = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(desborde).toBeLessThanOrEqual(0);
+  await expect(page.getByRole('banner').getByRole('link', { name: 'Empieza ahora' })).toBeInViewport({ ratio: 1 });
+});
+
 test('una direccion que no existe contesta 404 con la pagina propia y regresa al inicio', async ({ page }) => {
   const fallas = vigilar(page);
   const respuesta = await page.goto('./no-existe');

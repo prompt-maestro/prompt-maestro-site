@@ -63,7 +63,14 @@ async function resolver(ruta) {
 }
 
 const servidor = createServer(async (peticion, respuesta) => {
-  const ruta = decodeURIComponent(new URL(peticion.url ?? '/', 'http://local').pathname);
+  let ruta;
+  try {
+    ruta = decodeURIComponent(new URL(peticion.url ?? '/', 'http://local').pathname);
+  } catch {
+    respuesta.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });
+    respuesta.end('Direccion mal escrita');
+    return;
+  }
   const archivo = ruta.startsWith(base) ? await resolver(ruta.slice(base.length)) : null;
   const final = archivo ?? path.join(raizSitio, '404.html');
   try {

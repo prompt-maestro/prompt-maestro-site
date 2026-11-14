@@ -25,20 +25,25 @@ export function textoVisible(html) {
 }
 
 /**
- * Los textos de la pagina no llevan guiones largos, ni un guion suelto que una dos ideas.
+ * Los textos de la pagina no llevan guiones largos, ni un guion suelto que una dos ideas. Devuelve cada lugar donde
+ * un texto ya limpio (sin etiquetas) lleva uno.
+ * @param {string} texto
+ * @returns {string[]}
+ */
+export function guionesEn(texto) {
+  return [...texto.matchAll(CONECTOR)].map(
+    (m) => `guion como conector en "...${texto.slice(Math.max(0, m.index - 30), m.index + 30)}..."`,
+  );
+}
+
+/**
+ * Lo mismo, sobre el texto que se lee de una pagina ya armada.
  * @param {string} nombre
  * @param {string} html
  * @returns {string[]}
  */
 export function revisarGuiones(nombre, html) {
-  const texto = textoVisible(html);
-  /** @type {string[]} */
-  const problemas = [];
-  for (const m of texto.matchAll(CONECTOR)) {
-    const desde = Math.max(0, m.index - 30);
-    problemas.push(`${nombre}: guion como conector en "...${texto.slice(desde, m.index + 30)}..."`);
-  }
-  return problemas;
+  return guionesEn(textoVisible(html)).map((hallazgo) => `${nombre}: ${hallazgo}`);
 }
 
 /**

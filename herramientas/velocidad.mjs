@@ -27,7 +27,18 @@ const servidor = spawn(process.execPath, ['herramientas/servir.mjs', '--puerto',
   cwd: RAIZ,
   stdio: 'ignore',
 });
-await new Promise((listo) => setTimeout(listo, 800));
+for (let intento = 0; ; intento++) {
+  try {
+    if ((await fetch(`http://127.0.0.1:${PUERTO}/`)).ok) break;
+  } catch {
+    // todavia no levanta
+  }
+  if (intento === 40) {
+    servidor.kill();
+    throw new Error('El servidor local no levanto: arma primero con node herramientas/armar.mjs');
+  }
+  await new Promise((listo) => setTimeout(listo, 150));
+}
 // El mismo navegador de las pruebas, abierto con un puerto para que Lighthouse lo maneje.
 const navegador = await chromium.launch({ args: [`--remote-debugging-port=${PUERTO_DEL_NAVEGADOR}`] });
 
@@ -74,6 +85,10 @@ try {
   const recursos = /** @type {{ items?: { resourceType: string, transferSize: number }[] } | undefined} */ (
     lhr.audits['resource-summary']?.details
   );
+  if (!recursos?.items?.length) {
+    console.log('FALLA Lighthouse no entrego el resumen de pesos');
+    fallas.push('pesos');
+  }
   for (const [tipo, tope] of Object.entries(PESOS)) {
     const kb = (recursos?.items?.find((item) => item.resourceType === tipo)?.transferSize ?? 0) / 1024;
     const bien = kb <= tope;

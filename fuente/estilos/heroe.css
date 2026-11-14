@@ -1,122 +1,147 @@
-/* La primera pantalla: la promesa y, enseguida, la demostracion. */
+/* La primera pantalla: la promesa y, enseguida, la demostracion. En celular los botones van debajo del telefono para
+   que la demostracion suba; en pantallas anchas la promesa y sus botones van a la izquierda y el telefono a la derecha. */
 .heroe {
   display: grid;
-  gap: var(--e-12);
-  max-width: 1320px;
+  grid-template-areas:
+    "promesa"
+    "demo"
+    "cierre";
+  gap: var(--e-8);
+  max-width: 1440px;
   margin: 0 auto;
-  padding: var(--e-8) var(--e-6) var(--e-24);
+  padding: var(--e-3) clamp(20px, 5.5vw, 88px) var(--e-24);
 }
 
 .heroe__promesa {
+  grid-area: promesa;
   display: grid;
-  gap: var(--e-6);
   justify-items: start;
+  /* El titulo se mide contra el ancho de esta columna. */
+  container-type: inline-size;
+}
+
+.heroe .sobre {
+  margin-bottom: var(--e-3);
 }
 
 .heroe__titulo {
+  margin-bottom: var(--e-6);
   font-family: var(--f-titulo);
   font-size: var(--t-heroe);
   font-weight: 600;
-  line-height: 1.02;
-  letter-spacing: -0.02em;
+  line-height: 0.98;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 
+/* Donde el navegador sabe medir contra la columna: tan grande como quepa "los plantones." en ella, del celular a la
+   pantalla mas ancha. */
+@supports (font-size: 1cqi) {
+  .heroe__titulo {
+    font-size: clamp(2.75rem, 17cqi, 6rem);
+  }
+}
+
+/* La italica sola distingue la palabra: el azul se guarda para lo que ya esta pagado. */
 .heroe__titulo em {
-  color: var(--sello);
   font-weight: 500;
 }
 
 .heroe__texto {
-  max-width: 34rem;
+  max-width: 33rem;
   color: var(--tinta-2);
-  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.3125rem);
-  line-height: 1.5;
+  font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.3125rem);
+  line-height: 1.45;
+}
+
+.demo {
+  grid-area: demo;
+}
+
+.heroe__cierre {
+  grid-area: cierre;
+  display: grid;
+  gap: var(--e-3);
+  justify-items: center;
+  text-align: center;
 }
 
 .heroe__acciones {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--e-2) var(--e-6);
+  display: grid;
+  justify-items: center;
+  gap: var(--e-1);
+  width: 100%;
+  max-width: 392px;
+}
+
+.heroe__acciones .boton {
+  width: 100%;
 }
 
 .heroe__nota {
-  max-width: 30rem;
+  max-width: 24rem;
   color: var(--tinta-3);
   font-size: var(--t-nota);
+  text-wrap: balance;
 }
 
-@media (max-width: 599.98px) {
-  .heroe {
-    gap: var(--e-8);
-    padding-top: var(--e-4);
-  }
-
-  .heroe__promesa {
-    gap: var(--e-4);
-  }
-
-  .heroe .sobre {
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
+/* Si la columna es angosta, el renglon de arriba dice solo el nombre: lo demas ya lo dice el texto. */
+@container (max-width: 33rem) {
+  .sobre__resto {
+    display: none;
   }
 }
 
-@media (max-width: 380px) {
-  .heroe {
-    padding-inline: var(--e-4);
-  }
-}
-
-/* En pantallas anchas la promesa va a la izquierda y la demostracion a la derecha. */
 @media (min-width: 960px) {
   .heroe {
+    grid-template-areas:
+      "promesa demo"
+      "cierre demo";
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: var(--e-16);
-    padding-block: var(--e-12) var(--e-40);
+    grid-template-rows: 1fr 1fr;
+    gap: var(--e-8) var(--e-16);
+    padding-block: var(--e-6) var(--e-40);
   }
 
   .heroe__promesa {
-    gap: var(--e-8);
+    align-self: end;
   }
 
   .heroe__titulo {
-    font-size: clamp(3.25rem, 0.4rem + 4.9vw, 5.5rem);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .heroe__promesa > * {
-    animation: entra var(--d-escena) var(--suave) both;
-  }
-
-  .heroe__promesa > :nth-child(2) {
-    animation-delay: 80ms;
-  }
-
-  .heroe__promesa > :nth-child(3) {
-    animation-delay: 160ms;
-  }
-
-  .heroe__promesa > :nth-child(4) {
-    animation-delay: 240ms;
-  }
-
-  .heroe__promesa > :nth-child(5) {
-    animation-delay: 320ms;
+    margin-bottom: var(--e-8);
   }
 
   .demo {
-    animation: sube var(--d-escena) var(--suave) 200ms both;
+    align-self: center;
+  }
+
+  .heroe__cierre {
+    align-self: start;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .heroe__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--e-2) var(--e-6);
+    max-width: none;
+  }
+
+  .heroe__acciones .boton {
+    width: auto;
+  }
+
+  .heroe__nota {
+    max-width: 28rem;
   }
 }
 
-@keyframes entra {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
+/* El unico movimiento de entrada: el telefono sube un poco. El texto esta en su lugar desde el primer cuadro. */
+@media (prefers-reduced-motion: no-preference) {
+  .demo {
+    animation: sube var(--d-escena) var(--suave) both;
   }
 }
 

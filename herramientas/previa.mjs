@@ -32,6 +32,15 @@ if (!esCorreoPrivado(correo)) {
   process.exit(1);
 }
 
+// La previa sale de lo confirmado: asi se sabe de que commit salio y no se publica trabajo a medias.
+const sinConfirmar = git(['status', '--porcelain'], RAIZ) !== '';
+if (sinConfirmar && !process.argv.includes('--con-cambios')) {
+  console.error(
+    'BLOQUEA: hay cambios sin confirmar. Confirma primero, o usa --con-cambios si de verdad quieres subirlos.',
+  );
+  process.exit(1);
+}
+
 const { archivos, problemas, avisos } = await armarSitio({ raiz: RAIZ, destino: 'previa' });
 for (const aviso of avisos) console.log(`AVISO: ${aviso}`);
 for (const [ruta, contenido] of archivos) {
@@ -45,7 +54,6 @@ if (problemas.length > 0) {
 }
 
 const origen = git(['rev-parse', '--short', 'HEAD'], RAIZ);
-const sinConfirmar = git(['status', '--porcelain'], RAIZ) !== '';
 const carpeta = await mkdtemp(path.join(tmpdir(), 'pagina-previa-'));
 try {
   for (const [ruta, contenido] of archivos) {

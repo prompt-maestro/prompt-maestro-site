@@ -14,49 +14,46 @@
 {{> cinta-previa}}{{> tinta}}<a class="salto" href="#contenido">Saltar al contenido</a>
 <header class="barra">
   <div class="barra__dentro">
-    <a class="marca" href="{{armado.base}}">{{> marca}}<span class="marca__nombre">{{sitio.nombre}}</span></a>
-    <a class="boton boton--chico" href="{{sitio.alta}}" data-lugar="barra">Empieza ahora</a>
+    <a class="marca" href="{{armado.base}}" aria-label="{{sitio.nombre}}, inicio">{{> marca}}{{> nombre}}</a>
+    <a class="boton boton--chico boton--contorno" href="{{sitio.alta}}" data-lugar="barra">Empieza ahora</a>
   </div>
 </header>
 <main id="contenido">
   <section class="heroe" id="inicio" aria-labelledby="titulo-heroe">
     <div class="heroe__promesa">
-      <p class="sobre">{{sitio.producto}} · tu asistente en WhatsApp</p>
+      <p class="sobre">{{sitio.producto}}<span class="sobre__resto"> · tu asistente en WhatsApp</span></p>
       <h1 class="heroe__titulo" id="titulo-heroe">Se acabaron los <em>plantones.</em></h1>
       <p class="heroe__texto">Tu asistente contesta tu WhatsApp, aparta la cita solo cuando el anticipo ya está pagado y el dinero cae directo en tu cuenta. Tú, a lo tuyo.</p>
-      <div class="heroe__acciones">
-        <a class="boton" href="{{sitio.alta}}" data-lugar="heroe">Empieza ahora</a>
-        <a class="enlace" href="{{sitio.contacto}}" data-lugar="heroe">Prefiero que me acompañen</a>
-      </div>
-      <p class="heroe__nota">Instalación hoy. La mensualidad empieza cuando tu asistente ya está trabajando.</p>
     </div>
-    <div class="demo" id="demo" data-demo data-paso="reposo">
+    <div class="demo" id="demo" data-demo data-paso="reposo" data-telefono="cliente">
       <div class="demo__escena">
         <div class="telefono">
           <div class="chat__cabeza">
             <span class="chat__avatar" aria-hidden="true" data-demo-iniciales>{{ejemplo.iniciales}}</span>
-            <p class="chat__quien"><strong data-demo-negocio>{{ejemplo.negocio}}</strong> <span data-demo-atiende>{{ejemplo.atiende}}</span></p>
+            <p class="chat__quien"><strong data-demo-nombre>{{ejemplo.negocio}}</strong> <span data-demo-atiende>{{ejemplo.atiende}}</span></p>
           </div>
-          <div class="chat__mensajes" data-demo-chat role="log" aria-label="{{demo.rotulos.registro}}" tabindex="0">
-            <p class="chat__salto" data-demo-papel>{{ejemplo.papel}}</p>
+          <div class="chat__mensajes" data-demo-chat data-acotacion role="log" aria-label="{{demo.rotulos.registro}}" tabindex="0">
+            <p class="chat__salto">{{ejemplo.papel}}</p>
             <div class="transcripcion" data-demo-transcripcion>
               <p class="transcripcion__titulo">{{demo.rotulos.sinJs}}</p>
 {{#cada conversacion}}{{#si quien}}              <p><b>{{quien}}:</b> {{texto}}</p>
 {{/si}}{{#no quien}}              <p class="transcripcion__salto">{{texto}}</p>
 {{/no}}{{/cada}}            </div>
           </div>
+          <section class="tu" data-demo-tu aria-label="{{demo.rotulos.tuTitulo}}">
+            <p class="tu__narra"><span class="tu__rotulo">{{demo.rotulos.tuTitulo}}</span> <span class="tu__resumen" data-demo-tu-resumen>{{demo.tu.reposo}}</span></p>
+            <div class="agenda">
+              <p class="agenda__cabeza"><span class="agenda__dia" data-demo-dia>{{ejemplo.dia}}</span> <span class="agenda__de">{{demo.rotulos.calendario}}</span></p>
+              <ol class="agenda__filas" role="list" data-demo-filas>
+{{#cada ejemplo.filas}}                <li class="agenda__fila" data-estado="{{estado}}"><span class="agenda__hora">{{hora}}</span><span class="agenda__estado">{{texto}}</span></li>
+{{/cada}}              </ol>
+            </div>
+          </section>
           <div class="chat__pie" data-demo-pie>
-            <p class="chat__borrador" data-demo-borrador>{{ejemplo.pregunta}}</p>
-            <button class="boton boton--enviar" type="button" data-demo-accion="enviar">{{demo.rotulos.enviar}}</button>
+            <p class="chat__borrador">{{ejemplo.pregunta}}</p>
+            <button class="boton boton--enviar" type="button">{{demo.rotulos.enviar}}</button>
           </div>
         </div>
-        <section class="tu" data-demo-tu aria-label="{{demo.rotulos.tuTitulo}}">
-          <button class="tu__pestana" type="button" aria-expanded="false" aria-controls="tu-detalle" data-demo-tu-boton>
-            <span class="tu__rotulo">{{demo.rotulos.tuTitulo}}</span>
-            <span class="tu__resumen" data-demo-tu-resumen>{{demo.tu.reposo}}</span>
-          </button>
-          <div class="tu__detalle" id="tu-detalle" data-demo-tu-detalle></div>
-        </section>
       </div>
       <p class="demo__leyenda">Demostración con un negocio de ejemplo. Tócala y vívela como si fueras quien pide la cita.</p>
       <p class="demo__controles">
@@ -65,7 +62,15 @@
       </p>
       <p class="solo-lector" aria-live="polite" data-demo-anuncio></p>
       <template data-demo-sello>{{> sello}}</template>
+      <template data-demo-palomita><svg class="cobro__palomita" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></template>
       <script type="application/json" data-demo-datos>{{{armado.datosDemo}}}</script>
+    </div>
+    <div class="heroe__cierre">
+      <div class="heroe__acciones">
+        <a class="boton" href="{{sitio.alta}}" data-lugar="heroe">Empieza ahora</a>
+        <a class="enlace" href="{{sitio.contacto}}" data-lugar="heroe">Prefiero que me acompañen</a>
+      </div>
+      <p class="heroe__nota">Instalación hoy. La mensualidad empieza cuando tu asistente ya está trabajando.</p>
     </div>
   </section>
 </main>

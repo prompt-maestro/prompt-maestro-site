@@ -1,20 +1,34 @@
 // @ts-check
 // La vista de la demostracion: pinta lo que demo.js decide. Aqui viven los tiempos, el foco y el movimiento; ninguna
-// regla de la historia. Si el visitante pidio menos movimiento, cada paso aparece completo y sin esperas.
+// regla de la historia. Si el visitante pidio menos movimiento, cada paso aparece completo y sin animacion, pero
+// conserva el tiempo para leer entre un paso y el siguiente.
 import { accionesDe, avanzar, escenaDe, estadoInicial, porDefecto, presentacionDe } from './demo.js';
-import { pesos } from './redaccion.js';
+import { conMayuscula, pesos } from './redaccion.js';
 
 /** @typedef {import('./demo.js').Ejemplo} Ejemplo */
 /** @typedef {import('./demo.js').Evento} Evento */
 /** @typedef {import('./demo.js').Accion} Accion */
 /** @typedef {import('./demo.js').Entrada} Entrada */
 /** @typedef {import('./demo.js').LoQueVesTu} LoQueVesTu */
+/** @typedef {import('./demo.js').Telefono} Telefono */
 
-const ESPERA_PARA_ARRANCAR_SOLA = 4000;
+// Pausas de animacion: desaparecen con movimiento reducido.
 const PAUSA_ENTRE_BURBUJAS = 320;
+/** Lo que dura a la vista la acotacion que avisa el cambio de papel, antes de que el asistente escriba. */
+const PAUSA_DE_LA_ACOTACION = 1900;
+/** Tras "Pago aprobado": el dinero, despues la cita, despues el sello, y un silencio para que el sello se vea. */
+const PAUSA_DEL_DINERO_A_LA_CITA = 600;
+const PAUSA_DE_LA_CITA_AL_SELLO = 500;
+const SILENCIO_TRAS_EL_SELLO = 1100;
+/** En el cuadro final los sellos caen uno tras otro. */
+const PAUSA_ENTRE_SELLOS = 240;
+
+// Pausas para leer: se respetan siempre.
+const ESPERA_PARA_ARRANCAR_SOLA = 4000;
 const PAUSA_ENTRE_PASOS = 1300;
-const PAUSA_ANTES_DEL_CIERRE = 2400;
-const ANCHO_CON_COLUMNA = '(min-width: 1200px)';
+const PAUSA_ANTES_DEL_CIERRE = 2200;
+/** Lo minimo entre un toque y los botones del paso siguiente: un segundo toque sin querer no elige nada. */
+const PASO_MINIMO = 350;
 
 /**
  * @template {keyof HTMLElementTagNameMap} E
@@ -41,6 +55,9 @@ function pieza(raiz, selector) {
   return elemento;
 }
 
+/** @param {string | undefined} estado  si ese renglon de la agenda ya lleva sello */
+const llevaSello = (estado) => estado === 'garantizada' || estado === 'asistio' || estado === 'falto';
+
 /**
  * Da vida a la demostracion que ya viene escrita en la pagina.
  * @param {HTMLElement} raiz
@@ -61,43 +78,68 @@ export function montarDemo(raiz) {
   const chat = pieza(raiz, '[data-demo-chat]');
   const pie = pieza(raiz, '[data-demo-pie]');
   const tu = pieza(raiz, '[data-demo-tu]');
-  const tuBoton = pieza(raiz, '[data-demo-tu-boton]');
   const tuResumen = pieza(raiz, '[data-demo-tu-resumen]');
-  const tuDetalle = pieza(raiz, '[data-demo-tu-detalle]');
+  const agendaDia = pieza(raiz, '[data-demo-dia]');
+  const agendaFilas = pieza(raiz, '[data-demo-filas]');
   const anuncio = pieza(raiz, '[data-demo-anuncio]');
-  const papel = pieza(raiz, '[data-demo-papel]');
+  const iniciales = pieza(raiz, '[data-demo-iniciales]');
+  const nombre = pieza(raiz, '[data-demo-nombre]');
+  const atiende = pieza(raiz, '[data-demo-atiende]');
   const plantillaSello = /** @type {HTMLTemplateElement} */ (pieza(raiz, '[data-demo-sello]'));
+  const plantillaPalomita = /** @type {HTMLTemplateElement} */ (pieza(raiz, '[data-demo-palomita]'));
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const conColumna = window.matchMedia(ANCHO_CON_COLUMNA);
 
   const ejemplo = /** @type {Ejemplo} */ (ejemplos[0]);
   let estado = estadoInicial();
+  /** @type {Telefono} */
+  let telefono = 'cliente';
+  /** @type {HTMLElement | null} */
+  let cobro = null;
   let ocupada = false;
   let sola = false;
   let tocada = false;
-  // Cada reinicio cambia el turno: lo que quedo esperando de un turno viejo ya no pinta nada.
+  // Cada paso y cada reinicio cambian el turno: lo que quedo esperando de un turno viejo ya no pinta ni avanza nada.
   let turno = 0;
   // Quien avanza con el teclado no pierde su lugar: el foco pasa a lo siguiente que se puede hacer.
   let devolverFoco = false;
 
-  /**
-   * @param {number} ms
-   * @returns {Promise<void>}
-   */
-  const esperar = (ms) => new Promise((listo) => setTimeout(listo, sinMovimiento.matches ? 0 : ms));
+  /** @param {number} ms */
+  const leer = (ms) => /** @type {Promise<void>} */ (new Promise((listo) => setTimeout(listo, ms)));
+  /** @param {number} ms */
+  const animar = (ms) => leer(sinMovimiento.matches ? 0 : ms);
 
   function alFinal() {
     chat.scrollTop = chat.scrollHeight;
   }
 
   /**
-   * @param {'cliente' | 'asistente'} de
+   * Cambia de quien es el telefono: su cabecera y, a escenario limpio, la acotacion que le dice a la visitante que
+   * papel le toca ahora.
+   * @param {Telefono} cual
+   * @returns {string} la acotacion
+   */
+  function presentar(cual) {
+    const presentacion = presentacionDe(ejemplo.giro, rotulos, cual);
+    telefono = cual;
+    cobro = null;
+    raiz.dataset.telefono = cual;
+    iniciales.textContent = presentacion.iniciales;
+    nombre.textContent = presentacion.nombre;
+    atiende.textContent = presentacion.atiende;
+    chat.replaceChildren(crear('p', 'chat__salto', presentacion.papel));
+    chat.dataset.acotacion = '';
+    return presentacion.papel;
+  }
+
+  /**
+   * @param {'cliente' | 'profesional' | 'asistente'} de
    * @param {string} texto
    * @param {boolean} [conBoton]
    */
   function burbuja(de, texto, conBoton) {
-    const globo = crear('p', `burbuja burbuja--${de}`);
-    const quien = de === 'cliente' ? ejemplo.giro.cliente : ejemplo.giro.asistente;
+    const globo = crear('p', `burbuja burbuja--${de === 'asistente' ? 'asistente' : 'mia'}`);
+    const { giro } = ejemplo;
+    const quien = de === 'asistente' ? giro.asistente : de === 'cliente' ? giro.cliente : giro.profesional;
     globo.append(crear('span', 'solo-lector', `${quien}: `), texto);
     if (conBoton) globo.append(crear('span', 'burbuja__boton', rotulo('cambiarCita')));
     return globo;
@@ -105,106 +147,71 @@ export function montarDemo(raiz) {
 
   /** @param {string} concepto */
   function tarjetaDeCobro(concepto) {
-    const tarjeta = crear('div', 'cobro');
-    tarjeta.append(
+    cobro = crear('div', 'cobro');
+    cobro.append(
       crear('span', 'cobro__concepto', concepto),
       crear('strong', 'cobro__monto', pesos(ejemplo.giro.anticipo)),
       crear('span', 'cobro__estado', rotulo('pagoPendiente')),
     );
-    return tarjeta;
+    return cobro;
   }
 
   /** @param {string} texto */
   function marcarCobroAprobado(texto) {
-    const tarjeta = chat.querySelector('.cobro:last-of-type');
-    const estadoDelCobro = tarjeta?.querySelector('.cobro__estado');
-    if (!tarjeta || !estadoDelCobro) return;
-    tarjeta.classList.add('cobro--aprobado');
-    const palomita = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    palomita.setAttribute('class', 'cobro__palomita');
-    palomita.setAttribute('viewBox', '0 0 20 20');
-    palomita.setAttribute('aria-hidden', 'true');
-    const trazo = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    trazo.setAttribute('d', 'M4 10.5l4 4 8-9');
-    trazo.setAttribute('fill', 'none');
-    trazo.setAttribute('stroke', 'currentColor');
-    trazo.setAttribute('stroke-width', '2.4');
-    trazo.setAttribute('stroke-linecap', 'round');
-    trazo.setAttribute('stroke-linejoin', 'round');
-    palomita.append(trazo);
-    estadoDelCobro.replaceChildren(palomita, texto);
+    if (!cobro) return;
+    cobro.classList.add('cobro--aprobado');
+    cobro.querySelector('.cobro__estado')?.replaceChildren(plantillaPalomita.content.cloneNode(true), texto);
   }
 
   /**
-   * Pinta los mensajes nuevos de un paso, uno por uno, con su pausa.
+   * Pinta mensajes nuevos, uno por uno, con su pausa. Devuelve falso si a media pintada cambio el turno.
    * @param {Entrada[]} entradas
    * @param {number} miTurno
+   * @returns {Promise<boolean>}
    */
   async function pintarChat(entradas, miTurno) {
     for (const entrada of entradas) {
+      delete chat.dataset.acotacion;
       if (entrada.de === 'aprobado') {
         marcarCobroAprobado(entrada.texto);
-        await esperar(PAUSA_ENTRE_BURBUJAS);
       } else if (entrada.de === 'asistente') {
         const puntos = crear('p', 'burbuja burbuja--asistente burbuja--escribe');
         puntos.setAttribute('aria-hidden', 'true');
         puntos.append(crear('i', ''), crear('i', ''), crear('i', ''));
         chat.append(puntos);
         alFinal();
-        await esperar(600 + Math.min(300, entrada.texto.length * 2));
-        if (miTurno !== turno) return;
+        await animar(600 + Math.min(300, entrada.texto.length * 2));
+        if (miTurno !== turno) return false;
         puntos.replaceWith(burbuja('asistente', entrada.texto, entrada.boton));
+      } else if (entrada.de === 'cobro') {
+        chat.append(tarjetaDeCobro(entrada.texto));
+      } else if (entrada.de === 'salto') {
+        chat.append(crear('p', 'chat__salto', entrada.texto));
       } else {
-        if (entrada.de === 'cliente') chat.append(burbuja('cliente', entrada.texto));
-        else if (entrada.de === 'cobro') chat.append(tarjetaDeCobro(entrada.texto));
-        else chat.append(crear('p', 'chat__salto', entrada.texto));
+        chat.append(burbuja(entrada.de, entrada.texto));
       }
       alFinal();
-      await esperar(PAUSA_ENTRE_BURBUJAS);
-      if (miTurno !== turno) return;
+      await animar(PAUSA_ENTRE_BURBUJAS);
+      if (miTurno !== turno) return false;
     }
-  }
-
-  /** @param {boolean} abierto */
-  function abrirTu(abierto) {
-    tu.toggleAttribute('data-abierto', abierto);
-    tuBoton.setAttribute('aria-expanded', String(abierto || conColumna.matches));
+    return true;
   }
 
   /**
-   * @param {import('./demo.js').Fila} fila
-   * @returns {string}
-   */
-  function textoDeFila(fila) {
-    const { servicioCorto, cliente } = ejemplo.giro;
-    if (fila.estado === 'garantizada') return `${servicioCorto} · ${cliente}`;
-    if (fila.estado === 'asistio' || fila.estado === 'falto') return `${rotulo(fila.estado)} · ${cliente}`;
-    return rotulo(fila.estado);
-  }
-
-  /**
-   * Pone la agenda al dia sin volver a dibujarla: cada renglon cambia en su lugar y el sello, una vez puesto, se queda.
+   * Pone al dia lo que ve la profesional: la linea que narra y su agenda. La agenda no se vuelve a dibujar: cada
+   * renglon cambia en su lugar y el sello, una vez puesto, se queda. Devuelve falso si cambio el turno.
    * @param {LoQueVesTu} vista
    * @param {number} miTurno
+   * @returns {Promise<boolean>}
    */
-  async function pintarAgenda(vista, miTurno) {
-    let agenda = tuDetalle.querySelector('.agenda');
-    if (vista.filas.length === 0) {
-      agenda?.remove();
-      return;
-    }
-    if (!agenda) {
-      agenda = crear('div', 'agenda');
-      const cabeza = crear('p', 'agenda__cabeza');
-      cabeza.append(crear('span', 'agenda__dia'), crear('span', 'agenda__de', rotulo('calendario')));
-      agenda.append(cabeza, crear('ol', 'agenda__filas'));
-      tuDetalle.prepend(agenda);
-    }
-    const dia = /** @type {HTMLElement} */ (agenda.querySelector('.agenda__dia'));
-    dia.textContent = `${(vista.dia ?? '').charAt(0).toUpperCase()}${(vista.dia ?? '').slice(1)}`;
-    const lista = /** @type {HTMLElement} */ (agenda.querySelector('.agenda__filas'));
-    if (lista.children.length !== vista.filas.length) {
-      lista.replaceChildren(
+  async function pintarTu(vista, miTurno) {
+    tuResumen.textContent = vista.resumen;
+    anuncio.textContent = vista.resumen;
+    agendaDia.textContent = conMayuscula(vista.dia);
+    const horas = vista.filas.map((fila) => fila.hora).join('|');
+    if (agendaFilas.dataset.horas !== horas) {
+      agendaFilas.dataset.horas = horas;
+      agendaFilas.replaceChildren(
         ...vista.filas.map((fila) => {
           const renglon = crear('li', 'agenda__fila');
           renglon.append(crear('span', 'agenda__hora', fila.hora), crear('span', 'agenda__estado'));
@@ -212,82 +219,63 @@ export function montarDemo(raiz) {
         }),
       );
     }
+    tu.toggleAttribute(
+      'data-llena',
+      vista.filas.every((fila) => fila.estado !== 'libre'),
+    );
     for (const [indice, fila] of vista.filas.entries()) {
-      const renglon = /** @type {HTMLElement} */ (lista.children[indice]);
+      const renglon = /** @type {HTMLElement} */ (agendaFilas.children[indice]);
+      const texto = /** @type {HTMLElement} */ (renglon.children[1]);
       const antes = renglon.dataset.estado;
-      if (antes === fila.estado) continue;
+      if (antes === fila.estado && texto.textContent === fila.texto) continue;
+      // Recien pagada: primero se ve llegar el dinero (la linea de arriba ya cambio) y despues la cita entra a la agenda.
       const recienPagada = antes === 'apartado' && fila.estado === 'garantizada';
-      // Primero se ve llegar el dinero (el resumen ya cambio); despues la cita entra a la agenda.
-      if (recienPagada) await esperar(700);
-      if (miTurno !== turno) return;
+      const sellar = llevaSello(fila.estado) && !renglon.querySelector('.sello');
+      if (recienPagada) await animar(PAUSA_DEL_DINERO_A_LA_CITA);
+      if (miTurno !== turno) return false;
       renglon.dataset.estado = fila.estado;
-      /** @type {HTMLElement} */ (renglon.children[1]).textContent = textoDeFila(fila);
-      if (fila.estado === 'libre' || fila.estado === 'apartado') {
+      texto.textContent = fila.texto;
+      if (!llevaSello(fila.estado)) {
         renglon.querySelector('.sello')?.remove();
         delete renglon.dataset.sellada;
-      } else if (!renglon.querySelector('.sello')) {
+      } else if (sellar) {
         // Y al final cae el sello.
-        if (recienPagada) await esperar(520);
-        if (miTurno !== turno) return;
+        await animar(recienPagada ? PAUSA_DE_LA_CITA_AL_SELLO : PAUSA_ENTRE_SELLOS);
+        if (miTurno !== turno) return false;
         renglon.append(plantillaSello.content.cloneNode(true));
         renglon.dataset.sellada = '';
         if (recienPagada && !sinMovimiento.matches) navigator.vibrate?.(14);
       }
     }
+    return true;
   }
 
   /**
-   * @param {LoQueVesTu} vista
-   * @param {Accion[]} acciones
-   * @param {number} miTurno
-   */
-  async function pintarTu(vista, acciones, miTurno) {
-    tuResumen.textContent = vista.resumen;
-    anuncio.textContent = vista.mensaje ? `${vista.resumen} ${vista.mensaje}` : vista.resumen;
-    abrirTu(vista.abre);
-    tu.toggleAttribute(
-      'data-con-cita',
-      vista.filas.some((fila) => fila.estado !== 'libre'),
-    );
-    tuDetalle.querySelector('.tu__mensaje')?.remove();
-    tuDetalle.querySelector('.tu__botones')?.remove();
-    await pintarAgenda(vista, miTurno);
-    if (miTurno !== turno || !vista.mensaje) return;
-    tuDetalle.append(crear('p', 'tu__mensaje', vista.mensaje));
-    const respuestas = acciones.filter((accion) => accion.clase === 'si' || accion.clase === 'no');
-    if (respuestas.length === 0) return;
-    const botones = crear('div', 'tu__botones');
-    for (const accion of respuestas) {
-      const boton = crear('button', `boton boton--${accion.clase}`, rotulo(accion.clase));
-      boton.type = 'button';
-      boton.addEventListener('click', () => tocar(accion.evento));
-      botones.append(boton);
-    }
-    tuDetalle.append(botones);
-  }
-
-  /**
-   * Lo que la visitante puede tocar en este paso. Lo que conviene tocar late despacio: esa es la pista.
+   * Lo que la visitante puede tocar en este paso. Lo que conviene tocar late un rato: esa es la pista.
    * @param {Accion[]} acciones
    */
   function pintarPie(acciones) {
-    const sugerida = porDefecto(estado, ejemplo.guion);
-    /** @type {(HTMLElement | string)[]} */
+    /** @type {HTMLElement[]} */
     const piezas = [];
     if (estado.paso === 'reposo') piezas.push(crear('p', 'chat__borrador', ejemplo.guion.pregunta));
-    if (estado.paso === 'asistencia') piezas.push(crear('p', 'chat__pista', rotulo('ahoraTu')));
     for (const accion of acciones) {
-      if (accion.clase === 'si' || accion.clase === 'no') continue;
-      const esFicha = accion.clase === 'ficha';
-      const clase = esFicha ? 'ficha' : accion.clase === 'enviar' ? 'boton boton--enviar' : 'boton boton--ancho';
-      const boton = crear('button', clase, esFicha ? accion.etiqueta : rotulo(accion.clase));
+      const clase = {
+        enviar: 'boton boton--enviar',
+        ficha: 'ficha',
+        pagar: 'boton boton--ancho',
+        seguir: 'boton boton--ancho',
+        si: 'boton boton--mitad',
+        no: 'boton boton--mitad boton--contorno',
+      }[accion.clase];
+      const boton = crear('button', clase, accion.etiqueta);
       boton.type = 'button';
-      if (JSON.stringify(accion.evento) === JSON.stringify(sugerida)) boton.classList.add('pista');
+      // Entre si y no no se sugiere nada: esa respuesta es de ella.
+      if (accion.sugerida && accion.clase !== 'si') boton.classList.add('pista');
       boton.addEventListener('click', () => tocar(accion.evento));
       piezas.push(boton);
     }
     if (estado.paso === 'cierre') {
-      const empieza = crear('a', 'boton boton--ancho', rotulo('empieza'));
+      const empieza = crear('a', 'boton boton--ancho boton--sello', rotulo('empieza'));
       empieza.href = datos.alta;
       empieza.dataset.lugar = 'demo';
       const otraVez = crear('button', 'enlace', rotulo('otraVez'));
@@ -296,19 +284,46 @@ export function montarDemo(raiz) {
       piezas.push(empieza, otraVez);
     }
     pie.replaceChildren(...piezas);
+    alFinal();
+  }
+
+  /** Si la visitante venia con el teclado en el pie, el foco pasa a lo primero que ahora se puede hacer ahi. */
+  function regresarElFoco() {
+    if (!devolverFoco) return;
+    // Si ella movio el foco a otra parte mientras se pintaba, se respeta.
+    if (document.activeElement && document.activeElement !== document.body) {
+      devolverFoco = false;
+      return;
+    }
+    const siguiente = pie.querySelector('button, a');
+    if (!(siguiente instanceof HTMLElement)) return; // un paso sin nada que tocar: se intenta en el siguiente
+    siguiente.focus({ preventScroll: true });
+    devolverFoco = false;
   }
 
   /** Pinta el paso en que quedo el estado: mensajes, lo que ves tu y, al final, lo que se puede tocar. */
   async function jugar() {
     const miTurno = turno;
+    const inicio = performance.now();
     ocupada = true;
-    if (raiz.contains(document.activeElement) && document.activeElement instanceof HTMLButtonElement)
-      devolverFoco = true;
     pie.replaceChildren();
+    raiz.toggleAttribute('data-final', estado.paso === 'cierre');
     const escena = escenaDe(estado, ejemplo);
-    const acciones = accionesDe(estado, ejemplo.guion);
-    await pintarChat(escena.chat, miTurno);
-    if (miTurno !== turno) return;
+    if (escena.telefono !== telefono) {
+      // Cambio de acto: el escenario se limpia y una acotacion avisa el nuevo papel.
+      anuncio.textContent = presentar(escena.telefono);
+      await animar(PAUSA_DE_LA_ACOTACION);
+      if (miTurno !== turno) return;
+    }
+    // Lo que ves tu cambia en su momento: tras "Pago aprobado" si lo hay (y entonces lo que falte del chat espera a que
+    // el sello se vea); si no, cuando el chat de ese paso ya se pinto.
+    const corte = escena.chat.findIndex((entrada) => entrada.de === 'aprobado') + 1 || escena.chat.length;
+    if (!(await pintarChat(escena.chat.slice(0, corte), miTurno))) return;
+    if (!(await pintarTu(escena.tu, miTurno))) return;
+    if (corte < escena.chat.length) {
+      await animar(SILENCIO_TRAS_EL_SELLO);
+      if (miTurno !== turno || !(await pintarChat(escena.chat.slice(corte), miTurno))) return;
+    }
     if (estado.paso === 'cierre') {
       const tarjeta = crear('div', 'cierre');
       tarjeta.append(
@@ -316,22 +331,17 @@ export function montarDemo(raiz) {
         crear('p', 'cierre__texto', rotulo('cierreTexto')),
       );
       chat.append(tarjeta);
-      alFinal();
     }
-    await pintarTu(escena.tu, acciones, miTurno);
+    await leer(Math.max(0, PASO_MINIMO - (performance.now() - inicio)));
     if (miTurno !== turno) return;
-    pintarPie(acciones);
+    pintarPie(accionesDe(estado, ejemplo));
     ocupada = false;
     raiz.dataset.paso = estado.paso;
-    const siguiente = raiz.querySelector('.tu__botones button, [data-demo-pie] button, [data-demo-pie] a');
-    if (devolverFoco && siguiente instanceof HTMLElement) {
-      siguiente.focus({ preventScroll: true });
-      devolverFoco = false;
-    }
-    // Los dos finales llevan solos a la tarjeta de cierre; lo demas espera a la visitante, salvo que haya pedido verlo todo.
+    regresarElFoco();
+    // Los dos finales llevan solos al cuadro final; lo demas espera a la visitante, salvo que haya pedido verlo todo.
     const fin = estado.paso === 'finSi' || estado.paso === 'finNo';
     if (!fin && !sola) return;
-    await esperar(fin ? PAUSA_ANTES_DEL_CIERRE : PAUSA_ENTRE_PASOS);
+    await leer(fin ? PAUSA_ANTES_DEL_CIERRE : PAUSA_ENTRE_PASOS);
     if (miTurno !== turno) return;
     const evento = porDefecto(estado, ejemplo.guion);
     if (evento) despachar(evento);
@@ -344,73 +354,76 @@ export function montarDemo(raiz) {
     const siguiente = avanzar(estado, evento, ejemplo.guion);
     if (siguiente === estado) return;
     estado = siguiente;
-    void jugar();
+    turno += 1;
+    // Si un paso no se puede pintar, la demostracion vuelve a empezar en lugar de quedarse muda.
+    jugar().catch(reiniciar);
   }
 
   /**
-   * La visitante toco algo: desde aqui manda ella.
+   * La visitante toco algo del pie: desde aqui manda ella.
    * @param {Evento} evento
    */
   function tocar(evento) {
     tocada = true;
     sola = false;
+    vigia.disconnect();
+    devolverFoco = pie.contains(document.activeElement);
     despachar(evento);
   }
 
   function reiniciar() {
+    const conFoco = pie.contains(document.activeElement);
     turno += 1;
     tocada = true;
     sola = false;
     ocupada = false;
-    estado = estadoInicial();
-    const presentacion = presentacionDe(ejemplo.giro, rotulos);
-    papel.textContent = presentacion.papel;
-    chat.replaceChildren(papel);
-    tuDetalle.replaceChildren();
-    const escena = escenaDe(estado, ejemplo);
-    tuResumen.textContent = escena.tu.resumen;
-    anuncio.textContent = '';
-    abrirTu(false);
-    tu.removeAttribute('data-con-cita');
-    pintarPie(accionesDe(estado, ejemplo.guion));
+    vigia.disconnect();
+    estado = avanzar(estado, { tipo: 'reiniciar' }, ejemplo.guion);
+    const papel = presentar('cliente');
     raiz.dataset.paso = estado.paso;
+    raiz.removeAttribute('data-final');
+    // Sin esperas: en reposo la agenda no tiene nada que sellar.
+    void pintarTu(escenaDe(estado, ejemplo).tu, turno);
+    anuncio.textContent = papel;
+    pintarPie(accionesDe(estado, ejemplo));
+    devolverFoco = conFoco;
+    regresarElFoco();
   }
 
-  // ---------- Arranque ----------
-  chat.querySelector('[data-demo-transcripcion]')?.remove();
-  pintarPie(accionesDe(estado, ejemplo.guion));
-  abrirTu(false);
-  raiz.dataset.paso = estado.paso;
-  conColumna.addEventListener('change', () => abrirTu(tu.hasAttribute('data-abierto')));
-
-  tuBoton.addEventListener('click', () => {
-    if (!conColumna.matches) abrirTu(!tu.hasAttribute('data-abierto'));
-  });
-  pieza(raiz, '[data-demo-reiniciar]').addEventListener('click', reiniciar);
-  pieza(raiz, '[data-demo-sola]').addEventListener('click', () => {
-    tocada = true;
-    if (estado.paso === 'cierre') reiniciar();
-    sola = true;
-    const evento = porDefecto(estado, ejemplo.guion);
-    if (evento) despachar(evento);
-  });
-
   // Si nadie la toca, manda sola el primer mensaje a los 4 segundos de estar a la vista. De ahi en adelante espera.
+  // No arranca con la pestana oculta ni si alguien ya esta dentro con el teclado.
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let reloj;
   const vigia = new IntersectionObserver(
     (entradas) => {
-      const aLaVista = entradas.some((entrada) => entrada.isIntersecting);
       clearTimeout(reloj);
-      if (!aLaVista || tocada || estado.paso !== 'reposo') return;
+      if (!entradas.some((entrada) => entrada.isIntersecting)) return;
       reloj = setTimeout(() => {
-        if (!tocada && estado.paso === 'reposo') despachar({ tipo: 'enviar' });
+        if (tocada || estado.paso !== 'reposo' || document.hidden || raiz.contains(document.activeElement)) return;
         vigia.disconnect();
+        despachar({ tipo: 'enviar' });
       }, ESPERA_PARA_ARRANCAR_SOLA);
     },
     { threshold: 0.4 },
   );
-  vigia.observe(pieza(raiz, '.telefono'));
 
+  // ---------- Arranque ----------
+  // La pagina ya trae escrito el reposo del primer ejemplo; solo falta lo que se puede tocar.
+  agendaFilas.dataset.horas = escenaDe(estado, ejemplo)
+    .tu.filas.map((fila) => fila.hora)
+    .join('|');
+  pintarPie(accionesDe(estado, ejemplo));
+  pieza(raiz, '[data-demo-reiniciar]').addEventListener('click', reiniciar);
+  pieza(raiz, '[data-demo-sola]').addEventListener('click', () => {
+    if (estado.paso === 'cierre') reiniciar();
+    tocada = true;
+    sola = true;
+    vigia.disconnect();
+    const evento = porDefecto(estado, ejemplo.guion);
+    if (evento) despachar(evento);
+  });
+  vigia.observe(pieza(raiz, '.telefono'));
+  // Hasta aqui todo salio bien: la conversacion escrita ya no hace falta y la demostracion queda viva.
+  chat.querySelector('[data-demo-transcripcion]')?.remove();
   raiz.dataset.viva = '';
 }

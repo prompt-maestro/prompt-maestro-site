@@ -26,7 +26,7 @@
  * @param {string} que
  * @returns {number}
  */
-function pesos(valor, que) {
+function enteroDePesos(valor, que) {
   if (typeof valor !== 'number' || !Number.isInteger(valor) || valor <= 0) {
     throw new Error(`Planes: ${que} debe ser un numero entero mayor que cero`);
   }
@@ -60,9 +60,9 @@ export function planesPublicos(origen) {
     return {
       clave: texto(plan.clave, `la clave de ${nombre}`),
       nombre,
-      mensual: pesos(plan.mensual, `la mensualidad de ${nombre}`),
-      anual: pesos(plan.anual, `la anualidad de ${nombre}`),
-      instalacion: pesos(plan.instalacion, `la instalacion de ${nombre}`),
+      mensual: enteroDePesos(plan.mensual, `la mensualidad de ${nombre}`),
+      anual: enteroDePesos(plan.anual, `la anualidad de ${nombre}`),
+      instalacion: enteroDePesos(plan.instalacion, `la instalacion de ${nombre}`),
       destacado: plan.destacado === true,
       incluye: plan.incluye.map((linea) => texto(linea, `una linea de lo que incluye ${nombre}`)),
     };

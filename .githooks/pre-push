@@ -1,5 +1,5 @@
 #!/bin/sh
 # Antes de CADA push: sin correos personales, sin llaves y sin tocar main (ver herramientas/antes-de-subir.mjs).
-# Se activa una vez por copia del repo:  git config core.hooksPath .githooks
+# Se activa al instalar las dependencias (npm ci) o a mano:  git config core.hooksPath .githooks
 raiz=$(git rev-parse --show-toplevel) || exit 1
-exec node "$raiz/herramientas/antes-de-subir.mjs"
+exec node "$raiz/herramientas/antes-de-subir.mjs" "$1"

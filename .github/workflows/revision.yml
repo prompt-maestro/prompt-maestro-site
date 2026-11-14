@@ -16,7 +16,7 @@ concurrency:
 jobs:
   puerta:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,8 +37,8 @@ jobs:
         run: node herramientas/armar.mjs && node herramientas/armar.mjs --comprobar
       - name: Armar la previa y comprobar que sale identica
         run: node herramientas/armar.mjs --previa && node herramientas/armar.mjs --previa --comprobar
-      - name: Navegador de las pruebas
-        run: npx playwright install --with-deps chromium
+      - name: Navegadores de las pruebas
+        run: npx playwright install --with-deps chromium webkit firefox
       - name: Pruebas de punta a punta y accesibilidad
         run: npm run e2e
       - name: Velocidad en celular (Lighthouse con sus presupuestos)

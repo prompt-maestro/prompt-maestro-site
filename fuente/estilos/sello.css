@@ -1,10 +1,13 @@
-/* El sello de Garantizada: tinta azul sobre papel. Es el gesto de la marca, por eso es lo unico que cae con peso. */
+/* El sello de Garantizada: tinta azul sobre papel. Es el gesto de la marca, por eso es lo unico que cae con peso,
+   y por eso el azul no se gasta en nada mas. */
 .sello {
-  width: 148px;
+  width: 176px;
   height: auto;
   overflow: visible;
   color: var(--sello);
-  transform: rotate(-6deg);
+  /* La tinta se mezcla con el papel de abajo, no lo tapa. */
+  mix-blend-mode: multiply;
+  transform: rotate(-7deg);
 }
 
 .sello__palabra {
@@ -16,9 +19,9 @@
 
 .sello__linea {
   font-family: var(--f-texto);
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 2.6px;
+  letter-spacing: 2.4px;
 }
 
 /* Sobre la cita de la agenda: cae a un lado del texto y se sale un poco de la hoja, como un sello de verdad. */
@@ -27,36 +30,63 @@
   top: 50%;
   right: -12px;
   z-index: 1;
-  width: 142px;
-  margin-top: -27px;
   pointer-events: none;
+  transform: translateY(-50%) rotate(var(--giro, -7deg));
+}
+
+/* Sellados a mano: ninguno cae exactamente igual que el anterior. */
+.agenda__fila:nth-child(4n + 1) .sello {
+  --giro: -5deg;
+}
+
+.agenda__fila:nth-child(4n + 2) .sello {
+  --giro: -9deg;
+}
+
+.agenda__fila:nth-child(4n + 3) .sello {
+  --giro: -4deg;
+}
+
+.tu[data-llena] .agenda__fila .sello {
+  right: -8px;
+  width: 118px;
+}
+
+@media (min-width: 1200px) {
+  .agenda__fila .sello {
+    width: 158px;
+  }
+
+  .tu[data-llena] .agenda__fila .sello {
+    width: 120px;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .agenda__fila .sello {
-    animation: sello-cae 220ms cubic-bezier(0.5, 0, 0.9, 0.4) both;
+    animation: sello-cae 220ms cubic-bezier(0.55, 0, 0.9, 0.35) both;
     will-change: transform, opacity;
   }
 
   /* La cita recibe el golpe: se hunde apenas y regresa. */
   .agenda__fila[data-sellada] {
-    animation: golpe 140ms var(--suave) 200ms both;
+    animation: golpe 160ms var(--suave) 200ms both;
   }
 }
 
 @keyframes sello-cae {
   from {
     opacity: 0;
-    transform: rotate(-14deg) scale(1.6);
+    transform: translateY(-50%) rotate(calc(var(--giro, -7deg) - 8deg)) scale(1.9);
   }
 
-  60% {
+  55% {
     opacity: 1;
   }
 }
 
 @keyframes golpe {
   50% {
-    transform: scale(0.975);
+    transform: translateY(2px) scale(0.985);
   }
 }

@@ -11,10 +11,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--e-4);
-  max-width: 1320px;
+  max-width: 1440px;
   min-height: 64px;
   margin: 0 auto;
-  padding: var(--e-2) var(--e-6);
+  padding: var(--e-2) clamp(20px, 5.5vw, 88px);
 }
 
 .marca {
@@ -40,12 +40,29 @@
   white-space: nowrap;
 }
 
+/* La regla de la marca aplicada a su nombre: la palabra que importa va inclinada, con la misma M del sello. */
+.marca__nombre em {
+  font-weight: 500;
+}
+
+/* En los telefonos mas angostos la barra se aprieta para que el boton quepa entero. */
 @media (max-width: 380px) {
   .barra__dentro {
+    gap: var(--e-2);
     padding-inline: var(--e-4);
   }
 
+  .marca__sello {
+    width: 30px;
+    height: 30px;
+  }
+
   .marca__nombre {
-    font-size: 1.0625rem;
+    font-size: 1rem;
+  }
+
+  .barra .boton--chico {
+    padding: 0 var(--e-3);
+    font-size: 0.9375rem;
   }
 }

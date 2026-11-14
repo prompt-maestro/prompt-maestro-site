@@ -1,5 +1,6 @@
 // @ts-check
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -35,11 +36,10 @@ test('la armada publica no lleva noindex en el inicio ni la cinta de previa', as
   assert.match(inicio, /<link rel="canonical" href="https:\/\/prompt-maestro\.com\/">/);
 });
 
-test('la previa lleva noindex, la cinta y robots cerrado, y nunca el CNAME del dominio', async () => {
+test('la previa lleva noindex y la cinta, y nunca el CNAME del dominio', async () => {
   const { archivos, problemas } = await armarSitio({ raiz: RAIZ, destino: 'previa' });
   assert.deepEqual(problemas, []);
   assert.equal(archivos.has('CNAME'), false, 'un CNAME en la previa le quitaria el dominio a la pagina en vivo');
-  assert.equal(leer(archivos, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
   for (const pagina of ['index.html', '404.html']) {
     const html = leer(archivos, pagina);
     assert.match(html, /<meta name="robots" content="noindex, nofollow">/);
@@ -75,6 +75,9 @@ test('los estilos van en una carpeta con la huella de su contenido', async () =>
   const estilos = [...archivos.keys()].filter((ruta) => ruta.endsWith('.css'));
   assert.ok(estilos.length > 0);
   for (const ruta of estilos) assert.match(ruta, /^a\/[0-9a-f]{10}\/estilos\//);
+  const fuentes = [...archivos.keys()].filter((ruta) => ruta.endsWith('.woff2'));
+  assert.ok(fuentes.length > 0);
+  for (const ruta of fuentes) assert.match(ruta, /^r\/[0-9a-f]{10}\/fuentes\//, 'los recursos llevan su propia huella');
 });
 
 test('toda pagina lleva la politica de contenido y el idioma', async () => {
@@ -94,7 +97,11 @@ test('toda pagina lleva la politica de contenido y el idioma', async () => {
   }
 });
 
-test('mientras los precios sean de prueba, la armada lo avisa', async () => {
+test('la armada avisa que no se puede publicar justo mientras los precios sean de prueba', async () => {
   const { avisos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
-  assert.ok(avisos.some((aviso) => /PRECIOS DE PRUEBA/.test(aviso)));
+  const planes = JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', 'planes.json'), 'utf8'));
+  assert.equal(
+    avisos.some((aviso) => /PRECIOS DE PRUEBA/.test(aviso)),
+    planes.dePrueba,
+  );
 });

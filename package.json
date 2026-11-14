@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "armar": "node herramientas/armar.mjs",
     "armar:previa": "node herramientas/armar.mjs --previa",
     "servir": "node herramientas/servir.mjs",

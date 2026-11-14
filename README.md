@@ -14,7 +14,7 @@ Es un sitio estático sin framework: lo que se publica es HTML, CSS y JavaScript
 Hace falta Node 24.
 
 ```bash
-git config core.hooksPath .githooks   # una vez: revisa cada push
+git config core.hooksPath .githooks   # lo hace npm ci; revisa cada push
 npm ci                                # dependencias de desarrollo, con versión exacta
 npm run armar                         # escribe dist/
 npm run servir                        # http://127.0.0.1:4173/

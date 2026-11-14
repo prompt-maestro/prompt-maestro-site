@@ -8,9 +8,9 @@
     "profesional": "Bella",
     "cliente": "Ana",
     "servicio": "Gelish semipermanente",
+    "servicioCorto": "Gelish",
     "precio": 350,
     "anticipo": 150,
-    "direccion": "Av. Chapultepec 234, local 5, colonia Americana, Guadalajara",
-    "servicioCorto": "Gelish"
+    "direccion": "Av. Chapultepec 234, colonia Americana"
   }
 ]

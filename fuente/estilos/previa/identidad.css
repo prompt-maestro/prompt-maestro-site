@@ -17,7 +17,6 @@
 
 .identidad__titulo em,
 .letra--titulo em {
-  color: var(--sello);
   font-weight: 500;
 }
 

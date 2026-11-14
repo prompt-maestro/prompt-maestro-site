@@ -52,7 +52,7 @@ svg {
 }
 
 :focus-visible {
-  outline: 3px solid var(--sello);
+  outline: 3px solid var(--tinta);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -99,10 +99,10 @@ svg {
   justify-content: center;
   min-height: 52px;
   padding: 0 var(--e-6);
-  border: 0;
+  border: 1.5px solid var(--tinta);
   border-radius: var(--r-control);
-  background: var(--sello);
-  color: var(--superficie);
+  background: var(--tinta);
+  color: var(--papel);
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
@@ -112,19 +112,12 @@ svg {
 }
 
 .boton:hover {
-  background: var(--sello-2);
+  border-color: var(--tinta-2);
+  background: var(--tinta-2);
 }
 
 .boton:active {
-  background: var(--sello-2);
   transform: scale(0.98);
-}
-
-.boton[disabled] {
-  background: var(--papel-2);
-  color: var(--tinta-3);
-  cursor: default;
-  transform: none;
 }
 
 .boton--chico {
@@ -134,6 +127,29 @@ svg {
   font-size: 1rem;
 }
 
+/* El boton callado: acompana sin competir con el principal. */
+.boton--contorno {
+  background: none;
+  color: var(--tinta);
+}
+
+.boton--contorno:hover {
+  border-color: var(--tinta);
+  background: var(--papel-2);
+}
+
+/* El unico boton azul: va donde la cita ya quedo sellada. La tinta azul es de lo pagado y lo garantizado. */
+.boton--sello {
+  border-color: var(--sello);
+  background: var(--sello);
+  color: var(--superficie);
+}
+
+.boton--sello:hover {
+  border-color: var(--sello-2);
+  background: var(--sello-2);
+}
+
 .enlace {
   display: inline-flex;
   align-items: center;
@@ -141,7 +157,7 @@ svg {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--sello);
+  color: var(--tinta);
   font-weight: 500;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -151,7 +167,6 @@ svg {
 }
 
 .enlace:hover {
-  color: var(--sello-2);
   text-decoration-thickness: 2px;
 }
 
@@ -200,7 +215,6 @@ svg {
 }
 
 .obra__titulo em {
-  color: var(--sello);
   font-weight: 500;
 }
 

@@ -14,6 +14,9 @@ export default defineConfig({
     { name: 'celular', use: { ...devices['Pixel 7'], baseURL: 'http://127.0.0.1:4173/' } },
     { name: 'escritorio', use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:4173/' } },
     { name: 'previa', use: { ...devices['Pixel 7'], baseURL: 'http://127.0.0.1:4174/pagina-previa/' } },
+    // La mayoria de las visitas llegan de un celular, y muchas de un iPhone: tambien se prueba en su navegador y en Firefox.
+    { name: 'iphone', use: { ...devices['iPhone 14'], baseURL: 'http://127.0.0.1:4173/' } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'], baseURL: 'http://127.0.0.1:4173/' } },
   ],
   webServer: [
     {

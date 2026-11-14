@@ -2,6 +2,9 @@
 // La logica de la demostracion. No toca la pantalla: recibe un estado y un evento y devuelve el estado siguiente, y
 // sabe decir que se ve en cada paso. Asi se prueba sin navegador, y la misma logica arma la conversacion de ejemplo
 // que queda escrita en la pagina para quien no tiene JavaScript. Pintar es trabajo de demo-vista.js.
+//
+// La historia tiene dos actos. En el primero la visitante es quien pide la cita y el telefono es el suyo. En el
+// segundo (desde "asistencia") es la profesional: el telefono pasa a ser el de ella y quien le escribe es su asistente.
 import { aLaHora, conMayuscula, listaDeHoras, pesos, rellenar } from './redaccion.js';
 
 /** @typedef {'reposo' | 'precio' | 'horarios' | 'apartado' | 'pagado' | 'recordatorios' | 'asistencia' | 'finSi' | 'finNo' | 'cierre'} Paso */
@@ -12,8 +15,9 @@ import { aLaHora, conMayuscula, listaDeHoras, pesos, rellenar } from './redaccio
  */
 /** @typedef {{ id: string, ficha: string, dice: string, dia: string, horas: string[] }} Cuando */
 /**
- * Lo que cambia de un ejemplo a otro: lo que el asistente redacta con su propio tono.
- * @typedef {{ pregunta: string, saludo: string[], cuando: Cuando[], horaSugerida: string, eligeHora: string, apartado: string }} Guion
+ * Lo que cambia de un ejemplo a otro: lo que el asistente redacta con su propio tono, y las demas citas de ese dia.
+ * @typedef {{ pregunta: string, saludo: string[], cuando: Cuando[], horaSugerida: string, eligeHora: string,
+ *   apartado: string, otras: string[] }} Guion
  */
 /**
  * @typedef {{ clave: string, nombre: string, persona: string, negocio: string, asistente: string, profesional: string,
@@ -22,18 +26,25 @@ import { aLaHora, conMayuscula, listaDeHoras, pesos, rellenar } from './redaccio
 /**
  * Las frases que el motor manda tal cual, iguales en todos los ejemplos.
  * @typedef {Record<'horarios' | 'cobro' | 'confirmacion' | 'recordatorioDia' | 'recordatorioHora' | 'preguntaAsistencia'
- *   | 'graciasSi' | 'avisoNo' | 'registroSi' | 'registroNo', string>} Fijos
+ *   | 'registroSi' | 'registroNo', string>} Fijos
  */
 /** @typedef {{ giro: Giro, guion: Guion, fijos: Fijos, tu: Record<Paso, string>, rotulos: Record<string, string> }} Ejemplo */
-/** @typedef {{ de: 'cliente' | 'asistente' | 'salto' | 'cobro' | 'aprobado', texto: string, boton?: boolean }} Entrada */
-/** @typedef {'libre' | 'apartado' | 'garantizada' | 'asistio' | 'falto'} EstadoDeFila */
-/** @typedef {{ hora: string, estado: EstadoDeFila }} Fila */
+/** @typedef {'cliente' | 'profesional'} Telefono  de quien es el telefono que se ve */
 /**
- * Lo que ve la profesional: una linea, su agenda del dia y, si el asistente le escribe, su mensaje.
- * @typedef {{ resumen: string, abre: boolean, dia: string | null, filas: Fila[], mensaje: string | null }} LoQueVesTu
+ * Un mensaje nuevo del chat. "cliente" y "profesional" son la visitante, segun el acto; "salto" es un paso del tiempo.
+ * @typedef {{ de: 'cliente' | 'profesional' | 'asistente' | 'salto' | 'cobro' | 'aprobado', texto: string, boton?: boolean }} Entrada
  */
-/** @typedef {{ chat: Entrada[], tu: LoQueVesTu }} Escena */
-/** @typedef {{ evento: Evento, clase: 'enviar' | 'ficha' | 'pagar' | 'seguir' | 'si' | 'no', etiqueta?: string }} Accion */
+/** @typedef {'libre' | 'apartado' | 'garantizada' | 'asistio' | 'falto'} EstadoDeFila */
+/** @typedef {{ hora: string, estado: EstadoDeFila, texto: string }} Fila */
+/** Lo que ve la profesional: una linea que cuenta que pasa y su agenda de ese dia. @typedef {{ resumen: string, dia: string, filas: Fila[] }} LoQueVesTu */
+/** @typedef {{ telefono: Telefono, chat: Entrada[], tu: LoQueVesTu }} Escena */
+/**
+ * Algo que la visitante puede tocar. La sugerida es la que la demostracion elegiria sola: lleva la pista.
+ * @typedef {{ evento: Evento, clase: 'enviar' | 'ficha' | 'pagar' | 'seguir' | 'si' | 'no', etiqueta: string, sugerida: boolean }} Accion
+ */
+
+/** Los pasos del segundo acto: el telefono es el de la profesional. */
+const ACTO_DE_LA_PROFESIONAL = new Set(['asistencia', 'finSi', 'finNo', 'cierre']);
 
 /** @returns {Estado} */
 export function estadoInicial() {
@@ -47,6 +58,14 @@ export function estadoInicial() {
  */
 function opcionElegida(estado, guion) {
   return guion.cuando.find((opcion) => opcion.id === estado.cuando) ?? null;
+}
+
+/**
+ * @param {Paso} paso
+ * @returns {Telefono}
+ */
+export function telefonoDe(paso) {
+  return ACTO_DE_LA_PROFESIONAL.has(paso) ? 'profesional' : 'cliente';
 }
 
 /**
@@ -82,44 +101,6 @@ export function avanzar(estado, evento, guion) {
 }
 
 /**
- * Lo que la visitante puede hacer en este paso.
- * @param {Estado} estado
- * @param {Guion} guion
- * @returns {Accion[]}
- */
-export function accionesDe(estado, guion) {
-  switch (estado.paso) {
-    case 'reposo':
-      return [{ evento: { tipo: 'enviar' }, clase: 'enviar' }];
-    case 'precio':
-      return guion.cuando.map((opcion) => ({
-        evento: { tipo: 'cuando', id: opcion.id },
-        clase: 'ficha',
-        etiqueta: opcion.ficha,
-      }));
-    case 'horarios':
-      return (opcionElegida(estado, guion)?.horas ?? []).map((hora) => ({
-        evento: { tipo: 'hora', hora },
-        clase: 'ficha',
-        etiqueta: hora,
-      }));
-    case 'apartado':
-      return [{ evento: { tipo: 'pagar' }, clase: 'pagar' }];
-    case 'asistencia':
-      return [
-        { evento: { tipo: 'asistio', valor: true }, clase: 'si' },
-        { evento: { tipo: 'asistio', valor: false }, clase: 'no' },
-      ];
-    case 'finSi':
-    case 'finNo':
-    case 'cierre':
-      return [];
-    default:
-      return [{ evento: { tipo: 'seguir' }, clase: 'seguir' }];
-  }
-}
-
-/**
  * Lo que elige la demostracion cuando corre sola: siempre el camino feliz.
  * @param {Estado} estado
  * @param {Guion} guion
@@ -149,6 +130,55 @@ export function porDefecto(estado, guion) {
   }
 }
 
+/**
+ * Lo que la visitante puede tocar en este paso. En los dos finales y en el cierre no hay nada: la historia sigue sola.
+ * @param {Estado} estado
+ * @param {Ejemplo} ejemplo
+ * @returns {Accion[]}
+ */
+export function accionesDe(estado, ejemplo) {
+  const { guion, rotulos } = ejemplo;
+  const rotulo = (/** @type {string} */ clave) => rotulos[clave] ?? clave;
+  const sugerida = JSON.stringify(porDefecto(estado, guion));
+  /** @type {Omit<Accion, 'sugerida'>[]} */
+  let acciones = [];
+  switch (estado.paso) {
+    case 'reposo':
+      acciones = [{ evento: { tipo: 'enviar' }, clase: 'enviar', etiqueta: rotulo('enviar') }];
+      break;
+    case 'precio':
+      acciones = guion.cuando.map((opcion) => ({
+        evento: { tipo: 'cuando', id: opcion.id },
+        clase: 'ficha',
+        etiqueta: opcion.ficha,
+      }));
+      break;
+    case 'horarios':
+      acciones = (opcionElegida(estado, guion)?.horas ?? []).map((hora) => ({
+        evento: { tipo: 'hora', hora },
+        clase: 'ficha',
+        etiqueta: hora,
+      }));
+      break;
+    case 'apartado':
+      acciones = [{ evento: { tipo: 'pagar' }, clase: 'pagar', etiqueta: rotulo('pagar') }];
+      break;
+    case 'pagado':
+      acciones = [{ evento: { tipo: 'seguir' }, clase: 'seguir', etiqueta: rotulo('seguir') }];
+      break;
+    case 'recordatorios':
+      acciones = [{ evento: { tipo: 'seguir' }, clase: 'seguir', etiqueta: rotulo('seguirAlFinal') }];
+      break;
+    case 'asistencia':
+      acciones = [
+        { evento: { tipo: 'asistio', valor: true }, clase: 'si', etiqueta: rotulo('si') },
+        { evento: { tipo: 'asistio', valor: false }, clase: 'no', etiqueta: rotulo('no') },
+      ];
+      break;
+  }
+  return acciones.map((accion) => ({ ...accion, sugerida: JSON.stringify(accion.evento) === sugerida }));
+}
+
 /** @type {Partial<Record<Paso, EstadoDeFila>>} */
 const FILA_POR_PASO = {
   apartado: 'apartado',
@@ -159,11 +189,8 @@ const FILA_POR_PASO = {
   finNo: 'falto',
 };
 
-/** Los pasos en que lo que ve la profesional pasa al frente. */
-const ABRE = new Set(['pagado', 'asistencia', 'finSi', 'finNo']);
-
 /**
- * Lo que aparece al entrar a un paso: los mensajes nuevos del chat y lo que ve la profesional.
+ * Lo que aparece al entrar a un paso: de quien es el telefono, los mensajes nuevos y lo que ve la profesional.
  * @param {Estado} estado
  * @param {Ejemplo} ejemplo
  * @returns {Escena}
@@ -196,8 +223,6 @@ export function escenaDe(estado, ejemplo) {
 
   /** @type {Entrada[]} */
   let chat = [];
-  /** @type {string | null} */
-  let mensaje = null;
   switch (estado.paso) {
     case 'precio':
       chat = [dice('cliente', guion.pregunta), ...guion.saludo.map((texto) => dice('asistente', texto))];
@@ -220,55 +245,65 @@ export function escenaDe(estado, ejemplo) {
       ];
       break;
     case 'asistencia':
-      chat = [dice('salto', rotulo('alTerminar'))];
-      mensaje = llenar(fijos.preguntaAsistencia);
+      chat = [dice('asistente', fijos.preguntaAsistencia)];
       break;
     case 'finSi':
-      chat = [dice('asistente', fijos.graciasSi)];
-      mensaje = llenar(fijos.registroSi);
+      chat = [dice('profesional', rotulo('si')), dice('asistente', fijos.registroSi)];
       break;
     case 'finNo':
-      chat = [dice('asistente', fijos.avisoNo)];
-      mensaje = llenar(fijos.registroNo);
-      break;
-    case 'cierre':
-      // Lo ultimo que el asistente le dijo a la profesional se queda a la vista.
-      mensaje = llenar(estado.asistio ? fijos.registroSi : fijos.registroNo);
+      chat = [dice('profesional', rotulo('no')), dice('asistente', fijos.registroNo)];
       break;
   }
 
-  const porFila = estado.paso === 'cierre' ? (estado.asistio ? 'asistio' : 'falto') : FILA_POR_PASO[estado.paso];
+  // La agenda de la profesional. Antes de que la visitante elija dia se ve el primero que ofrece el guion.
+  const delDia = opcion ?? /** @type {Cuando} */ (guion.cuando[0]);
+  const enCierre = estado.paso === 'cierre';
+  const deLaCita = enCierre ? (estado.asistio ? 'asistio' : 'falto') : FILA_POR_PASO[estado.paso];
+  let otra = 0;
+  /** @type {Fila[]} */
+  const filas = delDia.horas.map((hora) => {
+    if (hora === estado.hora && deLaCita) {
+      const texto =
+        deLaCita === 'apartado'
+          ? rotulo('apartado')
+          : deLaCita === 'garantizada'
+            ? `${giro.servicioCorto} · ${giro.cliente}`
+            : `${rotulo(deLaCita)} · ${giro.cliente}`;
+      return { hora, estado: deLaCita, texto };
+    }
+    // En el cuadro final el dia entero queda lleno: cada cita, con su anticipo pagado.
+    const llena = enCierre ? guion.otras[otra++] : undefined;
+    return llena ? { hora, estado: 'garantizada', texto: llena } : { hora, estado: 'libre', texto: rotulo('libre') };
+  });
+
   return {
+    telefono: telefonoDe(estado.paso),
     chat,
-    tu: {
-      resumen: llenar(tu[estado.paso]),
-      abre: ABRE.has(estado.paso),
-      dia: opcion?.dia ?? null,
-      filas: (opcion?.horas ?? []).map((hora) => ({
-        hora,
-        estado: hora === estado.hora && porFila ? porFila : 'libre',
-      })),
-      mensaje,
-    },
+    tu: { resumen: llenar(tu[estado.paso]), dia: delDia.dia, filas },
   };
 }
 
 /**
- * Como se presenta un ejemplo en el telefono: las iniciales del negocio, quien atiende y el papel de la visitante.
+ * Como se presenta cada telefono: las iniciales, el nombre, quien atiende y la acotacion que le dice a la visitante
+ * que papel le toca.
  * @param {Giro} giro
  * @param {Record<string, string>} rotulos
- * @returns {{ iniciales: string, atiende: string, papel: string }}
+ * @param {Telefono} telefono
+ * @returns {{ iniciales: string, nombre: string, atiende: string, papel: string }}
  */
-export function presentacionDe(giro, rotulos) {
+export function presentacionDe(giro, rotulos, telefono) {
   const datos = { asistente: giro.asistente, cliente: giro.cliente, negocio: giro.negocio };
+  const deLaProfesional = telefono === 'profesional';
+  const nombre = deLaProfesional ? giro.asistente : giro.negocio;
   return {
-    iniciales: giro.negocio
+    iniciales: nombre
       .split(/\s+/)
       .slice(0, 2)
       .map((palabra) => palabra.charAt(0).toUpperCase())
       .join(''),
-    atiende: rellenar(rotulos.atiende ?? '', datos),
-    papel: rellenar(rotulos.papel ?? '', datos),
+    nombre,
+    atiende: rellenar(rotulos[deLaProfesional ? 'atiendeTu' : 'atiende'] ?? '', datos),
+    papel: rellenar(rotulos[deLaProfesional ? 'papelTu' : 'papel'] ?? '', datos),
   };
 }
 
@@ -280,25 +315,26 @@ export function presentacionDe(giro, rotulos) {
  */
 export function conversacionDeEjemplo(ejemplo) {
   const { giro, guion, rotulos } = ejemplo;
-  const aLaProfesional = `${giro.asistente}, a ${giro.profesional}`;
   /** @type {{ quien: string, texto: string }[]} */
   const lineas = [];
+  /** @type {Telefono} */
+  let telefono = 'cliente';
   let estado = estadoInicial();
   for (;;) {
     const escena = escenaDe(estado, ejemplo);
-    if (estado.paso === 'finSi') {
-      lineas.push({ quien: giro.profesional, texto: rotulos.si ?? '' });
-      if (escena.tu.mensaje) lineas.push({ quien: aLaProfesional, texto: escena.tu.mensaje });
+    if (escena.telefono !== telefono) {
+      telefono = escena.telefono;
+      lineas.push({ quien: '', texto: presentacionDe(giro, rotulos, telefono).papel });
     }
+    const asistente = telefono === 'profesional' ? `${giro.asistente}, a ${giro.profesional}` : giro.asistente;
     for (const entrada of escena.chat) {
       if (entrada.de === 'cliente') lineas.push({ quien: giro.cliente, texto: entrada.texto });
-      else if (entrada.de === 'asistente') lineas.push({ quien: giro.asistente, texto: entrada.texto });
+      else if (entrada.de === 'profesional') lineas.push({ quien: giro.profesional, texto: entrada.texto });
+      else if (entrada.de === 'asistente') lineas.push({ quien: asistente, texto: entrada.texto });
       else if (entrada.de === 'cobro')
-        lineas.push({ quien: giro.asistente, texto: `${entrada.texto}: ${pesos(giro.anticipo)}` });
+        lineas.push({ quien: asistente, texto: `${entrada.texto}: ${pesos(giro.anticipo)}` });
       else lineas.push({ quien: '', texto: entrada.texto });
     }
-    if (estado.paso === 'asistencia' && escena.tu.mensaje)
-      lineas.push({ quien: aLaProfesional, texto: escena.tu.mensaje });
     const evento = porDefecto(estado, guion);
     if (!evento) return lineas;
     estado = avanzar(estado, evento, guion);
