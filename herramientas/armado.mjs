@@ -6,6 +6,7 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { conversacionDeEjemplo, presentacionDe } from '../fuente/js/demo.js';
 import { revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
 import { planesPublicos } from './planes.mjs';
 import { pintar } from './plantilla.mjs';
@@ -66,6 +67,57 @@ async function leerDatos(carpeta) {
 }
 
 /**
+ * Los estilos. Los que nombra estilos/orden.json se unen, en ese orden, en una sola hoja (pagina.css): un solo viaje
+ * para el telefono. Cualquier otra hoja se copia aparte (por ejemplo la que solo se carga sin JavaScript).
+ * @param {string} carpeta
+ * @returns {Promise<[string, Buffer][]>}
+ */
+async function leerEstilos(carpeta) {
+  /** @type {string[]} */
+  const orden = JSON.parse(await readFile(path.join(carpeta, 'orden.json'), 'utf8'));
+  /** @type {Buffer[]} */
+  const unidas = [];
+  for (const nombre of orden) unidas.push(await readFile(path.join(carpeta, nombre)));
+  /** @type {[string, Buffer][]} */
+  const salida = [['estilos/pagina.css', Buffer.concat(unidas)]];
+  for (const ruta of await listar(carpeta)) {
+    if (ruta === 'orden.json' || orden.includes(ruta)) continue;
+    salida.push([`estilos/${ruta}`, await readFile(path.join(carpeta, ruta))]);
+  }
+  return salida;
+}
+
+/**
+ * Los ejemplos de la demostracion: cada giro con su guion. Se detiene si a un giro le falta el guion o si alguna
+ * frase deja un hueco sin llenar.
+ * @param {Record<string, unknown>} datos
+ * @param {string} alta  a donde lleva "Empieza ahora"
+ */
+function prepararDemo(datos, alta) {
+  const giros = /** @type {import('../fuente/js/demo.js').Giro[]} */ (datos.giros);
+  const guiones = /** @type {Record<string, import('../fuente/js/demo.js').Guion>} */ (datos.guiones);
+  const { fijos, tu, rotulos } = /** @type {Omit<import('../fuente/js/demo.js').Ejemplo, 'giro' | 'guion'>} */ (
+    datos.demo
+  );
+  const ejemplos = giros.map((giro) => {
+    const guion = guiones[giro.clave];
+    if (!guion) throw new Error(`Demostracion: al ejemplo "${giro.clave}" le falta su guion`);
+    return { giro, guion };
+  });
+  const conversaciones = ejemplos.map((ejemplo) => conversacionDeEjemplo({ ...ejemplo, fijos, tu, rotulos }));
+  const primero = ejemplos[0];
+  if (!primero) throw new Error('Demostracion: no hay ningun ejemplo');
+  return {
+    // Los datos viajan dentro de la pagina como JSON (no es un script que se ejecute). El "<" se escribe por su
+    // codigo para que ningun texto pueda cerrar la etiqueta.
+    json: JSON.stringify({ ejemplos, fijos, tu, rotulos, alta }).replace(/</g, '\\u003c'),
+    // Lo que la pagina trae ya escrito antes de que cargue el JavaScript: el primer ejemplo.
+    ejemplo: { ...primero.giro, pregunta: primero.guion.pregunta, ...presentacionDe(primero.giro, rotulos) },
+    conversacion: conversaciones[0] ?? [],
+  };
+}
+
+/**
  * @param {object} opciones
  * @param {string} opciones.raiz  la carpeta del repo (la que contiene fuente/)
  * @param {Destino} opciones.destino
@@ -81,18 +133,16 @@ export async function armarSitio({ raiz, destino }) {
   /** @type {string[]} */
   const avisos = [];
 
-  // 1. Lo que se copia tal cual. Estilos, scripts y recursos van dentro de una carpeta con la huella de su contenido:
-  //    si algo cambia, cambia la direccion, y ningun telefono se queda con una hoja de estilos vieja.
-  const huella = createHash('sha256');
-  /** @type {[string, Buffer][]} */
-  const activos = [];
-  for (const carpeta of ['estilos', 'js', 'recursos']) {
+  // 1. Estilos, scripts y recursos van dentro de una carpeta con la huella de su contenido: si algo cambia, cambia la
+  //    direccion, y ningun telefono se queda con una hoja de estilos vieja.
+  const activos = await leerEstilos(path.join(fuente, 'estilos'));
+  for (const carpeta of ['js', 'recursos']) {
     for (const ruta of await listar(path.join(fuente, carpeta))) {
-      const contenido = await readFile(path.join(fuente, carpeta, ruta));
-      huella.update(`${carpeta}/${ruta}\0`).update(contenido);
-      activos.push([`${carpeta}/${ruta}`, contenido]);
+      activos.push([`${carpeta}/${ruta}`, await readFile(path.join(fuente, carpeta, ruta))]);
     }
   }
+  const huella = createHash('sha256');
+  for (const [ruta, contenido] of activos) huella.update(`${ruta}\0`).update(contenido);
   const carpetaActivos = `a/${huella.digest('hex').slice(0, 10)}/`;
   for (const [ruta, contenido] of activos) archivos.set(carpetaActivos + ruta, contenido);
   for (const ruta of await listar(path.join(fuente, 'raiz'))) {
@@ -102,34 +152,43 @@ export async function armarSitio({ raiz, destino }) {
   // 2. Los datos.
   const datos = await leerDatos(path.join(fuente, 'datos'));
   const planes = planesPublicos(datos.planes);
-  const preciosDePrueba = planes.dePrueba;
-  if (preciosDePrueba)
+  const sitio = /** @type {Record<string, unknown>} */ (datos.sitio);
+  const demo = prepararDemo(datos, String(sitio.alta));
+  if (planes.dePrueba) {
     avisos.push('Los planes traen PRECIOS DE PRUEBA: esta armada no se puede publicar en el dominio.');
+  }
+  if (sitio.contactoProbado !== true) {
+    avisos.push('El canal de contacto todavia no esta probado: esta armada no se puede publicar en el dominio.');
+  }
   const contexto = {
     ...datos,
     planes,
-    armado: { previa: destino === 'previa', base, origen, activos: base + carpetaActivos, preciosDePrueba },
+    ejemplo: demo.ejemplo,
+    conversacion: demo.conversacion,
+    armado: {
+      previa: destino === 'previa',
+      base,
+      origen,
+      activos: base + carpetaActivos,
+      preciosDePrueba: planes.dePrueba,
+      datosDemo: demo.json,
+    },
   };
 
-  // 3. Las paginas.
+  // 3. Las paginas. Las de plantillas/previa/ solo existen en la previa (material para revisar, no para el publico).
   const carpetaPlantillas = path.join(fuente, 'plantillas');
   /** @type {Record<string, string>} */
   const parciales = {};
-  /** @type {string[]} */
+  /** @type {[string, string][]} */
   const paginas = [];
   for (const ruta of await listar(carpetaPlantillas)) {
     if (!ruta.endsWith('.html')) continue;
-    if (ruta.startsWith('parciales/')) {
-      parciales[ruta.slice('parciales/'.length, -'.html'.length)] = await readFile(
-        path.join(carpetaPlantillas, ruta),
-        'utf8',
-      );
-    } else {
-      paginas.push(ruta);
-    }
-  }
-  for (const ruta of paginas) {
     const plantilla = await readFile(path.join(carpetaPlantillas, ruta), 'utf8');
+    if (ruta.startsWith('parciales/')) parciales[ruta.slice('parciales/'.length, -'.html'.length)] = plantilla;
+    else if (!ruta.startsWith('previa/')) paginas.push([ruta, plantilla]);
+    else if (destino === 'previa') paginas.push([ruta.slice('previa/'.length), plantilla]);
+  }
+  for (const [ruta, plantilla] of paginas) {
     archivos.set(ruta, Buffer.from(pintar(plantilla, contexto, parciales), 'utf8'));
   }
 
@@ -139,7 +198,7 @@ export async function armarSitio({ raiz, destino }) {
   if (destino === 'previa') archivos.set('robots.txt', Buffer.from('User-agent: *\nDisallow: /\n', 'utf8'));
 
   // 5. Comprobaciones sobre lo armado.
-  for (const ruta of paginas) {
+  for (const [ruta] of paginas) {
     const html = /** @type {Buffer} */ (archivos.get(ruta)).toString('utf8');
     problemas.push(...revisarGuiones(ruta, html));
     problemas.push(...revisarEnlacesInternos(ruta, html, base, (r) => archivos.has(r)));

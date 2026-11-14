@@ -1,0 +1,26 @@
+{
+  "pregunta": "Hola, ¿cuánto cuesta el gelish?",
+  "saludo": [
+    "¡Hola! Soy {asistente}, la asistente virtual de {negocio} 💅 El gelish semipermanente cuesta {precio} y dura de 2 a 3 semanas. Si te animas, te busco un horario.",
+    "Si en algún momento prefieres hablar con la dueña, escribe PERSONA y le aviso."
+  ],
+  "cuando": [
+    {
+      "id": "jueves",
+      "ficha": "El jueves",
+      "dice": "Sí, ¿tienes lugar el jueves?",
+      "dia": "jueves",
+      "horas": ["10:00 am", "12:30 pm", "4:00 pm", "5:00 pm"]
+    },
+    {
+      "id": "sabado",
+      "ficha": "El sábado",
+      "dice": "Sí, ¿tienes lugar el sábado?",
+      "dia": "sábado",
+      "horas": ["10:00 am", "12:00 pm", "3:00 pm", "5:00 pm"]
+    }
+  ],
+  "horaSugerida": "5:00 pm",
+  "eligeHora": "{ALaHora}, por favor.",
+  "apartado": "¡Listo! Te aparté el lugar para el {dia} {aLaHora}. Para confirmar tu cita se paga el anticipo de {anticipo} con este link; el lugar te lo guardo unos minutos. En cuanto pagues, te llega la confirmación por aquí mismo."
+}

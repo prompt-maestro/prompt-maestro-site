@@ -1,0 +1,16 @@
+[
+  {
+    "clave": "unas",
+    "nombre": "Uñas",
+    "persona": "clienta",
+    "negocio": "Studio Bella",
+    "asistente": "Marifer",
+    "profesional": "Bella",
+    "cliente": "Ana",
+    "servicio": "Gelish semipermanente",
+    "precio": 350,
+    "anticipo": 150,
+    "direccion": "Av. Chapultepec 234, local 5, colonia Americana, Guadalajara",
+    "servicioCorto": "Gelish"
+  }
+]

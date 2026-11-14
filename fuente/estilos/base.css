@@ -8,6 +8,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scroll-padding-top: 80px;
 }
 
 body {
@@ -19,41 +20,95 @@ body {
   font-size: var(--t-texto);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
 }
 
 h1,
 h2,
 h3,
-p {
+p,
+ol,
+ul {
   margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
 }
 
 em {
   font-style: italic;
 }
 
-a {
-  color: var(--sello);
-  text-underline-offset: 0.18em;
+button {
+  font: inherit;
+  color: inherit;
+}
+
+svg {
+  display: block;
 }
 
 :focus-visible {
   outline: 3px solid var(--sello);
   outline-offset: 3px;
-  border-radius: 4px;
+  border-radius: 6px;
+}
+
+/* Solo para lectores de pantalla. */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* El enlace para saltar la barra: aparece al llegar con el teclado. */
+.salto {
+  position: absolute;
+  top: var(--e-2);
+  left: var(--e-2);
+  z-index: 20;
+  padding: var(--e-2) var(--e-4);
+  border-radius: var(--r-control);
+  background: var(--tinta);
+  color: var(--papel);
+  transform: translateY(-200%);
+}
+
+.salto:focus-visible {
+  transform: none;
+}
+
+/* El renglon chico en mayusculas que va arriba de un titulo. */
+.sobre {
+  color: var(--tinta-2);
+  font-size: var(--t-nota);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .boton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
+  min-height: 52px;
   padding: 0 var(--e-6);
+  border: 0;
   border-radius: var(--r-control);
   background: var(--sello);
   color: var(--superficie);
   font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .boton:hover {
@@ -62,7 +117,42 @@ a {
 
 .boton:active {
   background: var(--sello-2);
-  transform: translateY(1px);
+  transform: scale(0.98);
+}
+
+.boton[disabled] {
+  background: var(--papel-2);
+  color: var(--tinta-3);
+  cursor: default;
+  transform: none;
+}
+
+.boton--chico {
+  min-height: 44px;
+  white-space: nowrap;
+  padding: 0 var(--e-4);
+  font-size: 1rem;
+}
+
+.enlace {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sello);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.enlace:hover {
+  color: var(--sello-2);
+  text-decoration-thickness: 2px;
 }
 
 /* La cinta que solo lleva la previa: avisa que esto todavia no es publico. */
@@ -75,7 +165,12 @@ a {
   text-align: center;
 }
 
-/* Pagina de una sola idea: la de obra en curso y la de no encontrada. */
+/* El filtro de tinta del sello vive en un svg sin tamano: no ocupa lugar. */
+.tinta {
+  position: absolute;
+}
+
+/* Pagina de una sola idea: la de no encontrada. */
 .obra {
   display: grid;
   align-content: center;
@@ -117,6 +212,12 @@ a {
 /* El movimiento se agrega solo a quien no pidio reducirlo: asi nunca hay que apagarlo despues. */
 @media (prefers-reduced-motion: no-preference) {
   .boton {
-    transition: background-color var(--d-toque) var(--suave);
+    transition:
+      background-color var(--d-toque) var(--suave),
+      transform var(--d-toque) var(--suave);
+  }
+
+  .salto {
+    transition: transform var(--d-toque) var(--suave);
   }
 }

@@ -2,5 +2,7 @@
   "nombre": "Prompt Maestro",
   "producto": "Citas Garantizadas",
   "alta": "https://alta.prompt-maestro.com/",
+  "contacto": "mailto:hola@prompt-maestro.com?subject=Quiero%20que%20me%20acompa%C3%B1en%20con%20Citas%20Garantizadas",
+  "contactoProbado": false,
   "anio": 2026
 }

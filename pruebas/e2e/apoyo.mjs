@@ -28,6 +28,16 @@ export function vigilar(pagina) {
  * @param {import('@playwright/test').Page} pagina
  */
 export async function sinFaltasDeAccesibilidad(pagina) {
+  // A media entrada un texto todavia es translucido y su contraste no es el de verdad: se mide ya asentado.
+  // Las animaciones que nunca terminan (la pista que late) no cambian el color del texto y no se esperan.
+  await pagina.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animacion) => animacion.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY)
+        .map((animacion) => animacion.finished.catch(() => undefined)),
+    ),
+  );
   const resultado = await new AxeBuilder({ page: pagina })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
     .analyze();

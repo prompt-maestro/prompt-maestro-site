@@ -84,7 +84,12 @@ test('toda pagina lleva la politica de contenido y el idioma', async () => {
     assert.match(html, /<html lang="es-MX">/);
     assert.match(html, /http-equiv="Content-Security-Policy" content="default-src 'self';[^"]*form-action 'none'"/);
     assert.doesNotMatch(html, /\sstyle="/, 'la politica de contenido bloquea los estilos en linea');
-    assert.doesNotMatch(html, /<script(?![^>]*\ssrc=)/, 'la politica de contenido bloquea los scripts en linea');
+    // Un bloque de datos (application/json) no se ejecuta: es lo unico que puede ir sin src.
+    assert.doesNotMatch(
+      html,
+      /<script(?![^>]*\s(?:src=|type="application\/json"))/,
+      'la politica de contenido bloquea los scripts en linea',
+    );
     assert.equal(html.match(/<h1\b/g)?.length, 1, 'un solo h1 por pagina');
   }
 });
