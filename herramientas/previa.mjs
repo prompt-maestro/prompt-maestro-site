@@ -3,7 +3,7 @@
 // Arma el sitio para la previa (noindex, cinta de PREVIA, carpeta /pagina-previa/) y lo deja como UN solo commit en la
 // rama main del repo prompt-maestro/pagina-previa, que GitHub Pages sirve en https://prompt-maestro.github.io/pagina-previa/
 // Cada subida reemplaza a la anterior: ese repo es solo un escaparate para revisar, su historia no importa.
-// Nunca toca prompt-maestro.com: eso es herramientas/publicar.mjs, con el si de Jose.
+// Nunca toca prompt-maestro.com: eso es herramientas/publicar.mjs, con el si del dueno.
 import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';

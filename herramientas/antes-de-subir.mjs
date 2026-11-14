@@ -1,6 +1,6 @@
 // @ts-check
 // Revision antes de cada push (la llama .githooks/pre-push). Bloquea el push si:
-//   1. va a la rama main: esa rama es la pagina en vivo y solo la mueve herramientas/publicar.mjs, con el si de Jose;
+//   1. va a la rama main: esa rama es la pagina en vivo y solo la mueve herramientas/publicar.mjs, con el si del dueno;
 //   2. algun commit lleva un correo que no es el privado de GitHub (el repo es publico);
 //   3. algun archivo que se sube trae algo con forma de llave o token.
 // Se activa una vez por copia del repo:  git config core.hooksPath .githooks

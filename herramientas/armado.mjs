@@ -68,11 +68,12 @@ async function leerDatos(carpeta) {
 
 /**
  * Los estilos. Los que nombra estilos/orden.json se unen, en ese orden, en una sola hoja (pagina.css): un solo viaje
- * para el telefono. Cualquier otra hoja se copia aparte (por ejemplo la que solo se carga sin JavaScript).
+ * para el telefono. Cualquier otra hoja se copia aparte, y las de estilos/previa/ solo viajan a la previa.
  * @param {string} carpeta
+ * @param {Destino} destino
  * @returns {Promise<[string, Buffer][]>}
  */
-async function leerEstilos(carpeta) {
+async function leerEstilos(carpeta, destino) {
   /** @type {string[]} */
   const orden = JSON.parse(await readFile(path.join(carpeta, 'orden.json'), 'utf8'));
   /** @type {Buffer[]} */
@@ -82,6 +83,7 @@ async function leerEstilos(carpeta) {
   const salida = [['estilos/pagina.css', Buffer.concat(unidas)]];
   for (const ruta of await listar(carpeta)) {
     if (ruta === 'orden.json' || orden.includes(ruta)) continue;
+    if (ruta.startsWith('previa/') && destino !== 'previa') continue;
     salida.push([`estilos/${ruta}`, await readFile(path.join(carpeta, ruta))]);
   }
   return salida;
@@ -135,7 +137,7 @@ export async function armarSitio({ raiz, destino }) {
 
   // 1. Estilos, scripts y recursos van dentro de una carpeta con la huella de su contenido: si algo cambia, cambia la
   //    direccion, y ningun telefono se queda con una hoja de estilos vieja.
-  const activos = await leerEstilos(path.join(fuente, 'estilos'));
+  const activos = await leerEstilos(path.join(fuente, 'estilos'), destino);
   for (const carpeta of ['js', 'recursos']) {
     for (const ruta of await listar(path.join(fuente, carpeta))) {
       activos.push([`${carpeta}/${ruta}`, await readFile(path.join(fuente, carpeta, ruta))]);

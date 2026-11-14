@@ -1,5 +1,5 @@
-# Revision de cada cambio de la rama fuente: formato y lint, tipos, pruebas, armado y pruebas de punta a punta.
-# Este flujo NO publica nada: prompt-maestro.com solo cambia con herramientas/publicar.mjs y el si de Jose.
+# Revision de cada cambio de la rama fuente: formato y lint, tipos, pruebas, armado, pruebas de punta a punta y velocidad.
+# Este flujo NO publica nada: prompt-maestro.com solo cambia con herramientas/publicar.mjs y el si del dueno.
 name: Revision de la fuente
 
 on:
@@ -41,3 +41,5 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Pruebas de punta a punta y accesibilidad
         run: npm run e2e
+      - name: Velocidad en celular (Lighthouse con sus presupuestos)
+        run: npm run velocidad

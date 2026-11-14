@@ -16,7 +16,8 @@
     "tipos": "tsc --noEmit -p tsconfig.json",
     "pruebas": "node --test \"pruebas/unitarias/**/*.test.mjs\"",
     "e2e": "playwright test",
-    "puerta": "npm run revisar && npm run tipos && npm run pruebas && node herramientas/armar.mjs && node herramientas/armar.mjs --comprobar && node herramientas/armar.mjs --previa && node herramientas/armar.mjs --previa --comprobar && npm run e2e"
+    "puerta": "npm run revisar && npm run tipos && npm run pruebas && node herramientas/armar.mjs && node herramientas/armar.mjs --comprobar && node herramientas/armar.mjs --previa && node herramientas/armar.mjs --previa --comprobar && npm run e2e && npm run velocidad",
+    "velocidad": "node herramientas/velocidad.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
@@ -25,6 +26,7 @@
     "@fontsource-variable/playfair-display": "5.3.0",
     "@playwright/test": "1.64.1",
     "@types/node": "24.19.2",
+    "lighthouse": "13.6.0",
     "playwright-core": "1.64.1",
     "typescript": "7.0.2"
   }

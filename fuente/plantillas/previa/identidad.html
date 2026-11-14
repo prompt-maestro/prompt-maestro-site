@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+{{> cabeza}}<link rel="stylesheet" href="{{armado.activos}}estilos/previa/identidad.css">
+<title>Identidad de Prompt Maestro: logotipo y sello</title>
+</head>
+<body>
+{{> cinta-previa}}{{> tinta}}<main class="identidad">
+  <p class="sobre">Material para revisar</p>
+  <h1 class="identidad__titulo">Tu logotipo y <em>tu sello.</em></h1>
+  <p class="identidad__texto">Tres opciones de logotipo. La primera es la que recomiendo y la que ya está puesta en la página. Dime cuál te gusta: A, B o C.</p>
+  <p><a class="enlace" href="{{armado.base}}">Ver la página con la opción A</a></p>
+
+  <section class="opcion" aria-labelledby="opcion-a">
+    <h2 class="opcion__titulo" id="opcion-a">A. El sello del maestro <span class="opcion__nota">Recomendada</span></h2>
+    <p class="opcion__texto">Un sello redondo con la M de Maestro. Es el mismo gesto de toda la página: lo que lleva tu sello queda garantizado.</p>
+    <div class="muestras">
+      <p class="muestra"><span class="marca">{{> marca}}<span class="marca__nombre">{{sitio.nombre}}</span></span></p>
+      <p class="muestra muestra--oscura"><span class="marca">{{> marca}}<span class="marca__nombre">{{sitio.nombre}}</span></span></p>
+      <p class="muestra muestra--iconos"><span class="icono icono--grande">{{> marca-llena}}</span><span class="icono icono--medio">{{> marca-llena}}</span><span class="icono icono--chico">{{> marca-llena}}</span></p>
+    </div>
+  </section>
+
+  <section class="opcion" aria-labelledby="opcion-b">
+    <h2 class="opcion__titulo" id="opcion-b">B. Monograma PM</h2>
+    <p class="opcion__texto">La evolución del ícono azul que ya tienes hoy.</p>
+    <div class="muestras">
+      <p class="muestra"><span class="marca">{{> marca-b}}<span class="marca__nombre">{{sitio.nombre}}</span></span></p>
+      <p class="muestra muestra--oscura"><span class="marca">{{> marca-b}}<span class="marca__nombre">{{sitio.nombre}}</span></span></p>
+      <p class="muestra muestra--iconos"><span class="icono icono--grande">{{> marca-b}}</span><span class="icono icono--medio">{{> marca-b}}</span><span class="icono icono--chico">{{> marca-b}}</span></p>
+    </div>
+  </section>
+
+  <section class="opcion" aria-labelledby="opcion-c">
+    <h2 class="opcion__titulo" id="opcion-c">C. Solo la palabra</h2>
+    <p class="opcion__texto">El nombre y una gota de tinta, sin ícono aparte.</p>
+    <div class="muestras">
+      <p class="muestra"><span class="marca marca--gota"><span class="marca__nombre">{{sitio.nombre}}</span></span></p>
+      <p class="muestra muestra--oscura"><span class="marca marca--gota"><span class="marca__nombre">{{sitio.nombre}}</span></span></p>
+      <p class="muestra muestra--iconos"><span class="icono icono--grande icono--gota"></span><span class="icono icono--medio icono--gota"></span><span class="icono icono--chico icono--gota"></span></p>
+    </div>
+  </section>
+
+  <section class="opcion" aria-labelledby="el-sello">
+    <h2 class="opcion__titulo" id="el-sello">El sello de Garantizada</h2>
+    <p class="opcion__texto">Cae sobre la cita cuando el anticipo ya está pagado. En toda la página, la tinta azul se reserva para lo que ya está pagado o garantizado.</p>
+    <div class="muestras">
+      <p class="muestra muestra--sello">{{> sello}}</p>
+    </div>
+  </section>
+
+  <section class="opcion" aria-labelledby="la-paleta">
+    <h2 class="opcion__titulo" id="la-paleta">Colores y letras</h2>
+    <p class="opcion__texto">Los mismos de tu página de alta, para que al tocar “Empieza ahora” se sienta el mismo lugar.</p>
+    <ul class="colores">
+      <li class="color color--papel">Papel</li>
+      <li class="color color--tinta">Tinta</li>
+      <li class="color color--sello">Azul del sello</li>
+    </ul>
+    <p class="letra letra--titulo">Se acabaron los <em>plantones.</em></p>
+    <p class="letra letra--texto">Playfair Display para los títulos y Outfit para todo lo demás.</p>
+  </section>
+</main>
+</body>
+</html>
