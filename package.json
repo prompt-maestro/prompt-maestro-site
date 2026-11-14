@@ -1,0 +1,29 @@
+{
+  "name": "prompt-maestro-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fuente de prompt-maestro.com: sitio estatico sin framework. Lo publicado no lleva dependencias.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "armar": "node herramientas/armar.mjs",
+    "armar:previa": "node herramientas/armar.mjs --previa",
+    "servir": "node herramientas/servir.mjs",
+    "formato": "biome check --write .",
+    "revisar": "biome ci .",
+    "tipos": "tsc --noEmit -p tsconfig.json",
+    "pruebas": "node --test \"pruebas/unitarias/**/*.test.mjs\"",
+    "e2e": "playwright test",
+    "puerta": "npm run revisar && npm run tipos && npm run pruebas && node herramientas/armar.mjs && node herramientas/armar.mjs --comprobar && node herramientas/armar.mjs --previa && node herramientas/armar.mjs --previa --comprobar && npm run e2e"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@biomejs/biome": "2.6.4",
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.19.2",
+    "playwright-core": "1.64.1",
+    "typescript": "7.0.2"
+  }
+}

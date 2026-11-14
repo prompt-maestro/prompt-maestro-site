@@ -1,0 +1,43 @@
+{
+  "moneda": "mxn",
+  "dePrueba": true,
+  "planes": [
+    {
+      "clave": "bronce",
+      "nombre": "Bronce",
+      "mensual": 990,
+      "anual": 9900,
+      "instalacion": 2500,
+      "destacado": false,
+      "incluye": [
+        "Asistente de WhatsApp que agenda solo con anticipo pagado",
+        "Recordatorios y seguimiento de asistencia",
+        "10 cambios al mes por WhatsApp"
+      ]
+    },
+    {
+      "clave": "plata",
+      "nombre": "Plata",
+      "mensual": 1490,
+      "anual": 14900,
+      "instalacion": 2500,
+      "destacado": true,
+      "incluye": [
+        "Todo lo de Bronce",
+        "30 cambios al mes por WhatsApp"
+      ]
+    },
+    {
+      "clave": "oro",
+      "nombre": "Oro",
+      "mensual": 2490,
+      "anual": 24900,
+      "instalacion": 2500,
+      "destacado": false,
+      "incluye": [
+        "Todo lo de Plata",
+        "Cambios sin tope por WhatsApp"
+      ]
+    }
+  ]
+}

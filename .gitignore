@@ -1,0 +1,26 @@
+# Lo armado nunca se confirma en la rama fuente: se publica con herramientas/previa.mjs o publicar.mjs
+dist/
+dist-previa/
+
+# Dependencias y salidas de las pruebas
+node_modules/
+test-results/
+playwright-report/
+.lighthouse/
+*.log
+
+# Originales de imagen y video (pesados): viven fuera del repo, aqui solo entra lo ya optimizado
+originales/
+
+# Nunca un secreto en un repo publico
+.env
+.env.*
+*.pem
+*.key
+
+# Del sistema y del editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/

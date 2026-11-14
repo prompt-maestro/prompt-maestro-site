@@ -1,0 +1,122 @@
+/* Base: lo que comparten todas las paginas. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--f-texto);
+  font-size: var(--t-texto);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+em {
+  font-style: italic;
+}
+
+a {
+  color: var(--sello);
+  text-underline-offset: 0.18em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sello);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 var(--e-6);
+  border-radius: var(--r-control);
+  background: var(--sello);
+  color: var(--superficie);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.boton:hover {
+  background: var(--sello-2);
+}
+
+.boton:active {
+  background: var(--sello-2);
+  transform: translateY(1px);
+}
+
+/* La cinta que solo lleva la previa: avisa que esto todavia no es publico. */
+.cinta-previa {
+  padding: var(--e-2) var(--e-4);
+  background: var(--tinta);
+  color: var(--papel);
+  font-size: var(--t-nota);
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Pagina de una sola idea: la de obra en curso y la de no encontrada. */
+.obra {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--e-6);
+  max-width: 44rem;
+  min-height: 80svh;
+  margin: 0 auto;
+  padding: var(--e-16) var(--e-6);
+}
+
+.obra__firma {
+  color: var(--tinta-3);
+  font-size: var(--t-nota);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.obra__titulo {
+  font-family: var(--f-titulo);
+  font-size: var(--t-heroe);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.obra__titulo em {
+  color: var(--sello);
+  font-weight: 500;
+}
+
+.obra__texto {
+  max-width: 34rem;
+  color: var(--tinta-2);
+}
+
+/* El movimiento se agrega solo a quien no pidio reducirlo: asi nunca hay que apagarlo despues. */
+@media (prefers-reduced-motion: no-preference) {
+  .boton {
+    transition: background-color var(--d-toque) var(--suave);
+  }
+}

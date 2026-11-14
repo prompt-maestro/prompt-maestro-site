@@ -1,0 +1,43 @@
+# Revision de cada cambio de la rama fuente: formato y lint, tipos, pruebas, armado y pruebas de punta a punta.
+# Este flujo NO publica nada: prompt-maestro.com solo cambia con herramientas/publicar.mjs y el si de Jose.
+name: Revision de la fuente
+
+on:
+  push:
+    branches: [fuente]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: revision-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  puerta:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.13.1"
+          cache: npm
+      - name: Dependencias (versiones exactas)
+        run: npm ci
+      - name: Formato y lint
+        run: npm run revisar
+      - name: Tipos
+        run: npm run tipos
+      - name: Pruebas unitarias
+        run: npm run pruebas
+      - name: Armar la pagina y comprobar que sale identica
+        run: node herramientas/armar.mjs && node herramientas/armar.mjs --comprobar
+      - name: Armar la previa y comprobar que sale identica
+        run: node herramientas/armar.mjs --previa && node herramientas/armar.mjs --previa --comprobar
+      - name: Navegador de las pruebas
+        run: npx playwright install --with-deps chromium
+      - name: Pruebas de punta a punta y accesibilidad
+        run: npm run e2e

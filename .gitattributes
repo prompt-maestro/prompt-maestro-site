@@ -1,0 +1,9 @@
+# Saltos de linea iguales en la laptop (Windows) y en GitHub Actions (Linux): lo armado sale identico en los dos
+* text=auto eol=lf
+*.woff2 binary
+*.avif binary
+*.webp binary
+*.png binary
+*.jpg binary
+*.mp4 binary
+*.webm binary
