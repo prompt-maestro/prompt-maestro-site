@@ -47,15 +47,20 @@ export function montarCalculadora(raiz) {
     const deEjemplo = escrito.citas === null && escrito.precio === null;
     const numeros = deEjemplo ? ejemplo : escrito;
     const cuenta = hacerLaCuenta({ ...numeros, mensualidad: plan.mensual });
-    citas.removeAttribute('aria-invalid');
-    precio.removeAttribute('aria-invalid');
+    for (const casilla of [citas, precio]) {
+      casilla.removeAttribute('aria-invalid');
+      casilla.removeAttribute('aria-describedby');
+    }
     raiz.dataset.estado = deEjemplo && cuenta.estado === 'lista' ? 'ejemplo' : cuenta.estado;
     if (cuenta.estado === 'vacia') {
       salida.textContent = textos.vacia ?? '';
       return;
     }
     if (cuenta.estado === 'fuera') {
-      (cuenta.casilla === 'citas' ? citas : precio).setAttribute('aria-invalid', 'true');
+      const casilla = cuenta.casilla === 'citas' ? citas : precio;
+      casilla.setAttribute('aria-invalid', 'true');
+      // El aviso queda ligado a su casilla: quien no lo ve lo oye al llegar a ella.
+      if (salida.id) casilla.setAttribute('aria-describedby', salida.id);
       salida.textContent = (cuenta.casilla === 'citas' ? textos.fueraCitas : textos.fueraPrecio) ?? '';
       return;
     }

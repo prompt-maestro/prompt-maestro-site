@@ -665,8 +665,10 @@ html:not(.con-cuenta) .calculadora {
 }
 
 /* Con la barra de abajo a la vista, lo que recibe el foco no se queda escondido detras de ella. */
+/* Solo mientras la barra de abajo se ve: si no, el navegador moveria la pagina al enfocar los controles del
+   comercial, que viven pegados al fondo de la pantalla. */
 @media (max-width: 899px) {
-  html {
+  html[data-barra-abajo] {
     scroll-padding-bottom: 5.5rem;
   }
 }

@@ -9,12 +9,13 @@ export const LIMITES = /** @type {const} */ ({ citas: [1, 500], precio: [1, 1000
 const ENTERO = /^(?:\d+|\d{1,3}(?:,\d{3})+)$/;
 
 /**
- * Quita lo que la gente escribe alrededor de un numero: espacios y el signo de pesos.
+ * Quita lo que la gente escribe alrededor de un numero: espacios, el signo de pesos y el punto o la coma con que
+ * se queda a medio teclear ("350." todavia no es un error: es "350" a punto de llevar centavos).
  * @param {string} texto
  * @returns {string}
  */
 function limpiar(texto) {
-  return texto.replace(/[\s$]/g, '');
+  return texto.replace(/[\s$]/g, '').replace(/[.,]$/, '');
 }
 
 /**
@@ -29,10 +30,10 @@ export function leerEntero(texto) {
 }
 
 /**
- * Lee un precio en pesos. Acepta centavos con punto ("350.50") o con coma ("350,50") y los redondea al peso: la
- * cuenta es en pesos cerrados. "1,200" son mil doscientos, no uno con veinte.
+ * Lee un precio en pesos, con sus centavos si los trae: con punto ("350.50") o con coma ("350,50"). "1,200" son
+ * mil doscientos, no uno con veinte. La cuenta se hace con el precio exacto y se cierra al peso hasta el final.
  * @param {string} texto
- * @returns {number | null} los pesos, o null si la casilla esta vacia; NaN si no es un precio
+ * @returns {number | null} el precio, o null si la casilla esta vacia; NaN si no es un precio
  */
 export function leerDinero(texto) {
   const limpio = limpiar(texto);
@@ -40,7 +41,7 @@ export function leerDinero(texto) {
   const partes = /^(.+?)(?:[.,](\d{1,2}))?$/.exec(limpio);
   const enteros = partes?.[1] ?? '';
   if (!ENTERO.test(enteros)) return Number.NaN;
-  return Math.round(Number(`${enteros.replaceAll(',', '')}.${partes?.[2] ?? '0'}`));
+  return Number(`${enteros.replaceAll(',', '')}.${partes?.[2] ?? '0'}`);
 }
 
 /**
@@ -49,7 +50,7 @@ export function leerDinero(texto) {
  * @returns {boolean}
  */
 function cabe(valor, limite) {
-  return Number.isInteger(valor) && valor >= limite[0] && valor <= limite[1];
+  return Number.isFinite(valor) && valor >= limite[0] && valor <= limite[1];
 }
 
 /**
@@ -68,12 +69,14 @@ function cabe(valor, limite) {
  * @returns {Cuenta}
  */
 export function hacerLaCuenta({ citas, precio, mensualidad }) {
-  if (citas !== null && !cabe(citas, LIMITES.citas)) return { estado: 'fuera', casilla: 'citas' };
+  if (citas !== null && !(Number.isInteger(citas) && cabe(citas, LIMITES.citas)))
+    return { estado: 'fuera', casilla: 'citas' };
   if (precio !== null && !cabe(precio, LIMITES.precio)) return { estado: 'fuera', casilla: 'precio' };
   // Sin una mensualidad de verdad no hay contra que comparar.
   if (citas === null || precio === null || !(mensualidad > 0)) return { estado: 'vacia' };
   const citasParaPagar = Math.ceil(mensualidad / precio);
-  return { estado: 'lista', perdido: citas * precio, citasParaPagar, sePaga: citasParaPagar <= citas };
+  // Primero se multiplica y luego se cierra al peso: 4 citas de $350.50 son $1,402, no $1,404.
+  return { estado: 'lista', perdido: Math.round(citas * precio), citasParaPagar, sePaga: citasParaPagar <= citas };
 }
 
 /**

@@ -414,7 +414,7 @@ test('el selector de ejemplos se maneja con el teclado y marca cual esta puesto'
   await expect(demo.locator('[data-demo-nombre]')).toHaveText('Consultorio Médico Aurora');
   await expect(demo.locator('.chat__borrador')).toHaveText('Buenas tardes, ¿cuánto cuesta la consulta?');
   await expect(demo.locator('[data-demo-anuncio]')).toHaveText(
-    'Ejemplo: Médico. Eres Paty y le escribes a Consultorio Médico Aurora.',
+    'Ejemplo: Médico. Eres Paty y le escribes al Consultorio Médico Aurora.',
   );
   await expect(medico).toBeFocused();
   // Y de regreso al primero, tambien con el teclado.

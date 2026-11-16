@@ -127,3 +127,8 @@ html.con-pelicula .barra--pelicula:not([data-fondo]) {
 .barra[data-fondo] {
   border-bottom: 1px solid var(--linea);
 }
+
+/* Al regresar con el teclado a la barra (que ya esta fija a la vista) la pagina no tiene por que moverse. */
+.barra a {
+  scroll-margin-top: -80px;
+}

@@ -120,7 +120,11 @@ const TRABAJOS = [
     ...foto(`comercial/${oficio}-trabajo.png`, `comercial/${oficio}-trabajo`, 720, TOMA),
     ...foto(`comercial/${oficio}-trabajo.png`, `comercial/${oficio}-trabajo`, 1080, TOMA),
     ...foto(`comercial/${oficio}-espera.png`, `comercial/${oficio}-espera`, 720, TOMA),
-    ...foto(`comercial/${oficio}-espera.png`, `comercial/${oficio}-espera`, 1080, TOMA),
+    // De la espera grande solo va el AVIF: la pagina la pide unicamente donde el navegador sabe escoger formato, y
+    // el respaldo WebP de ese tamano no lo pedia nadie.
+    ...foto(`comercial/${oficio}-espera.png`, `comercial/${oficio}-espera`, 1080, TOMA).filter((trabajo) =>
+      trabajo.a.endsWith('.avif'),
+    ),
   ]),
   // La foto de referencia que una clienta manda por WhatsApp (escena "Ve las fotos").
   {

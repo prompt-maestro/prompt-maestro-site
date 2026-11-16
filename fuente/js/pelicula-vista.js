@@ -11,6 +11,11 @@ const ANCHA = '(min-width: 900px) and (min-aspect-ratio: 1/1)';
 const CADA_OFICIO = 4600;
 /** Cada cuanto se revisa el contador de mensajes. */
 const CADA_CUENTA = 400;
+/**
+ * Con menos alto que esto (un celular acostado, o una pantalla con zoom de 400 %) el escenario fijo no cabe: el
+ * comercial se queda como texto corrido, que se lee completo con cualquier tamano de letra.
+ */
+const MUY_BAJITA = '(max-height: 479px)';
 /** Lo que espera, ya cargada la pagina, para ir por el video y por las fotos de la espera. */
 const ESPERA_DE_LO_PESADO = 1600;
 
@@ -30,11 +35,16 @@ export function montarPelicula(raiz) {
   const primera = tomas[0];
   const primerOficio = claves[0];
   if (!primera || !primerOficio || !(cuenta instanceof HTMLElement)) return;
+  if (matchMedia(MUY_BAJITA).matches) return;
 
   const quieta = matchMedia('(prefers-reduced-motion: reduce)');
   const ancha = matchMedia(ANCHA);
-  const inicio = performance.now();
-  let toma = primera;
+  // El tiempo que el comercial lleva corriendo de verdad: en pausa, con movimiento reducido o con la pestana
+  // escondida no avanza, y con el el contador de mensajes.
+  let corrido = 0;
+  let ultimaVez = performance.now();
+  // Quien llega por un ancla (o recarga mas abajo) y sube, entra al comercial por su final: por la ultima toma.
+  let toma = raiz.getBoundingClientRect().bottom < window.innerHeight / 2 ? (tomas.at(-1) ?? primera) : primera;
   let elegido = primerOficio;
   let aMano = false;
   let pesado = false;
@@ -83,7 +93,10 @@ export function montarPelicula(raiz) {
 
   function contar() {
     if (!(cuenta instanceof HTMLElement)) return;
-    const van = String(sinContestar(toma.clave, (performance.now() - inicio) / 1000));
+    const ahora = performance.now();
+    if (!pausada && !quieta.matches && !document.hidden) corrido += ahora - ultimaVez;
+    ultimaVez = ahora;
+    const van = String(sinContestar(toma.clave, corrido / 1000));
     if (cuenta.textContent !== van) cuenta.textContent = van;
   }
 

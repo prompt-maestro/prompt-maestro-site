@@ -84,10 +84,10 @@ test('al escribir sus numeros la calculadora rehace la cuenta y ya no habla del 
   await expect(salida).toContainText('Hoy se te van cerca de $12,000 al mes.');
   await expect(salida).not.toContainText('Un ejemplo');
   if (BARATO.mensual <= 1200) await expect(salida).toContainText('con 1 cita que sí llegue, ya se pagó.');
-  // Con centavos, y con coma: son 350 pesos con 50 centavos, no treinta y cinco mil.
+  // Con centavos, y con coma: son 350 pesos con 50 centavos (no treinta y cinco mil), y dos citas son $701 exactos.
   await citas.fill('2');
   await precio.fill('350,50');
-  await expect(salida).toContainText('Hoy se te van cerca de $702 al mes.');
+  await expect(salida).toContainText('Hoy se te van cerca de $701 al mes.');
 });
 
 test('si pierde menos de lo que cuesta el plan, la calculadora no le dice que ya se pago', async ({ page }) => {

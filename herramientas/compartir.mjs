@@ -1,7 +1,8 @@
 // @ts-check
 // La imagen que se ve al compartir el enlace (WhatsApp, Facebook, Messages):  node herramientas/compartir.mjs
 // La compone con lo que la pagina ya tiene: la toma de unas del comercial, la tipografia, el logotipo y el titulo.
-// Escribe fuente/raiz/compartir.jpg (1200 por 630, ligera: WhatsApp no ensena imagenes pesadas). Se corre a mano
+// Escribe fuente/raiz/compartir.jpg (1200 por 630, ligera: WhatsApp no ensena imagenes pesadas) y, de paso, el icono
+// que el iPhone pone en la pantalla de inicio (fuente/raiz/apple-touch-icon.png, 180 por 180). Se corre a mano
 // cuando cambia el titulo o la toma; necesita el navegador de las pruebas (npx playwright install chromium).
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -10,6 +11,7 @@ import { chromium } from 'playwright-core';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SALIDA = path.join(RAIZ, 'fuente', 'raiz', 'compartir.jpg');
+const ICONO = path.join(RAIZ, 'fuente', 'raiz', 'apple-touch-icon.png');
 const ANCHO = 1200;
 const ALTO = 630;
 
@@ -62,7 +64,17 @@ try {
   await pagina.setContent(html, { waitUntil: 'load' });
   await pagina.evaluate(() => document.fonts.ready);
   await pagina.screenshot({ path: SALIDA, type: 'jpeg', quality: 84 });
+  // El icono para iPhone: el logotipo sobre el fondo de noche, sin esquinas (el telefono las redondea).
+  await pagina.setViewportSize({ width: 180, height: 180 });
+  await pagina.setContent(
+    `<!doctype html><style>*{margin:0}body{display:grid;place-items:center;width:180px;height:180px;background:#070916;color:#f5f4f0}
+    svg{width:118px}.marca__cursor{fill:#5873ff}</style>${marca}`,
+    { waitUntil: 'load' },
+  );
+  await pagina.screenshot({ path: ICONO, type: 'png' });
 } finally {
   await navegador.close();
 }
-console.log(`Escrita ${path.relative(RAIZ, SALIDA)} (${ANCHO} por ${ALTO}).`);
+console.log(
+  `Escritas ${path.relative(RAIZ, SALIDA)} (${ANCHO} por ${ALTO}) y ${path.relative(RAIZ, ICONO)} (180 por 180).`,
+);

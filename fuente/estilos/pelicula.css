@@ -11,7 +11,7 @@
   --tramo: 92vh;
   /* El mismo canal que el resto de la pagina; en pantallas mas anchas que la pagina, se alinea con su columna. */
   --margen: max(var(--canal), calc((100vw - 1440px) / 2 + var(--canal)));
-  --vidrio: rgb(13 17 40 / 0.6);
+  --vidrio: rgb(13 17 40 / 0.78);
   --raya: rgb(255 255 255 / 0.16);
   position: relative;
   background: var(--papel);
@@ -165,7 +165,7 @@ html.con-pelicula .pelicula__pasos {
   z-index: -1;
   background:
     linear-gradient(to bottom, rgb(7 9 22 / 0.94) 0%, rgb(7 9 22 / 0.72) 24%, rgb(7 9 22 / 0) 54%),
-    linear-gradient(to top, rgb(7 9 22 / 0.66) 0%, rgb(7 9 22 / 0) 17%);
+    linear-gradient(to top, rgb(7 9 22 / 0.9) 0%, rgb(7 9 22 / 0.66) 9%, rgb(7 9 22 / 0) 24%);
   pointer-events: none;
 }
 
@@ -256,12 +256,12 @@ html:not(.con-pelicula) .pelicula__velo {
 
 /* Los mas viejos se van quedando atras. */
 .aviso:nth-last-child(4) {
-  opacity: 0.5;
+  opacity: 0.8;
   scale: 0.94;
 }
 
 .aviso:nth-last-child(3) {
-  opacity: 0.76;
+  opacity: 0.9;
   scale: 0.97;
 }
 
@@ -294,7 +294,7 @@ html:not(.con-pelicula) .pelicula__velo {
 .aviso__hace {
   align-self: start;
   margin-top: 2px;
-  color: rgb(245 244 240 / 0.66);
+  color: rgb(245 244 240 / 0.92);
   font-size: 0.6875rem;
 }
 
@@ -402,7 +402,7 @@ html:not(.con-pelicula) .pelicula__velo {
 }
 
 .globo b {
-  color: rgb(245 244 240 / 0.74);
+  color: rgb(245 244 240 / 0.92);
   font-size: 0.75rem;
   letter-spacing: 0.02em;
 }
@@ -563,6 +563,15 @@ html.con-pelicula .rotulo[data-activo] a {
   white-space: nowrap;
 }
 
+/* En celular, si alguien fuerza el espaciado de las letras, el titulo se parte en vez de salirse de la pantalla.
+   Con la letra normal cabe en un renglon. En pantallas anchas hay lugar de sobra y nunca se parte. */
+@media (max-width: 899px) {
+  .rotulo__titulo--grande {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* El cursor de la marca: el mismo guion bajo que cierra "PM". */
 .cursor {
   display: inline-block;
@@ -695,7 +704,7 @@ html.con-pelicula .pelicula__pie {
   padding: 0;
   border: 0;
   background: none;
-  color: rgb(245 244 240 / 0.7);
+  color: var(--tinta);
   font: inherit;
   letter-spacing: inherit;
   text-transform: inherit;
@@ -711,7 +720,7 @@ html.con-pelicula .pelicula__pie {
 }
 
 .oficios__mas {
-  color: rgb(245 244 240 / 0.7);
+  color: rgb(245 244 240 / 0.86);
 }
 
 .desliza {
@@ -719,7 +728,7 @@ html.con-pelicula .pelicula__pie {
   right: 0;
   bottom: 12px;
   left: 0;
-  color: rgb(245 244 240 / 0.7);
+  color: var(--tinta);
   font-size: 0.625rem;
   letter-spacing: 0.34em;
   text-align: center;
@@ -767,8 +776,8 @@ html.con-pelicula .pelicula__pie {
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: none;
-  color: rgb(245 244 240 / 0.8);
+  background: radial-gradient(circle, rgb(7 9 22 / 0.72) 0 16px, rgb(7 9 22 / 0) 17px);
+  color: var(--tinta);
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
@@ -882,10 +891,10 @@ html.con-pelicula .pelicula__pie {
     filter: saturate(1.06) brightness(0.98);
   }
 
+  /* Aqui el velo solo oscurece arriba, donde va el texto. Abajo no: taparia el nombre de cada panel, que vive
+     debajo de el. Lo de abajo (nombres, "Desliza") lleva su propia pastilla oscura para leerse sobre cualquier foto. */
   .pelicula__velo {
-    background:
-      linear-gradient(to bottom, rgb(7 9 22 / 0.96) 0%, rgb(7 9 22 / 0.8) 30%, rgb(7 9 22 / 0) 62%),
-      linear-gradient(to top, rgb(7 9 22 / 0.72) 0%, rgb(7 9 22 / 0) 15%);
+    background: linear-gradient(to bottom, rgb(7 9 22 / 0.96) 0%, rgb(7 9 22 / 0.8) 30%, rgb(7 9 22 / 0) 62%);
   }
 
   .avisos,
@@ -921,10 +930,13 @@ html.con-pelicula .pelicula__pie {
 
   .panel__nombre {
     position: absolute;
-    bottom: 26px;
-    left: 28px;
+    bottom: 22px;
+    left: 22px;
     z-index: 1;
     display: block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgb(7 9 22 / 0.85);
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -1030,15 +1042,15 @@ html.con-pelicula .pelicula__pie {
   }
 
   /* Los avisos van cayendo uno tras otro, del mas viejo al mas nuevo, cada vez que su oficio entra a cuadro. */
-  .pelicula[data-toma="ruido"] .panel[data-activo] .aviso {
+  .pelicula[data-toma="ruido"]:not([data-pausada]) .panel[data-activo] .aviso {
     animation: llega 460ms var(--suave) var(--turno, 0ms) both var(--marcha, running);
   }
 
   /* La charla se escribe en orden: entra el mensaje, el agente lo entiende, contesta, cobra y agenda. */
-  .pelicula[data-toma="texto"] .charla[data-charla="texto"] > *,
-  .pelicula[data-toma="voz"] .charla[data-charla="voz"] > *,
-  .pelicula[data-toma="foto"] .charla[data-charla="foto"] > *,
-  .pelicula[data-toma="pago"] .charla[data-charla="pago"] > * {
+  .pelicula[data-toma="texto"]:not([data-pausada]) .charla[data-charla="texto"] > *,
+  .pelicula[data-toma="voz"]:not([data-pausada]) .charla[data-charla="voz"] > *,
+  .pelicula[data-toma="foto"]:not([data-pausada]) .charla[data-charla="foto"] > *,
+  .pelicula[data-toma="pago"]:not([data-pausada]) .charla[data-charla="pago"] > * {
     animation: llega 460ms var(--suave) var(--turno, 300ms) both var(--marcha, running);
   }
 
@@ -1053,14 +1065,15 @@ html.con-pelicula .pelicula__pie {
 
   /* El cursor del logotipo parpadea unas veces al llegar y se queda encendido. */
   .marca__cursor {
-    animation: parpadea 1100ms steps(1, end) 5;
+    animation: parpadea 1100ms steps(1, end) 4;
   }
 
   .desliza {
     animation: respira 2400ms ease-in-out infinite var(--marcha, running);
   }
 
-  /* Con el boton de pausa todo lo que se mueve en el comercial se detiene: cada animacion lleva esta marcha. */
+  /* Con el boton de pausa todo lo que se mueve en el comercial se detiene: cada animacion lleva esta marcha. Lo
+     que entra animado (avisos y charla) no se anima en pausa: se queda puesto, nunca a medio entrar. */
   .pelicula[data-pausada] {
     --marcha: paused;
   }
@@ -1101,11 +1114,6 @@ html.con-pelicula .pelicula__pie {
   text-shadow: 0 1px 12px rgb(7 9 22 / 0.95);
 }
 
-/* "y mas" no es una pestana: no se toca, y se ve que no. */
-.oficios__mas {
-  opacity: 0.5;
-}
-
 /* El enlace del cartel se lee aunque caiga sobre lo claro de la foto. */
 .rotulo__acciones .enlace {
   padding-inline: 14px;
@@ -1118,15 +1126,96 @@ html.con-pelicula .rotulo--marca .rotulo__texto {
   text-wrap: balance;
 }
 
-/* Celular bajito: sale el aviso mas viejo y la charla del pago baja un poco. */
+/* Celular bajito: sale el aviso mas viejo y la charla del pago, que es la mas larga, se compacta. */
 @media (max-height: 50rem) and (max-width: 899px) {
   .aviso:nth-last-child(n + 4) {
     display: none;
   }
 
   .charla[data-charla="pago"] {
-    bottom: 25%;
+    bottom: 22%;
+    gap: 5px;
+  }
+
+  .charla[data-charla="pago"] .globo {
+    padding: 7px 12px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Celular muy bajito (un telefono chico con las barras del navegador a la vista, o una pantalla con zoom de 200 %):
+   quedan los dos avisos mas nuevos y el texto y la charla se compactan para no encimarse. */
+@media (max-height: 40rem) and (max-width: 899px) {
+  .pelicula__textos {
+    padding-top: calc(var(--barra-alto) + 2px);
+  }
+
+  .rotulo__titulo {
+    margin-top: 6px;
+    font-size: clamp(1.625rem, 7.6vw, 2rem);
+  }
+
+  .rotulo__titulo--grande {
+    font-size: clamp(2.125rem, 10.4vw, 2.75rem);
+  }
+
+  .rotulo__texto {
+    margin-top: 8px;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+
+  .aviso:nth-last-child(n + 3) {
+    display: none;
+  }
+
+  .avisos,
+  .citas,
+  .charla {
     gap: 6px;
+  }
+
+  .charla {
+    bottom: 21%;
+  }
+
+  .citas {
+    height: 150px;
+  }
+
+  .cita:nth-child(3) {
+    display: none;
+  }
+
+  .globo {
+    padding: 6px 11px;
+    font-size: 0.8125rem;
+  }
+
+  .globo__foto {
+    width: 44px;
+    height: 44px;
+  }
+
+  .charla__nota {
+    font-size: 0.6875rem;
+  }
+
+  .charla[data-charla="pago"] {
+    bottom: 19%;
+    gap: 4px;
+  }
+
+  .charla[data-charla="pago"] .globo {
+    padding: 5px 10px;
+    font-size: 0.8125rem;
+  }
+}
+
+/* En los telefonos mas angostos "y mas" no cabe junto al boton de pausa. */
+@media (max-width: 340px) {
+  .oficios__mas {
+    display: none;
   }
 }
 
@@ -1214,11 +1303,14 @@ html.con-pelicula .rotulo--marca .rotulo__texto {
 }
 
 @media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
-  /* "Desliza" deja el centro (ahi vive el nombre del segundo panel) y se va junto a la pausa. */
+  /* "Desliza" deja el centro (ahi vive el nombre del segundo panel) y se va junto a la pausa, en su pastilla. */
   .desliza {
-    right: 84px;
-    bottom: 24px;
+    right: 80px;
+    bottom: 22px;
     left: auto;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgb(7 9 22 / 0.85);
   }
 
   .desliza::after {

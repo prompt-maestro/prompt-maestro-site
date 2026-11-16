@@ -1,8 +1,7 @@
 <!doctype html>
 <html lang="es-MX">
 <head>
-{{> cabeza}}<link rel="preload" as="image" type="image/avif" imagesrcset="{{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-1080.avif 1080w" imagesizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" fetchpriority="high">
-<script src="{{armado.activos}}js/arranque.js"></script>
+{{> cabeza}}<script src="{{armado.activos}}js/arranque.js"></script>
 <link rel="modulepreload" href="{{armado.activos}}js/pelicula-vista.js">
 <link rel="modulepreload" href="{{armado.activos}}js/pelicula.js">
 <link rel="modulepreload" href="{{armado.activos}}js/demo-vista.js">
@@ -13,6 +12,8 @@
 <link rel="modulepreload" href="{{armado.activos}}js/medicion-vista.js">
 <link rel="modulepreload" href="{{armado.activos}}js/medicion.js">
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
+<link rel="stylesheet" href="{{armado.activos}}estilos/pagina.css">
+<link rel="preload" as="image" type="image/avif" imagesrcset="{{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-1080.avif 1080w" imagesizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" fetchpriority="high">
 {{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true"></script>
 {{/si}}<title>{{sitio.titulo}}</title>
 <meta name="description" content="{{sitio.descripcion}}">
@@ -54,7 +55,7 @@
               <img class="panel__toma" src="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.webp 1080w" sizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" alt="" decoding="async"{{#si @primero}} fetchpriority="high"{{/si}}>
             </picture>
             <div class="panel__espera" data-espera data-webp="{{armado.recursos}}comercial/{{clave}}-espera-720.webp" data-avif="{{armado.recursos}}comercial/{{clave}}-espera-720.avif" data-avif-fina="{{armado.recursos}}comercial/{{clave}}-espera-1080.avif"></div>
-{{#si video}}            <video class="panel__video" muted loop playsinline preload="none" aria-hidden="true" data-src="{{armado.recursos}}comercial/{{clave}}-trabajo.mp4"></video>
+{{#si video}}            <video class="panel__video" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-src="{{armado.recursos}}comercial/{{clave}}-trabajo.mp4"></video>
 {{/si}}          </div>
           <ol class="avisos" role="list" aria-label="{{pelicula.avisosTitulo}}">
 {{#cada mensajes}}            <li class="aviso"><span class="aviso__inicial" aria-hidden="true">{{inicial}}</span><span class="aviso__cuerpo"><b>{{quien}}</b><span class="aviso__dice">{{#si foto}}<span class="aviso__foto" aria-hidden="true"></span><span class="solo-lector">Foto. </span>{{/si}}{{#si voz}}{{> onda}}<span class="solo-lector">Nota de voz, </span>{{voz}}{{/si}}{{texto}}</span></span><span class="aviso__hace">{{hace}}</span></li>
@@ -202,7 +203,7 @@
         <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.citas}}</span><input class="calculadora__numero" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="{{secciones.planes.calculadora.ejemploCitas}}" data-calculadora-citas></label>
         <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.precio}}</span><span class="calculadora__pesos"><span aria-hidden="true">$</span><input class="calculadora__numero" type="text" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="{{secciones.planes.calculadora.ejemploPrecio}}" data-calculadora-precio></span></label>
       </div>
-      <p class="calculadora__salida" data-calculadora-salida>{{secciones.planes.calculadora.vacia}}</p>
+      <p class="calculadora__salida" id="calculadora-salida" data-calculadora-salida>{{secciones.planes.calculadora.vacia}}</p>
     </div>
     <ul class="planes__lista" role="list">
 {{#cada planes.planes}}      <li class="plan{{#si destacado}} plan--destacado{{/si}}" data-plan="{{nombre}}" data-mensual="{{mensual}}">

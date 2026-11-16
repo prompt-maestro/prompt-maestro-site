@@ -26,7 +26,8 @@ import { aLaHora, conMayuscula, listaDeHoras, pesos, rellenar } from './redaccio
  * El negocio del ejemplo. "nombre" es con lo que se elige el ejemplo; "lugar", como se le llama a ese tipo de negocio
  * ("un consultorio dental"); "persona", como le dice ese giro a quien atiende (clienta, paciente), y "humano", con
  * quien la comunica la salida PERSONA ("la duena", "una persona del consultorio").
- * @typedef {{ clave: string, nombre: string, lugar: string, persona: string, humano: string, negocio: string,
+ * "aNegocio" es el negocio como se dice al escribirle ("a Studio Bella", "al Consultorio Medico Aurora").
+ * @typedef {{ clave: string, nombre: string, lugar: string, persona: string, humano: string, negocio: string, aNegocio: string,
  *   asistente: string, profesional: string, cliente: string, servicio: string, servicioCorto: string, precio: number,
  *   anticipo: number, direccion: string }} Giro
  */
@@ -308,7 +309,7 @@ export function escenaDe(estado, ejemplo) {
  * @returns {{ iniciales: string, nombre: string, atiende: string, papel: string }}
  */
 export function presentacionDe(giro, rotulos, telefono) {
-  const datos = { asistente: giro.asistente, cliente: giro.cliente, negocio: giro.negocio };
+  const datos = { asistente: giro.asistente, cliente: giro.cliente, negocio: giro.negocio, aNegocio: giro.aNegocio };
   const deLaProfesional = telefono === 'profesional';
   const nombre = deLaProfesional ? giro.asistente : giro.negocio;
   return {

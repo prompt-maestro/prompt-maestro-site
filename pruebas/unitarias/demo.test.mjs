@@ -359,7 +359,9 @@ for (const ejemplo of ejemplos) {
       leyenda,
       `Demostración con ${giro.lugar} de ejemplo. Tócala y vívela como si fueras quien pide la cita.`,
     );
-    assert.equal(anuncio, `Ejemplo: ${giro.nombre}. Eres ${giro.cliente} y le escribes a ${giro.negocio}.`);
+    // "a Studio Bella", pero "al Consultorio": como se dice al escribirle a cada negocio.
+    assert.equal(anuncio, `Ejemplo: ${giro.nombre}. Eres ${giro.cliente} y le escribes ${giro.aNegocio}.`);
+    assert.ok(giro.aNegocio.endsWith(giro.negocio));
   });
 
   /** @param {Evento[]} eventos */

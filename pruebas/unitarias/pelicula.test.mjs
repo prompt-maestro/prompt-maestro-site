@@ -92,11 +92,17 @@ test('en salud ninguna charla ensena una foto: ahi una foto es imagen clinica, n
 test('cada oficio tiene en el repo sus fotos, y su video si dice tenerlo', async () => {
   const carpeta = path.join(FUENTE, 'recursos', 'comercial');
   for (const oficio of pelicula.oficios) {
-    for (const momento of ['trabajo', 'espera']) {
-      for (const ancho of [720, 1080]) {
-        for (const tipo of ['avif', 'webp'])
-          await access(path.join(carpeta, `${oficio.clave}-${momento}-${ancho}.${tipo}`));
-      }
+    // Justo las que la pagina pide: de la espera grande solo el AVIF (nadie pide su WebP).
+    for (const foto of [
+      'trabajo-720.avif',
+      'trabajo-720.webp',
+      'trabajo-1080.avif',
+      'trabajo-1080.webp',
+      'espera-720.avif',
+      'espera-720.webp',
+      'espera-1080.avif',
+    ]) {
+      await access(path.join(carpeta, `${oficio.clave}-${foto}`));
     }
     if (oficio.video) await access(path.join(carpeta, `${oficio.clave}-trabajo.mp4`));
   }

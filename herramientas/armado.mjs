@@ -14,7 +14,7 @@ import {
   presentacionDe,
   rotulosDeEjemplo,
 } from '../fuente/js/demo.js';
-import { pesos } from '../fuente/js/redaccion.js';
+import { pesos, rellenar } from '../fuente/js/redaccion.js';
 import { datosEstructurados, jsonParaScript, llmsTxt, robots, sitemap, TOPES } from './buscadores.mjs';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
 import { medicionDe } from './medicion.mjs';
@@ -229,7 +229,8 @@ function prepararDemo(datos, alta, problemas) {
       ...primero.giro,
       pregunta: primero.guion.pregunta,
       ...presentacionDe(primero.giro, rotulos, 'cliente'),
-      leyenda: rotulosDeEjemplo(primero.giro, rotulos).leyenda,
+      // Escrita en la pagina va la leyenda corta: sin JavaScript no hay nada que tocar. La vista pone la completa.
+      leyenda: rellenar(String(rotulos.leyendaEscrita ?? ''), { lugar: primero.giro.lugar }),
       dia: reposo.dia.charAt(0).toUpperCase() + reposo.dia.slice(1),
       filas: reposo.filas,
     },

@@ -151,7 +151,10 @@ export function montarDemo(raiz) {
     iniciales.textContent = presentacion.iniciales;
     nombre.textContent = presentacion.nombre;
     atiende.textContent = presentacion.atiende;
-    chat.replaceChildren(crear('p', 'chat__salto', presentacion.papel));
+    // La acotacion la anuncia la region de avisos; aqui va escondida para el lector, que si no la diria dos veces.
+    const acotacion = crear('p', 'chat__salto', presentacion.papel);
+    acotacion.setAttribute('aria-hidden', 'true');
+    chat.replaceChildren(acotacion);
     chat.dataset.acotacion = '';
     return presentacion.papel;
   }
@@ -480,6 +483,8 @@ export function montarDemo(raiz) {
     .tu.filas.map((fila) => fila.hora)
     .join('|');
   pintarPie(accionesDe(estado, ejemplo));
+  // Ya viva, la leyenda invita a tocarla (sin JavaScript solo dice que es un ejemplo: no hay nada que tocar).
+  leyenda.textContent = rotulosDeEjemplo(ejemplo.giro, rotulos).leyenda;
   pieza(raiz, '[data-demo-reiniciar]').addEventListener('click', reiniciar);
   for (const boton of botonesDeEjemplo) {
     boton.addEventListener('click', () => elegir(boton.dataset.demoEjemplo ?? ''));

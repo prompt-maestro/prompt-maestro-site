@@ -23,14 +23,18 @@ test('las citas se leen como entero, con o sin comas de miles bien puestas', () 
   assert.ok(Number.isNaN(leerEntero('35,5')));
 });
 
-test('el precio acepta el signo de pesos y centavos con punto o con coma, y los cierra al peso', () => {
+test('el precio acepta el signo de pesos y centavos, con punto o con coma, y no se asusta a medio teclear', () => {
   assert.equal(leerDinero('$400'), 400);
   assert.equal(leerDinero('1,200'), 1200);
-  assert.equal(leerDinero('350.50'), 351);
+  assert.equal(leerDinero('350.50'), 350.5);
   // Con coma decimal son 350 pesos con 50 centavos: nunca treinta y cinco mil.
-  assert.equal(leerDinero('350,50'), 351);
-  assert.equal(leerDinero('350,4'), 350);
-  assert.equal(leerDinero('1,200.40'), 1200);
+  assert.equal(leerDinero('350,50'), 350.5);
+  assert.equal(leerDinero('350,4'), 350.4);
+  assert.equal(leerDinero('1,200.40'), 1200.4);
+  // A medio teclear ("350." antes de los centavos, "1," antes de los miles) todavia no es un error.
+  assert.equal(leerDinero('350.'), 350);
+  assert.equal(leerDinero('1,'), 1);
+  assert.equal(leerEntero('12,'), 12);
   assert.equal(leerDinero(''), null);
   assert.ok(Number.isNaN(leerDinero('abc')));
   assert.ok(Number.isNaN(leerDinero('1.200.5')));
@@ -51,6 +55,8 @@ test('con las dos casillas llenas hace la cuenta: lo que se va y con cuantas cit
     citasParaPagar: 1,
     sePaga: true,
   });
+  // La cuenta se hace con el precio exacto y se cierra al peso al final: 4 de $350.50 son $1,402, no $1,404.
+  assert.equal(/** @type {any} */ (hacerLaCuenta({ citas: 4, precio: 350.5, mensualidad: 990 })).perdido, 1402);
   // En la raya: cobrar justo la mensualidad la paga con una cita; un peso menos ya pide dos.
   assert.equal(/** @type {any} */ (hacerLaCuenta({ citas: 2, precio: 990, mensualidad: 990 })).citasParaPagar, 1);
   assert.equal(/** @type {any} */ (hacerLaCuenta({ citas: 2, precio: 989, mensualidad: 990 })).citasParaPagar, 2);
@@ -93,6 +99,9 @@ test('fuera de rango dice cual casilla, y la de citas va primero', () => {
     casilla: 'citas',
   });
   assert.deepEqual(hacerLaCuenta({ citas: 6, precio: 0, mensualidad: 990 }), { estado: 'fuera', casilla: 'precio' });
+  // Menos de un peso no es un precio, y media cita no es una cita.
+  assert.deepEqual(hacerLaCuenta({ citas: 6, precio: 0.5, mensualidad: 990 }), { estado: 'fuera', casilla: 'precio' });
+  assert.deepEqual(hacerLaCuenta({ citas: 2.5, precio: 400, mensualidad: 990 }), { estado: 'fuera', casilla: 'citas' });
   assert.deepEqual(hacerLaCuenta({ citas: 6, precio: Number.NaN, mensualidad: 990 }), {
     estado: 'fuera',
     casilla: 'precio',
