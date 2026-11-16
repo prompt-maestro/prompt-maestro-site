@@ -14,7 +14,7 @@
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
 <link rel="stylesheet" href="{{armado.activos}}estilos/pagina.css">
 <link rel="preload" as="image" type="image/avif" imagesrcset="{{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-1080.avif 1080w" imagesizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" fetchpriority="high">
-{{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true"></script>
+{{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true"></script>
 {{/si}}<title>{{sitio.titulo}}</title>
 <meta name="description" content="{{sitio.descripcion}}">
 <link rel="canonical" href="{{armado.origen}}{{armado.base}}">

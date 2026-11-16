@@ -16,5 +16,5 @@
     "noEmit": true
   },
   "include": ["herramientas/**/*.mjs", "fuente/js/**/*.js", "pruebas/**/*.mjs", "playwright.config.mjs"],
-  "exclude": ["node_modules", "dist", "dist-previa"]
+  "exclude": ["node_modules", "dist", "dist-previa", "fuente/js/terceros"]
 }

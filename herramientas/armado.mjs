@@ -45,7 +45,8 @@ export const ALTA = 'https://alta.prompt-maestro.com/';
  */
 export const PERMITIDOS = {
   estilos: /\.(css|json)$/,
-  js: /\.js$/,
+  // En js/terceros/ vive el codigo que no escribimos nosotros (el script de la medicion), con su licencia al lado.
+  js: /\.js$|^terceros\/[^/]+\.txt$/,
   recursos: /\.(woff2|txt|avif|webp|png|jpg|svg|mp4|webm)$/,
   raiz: /\.(svg|png|jpg|ico|txt|xml|webmanifest)$/,
   plantillas: /\.html$/,
@@ -292,8 +293,12 @@ export async function armarSitio({ raiz, destino }) {
     avisos.push('El canal de contacto todavia no esta probado: esta armada no se puede publicar en el dominio.');
   }
   if (sitio.legalesConfirmadas !== true) {
+    // Con la medicion puesta, el aviso de privacidad tiene que nombrarla: quien confirme las legales lo lee aqui.
+    const conMedicion = Boolean(/** @type {any} */ (sitio.medicion)?.sitio);
     avisos.push(
-      'Las paginas legales del dominio (terminos y privacidad) no estan confirmadas contra la pagina nueva: esta armada no se puede publicar en el dominio.',
+      `Las paginas legales del dominio (terminos y privacidad) no estan confirmadas contra la pagina nueva${
+        conMedicion ? ' (el aviso de privacidad debe nombrar la medicion de visitas con Umami)' : ''
+      }: esta armada no se puede publicar en el dominio.`,
     );
   }
   // A donde manda la pagina a la gente: solo al alta de verdad, a las legales del dominio y al correo del dominio.
@@ -321,8 +326,14 @@ export async function armarSitio({ raiz, destino }) {
     const largo = String(sitio[clave] ?? '').length;
     if (largo === 0 || largo > tope) problemas.push(`sitio.json: ${clave} mide ${largo} letras (de 1 a ${tope})`);
   }
-  // La medicion solo se enciende con la cuenta completa en sitio.json, y solo en el dominio.
-  const medicion = medicionDe(sitio.medicion, { destino, dominio: DOMINIO });
+  // La medicion solo se enciende con la cuenta completa en sitio.json, y solo en el dominio. Su script es uno de los
+  // archivos de codigo de la pagina: por eso se le pasan, para comprobar que existe y que es la copia revisada.
+  const medicion = medicionDe(sitio.medicion, {
+    destino,
+    dominio: DOMINIO,
+    activos: carpetaCodigo,
+    propios: new Map(codigo),
+  });
   problemas.push(...medicion.problemas);
   const contexto = {
     ...datos,
@@ -338,7 +349,6 @@ export async function armarSitio({ raiz, destino }) {
       preciosDePrueba: planes.dePrueba,
       datosDemo: demo.json,
       medicion: medicion.etiqueta ?? false,
-      cspScript: medicion.cspScript,
       cspEnvio: medicion.cspEnvio,
       datosEstructurados: jsonParaScript(datosEstructurados(paraBuscar)),
     },
@@ -355,8 +365,12 @@ export async function armarSitio({ raiz, destino }) {
     else if (!ruta.startsWith('previa/')) paginas.push([ruta, plantilla]);
     else if (destino === 'previa') paginas.push([ruta.slice('previa/'.length), plantilla]);
   }
+  // Solo el inicio mide. Las demas paginas (la 404, donde viajaria una ruta escrita por la persona) no llevan la
+  // etiqueta ni el permiso para mandar: su politica de contenido queda cerrada.
+  const sinMedicion = { ...contexto, armado: { ...contexto.armado, medicion: false, cspEnvio: '' } };
   for (const [ruta, plantilla] of paginas) {
-    archivos.set(ruta, Buffer.from(pintar(plantilla, contexto, parciales), 'utf8'));
+    const datosDeLaPagina = ruta === 'index.html' ? contexto : sinMedicion;
+    archivos.set(ruta, Buffer.from(pintar(plantilla, datosDeLaPagina, parciales), 'utf8'));
   }
 
   // 4. Lo que GitHub Pages necesita. CNAME solo va al dominio. La previa no se indexa por el noindex de cada pagina

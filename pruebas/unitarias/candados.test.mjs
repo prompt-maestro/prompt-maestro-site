@@ -138,6 +138,12 @@ test('en cada carpeta de la fuente solo entran sus tipos de archivo: ni notas, n
   assert.ok(PERMITIDOS.recursos?.test('comercial/unas-trabajo-720.avif'));
   assert.ok(PERMITIDOS.raiz?.test('compartir.jpg'));
   assert.equal(PERMITIDOS.raiz?.test('index.html'), false);
+  // Junto al codigo solo entra una nota de texto: la licencia del codigo de terceros, y solo en su carpeta.
+  assert.ok(PERMITIDOS.js?.test('terceros/umami-2026-11-15.js'));
+  assert.ok(PERMITIDOS.js?.test('terceros/umami-2026-11-15.txt'));
+  for (const intruso of ['notas.txt', 'terceros/sub/notas.txt', 'terceros/notas.md', 'otra/terceros/notas.txt']) {
+    assert.equal(PERMITIDOS.js?.test(intruso), false, `js dejaria entrar ${intruso}`);
+  }
 });
 
 test('un archivo que no debe publicarse detiene la armada en vez de salir al dominio', async () => {
@@ -231,12 +237,17 @@ test('ningun archivo del repo trae un correo personal ni una ruta de la laptop',
   const correo = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g;
   const permitido =
     /@(?:users\.noreply\.github\.com|prompt-maestro\.com|anthropic\.com|github\.com|fontsource[\w-]*|axe-core|biomejs|playwright|types)\b|^(?:noreply@|git@github\.com)/;
+  // El aviso de una licencia trae el correo de contacto de quien la da: pasa ese, y solo en la nota de su codigo.
+  const deUnaLicencia = (/** @type {string} */ ruta, /** @type {string} */ hallado) =>
+    /^fuente\/js\/terceros\/[^/]+\.txt$/.test(ruta) && hallado === une('hello', '@', 'umami.is');
   /** @type {string[]} */
   const hallazgos = [];
   for (const ruta of archivos) {
     const texto = await readFile(path.join(RAIZ, ruta), 'utf8');
     for (const [hallado] of texto.matchAll(correo)) {
-      if (!permitido.test(hallado)) hallazgos.push(`${ruta}: un correo que no es de la casa`);
+      if (!permitido.test(hallado) && !deUnaLicencia(ruta, hallado)) {
+        hallazgos.push(`${ruta}: un correo que no es de la casa`);
+      }
     }
     if (/[A-Za-z]:\\Users\\|\/Users\/[a-z]|\/home\/[a-z]|LAPTOP-[A-Z0-9]{4,}/.test(texto)) {
       hallazgos.push(`${ruta}: una ruta o un nombre de la laptop`);

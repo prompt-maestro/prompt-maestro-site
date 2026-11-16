@@ -7,3 +7,5 @@
 *.jpg binary
 *.mp4 binary
 *.webm binary
+# El codigo de terceros se guarda byte por byte: su huella se comprueba al armar
+fuente/js/terceros/*.js -text

@@ -52,9 +52,15 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   título y la descripción viven en `fuente/datos/sitio.json`; la armada se detiene si no caben en un resultado.
 - La imagen que se ve al compartir el enlace (`fuente/raiz/compartir.jpg`) se compone con `herramientas/compartir.mjs`
   a partir del título y de una toma del comercial. Se vuelve a correr a mano si cambia alguno de los dos.
-- La medición (Umami, sin cookies) está apagada mientras `medicion` en `sitio.json` esté vacío. Con sus tres datos, la
-  etiqueta va solo en el dominio y la política de contenido se abre solo a esas dos direcciones
-  (`herramientas/medicion.mjs`). Los eventos los manda `fuente/js/medicion-vista.js`, que no hace nada si no hay script.
+- La medición (Umami, sin cookies) se enciende con los cuatro datos de `medicion` en `sitio.json`; vacío, está
+  apagada. La etiqueta va solo en el dominio (la previa y la 404 nunca miden). El script de Umami no se carga de su
+  servidor: es una copia revisada que sirve la propia página (`fuente/js/terceros/`, con su licencia al lado), así
+  que `script-src` se queda en `'self'` y la política de contenido solo se abre para mandar los conteos a un
+  servidor (`herramientas/medicion.mjs`). La armada se detiene si la copia no coincide con `medicion.huella`. Para
+  cambiar de versión: bajar el script nuevo byte por byte (`curl -o`, sin redirigir la salida en PowerShell), leerlo
+  completo, guardarlo con su fecha junto con su nota (que también dice su SHA-256), borrar la copia vieja y poner el
+  nombre y el SHA-256 nuevos en `sitio.json`. Los eventos los manda `fuente/js/medicion-vista.js`, que no hace nada
+  si no hay script. Lo que no se prueba aquí es el servidor de Umami de verdad: se mira en vivo después de publicar.
 - `herramientas/publicar.mjs` sin banderas es un ENSAYO: dice qué entraría, qué se conserva y qué se retira de `main`, y
   no toca nada. Con `--si` (solo con la autorización escrita del dueño) deja un commit nuevo en `main` y su etiqueta
   `pagina-vN`, sin reescribir la historia. Se niega con precios de prueba, contacto o legales sin confirmar, cambios sin confirmar, la rama sin subir o la

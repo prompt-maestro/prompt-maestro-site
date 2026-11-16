@@ -16,8 +16,9 @@
   "lugar": "Hecho en Guadalajara",
   "ciudad": "Guadalajara",
   "medicion": {
-    "sitio": "",
-    "script": "",
-    "envio": ""
+    "sitio": "d1181882-e633-469a-9255-a5ae9e6ee3b4",
+    "script": "js/terceros/umami-2026-11-15.js",
+    "huella": "c11c9d29ac15ee26ef07059add176fd7db95acbf8e8bdb1a79796b0ffdb58f18",
+    "envio": "https://gateway.umami.is"
   }
 }

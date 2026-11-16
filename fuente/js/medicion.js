@@ -1,8 +1,10 @@
 // @ts-check
 // La medicion, sin tocar la pagina: que eventos existen, que propiedades lleva cada uno y que valores se aceptan.
 // Cada evento se arma con datos sueltos y se valida contra un vocabulario cerrado: un dato que no esta en la lista
-// tira el evento entero, porque es mejor no medir que mandar algo inesperado. Ningun evento lleva lo que la persona
-// escribio, ni el texto de un error, ni una direccion completa. Poner los escuchas es trabajo de medicion-vista.js.
+// tira el evento entero, porque es mejor no medir que mandar algo inesperado. Ninguna propiedad lleva lo que la
+// persona escribio, ni el texto de un error, ni una direccion completa. (A cada visita y a cada evento, el script de
+// Umami le agrega por su cuenta la direccion de la pagina, sin parametros ni ancla, de donde viene la visita, el
+// idioma, el tamano de pantalla y el titulo.) Los escuchas los pone medicion-vista.js.
 
 /** Un evento ya armado: su nombre fijo y, si lleva, sus propiedades. @typedef {{ nombre: string, propiedades?: Record<string, string | number> }} Medida */
 /** Lo que el script de Umami deja en window.umami. @typedef {{ track: (nombre: string, propiedades?: Record<string, string | number>) => unknown }} Rastreador */

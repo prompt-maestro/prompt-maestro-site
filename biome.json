@@ -12,6 +12,7 @@
       "!fuente/recursos",
       "!fuente/plantillas",
       "!fuente/raiz",
+      "!fuente/js/terceros",
       "!package-lock.json"
     ]
   },
