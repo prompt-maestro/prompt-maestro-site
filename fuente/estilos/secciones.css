@@ -191,7 +191,9 @@
 .frase__subtitulo {
   font-size: 1.5rem;
   font-weight: 500;
+  line-height: 1.15;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 /* En celular cada opcion es una tarjeta: su nombre y, debajo, sus dos respuestas con su rotulo. La tabla conserva
@@ -340,8 +342,13 @@ html:not(.con-cuenta) .calculadora {
   font-size: var(--t-nota);
 }
 
+.calculadora__pago {
+  text-wrap: pretty;
+}
+
 .calculadora__perdido {
   color: var(--tinta);
+  text-wrap: balance;
   font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.25rem);
   font-weight: 500;
   line-height: 1.15;
@@ -374,12 +381,15 @@ html:not(.con-cuenta) .calculadora {
     0 24px 60px rgb(63 92 245 / 0.22);
 }
 
+/* La marca cuelga del borde de la tarjeta: asi el nombre, el precio y la raya de los tres planes quedan parejos. */
 .plan__marca {
-  align-self: flex-start;
+  position: absolute;
+  top: -13px;
+  left: var(--e-6);
   padding: 3px 10px;
   border-radius: 999px;
-  background: var(--sello-suave);
-  color: var(--luz);
+  background: var(--sello);
+  color: #fff;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -435,6 +445,8 @@ html:not(.con-cuenta) .calculadora {
 
 .plan .boton {
   margin-top: auto;
+  padding-inline: var(--e-3);
+  white-space: nowrap;
 }
 
 .planes__nota {
@@ -578,10 +590,6 @@ html:not(.con-cuenta) .calculadora {
 }
 
 @media (min-width: 720px) {
-  .frase__definiciones {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   /* Con espacio, la comparacion es una tabla de verdad. */
   .compara {
     display: table;
@@ -668,6 +676,10 @@ html:not(.con-cuenta) .calculadora {
     display: none;
   }
 
+  .frase__definiciones {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .oficio__lista {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -703,4 +715,26 @@ html:not(.con-cuenta) .calculadora {
   .pasos__lista {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* Tableta de pie: el boton de la barra de abajo y las tarjetas de plan no se estiran de orilla a orilla. */
+@media (min-width: 600px) and (max-width: 899px) {
+  .barra-movil {
+    display: grid;
+    justify-items: center;
+  }
+
+  .barra-movil .boton {
+    max-width: 24rem;
+  }
+}
+
+@media (min-width: 720px) and (max-width: 899px) {
+  .planes__lista {
+    max-width: 34rem;
+  }
+}
+
+.pregunta summary:hover h3 {
+  color: var(--luz);
 }

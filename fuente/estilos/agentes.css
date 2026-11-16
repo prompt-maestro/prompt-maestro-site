@@ -29,6 +29,13 @@
   text-wrap: balance;
 }
 
+/* A la misma escala que los titulos de las demas secciones. */
+@supports (font-size: 1cqi) {
+  .agentes__titulo {
+    font-size: clamp(2.25rem, 10.5cqi, 4.25rem);
+  }
+}
+
 .agentes__titulo em {
   display: block;
 }
@@ -45,12 +52,12 @@
   gap: var(--e-2);
   align-content: start;
   padding-top: var(--e-4);
-  border-top: 1.5px solid var(--tinta);
+  border-top: 1px solid var(--linea);
   counter-increment: punto;
 }
 
 .agentes__punto::before {
-  color: var(--tinta-3);
+  color: var(--luz);
   content: counter(punto, decimal-leading-zero);
   font-size: var(--t-nota);
   font-weight: 600;
@@ -136,11 +143,14 @@
   background: linear-gradient(var(--tinta), var(--tinta)) 0 0.78em / 12px 1.5px no-repeat;
 }
 
-@media (min-width: 720px) {
+/* Tres columnas solo cuando caben: en tableta de pie cada una quedaba de siete renglones. */
+@media (min-width: 900px) {
   .agentes__cuidamos {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
 
+@media (min-width: 720px) {
   .agentes__lista,
   .agentes__no {
     grid-template-columns: repeat(2, minmax(0, 1fr));

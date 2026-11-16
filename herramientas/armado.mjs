@@ -32,13 +32,18 @@ export const DESTINOS = /** @type {const} */ ({
 });
 
 const DOMINIO = 'prompt-maestro.com';
+/**
+ * A donde llevan los botones de empezar: ahi se paga. Es una constante del codigo y no solo un dato: si alguien
+ * cambia sitio.json a otra direccion (un dominio parecido, http), la armada se detiene.
+ */
+export const ALTA = 'https://alta.prompt-maestro.com/';
 
 /**
  * Lo unico que puede haber en cada carpeta de fuente/. Lo armado va a un sitio publico: un archivo de cualquier otro
  * tipo (una nota, un .env, un original pesado) detiene la armada en lugar de publicarse sin querer.
  * @type {Record<string, RegExp>}
  */
-const PERMITIDOS = {
+export const PERMITIDOS = {
   estilos: /\.(css|json)$/,
   js: /\.js$/,
   recursos: /\.(woff2|txt|avif|webp|png|jpg|svg|mp4|webm)$/,
@@ -284,6 +289,24 @@ export async function armarSitio({ raiz, destino }) {
   }
   if (sitio.contactoProbado !== true) {
     avisos.push('El canal de contacto todavia no esta probado: esta armada no se puede publicar en el dominio.');
+  }
+  if (sitio.legalesConfirmadas !== true) {
+    avisos.push(
+      'Las paginas legales del dominio (terminos y privacidad) no estan confirmadas contra la pagina nueva: esta armada no se puede publicar en el dominio.',
+    );
+  }
+  // A donde manda la pagina a la gente: solo al alta de verdad, a las legales del dominio y al correo del dominio.
+  if (sitio.alta !== ALTA) problemas.push(`sitio.json: alta debe ser ${ALTA}`);
+  const pie = /** @type {Record<string, unknown>} */ (/** @type {any} */ (datos.secciones)?.pie ?? {});
+  for (const clave of ['terminosUrl', 'privacidadUrl']) {
+    if (!String(pie[clave] ?? '').startsWith(`https://${DOMINIO}/`)) {
+      problemas.push(`secciones.json: pie.${clave} debe vivir en https://${DOMINIO}/`);
+    }
+  }
+  for (const clave of ['contacto', 'contactoOficio', 'contactoGeneral']) {
+    if (!new RegExp(`^mailto:[a-z0-9._-]+@${DOMINIO.replace('.', '\\.')}(?:\\?|$)`).test(String(sitio[clave] ?? ''))) {
+      problemas.push(`sitio.json: ${clave} debe ser un correo de ${DOMINIO}`);
+    }
   }
   // Lo que leen los buscadores sale de los mismos datos que la pagina.
   const paraBuscar = /** @type {any} */ ({

@@ -57,6 +57,10 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   (`herramientas/medicion.mjs`). Los eventos los manda `fuente/js/medicion-vista.js`, que no hace nada si no hay script.
 - `herramientas/publicar.mjs` sin banderas es un ENSAYO: dice qué entraría, qué se conserva y qué se retira de `main`, y
   no toca nada. Con `--si` (solo con la autorización escrita del dueño) deja un commit nuevo en `main` y su etiqueta
-  `pagina-vN`, sin reescribir la historia. Se niega con precios de prueba, cambios sin confirmar o la rama sin subir.
+  `pagina-vN`, sin reescribir la historia. Se niega con precios de prueba, contacto o legales sin confirmar, cambios sin confirmar, la rama sin subir o la
+  revisión automática de GitHub sin verde. `--regresar --si` deshace la última publicación con un commit nuevo.
 - Este repo es público. Ningún commit lleva un correo personal y ningún archivo lleva llaves: el gancho de `pre-push`
-  lo revisa, y además bloquea cualquier push directo a `main`.
+  lo revisa y bloquea cualquier push a `main` desde esta carpeta. Vive como archivo en `.git/hooks` (lo instala
+  `npm ci`), así que sigue ahí aunque se cambie de rama, y falla cerrado si la rama puesta no trae la herramienta. Lo
+  que el gancho no puede cuidar (editar en github.com, `--no-verify`, un clon sin instalar) lo cuidan las reglas de
+  GitHub sobre `main`: sin push forzado y sin borrado.

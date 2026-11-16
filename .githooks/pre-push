@@ -1,5 +1,11 @@
 #!/bin/sh
 # Antes de CADA push: sin correos personales, sin llaves y sin tocar main (ver herramientas/antes-de-subir.mjs).
-# Se activa al instalar las dependencias (npm ci) o a mano:  git config core.hooksPath .githooks
+# Se instala como archivo en .git/hooks al instalar las dependencias (npm ci) o a mano:
+#   node herramientas/instalar-gancho.mjs
+# Falla cerrado: si la rama puesta no trae la herramienta que revisa (la rama main no la trae), el push no sale.
 raiz=$(git rev-parse --show-toplevel) || exit 1
+if [ ! -f "$raiz/herramientas/antes-de-subir.mjs" ]; then
+  echo "BLOQUEA: desde esta rama no se puede revisar el push. Cambia a la rama fuente (git checkout fuente)." >&2
+  exit 1
+fi
 exec node "$raiz/herramientas/antes-de-subir.mjs" "$1"

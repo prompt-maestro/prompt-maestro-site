@@ -9,7 +9,8 @@
      cualquier navegador y despues, donde existe, la que descuenta las barras del celular. */
   --alto: max(100vh, 36rem);
   --tramo: 92vh;
-  --margen: clamp(20px, 5.5vw, 56px);
+  /* El mismo canal que el resto de la pagina; en pantallas mas anchas que la pagina, se alinea con su columna. */
+  --margen: max(var(--canal), calc((100vw - 1440px) / 2 + var(--canal)));
   --vidrio: rgb(13 17 40 / 0.6);
   --raya: rgb(255 255 255 / 0.16);
   position: relative;
@@ -1087,5 +1088,220 @@ html.con-pelicula .pelicula__pie {
 @keyframes respira {
   50% {
     translate: 0 4px;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El comercial fuera de los tamanos "de diseno". Sin esto, en una laptop comun (1366 por 768, 1280 por 720) y en
+   celulares bajitos el texto de la toma quedaba encima de los mensajes que flotan. Medido en 27 tamanos.
+   --------------------------------------------------------------------------------------------------------------- */
+
+/* El nombre de cada panel se lee tambien sobre una mesa clara. */
+.panel__nombre {
+  text-shadow: 0 1px 12px rgb(7 9 22 / 0.95);
+}
+
+/* "y mas" no es una pestana: no se toca, y se ve que no. */
+.oficios__mas {
+  opacity: 0.5;
+}
+
+/* El enlace del cartel se lee aunque caiga sobre lo claro de la foto. */
+.rotulo__acciones .enlace {
+  padding-inline: 14px;
+  border-radius: var(--r-control);
+  background: rgb(7 9 22 / 0.5);
+  backdrop-filter: blur(10px);
+}
+
+html.con-pelicula .rotulo--marca .rotulo__texto {
+  text-wrap: balance;
+}
+
+/* Celular bajito: sale el aviso mas viejo y la charla del pago baja un poco. */
+@media (max-height: 50rem) and (max-width: 899px) {
+  .aviso:nth-last-child(n + 4) {
+    display: none;
+  }
+
+  .charla[data-charla="pago"] {
+    bottom: 25%;
+    gap: 6px;
+  }
+}
+
+/* Tableta de pie (y cualquier pantalla ancha mas alta que ancha): un solo oficio a la vista, con mucho mas lienzo. */
+@media (min-width: 600px) and (min-height: 700px) and (max-width: 899px),
+  (min-width: 900px) and (max-aspect-ratio: 999 / 1000) {
+  .rotulo {
+    max-width: 40rem;
+  }
+
+  .pelicula .sobre {
+    font-size: 0.8125rem;
+  }
+
+  .rotulo__titulo {
+    margin-top: 14px;
+    font-size: clamp(3rem, 7.4vw, 4.5rem);
+  }
+
+  .rotulo__titulo--grande {
+    font-size: clamp(3.5rem, 11.5vw, 6.5rem);
+  }
+
+  .rotulo__texto {
+    max-width: 26em;
+    margin-top: 18px;
+    font-size: clamp(1.25rem, 2.6vw, 1.5rem);
+    font-weight: 400;
+  }
+
+  .avisos,
+  .charla {
+    max-width: 36rem;
+    gap: 12px;
+  }
+
+  .aviso {
+    padding: 12px 16px 12px 12px;
+    font-size: 1rem;
+  }
+
+  .globo {
+    padding: 12px 16px;
+    font-size: 1.125rem;
+  }
+
+  .globo--sale {
+    padding-right: 46px;
+  }
+
+  .charla__nota {
+    font-size: 0.875rem;
+  }
+
+  .citas {
+    height: 300px;
+  }
+
+  .cita {
+    width: min(300px, 46%);
+    padding: 16px 18px;
+    font-size: 1rem;
+  }
+
+  .cita:nth-child(2) {
+    top: 104px;
+  }
+
+  .cita:nth-child(3) {
+    top: 206px;
+  }
+
+  .charla__cita {
+    padding: 14px 150px 14px 18px;
+    font-size: 1.0625rem;
+  }
+
+  .charla__cita .sello {
+    width: 148px;
+  }
+
+  .rotulo__logo .marca__pm {
+    height: 112px;
+  }
+}
+
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
+  /* "Desliza" deja el centro (ahi vive el nombre del segundo panel) y se va junto a la pausa. */
+  .desliza {
+    right: 84px;
+    bottom: 24px;
+    left: auto;
+  }
+
+  .desliza::after {
+    display: inline-block;
+    margin: 0 0 2px 10px;
+  }
+
+  /* El sello de la cita, a la escala del titulo que tiene al lado. */
+  .charla__cita {
+    padding-right: 150px;
+  }
+
+  .charla__cita .sello {
+    right: -14px;
+    width: 148px;
+  }
+}
+
+/* Tres paneles en pantallas bajas: las cuatro ventajas se compactan (titulo, texto y mensajes). */
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) and (max-height: 60rem) {
+  .rotulo:is([data-rotulo="texto"], [data-rotulo="voz"], [data-rotulo="foto"], [data-rotulo="pago"]) .rotulo__titulo {
+    margin-top: 10px;
+    font-size: clamp(2.25rem, min(4.4vw, 8svh), 4rem);
+  }
+
+  .rotulo:is([data-rotulo="texto"], [data-rotulo="voz"], [data-rotulo="foto"], [data-rotulo="pago"]) .rotulo__texto {
+    max-width: 34em;
+    margin-top: 12px;
+    font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+  }
+
+  .rotulo[data-rotulo="pago"] {
+    max-width: min(46rem, calc(66.6vw - var(--margen) - 32px));
+  }
+
+  .charla {
+    bottom: 29%;
+    gap: 6px;
+  }
+
+  .globo {
+    padding: 7px 12px;
+    font-size: 0.875rem;
+  }
+
+  .globo--sale {
+    padding-right: 38px;
+  }
+
+  .globo__foto {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* Muy bajitas (laptops con el texto al 150 %, ventanas chicas): tambien el arranque y la duda. */
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) and (max-height: 42rem) {
+  .pelicula__textos {
+    padding-top: calc(var(--barra-alto) + var(--e-3));
+  }
+
+  .avisos,
+  .citas {
+    bottom: 27%;
+  }
+
+  .aviso {
+    padding-block: 7px;
+  }
+}
+
+/* Pantallas grandes de verdad: lo que flota crece con ellas. */
+@media (min-width: 1600px) and (min-height: 60rem) {
+  .globo {
+    padding: 12px 16px;
+    font-size: 1.0625rem;
+  }
+
+  .aviso {
+    font-size: 1rem;
+  }
+
+  .charla__nota {
+    font-size: 0.875rem;
   }
 }

@@ -10,7 +10,7 @@
   gap: var(--e-8);
   max-width: 1440px;
   margin: 0 auto;
-  padding: var(--e-16) clamp(20px, 5.5vw, 56px) var(--e-8);
+  padding: var(--e-16) var(--canal) var(--e-8);
 }
 
 .pie__firma {
@@ -72,4 +72,9 @@
   .pie__nota {
     grid-column: 1 / -1;
   }
+}
+
+/* El logotipo grande arranca en la misma linea que el texto. */
+.pie__firma .marca__pm {
+  margin-left: -4%;
 }

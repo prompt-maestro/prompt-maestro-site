@@ -19,7 +19,7 @@
   max-width: 1440px;
   min-height: var(--barra-alto);
   margin: 0 auto;
-  padding: var(--e-2) clamp(20px, 5.5vw, 56px);
+  padding: var(--e-2) var(--canal);
 }
 
 .marca {
@@ -121,4 +121,9 @@ html.con-pelicula .barra--pelicula:not([data-fondo]) {
   html[data-barra-abajo] .barra .boton {
     visibility: hidden;
   }
+}
+
+/* Ya con fondo, la barra se separa de lo que le pasa por debajo con una raya. */
+.barra[data-fondo] {
+  border-bottom: 1px solid var(--linea);
 }

@@ -41,6 +41,15 @@ if (sinConfirmar && !process.argv.includes('--con-cambios')) {
   process.exit(1);
 }
 
+// Se arma con lo que hay en disco: un archivo ignorado por git dentro de fuente/ entraria sin estar en ningun commit.
+if (
+  git(['status', '--porcelain', '--ignored', '--', 'fuente'], RAIZ) !== '' &&
+  !process.argv.includes('--con-cambios')
+) {
+  console.error('BLOQUEA: hay archivos dentro de fuente/ que no estan en el commit (ignorados o nuevos).');
+  process.exit(1);
+}
+
 const { archivos, problemas, avisos } = await armarSitio({ raiz: RAIZ, destino: 'previa' });
 for (const aviso of avisos) console.log(`AVISO: ${aviso}`);
 for (const [ruta, contenido] of archivos) {

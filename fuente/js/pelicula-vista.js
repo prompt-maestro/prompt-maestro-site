@@ -181,13 +181,13 @@ function ponerEspera(panel) {
  * @param {HTMLElement} pelicula
  */
 export function montarBarra(barra, pelicula) {
-  const alto = Math.round(barra.getBoundingClientRect().height) || 64;
   const vigia = new IntersectionObserver(
     (entradas) => {
       for (const entrada of entradas) barra.toggleAttribute('data-fondo', !entrada.isIntersecting);
     },
-    // La barra toma su fondo un poco antes de que el pie del comercial le pase por debajo.
-    { rootMargin: `-${alto + 140}px 0px 0px 0px` },
+    // La barra toma su fondo justo cuando el comercial se despega del fondo de la pantalla: antes de que su ultimo
+    // titulo le pase por debajo y se imprima sobre el logotipo.
+    { rootMargin: '-100% 0px 0px 0px' },
   );
   vigia.observe(pelicula);
 }

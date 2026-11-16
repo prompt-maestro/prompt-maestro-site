@@ -382,7 +382,11 @@ export function montarDemo(raiz) {
     estado = siguiente;
     turno += 1;
     // Si un paso no se puede pintar, la demostracion vuelve a empezar en lugar de quedarse muda.
-    jugar().catch(reiniciar);
+    jugar().catch((error) => {
+      // Se reporta como cualquier otro error de la pagina, y la historia vuelve a empezar.
+      if (typeof reportError === 'function') reportError(error);
+      reiniciar();
+    });
     // Los avisos salen de aqui, el unico lugar donde la historia avanza: uno por cada llegada, y ninguno al reiniciar
     // o al cambiar de ejemplo, que regresan al reposo por otro camino. "tocada" dice si la visitante ya hizo algo
     // (tocar Enviar o pedir verlo todo): sin eso, quien mando el primer mensaje fue el reloj de los 4 segundos.

@@ -8,7 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks",
+    "prepare": "node herramientas/instalar-gancho.mjs",
     "armar": "node herramientas/armar.mjs",
     "armar:previa": "node herramientas/armar.mjs --previa",
     "servir": "node herramientas/servir.mjs",

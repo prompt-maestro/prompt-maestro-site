@@ -10,6 +10,7 @@
   "contactoOficio": "mailto:hola@prompt-maestro.com?subject=Quiero%20Citas%20Garantizadas%20para%20mi%20oficio",
   "contactoGeneral": "mailto:hola@prompt-maestro.com",
   "contactoProbado": false,
+  "legalesConfirmadas": false,
   "anio": 2026,
   "lema": "Tu agenda, atendida.",
   "lugar": "Hecho en Guadalajara",

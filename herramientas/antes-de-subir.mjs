@@ -1,14 +1,14 @@
 // @ts-check
 // Revision antes de cada push (la llama .githooks/pre-push con el nombre del remoto). Bloquea el push si:
 //   1. toca la rama main (subirle algo o borrarla): esa rama es la pagina en vivo y solo la mueve
-//      herramientas/publicar.mjs, con el si del dueno;
+//      herramientas/publicar.mjs, con el si del dueno (publica desde una copia temporal, que no pasa por aqui);
 //   2. algun commit o etiqueta lleva un correo personal, como autor, como quien confirma o dentro del mensaje (el repo
 //      es publico);
 //   3. algun archivo que se sube trae algo con forma de llave o token.
 // Se activa al instalar las dependencias (npm ci) o a mano:  git config core.hooksPath .githooks
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { correosExpuestos } from './correos.mjs';
+import { correosExpuestos, identidadesDe } from './correos.mjs';
 import { secretosEn } from './secretos.mjs';
 
 const CERO = /^0+$/;
@@ -25,13 +25,15 @@ function git(argumentos) {
 }
 
 /**
- * Los correos de un commit o de una etiqueta anotada: autor, quien confirma, quien etiqueta y los del mensaje.
+ * Los correos de un commit o de una etiqueta anotada: las identidades de su cabecera (autor, quien confirma, quien
+ * etiqueta), tengan o no forma de correo, y los correos escritos en el mensaje.
  * @param {string} objeto
  * @returns {string[]}
  */
 function correosDe(objeto) {
   const crudo = git(['cat-file', '-p', objeto]);
-  return (crudo.match(CORREO) ?? []).filter((correo) => !CORREOS_DE_HERRAMIENTAS.has(correo));
+  const delMensaje = (crudo.match(CORREO) ?? []).filter((correo) => !CORREOS_DE_HERRAMIENTAS.has(correo));
+  return [...identidadesDe(crudo), ...delMensaje];
 }
 
 const remoto = process.argv[2] ?? 'origin';
@@ -42,7 +44,7 @@ const lineas = readFileSync(0, 'utf8').split('\n').filter(Boolean);
 for (const linea of lineas) {
   const [, shaLocal = '', refRemota = '', shaRemoto = ''] = linea.split(' ');
   // La regla de main va primero: tambien cuenta borrarla.
-  if (refRemota === 'refs/heads/main' && process.env.PUBLICAR_CON_SI !== '1') {
+  if (refRemota === 'refs/heads/main') {
     fallas.push('main es la pagina en vivo: solo se publica con herramientas/publicar.mjs --si');
   }
   if (CERO.test(shaLocal)) continue; // borrar una rama remota no sube nada mas que revisar

@@ -13,6 +13,21 @@ const PATRONES = [
   ['llave de Google', /\bAIza[0-9A-Za-z_-]{35}\b/],
   ['llave de AWS', /\bAKIA[0-9A-Z]{16}\b/],
   ['token JWT', /\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/],
+  ['llave de Supabase', /\bsb_secret_[A-Za-z0-9_-]{20,}|\bsbp_[a-f0-9]{30,}\b/],
+  ['token de Meta', /\bEAA[A-Za-z0-9]{40,}\b/],
+  ['secreto de Google', /\bGOCSPX-[A-Za-z0-9_-]{20,}/],
+  ['token de Slack', /\bxox[abprs]-[A-Za-z0-9-]{10,}/],
+  ['token de npm', /\bnpm_[A-Za-z0-9]{36}\b/],
+  ['llave de Twilio', /\bSK[0-9a-f]{32}\b/],
+  [
+    'direccion de base de datos con clave',
+    /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis):\/\/[^\s:@/]+:[^\s@/]+@/,
+  ],
+  // Lo generico: un nombre de secreto con un valor largo pegado. Atrapa lo que no tiene forma propia.
+  [
+    'clave escrita en claro',
+    /\b(?:password|passwd|contrasena|secret|secreto|api[_-]?key|access[_-]?token|auth[_-]?token)\b["']?\s*[:=]\s*["'][^"'\s]{12,}["']/i,
+  ],
 ];
 
 /**

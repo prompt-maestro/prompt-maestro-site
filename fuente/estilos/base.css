@@ -114,9 +114,11 @@ svg {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Al pasar el cursor el boton se enciende, nunca se apaga. */
 .boton:hover {
-  border-color: var(--tinta-2);
-  background: var(--tinta-2);
+  border-color: #fff;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgb(245 244 240 / 0.16);
 }
 
 .boton:active {
@@ -138,7 +140,8 @@ svg {
 
 .boton--contorno:hover {
   border-color: var(--tinta);
-  background: var(--papel-2);
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: none;
 }
 
 /* El boton azul: va donde la cita ya quedo sellada y donde cierra el comercial. El azul es de lo pagado y lo garantizado. */
@@ -151,6 +154,7 @@ svg {
 .boton--sello:hover {
   border-color: var(--sello-2);
   background: var(--sello-2);
+  box-shadow: 0 8px 28px rgb(63 92 245 / 0.45);
 }
 
 .enlace {
@@ -233,4 +237,9 @@ svg {
   .salto {
     transition: transform var(--d-toque) var(--suave);
   }
+}
+
+/* La tipografia no trae cursiva: el navegador no la inventa inclinando la letra. */
+html {
+  font-synthesis: none;
 }

@@ -9,14 +9,16 @@ playwright-report/
 .lighthouse/
 *.log
 
-# Originales de imagen y video (pesados): viven fuera del repo, aqui solo entra lo ya optimizado
-originales/
+# Originales de imagen y video (pesados): viven en la raiz, fuera del repo; aqui solo entra lo ya optimizado.
+# Solo la carpeta de la raiz: una carpeta "originales" dentro de fuente/ no se ignora, para que se vea.
+/originales/
 
 # Nunca un secreto en un repo publico
 .env
 .env.*
 *.pem
 *.key
+.npmrc
 
 # Del sistema y del editor
 .DS_Store

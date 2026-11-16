@@ -63,3 +63,44 @@ export function planDePublicacion({ enMain, inicioDeMain, armado }) {
   }
   return { escribir: [...nuevo].sort(), conservar, retirar };
 }
+
+/**
+ * A donde manda la pagina a la gente: cada direccion de fuera (https y correo) que aparece en un enlace, una vez.
+ * Se imprime antes de publicar para leerla con los ojos: ahi esta el boton que lleva a pagar.
+ * @param {string} html
+ * @returns {string[]}
+ */
+export function enlacesHaciaFuera(html) {
+  const enlaces = new Set();
+  for (const [, destino] of html.matchAll(/<a\b[^>]*\shref="((?:https?:|mailto:)[^"]*)"/g)) {
+    if (destino) enlaces.add(destino.replaceAll('&amp;', '&'));
+  }
+  return [...enlaces].sort();
+}
+
+/**
+ * De la direccion del remoto, "duena/repo" en GitHub (o null si no es de GitHub).
+ * @param {string} remoto  "https://github.com/duena/repo.git" o "git@github.com:duena/repo.git"
+ * @returns {string | null}
+ */
+export function repoDeGitHub(remoto) {
+  return (
+    /^(?:https:\/\/github\.com\/|git@github\.com:)([\w.-]+\/[\w.-]+?)(?:\.git)?\/?$/.exec(remoto.trim())?.[1] ?? null
+  );
+}
+
+/**
+ * Lo que GitHub dice de las revisiones automaticas de un commit: solo vale si hay al menos una, todas terminaron y
+ * todas salieron bien. Sin revisiones no hay verde: un commit que nadie reviso no se publica.
+ * @param {unknown} corridas  el arreglo check_runs de la API de GitHub
+ * @returns {{ enVerde: boolean, porque: string }}
+ */
+export function revisionEnVerde(corridas) {
+  if (!Array.isArray(corridas) || corridas.length === 0) return { enVerde: false, porque: 'no hay ninguna revision' };
+  for (const corrida of corridas) {
+    const { name, status, conclusion } = /** @type {Record<string, unknown>} */ (corrida ?? {});
+    if (status !== 'completed') return { enVerde: false, porque: `"${name}" todavia no termina` };
+    if (conclusion !== 'success') return { enVerde: false, porque: `"${name}" termino en ${conclusion}` };
+  }
+  return { enVerde: true, porque: '' };
+}
