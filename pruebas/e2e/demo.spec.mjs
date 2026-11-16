@@ -1,6 +1,7 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
+
 import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { expect, test } from './base.mjs';
 
 const ALTA = 'https://alta.prompt-maestro.com/';
 // El azul de la marca tiene dos tonos: el del boton que cierra (relleno) y la luz de lo ya pagado (texto y sello).

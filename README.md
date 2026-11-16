@@ -42,10 +42,19 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   originales, pesados, viven en `originales/` (fuera del repo); aquí solo entra lo ya optimizado, sin audio.
 - Sumar un oficio al comercial no toca el diseño: sus dos fotos en `originales/comercial/` (`<oficio>-trabajo.png` y
   `<oficio>-espera.png`), su nombre en la lista de `optimizar.mjs` y su entrada en `fuente/datos/pelicula.json`.
-- Sumar un oficio a la demostración tampoco toca el código: su entrada en `fuente/datos/giros.json` y su guion en
-  `fuente/datos/guiones/<oficio>.json`. La armada se detiene si a algún ejemplo le falta un texto.
+- Sumar un oficio a la demostración casi no toca el código: su entrada en `fuente/datos/giros.json`, su guion en
+  `fuente/datos/guiones/<oficio>.json` y su clave en la lista `GIROS` de `fuente/js/medicion.js` (la medición solo
+  acepta valores de una lista cerrada; una prueba avisa si falta). La armada se detiene si a un ejemplo le falta un texto.
 - Los textos de las secciones viven en `fuente/datos/secciones.json` y `preguntas.json`. Ninguno promete algo que el
   producto no hace: se revisan contra la tabla de la verdad del PRD antes de cambiarse.
+- Lo que leen los buscadores sale de los mismos datos que la página (`herramientas/buscadores.mjs`): los datos
+  estructurados van dentro del HTML y, solo en el dominio, se escriben `robots.txt`, `sitemap.xml` y `llms.txt`. El
+  título y la descripción viven en `fuente/datos/sitio.json`; la armada se detiene si no caben en un resultado.
+- La imagen que se ve al compartir el enlace (`fuente/raiz/compartir.jpg`) se compone con `herramientas/compartir.mjs`
+  a partir del título y de una toma del comercial. Se vuelve a correr a mano si cambia alguno de los dos.
+- La medición (Umami, sin cookies) está apagada mientras `medicion` en `sitio.json` esté vacío. Con sus tres datos, la
+  etiqueta va solo en el dominio y la política de contenido se abre solo a esas dos direcciones
+  (`herramientas/medicion.mjs`). Los eventos los manda `fuente/js/medicion-vista.js`, que no hace nada si no hay script.
 - `herramientas/publicar.mjs` sin banderas es un ENSAYO: dice qué entraría, qué se conserva y qué se retira de `main`, y
   no toca nada. Con `--si` (solo con la autorización escrita del dueño) deja un commit nuevo en `main` y su etiqueta
   `pagina-vN`, sin reescribir la historia. Se niega con precios de prueba, cambios sin confirmar o la rama sin subir.

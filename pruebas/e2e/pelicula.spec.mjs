@@ -1,6 +1,7 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
+
 import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { expect, test } from './base.mjs';
 
 const ALTA = 'https://alta.prompt-maestro.com/';
 const TOMAS = ['ruido', 'duda', 'marca', 'texto', 'voz', 'foto', 'pago', 'cartel'];

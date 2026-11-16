@@ -15,7 +15,9 @@ import {
   rotulosDeEjemplo,
 } from '../fuente/js/demo.js';
 import { pesos } from '../fuente/js/redaccion.js';
+import { datosEstructurados, jsonParaScript, llmsTxt, robots, sitemap, TOPES } from './buscadores.mjs';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
+import { medicionDe } from './medicion.mjs';
 import { planesParaPagina, planesPublicos } from './planes.mjs';
 import { pintar } from './plantilla.mjs';
 
@@ -40,7 +42,7 @@ const PERMITIDOS = {
   estilos: /\.(css|json)$/,
   js: /\.js$/,
   recursos: /\.(woff2|txt|avif|webp|png|jpg|svg|mp4|webm)$/,
-  raiz: /\.(svg|png|ico|txt|xml|webmanifest)$/,
+  raiz: /\.(svg|png|jpg|ico|txt|xml|webmanifest)$/,
   plantillas: /\.html$/,
   datos: /\.json$/,
 };
@@ -216,7 +218,7 @@ function prepararDemo(datos, alta, problemas) {
   return {
     // Los datos viajan dentro de la pagina como JSON (no es un script que se ejecute). El "<" se escribe por su
     // codigo para que ningun texto pueda cerrar la etiqueta.
-    json: JSON.stringify({ ejemplos, fijos, tu, rotulos, alta }).replace(/</g, '\\u003c'),
+    json: jsonParaScript({ ejemplos, fijos, tu, rotulos, alta }),
     // Lo que la pagina trae ya escrito antes de que cargue el JavaScript: el primer ejemplo, en reposo.
     ejemplo: {
       ...primero.giro,
@@ -283,6 +285,21 @@ export async function armarSitio({ raiz, destino }) {
   if (sitio.contactoProbado !== true) {
     avisos.push('El canal de contacto todavia no esta probado: esta armada no se puede publicar en el dominio.');
   }
+  // Lo que leen los buscadores sale de los mismos datos que la pagina.
+  const paraBuscar = /** @type {any} */ ({
+    origen,
+    base,
+    sitio,
+    planes,
+    preguntas: datos.preguntas,
+  });
+  for (const [clave, tope] of Object.entries(TOPES)) {
+    const largo = String(sitio[clave] ?? '').length;
+    if (largo === 0 || largo > tope) problemas.push(`sitio.json: ${clave} mide ${largo} letras (de 1 a ${tope})`);
+  }
+  // La medicion solo se enciende con la cuenta completa en sitio.json, y solo en el dominio.
+  const medicion = medicionDe(sitio.medicion, { destino, dominio: DOMINIO });
+  problemas.push(...medicion.problemas);
   const contexto = {
     ...datos,
     planes: planesParaPagina(planes, pesos),
@@ -296,6 +313,10 @@ export async function armarSitio({ raiz, destino }) {
       recursos: carpetaRecursos,
       preciosDePrueba: planes.dePrueba,
       datosDemo: demo.json,
+      medicion: medicion.etiqueta ?? false,
+      cspScript: medicion.cspScript,
+      cspEnvio: medicion.cspEnvio,
+      datosEstructurados: jsonParaScript(datosEstructurados(paraBuscar)),
     },
   };
 
@@ -317,7 +338,31 @@ export async function armarSitio({ raiz, destino }) {
   // 4. Lo que GitHub Pages necesita. CNAME solo va al dominio. La previa no se indexa por el noindex de cada pagina
   //    (un robots.txt dentro de una carpeta no lo lee ningun buscador).
   archivos.set('.nojekyll', Buffer.from('', 'utf8'));
-  if (destino === 'publica') archivos.set('CNAME', Buffer.from(`${DOMINIO}\n`, 'utf8'));
+  if (destino === 'publica') {
+    archivos.set('CNAME', Buffer.from(`${DOMINIO}\n`, 'utf8'));
+    // Y lo que leen los buscadores en la raiz del dominio. En la previa no van: no se indexa.
+    const secciones = /** @type {any} */ (datos.secciones);
+    const agentes = /** @type {any} */ (datos.agentes);
+    const textos = (/** @type {{ texto: string }[]} */ lista) => lista.map(({ texto }) => texto);
+    archivos.set('robots.txt', Buffer.from(robots({ origen }), 'utf8'));
+    archivos.set('sitemap.xml', Buffer.from(sitemap({ origen }), 'utf8'));
+    archivos.set(
+      'llms.txt',
+      Buffer.from(
+        llmsTxt({
+          ...paraBuscar,
+          pasos: textos(secciones.pasos.lista),
+          hace: agentes.hace,
+          noHace: textos([...agentes.noHace, ...secciones.confianza.noHaceMas]),
+          requisitos: textos(secciones.planes.requisitos),
+          paraQuien: `${secciones.paraQuien.titulo} ${secciones.paraQuien.tituloFuerte}`,
+          preciosDePrueba: planes.dePrueba,
+          legales: { terminos: secciones.pie.terminosUrl, privacidad: secciones.pie.privacidadUrl },
+        }),
+        'utf8',
+      ),
+    );
+  }
 
   // 5. Comprobaciones sobre lo armado.
   for (const [ruta] of paginas) {

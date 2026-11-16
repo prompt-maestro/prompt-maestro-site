@@ -44,14 +44,17 @@ before(async () => {
   const atributos = [...html.matchAll(/\s(?:aria-label|placeholder|content|alt|data-[\w-]+)="([^"]*)"/g)].map(
     ([, valor]) => valor,
   );
-  const datos = [...html.matchAll(/<script type="application\/json"[^>]*>([\s\S]*?)<\/script>/g)].map(
+  // Tambien lo que viaja como datos: la demostracion (JSON) y lo que leen los buscadores (datos estructurados).
+  const datos = [...html.matchAll(/<script type="application\/(?:ld\+)?json"[^>]*>([\s\S]*?)<\/script>/g)].map(
     ([, json]) => json,
   );
   const texto = html
     .replace(/<script[\s\S]*?<\/script>/g, ' ')
     .replace(/<style[\s\S]*?<\/style>/g, ' ')
     .replace(/<[^>]+>/g, ' ');
-  visible = [texto, ...atributos, ...datos].join(' ').replace(/\s+/g, ' ').toLowerCase();
+  // Y la pagina contada para los modelos de lenguaje: tampoco ahi se promete de mas.
+  const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
+  visible = [texto, ...atributos, ...datos, llms].join(' ').replace(/\s+/g, ' ').toLowerCase();
 });
 
 test('la pagina armada trae sus secciones (si no, esta prueba no estaria leyendo nada)', () => {

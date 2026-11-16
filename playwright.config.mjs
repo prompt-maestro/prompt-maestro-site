@@ -7,7 +7,9 @@ export default defineConfig({
   testDir: 'pruebas/e2e',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 1 : 0,
+  // Un reintento, tambien en la laptop: con cinco navegadores a la vez, Firefox a veces no alcanza ni a abrir la
+  // pagina en 30 segundos. Lo que pasa al segundo intento queda anotado como inestable; lo que falla dos veces, falla.
+  retries: 1,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: { trace: 'retain-on-failure' },
   projects: [

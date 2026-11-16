@@ -1,6 +1,7 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
+
 import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { expect, test } from './base.mjs';
 
 test('el inicio abre limpio: un titulo, estilos puestos, cero errores y accesible', async ({ page }) => {
   const fallas = vigilar(page);
@@ -40,7 +41,7 @@ test('una direccion que no existe contesta 404 con la pagina propia y regresa al
   await expect(page.getByRole('heading', { level: 1 })).toContainText('no llegó a su cita');
   await sinFaltasDeAccesibilidad(page);
   await page.getByRole('link', { name: 'Ir al inicio' }).click();
-  await expect(page).toHaveTitle(/Citas Garantizadas: tu agente/);
+  await expect(page).toHaveTitle(/^Citas Garantizadas: agenda por WhatsApp/);
   expect(fallas.filter((falla) => !falla.includes('no-existe'))).toEqual([]);
 });
 

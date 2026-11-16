@@ -1,8 +1,8 @@
 // @ts-check
 import { readFileSync } from 'node:fs';
-import { expect, test } from '@playwright/test';
 import { pesos } from '../../fuente/js/redaccion.js';
 import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { expect, test } from './base.mjs';
 
 const ALTA = 'https://alta.prompt-maestro.com/';
 // Los precios salen del mismo archivo que la pagina: el dia que cambien, estas pruebas siguen valiendo.
@@ -43,7 +43,17 @@ test('la pagina trae todas sus secciones, cada una con su titulo, y un solo h1',
   const fallas = vigilar(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
-  for (const ancla of ['inicio', 'citas', 'como-funciona', 'agente', 'para-quien', 'planes', 'preguntas', 'empieza']) {
+  for (const ancla of [
+    'inicio',
+    'citas',
+    'como-funciona',
+    'agente',
+    'para-quien',
+    'en-una-frase',
+    'planes',
+    'preguntas',
+    'empieza',
+  ]) {
     await expect(page.locator(`#${ancla}`)).toHaveCount(1);
     await expect(page.locator(`#${ancla}`).getByRole('heading').first()).toBeAttached();
   }
@@ -158,6 +168,33 @@ test('para quien ensena los tres oficios con su foto y deja la puerta abierta a 
   // Pedir un oficio nuevo lleva su propio asunto: no el de "quiero que me acompanen".
   const otro = seccion.getByRole('link', { name: '¿El tuyo no está? Escríbenos y te avisamos.' });
   await expect(otro).toHaveAttribute('href', /^mailto:.*subject=.*oficio/);
+});
+
+test('en una frase: tres definiciones y la comparacion, que en celular se lee opcion por opcion', async ({ page }) => {
+  const seccion = await abrirEn(page, 'en-una-frase');
+  await expect(seccion.locator('dt')).toHaveCount(3);
+  await expect(seccion.locator('dt').first()).toHaveText('Cita garantizada');
+  // Es una tabla de verdad tambien para quien no la ve: sus encabezados, sus filas y la propia marcada.
+  const tabla = seccion.getByRole('table', { name: 'En qué se distingue de otras opciones' });
+  await expect(tabla.getByRole('rowheader')).toHaveCount(4);
+  await expect(tabla.getByRole('rowheader', { name: 'Citas Garantizadas' })).toBeVisible();
+  await expect(tabla.locator('.compara__propia')).toHaveCount(1);
+  await expect(tabla.locator('.compara__propia')).toContainText('Entra a tu calendario solo con el anticipo pagado.');
+  const ancha = await page.evaluate(() => matchMedia('(min-width: 720px)').matches);
+  const rotulo = await tabla
+    .getByRole('cell')
+    .first()
+    .evaluate((celda) => getComputedStyle(celda, '::before').content);
+  if (ancha) {
+    await expect(tabla.getByRole('columnheader')).toHaveCount(3);
+    expect(rotulo).toBe('none');
+  } else {
+    // En celular no hay renglon de encabezados (ni a la vista ni para el lector de pantalla, que lo leeria doble):
+    // cada respuesta lleva su rotulo encima.
+    await expect(tabla.getByRole('columnheader')).toHaveCount(0);
+    expect(rotulo).toContain('Dónde conversa tu clientela');
+  }
+  await sinFaltasDeAccesibilidad(page, '#en-una-frase');
 });
 
 test('el cierre y el pie: el boton al alta, los enlaces legales y la nota de las marcas', async ({ page }) => {

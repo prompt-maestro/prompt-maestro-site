@@ -1,6 +1,10 @@
 {
   "nombre": "Prompt Maestro",
   "producto": "Citas Garantizadas",
+  "titulo": "Citas Garantizadas: agenda por WhatsApp con anticipo pagado",
+  "descripcion": "Tu agente contesta tu WhatsApp, cobra el anticipo y solo entonces agenda. El dinero cae directo en tu Mercado Pago. Hoy, para uñas, dentistas y médicos.",
+  "compartirTexto": "Tu agente de WhatsApp agenda solo con el anticipo pagado.",
+  "compartirAlt": "Despreocúpate: tu agente de WhatsApp agenda solo con el anticipo pagado.",
   "alta": "https://alta.prompt-maestro.com/",
   "contacto": "mailto:hola@prompt-maestro.com?subject=Quiero%20que%20me%20acompa%C3%B1en%20con%20Citas%20Garantizadas",
   "contactoOficio": "mailto:hola@prompt-maestro.com?subject=Quiero%20Citas%20Garantizadas%20para%20mi%20oficio",
@@ -8,5 +12,11 @@
   "contactoProbado": false,
   "anio": 2026,
   "lema": "Tu agenda, atendida.",
-  "lugar": "Hecho en Guadalajara"
+  "lugar": "Hecho en Guadalajara",
+  "ciudad": "Guadalajara",
+  "medicion": {
+    "sitio": "",
+    "script": "",
+    "envio": ""
+  }
 }

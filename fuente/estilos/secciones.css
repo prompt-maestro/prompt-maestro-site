@@ -2,6 +2,7 @@
    Todas comparten el mismo marco: un renglon chico encendido, un titulo grande y aire. */
 .pasos,
 .oficio,
+.frase,
 .planes,
 .preguntas {
   display: grid;
@@ -149,6 +150,107 @@
   color: var(--tinta-2);
   font-size: 1rem;
   line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   En una frase: que es, con sus tres palabras definidas, y en que se distingue de otras opciones. Es lo que cita un
+   buscador o un asistente cuando alguien pregunta "que es Citas Garantizadas".
+   --------------------------------------------------------------------------------------------------------------- */
+.frase__definiciones {
+  display: grid;
+  gap: var(--e-6) var(--e-12);
+  margin: 0;
+}
+
+.frase__definicion {
+  display: grid;
+  gap: var(--e-2);
+  align-content: start;
+  padding-top: var(--e-4);
+  border-top: 1px solid var(--linea);
+}
+
+.frase__definicion dt {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.frase__definicion dd {
+  max-width: 30rem;
+  margin: 0;
+  color: var(--tinta-2);
+}
+
+.frase__compara {
+  display: grid;
+  gap: var(--e-6);
+}
+
+.frase__subtitulo {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* En celular cada opcion es una tarjeta: su nombre y, debajo, sus dos respuestas con su rotulo. La tabla conserva
+   sus papeles (role) para quien la recorre con lector de pantalla. */
+.compara,
+.compara tbody,
+.compara tr,
+.compara th,
+.compara td {
+  display: block;
+}
+
+.compara {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* El renglon de encabezados no va en celular: cada respuesta lleva su rotulo encima, y asi tampoco se lee dos veces. */
+.compara thead {
+  display: none;
+}
+
+.compara tbody tr {
+  display: grid;
+  gap: var(--e-1);
+  padding: var(--e-4);
+  border-top: 1px solid var(--linea);
+}
+
+.compara tbody th {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.compara td {
+  color: var(--tinta-2);
+}
+
+.compara td::before {
+  display: block;
+  color: var(--tinta-3);
+  font-size: var(--t-nota);
+  content: attr(data-rotulo);
+}
+
+/* La fila propia lleva la luz de la marca. */
+.compara tbody .compara__propia {
+  border-top-color: transparent;
+  border-radius: var(--r-tarjeta);
+  background: var(--sello-suave);
+}
+
+.compara tbody .compara__propia th {
+  color: var(--luz);
+}
+
+.compara tbody .compara__propia td {
+  color: var(--tinta);
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
@@ -476,6 +578,59 @@ html:not(.con-cuenta) .calculadora {
 }
 
 @media (min-width: 720px) {
+  .frase__definiciones {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Con espacio, la comparacion es una tabla de verdad. */
+  .compara {
+    display: table;
+  }
+
+  .compara thead {
+    display: table-header-group;
+  }
+
+  .compara tbody {
+    display: table-row-group;
+  }
+
+  .compara tr,
+  .compara tbody tr {
+    display: table-row;
+  }
+
+  .compara th,
+  .compara td {
+    display: table-cell;
+    padding: var(--e-4);
+    border-top: 1px solid var(--linea);
+    vertical-align: top;
+  }
+
+  .compara thead th {
+    border-top: 0;
+    color: var(--tinta-3);
+    font-size: var(--t-nota);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .compara td::before {
+    content: none;
+  }
+
+  /* En tabla, la fila propia es una banda de lado a lado, sin esquinas redondas. */
+  .compara tbody .compara__propia {
+    border-radius: 0;
+  }
+
+  .compara tbody .compara__propia th,
+  .compara tbody .compara__propia td {
+    border-top-color: transparent;
+  }
+
   .final__sello {
     top: 50%;
   }
@@ -539,6 +694,7 @@ html:not(.con-cuenta) .calculadora {
 @media (min-width: 1100px) {
   .pasos,
   .oficio,
+  .frase,
   .planes,
   .preguntas {
     padding-block: var(--e-24) var(--e-40);

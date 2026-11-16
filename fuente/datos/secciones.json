@@ -68,6 +68,53 @@
     "tituloFuerte": "Pronto, más oficios.",
     "otro": "¿El tuyo no está? Escríbenos y te avisamos."
   },
+  "enUnaFrase": {
+    "sobre": "En una frase",
+    "titulo": "Citas Garantizadas es un agente de WhatsApp",
+    "tituloFuerte": "que agenda solo con el anticipo pagado.",
+    "definiciones": [
+      {
+        "termino": "Cita garantizada",
+        "texto": "Una cita que entra a tu calendario con su anticipo ya pagado. Garantizada quiere decir pagada."
+      },
+      {
+        "termino": "Anticipo",
+        "texto": "La parte del servicio que se paga por adelantado para garantizar la cita. Tú decides de cuánto es y cae directo en tu Mercado Pago."
+      },
+      {
+        "termino": "Agente",
+        "texto": "Un asistente virtual con inteligencia artificial que atiende el WhatsApp de tu negocio con tus precios, tus horarios y tus reglas."
+      }
+    ],
+    "comparaTitulo": "En qué se distingue de otras opciones",
+    "comparaColumnas": ["Opción", "Dónde conversa tu clientela", "Cómo queda la cita"],
+    "compara": [
+      {
+        "opcion": "Agenda en línea",
+        "donde": "En una página o aplicación aparte.",
+        "cita": "Se reserva ahí; el anticipo depende de cada plataforma.",
+        "propia": false
+      },
+      {
+        "opcion": "Recordatorios automáticos",
+        "donde": "Mandan avisos; la conversación va por otro lado.",
+        "cita": "Recuerdan una cita que alguien ya agendó.",
+        "propia": false
+      },
+      {
+        "opcion": "Bot de WhatsApp",
+        "donde": "En WhatsApp.",
+        "cita": "Agenda; cobrar antes depende de cada proveedor.",
+        "propia": false
+      },
+      {
+        "opcion": "Citas Garantizadas",
+        "donde": "En el WhatsApp de tu negocio.",
+        "cita": "Entra a tu calendario solo con el anticipo pagado.",
+        "propia": true
+      }
+    ]
+  },
   "planes": {
     "sobre": "Planes",
     "titulo": "Haz la cuenta",

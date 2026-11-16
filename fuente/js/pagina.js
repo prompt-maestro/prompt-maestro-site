@@ -2,20 +2,27 @@
 // El arranque de la pagina. Cada pieza se monta por separado: si una falla, las demas siguen.
 import { montarCalculadora } from './calculadora-vista.js';
 import { montarDemo } from './demo-vista.js';
+import { montarMedicion } from './medicion-vista.js';
 import { montarBarra, montarPelicula } from './pelicula-vista.js';
 
 /**
  * Monta una pieza sin dejar que su error tumbe a las demas. La pieza que no arranca se queda como sin JavaScript
- * (arranque.js le quita su marca).
+ * (arranque.js le quita su marca). El error se reporta como cualquier otro de la pagina: asi la medicion se entera
+ * de que una pieza no arranco (en que archivo y en que linea, nunca el mensaje).
  * @param {() => void} pieza
  */
 function montar(pieza) {
   try {
     pieza();
   } catch (error) {
-    console.error(error);
+    if (typeof reportError === 'function') reportError(error);
+    else console.error(error);
   }
 }
+
+// La medicion va primero: sus escuchas ya estan puestos cuando las demas piezas empiezan a trabajar, y no se le
+// escapa ni el primer aviso de la demostracion ni un error de codigo que llegue hasta la ventana.
+montar(() => montarMedicion());
 
 const pelicula = document.querySelector('[data-pelicula]');
 montar(() => {

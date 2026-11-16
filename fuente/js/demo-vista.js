@@ -126,6 +126,18 @@ export function montarDemo(raiz) {
   }
 
   /**
+   * Avisa lo que pasa en la historia, para quien quiera enterarse: un evento "demo:..." que sale de la raiz y sube por
+   * el documento, con el ejemplo puesto y lo propio de cada aviso. La historia no espera respuesta ni depende de que
+   * alguien escuche.
+   * @param {'inicio' | 'paso' | 'fin' | 'ejemplo'} que
+   * @param {Record<string, string | boolean>} [detalle]
+   */
+  function avisar(que, detalle) {
+    const detail = { giro: ejemplo.giro.clave, ...detalle };
+    raiz.dispatchEvent(new CustomEvent(`demo:${que}`, { bubbles: true, detail }));
+  }
+
+  /**
    * Cambia de quien es el telefono: su cabecera y, a escenario limpio, la acotacion que le dice a la visitante que
    * papel le toca ahora.
    * @param {Telefono} cual
@@ -366,10 +378,17 @@ export function montarDemo(raiz) {
     if (ocupada) return;
     const siguiente = avanzar(estado, evento, ejemplo.guion);
     if (siguiente === estado) return;
+    const saleDelReposo = estado.paso === 'reposo';
     estado = siguiente;
     turno += 1;
     // Si un paso no se puede pintar, la demostracion vuelve a empezar en lugar de quedarse muda.
     jugar().catch(reiniciar);
+    // Los avisos salen de aqui, el unico lugar donde la historia avanza: uno por cada llegada, y ninguno al reiniciar
+    // o al cambiar de ejemplo, que regresan al reposo por otro camino. "tocada" dice si la visitante ya hizo algo
+    // (tocar Enviar o pedir verlo todo): sin eso, quien mando el primer mensaje fue el reloj de los 4 segundos.
+    if (saleDelReposo) avisar('inicio', { modo: tocada ? 'toque' : 'sola' });
+    if (estado.paso === 'finSi' || estado.paso === 'finNo') avisar('fin', { asistio: estado.paso === 'finSi' });
+    else if (estado.paso !== 'cierre') avisar('paso', { paso: estado.paso });
   }
 
   /**
@@ -431,6 +450,7 @@ export function montarDemo(raiz) {
     raiz.dataset.ejemplo = ejemplo.giro.clave;
     leyenda.textContent = palabras.leyenda;
     anuncio.textContent = palabras.anuncio;
+    avisar('ejemplo');
   }
 
   // Si nadie la toca, manda sola el primer mensaje a los 4 segundos de estar a la vista. De ahi en adelante espera.

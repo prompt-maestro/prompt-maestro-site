@@ -10,10 +10,25 @@
 <link rel="modulepreload" href="{{armado.activos}}js/redaccion.js">
 <link rel="modulepreload" href="{{armado.activos}}js/calculadora-vista.js">
 <link rel="modulepreload" href="{{armado.activos}}js/calculadora.js">
+<link rel="modulepreload" href="{{armado.activos}}js/medicion-vista.js">
+<link rel="modulepreload" href="{{armado.activos}}js/medicion.js">
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
-<title>Citas Garantizadas: tu agente de WhatsApp que agenda con anticipo pagado</title>
-<meta name="description" content="Despreocúpate: nuestro agente se encarga de tu agenda por WhatsApp. Contesta mensajes y notas de voz, ve fotos y agenda solo con el anticipo pagado. Hoy para uñas, dentistas y médicos.">
+{{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true"></script>
+{{/si}}<title>{{sitio.titulo}}</title>
+<meta name="description" content="{{sitio.descripcion}}">
 <link rel="canonical" href="{{armado.origen}}{{armado.base}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{sitio.producto}}">
+<meta property="og:locale" content="es_MX">
+<meta property="og:title" content="{{sitio.titulo}}">
+<meta property="og:description" content="{{sitio.descripcion}}">
+<meta property="og:url" content="{{armado.origen}}{{armado.base}}">
+<meta property="og:image" content="{{armado.origen}}{{armado.base}}compartir.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{sitio.compartirAlt}}">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{{{armado.datosEstructurados}}}</script>
 </head>
 <body>
 {{> cinta-previa}}{{> tinta}}<a class="salto" href="#contenido">Saltar al contenido</a>
@@ -152,6 +167,29 @@
       </li>
 {{/cada}}    </ul>
     <p class="oficio__otro"><a class="enlace" href="{{sitio.contactoOficio}}" data-lugar="para-quien">{{secciones.paraQuien.otro}}</a></p>
+  </section>
+
+  <section class="frase" id="en-una-frase" aria-labelledby="titulo-frase">
+    <div class="seccion__cabeza">
+      <p class="sobre">{{secciones.enUnaFrase.sobre}}</p>
+      <h2 class="seccion__titulo" id="titulo-frase">{{secciones.enUnaFrase.titulo}} <em>{{secciones.enUnaFrase.tituloFuerte}}</em></h2>
+    </div>
+    <dl class="frase__definiciones">
+{{#cada secciones.enUnaFrase.definiciones}}      <div class="frase__definicion"><dt>{{termino}}</dt><dd>{{texto}}</dd></div>
+{{/cada}}    </dl>
+    <div class="frase__compara">
+      <h3 class="frase__subtitulo" id="titulo-compara">{{secciones.enUnaFrase.comparaTitulo}}</h3>
+      <table class="compara" role="table" aria-labelledby="titulo-compara">
+        <thead role="rowgroup">
+          <tr role="row">
+{{#cada secciones.enUnaFrase.comparaColumnas}}            <th role="columnheader" scope="col">{{este}}</th>
+{{/cada}}          </tr>
+        </thead>
+        <tbody role="rowgroup">
+{{#cada secciones.enUnaFrase.compara}}          <tr role="row"{{#si propia}} class="compara__propia"{{/si}}><th role="rowheader" scope="row">{{opcion}}</th><td role="cell" data-rotulo="{{secciones.enUnaFrase.comparaColumnas.1}}">{{donde}}</td><td role="cell" data-rotulo="{{secciones.enUnaFrase.comparaColumnas.2}}">{{cita}}</td></tr>
+{{/cada}}        </tbody>
+      </table>
+    </div>
   </section>
 
   <section class="planes" id="planes" aria-labelledby="titulo-planes">
