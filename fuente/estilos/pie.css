@@ -39,6 +39,21 @@
   color: var(--tinta-2);
 }
 
+.pie__enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--e-6);
+}
+
+.pie__enlaces .enlace {
+  color: var(--tinta-2);
+  font-size: 1rem;
+}
+
+.pie__enlaces .enlace:hover {
+  color: var(--tinta);
+}
+
 .pie__nota {
   max-width: 46rem;
   padding-top: var(--e-6);

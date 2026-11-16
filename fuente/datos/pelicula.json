@@ -96,7 +96,8 @@
           "cita": ""
         }
       ],
-      "video": true
+      "video": true,
+      "tarjeta": "Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta."
     },
     {
       "clave": "dentista",
@@ -120,8 +121,8 @@
           "hace": "3 min"
         },
         {
-          "quien": "Sr. Robles",
-          "inicial": "R",
+          "quien": "Sr. Medina",
+          "inicial": "M",
           "texto": "",
           "voz": "0:21",
           "foto": false,
@@ -145,18 +146,19 @@
       "charlas": [
         {
           "toma": "voz",
-          "quien": "Sr. Robles",
-          "inicial": "R",
+          "quien": "Sr. Medina",
+          "inicial": "M",
           "entra": "",
           "voz": "0:21",
           "foto": false,
           "nota": "Escuchó: «Doctor, se me cayó una amalgama. ¿Me podría atender hoy?»",
-          "sale": "Buenas tardes, señor Robles. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?",
+          "sale": "Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?",
           "pago": "",
           "cita": ""
         }
       ],
-      "video": false
+      "video": false,
+      "tarjeta": "Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental."
     },
     {
       "clave": "medico",
@@ -207,23 +209,24 @@
           "toma": "pago",
           "quien": "Doña Elvira",
           "inicial": "E",
-          "entra": "Sí, aparte el sábado a las 10, por favor.",
+          "entra": "Sí, aparte el jueves a las 10, por favor.",
           "voz": "",
           "foto": false,
           "nota": "",
-          "sale": "Con gusto. Para apartar su consulta, el anticipo es de $200. Aquí está su enlace de pago.",
-          "pago": "$200 · Mercado Pago",
-          "cita": "Sábado 10:00 am · Elvira"
+          "sale": "Con gusto. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.",
+          "pago": "$300 · Mercado Pago",
+          "cita": "Jueves 10:00 am · Elvira"
         }
       ],
-      "video": false
+      "video": false,
+      "tarjeta": "Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti."
     }
   ],
   "tomas": [
     {
       "clave": "ruido",
       "oficio": "",
-      "sobre": "No importa tu profesión u oficio",
+      "sobre": "Uñas, dentistas, médicos y pronto más oficios",
       "titulo": "Despreocúpate",
       "texto": "Nuestro agente se encarga de tu agenda por WhatsApp: contesta, agenda y cobra el anticipo mientras tú trabajas.",
       "primera": true,
@@ -254,7 +257,7 @@
       "clave": "texto",
       "oficio": "unas",
       "sobre": "01 · Contesta",
-      "titulo": "Responde al momento.",
+      "titulo": "Contesta en menos de un minuto.",
       "texto": "Precios, horarios y dudas, a cualquier hora y con el tono de tu negocio.",
       "primera": false,
       "ultima": false,
@@ -285,7 +288,7 @@
       "oficio": "medico",
       "sobre": "04 · Agenda",
       "titulo": "Agenda solo con pago previo.",
-      "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo en tu cuenta.",
+      "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo en tu Mercado Pago.",
       "primera": false,
       "ultima": false,
       "marca": false

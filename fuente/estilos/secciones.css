@@ -1,0 +1,550 @@
+/* Las secciones de despues del comercial y la demostracion: como funciona, para quien, planes, preguntas y el cierre.
+   Todas comparten el mismo marco: un renglon chico encendido, un titulo grande y aire. */
+.pasos,
+.oficio,
+.planes,
+.preguntas {
+  display: grid;
+  gap: var(--e-12);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--e-16) clamp(20px, 5.5vw, 88px) var(--e-24);
+  border-top: 1px solid var(--linea);
+}
+
+.seccion__cabeza {
+  display: grid;
+  justify-items: start;
+  /* El titulo se mide contra el ancho de esta columna. */
+  container-type: inline-size;
+}
+
+.seccion__cabeza .sobre {
+  margin-bottom: var(--e-3);
+}
+
+.seccion__titulo {
+  font-family: var(--f-titulo);
+  font-size: var(--t-seccion);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+@supports (font-size: 1cqi) {
+  .seccion__titulo {
+    font-size: clamp(2.25rem, 10.5cqi, 4.25rem);
+  }
+}
+
+/* La segunda frase del titulo va en su renglon, encendida. */
+.seccion__titulo em {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Como funciona: seis pasos y lo poco que le toca a ella.
+   --------------------------------------------------------------------------------------------------------------- */
+.pasos__lista {
+  display: grid;
+  gap: var(--e-6) var(--e-12);
+}
+
+.pasos__paso {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--e-4);
+  align-items: baseline;
+  padding-top: var(--e-4);
+  border-top: 1px solid var(--linea);
+}
+
+.pasos__numero {
+  color: var(--luz);
+  font-size: var(--t-nota);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.pasos__paso p {
+  max-width: 32rem;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  line-height: 1.35;
+}
+
+.pasos__tu,
+.planes__requisitos {
+  display: grid;
+  gap: var(--e-4);
+  padding: var(--e-8) clamp(20px, 4vw, 48px);
+  border-radius: var(--r-tarjeta);
+  background: var(--papel-2);
+}
+
+.pasos__subtitulo,
+.planes__subtitulo {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.pasos__tareas,
+.planes__requisitos ul {
+  display: grid;
+  gap: var(--e-3) var(--e-12);
+  color: var(--tinta-2);
+}
+
+.pasos__tareas li,
+.planes__requisitos li {
+  padding-left: var(--e-6);
+  background: linear-gradient(var(--luz), var(--luz)) 0 0.78em / 12px 1.5px no-repeat;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Para quien: una tarjeta por oficio, con su toma.
+   --------------------------------------------------------------------------------------------------------------- */
+.oficio__lista {
+  display: grid;
+  gap: var(--e-4);
+}
+
+.oficio__tarjeta {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-tarjeta);
+  background: var(--superficie);
+  isolation: isolate;
+}
+
+.oficio__foto {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  /* La persona trabajando, no el celular: el encuadre sube. */
+  object-position: 50% 32%;
+}
+
+.oficio__texto {
+  position: absolute;
+  inset: auto 0 0;
+  display: grid;
+  gap: var(--e-1);
+  padding: var(--e-12) var(--e-6) var(--e-6);
+  background: linear-gradient(to top, rgb(7 9 22 / 0.94) 0%, rgb(7 9 22 / 0.7) 55%, rgb(7 9 22 / 0) 100%);
+}
+
+.oficio__texto h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.oficio__texto p {
+  max-width: 26rem;
+  color: var(--tinta-2);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Planes: primero la cuenta con sus numeros, luego los planes y lo que hace falta para empezar.
+   --------------------------------------------------------------------------------------------------------------- */
+.calculadora {
+  display: grid;
+  gap: var(--e-6);
+  padding: clamp(20px, 4vw, 48px);
+  border: 1px solid var(--linea);
+  border-radius: var(--r-tarjeta);
+  background: var(--superficie);
+}
+
+/* Sin JavaScript la calculadora no puede hacer la cuenta: no se ensena. La marca la pone arranque.js antes de
+   pintar, para que la seccion no brinque al cargar. */
+html:not(.con-cuenta) .calculadora {
+  display: none;
+}
+
+.calculadora__casillas {
+  display: grid;
+  gap: var(--e-6);
+}
+
+.calculadora__casilla {
+  display: grid;
+  gap: var(--e-2);
+}
+
+.calculadora__pregunta {
+  color: var(--tinta-2);
+}
+
+.calculadora__pesos {
+  display: flex;
+  align-items: baseline;
+  gap: var(--e-2);
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.calculadora__numero {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--e-4);
+  /* El contorno de una casilla tiene que verse: mas luz que las lineas de adorno. */
+  border: 1.5px solid var(--tinta-3);
+  border-radius: var(--r-control);
+  background: var(--papel);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 2rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El ejemplo se ve como sugerencia, no como algo ya escrito. */
+.calculadora__numero::placeholder {
+  color: var(--tinta-3);
+  opacity: 0.7;
+}
+
+.calculadora__numero:focus-visible {
+  border-color: var(--luz);
+}
+
+.calculadora__numero[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+/* Alto fijo para que los planes de abajo no brinquen cada vez que cambia la cuenta. */
+.calculadora__salida {
+  display: grid;
+  gap: var(--e-2);
+  min-height: 11rem;
+  align-content: start;
+  color: var(--tinta-2);
+}
+
+.calculadora[data-estado="fuera"] .calculadora__salida {
+  color: var(--error);
+}
+
+.calculadora__ejemplo {
+  color: var(--luz);
+  font-size: var(--t-nota);
+}
+
+.calculadora__perdido {
+  color: var(--tinta);
+  font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.25rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.planes__lista {
+  display: grid;
+  gap: var(--e-4);
+  align-items: stretch;
+}
+
+/* En columna: asi el boton de cada plan cae al fondo y los tres quedan a la misma altura. */
+.plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+  padding: var(--e-8) var(--e-6);
+  border: 1px solid var(--linea);
+  border-radius: var(--r-tarjeta);
+  background: var(--superficie);
+}
+
+/* El plan recomendado lleva la luz de la marca. */
+.plan--destacado {
+  border-color: var(--sello-2);
+  box-shadow:
+    0 0 0 1px var(--sello-2),
+    0 24px 60px rgb(63 92 245 / 0.22);
+}
+
+.plan__marca {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--sello-suave);
+  color: var(--luz);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.plan__nombre {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.plan__precio strong {
+  font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.plan__precio span,
+.plan__anual {
+  color: var(--tinta-2);
+}
+
+.plan__anual {
+  font-size: var(--t-nota);
+}
+
+.plan__incluye {
+  display: grid;
+  gap: var(--e-2);
+  margin-block: var(--e-3);
+  padding-top: var(--e-4);
+  border-top: 1px solid var(--linea);
+  color: var(--tinta-2);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.plan__incluye li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--e-2);
+  align-items: start;
+}
+
+.plan__incluye .palomita {
+  width: 16px;
+  height: 16px;
+  margin-top: 0.2em;
+  color: var(--luz);
+}
+
+.plan .boton {
+  margin-top: auto;
+}
+
+.planes__nota {
+  max-width: 46rem;
+  color: var(--tinta-3);
+  font-size: var(--t-nota);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Preguntas: cada una se abre sola, con o sin JavaScript.
+   --------------------------------------------------------------------------------------------------------------- */
+.preguntas__lista {
+  max-width: 56rem;
+  border-bottom: 1px solid var(--linea);
+}
+
+.pregunta {
+  border-top: 1px solid var(--linea);
+}
+
+.pregunta summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--e-4);
+  align-items: center;
+  min-height: 64px;
+  padding-block: var(--e-3);
+  cursor: pointer;
+  list-style: none;
+}
+
+.pregunta summary::-webkit-details-marker {
+  display: none;
+}
+
+/* El signo de mas, que se vuelve menos al abrir. */
+.pregunta summary::after {
+  width: 14px;
+  height: 14px;
+  background:
+    linear-gradient(var(--luz), var(--luz)) 50% 50% / 100% 1.5px no-repeat,
+    linear-gradient(var(--luz), var(--luz)) 50% 50% / 1.5px 100% no-repeat;
+  content: "";
+}
+
+.pregunta[open] summary::after {
+  background: linear-gradient(var(--luz), var(--luz)) 50% 50% / 100% 1.5px no-repeat;
+}
+
+.pregunta h3 {
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.pregunta p {
+  max-width: 44rem;
+  padding-bottom: var(--e-6);
+  color: var(--tinta-2);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El cierre: una sola idea, el boton y el sello.
+   --------------------------------------------------------------------------------------------------------------- */
+.final {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--e-6);
+  overflow: hidden;
+  padding: var(--e-24) clamp(20px, 5.5vw, 88px);
+  border-top: 1px solid var(--linea);
+  background: radial-gradient(60% 80% at 50% 110%, rgb(63 92 245 / 0.28), rgb(63 92 245 / 0) 70%), var(--papel);
+  text-align: center;
+  isolation: isolate;
+}
+
+.final__titulo {
+  font-size: clamp(2.25rem, 1.2rem + 5.4vw, 5rem);
+}
+
+.final__acciones {
+  display: grid;
+  justify-items: center;
+  gap: var(--e-1);
+}
+
+.final__nota {
+  max-width: 26rem;
+  color: var(--tinta-3);
+  font-size: var(--t-nota);
+  text-wrap: balance;
+}
+
+/* El sello, grande y apenas visible, detras de todo. */
+.final__sello {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  z-index: -1;
+  width: min(120vw, 60rem);
+  opacity: 0.07;
+  pointer-events: none;
+  translate: -50% -50%;
+}
+
+.final__sello .sello {
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   La barra de abajo, solo en celular: el boton principal a la mano despues del comercial.
+   --------------------------------------------------------------------------------------------------------------- */
+.barra-movil {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 9;
+  padding: var(--e-2) var(--e-4) max(var(--e-2), env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linea);
+  background: rgb(7 9 22 / 0.9);
+  visibility: hidden;
+  translate: 0 100%;
+}
+
+.barra-movil .boton {
+  width: 100%;
+}
+
+.barra-movil[data-visible] {
+  visibility: visible;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .barra-movil {
+    transition:
+      translate var(--d-entrada) var(--suave),
+      visibility var(--d-entrada) var(--suave);
+  }
+}
+
+@media (min-width: 720px) {
+  .final__sello {
+    top: 50%;
+  }
+
+  .pasos__lista,
+  .pasos__tareas,
+  .planes__requisitos ul,
+  .calculadora__casillas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Una tarjeta por renglon todavia: en tres columnas el texto taparia la foto. */
+  .oficio__foto {
+    aspect-ratio: 16 / 9;
+  }
+
+  .final__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--e-2) var(--e-6);
+  }
+}
+
+/* Con la barra de abajo a la vista, lo que recibe el foco no se queda escondido detras de ella. */
+@media (max-width: 899px) {
+  html {
+    scroll-padding-bottom: 5.5rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .barra-movil {
+    display: none;
+  }
+
+  .oficio__lista {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .oficio__foto {
+    aspect-ratio: 4 / 5;
+  }
+
+  .planes__lista {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .calculadora {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--e-12);
+  }
+
+  .calculadora__casillas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .pasos,
+  .oficio,
+  .planes,
+  .preguntas {
+    padding-block: var(--e-24) var(--e-40);
+  }
+
+  .pasos__lista {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

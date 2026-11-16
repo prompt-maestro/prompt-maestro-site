@@ -1,0 +1,26 @@
+{
+  "pregunta": "Buenas tardes, ¿cuánto cuesta la consulta?",
+  "saludo": [
+    "Buenas tardes. Soy {asistente}, la asistente virtual del {negocio}. La consulta de primera vez con el {profesional} cuesta {precio} y dura alrededor de 45 minutos. Si lo deseas, con gusto te busco un horario."
+  ],
+  "cuando": [
+    {
+      "id": "lunes",
+      "ficha": "El lunes",
+      "dice": "Sí, por favor. ¿Hay lugar el lunes?",
+      "dia": "lunes",
+      "horas": ["10:00 am", "12:00 pm", "4:30 pm", "6:00 pm"]
+    },
+    {
+      "id": "jueves",
+      "ficha": "El jueves",
+      "dice": "Sí, por favor. ¿Hay lugar el jueves?",
+      "dia": "jueves",
+      "horas": ["10:30 am", "12:30 pm", "4:00 pm", "5:30 pm"]
+    }
+  ],
+  "horaSugerida": "4:30 pm",
+  "eligeHora": "{ALaHora}, por favor.",
+  "apartado": "Con gusto. Te aparté el lugar para el {dia} {aLaHora}. Para confirmar tu cita se paga el anticipo de {anticipo} con este link. El lugar se guarda unos minutos y, en cuanto pagues, recibirás la confirmación por aquí mismo.",
+  "otras": ["Consulta · Jorge", "Consulta en línea · Marta", "Certificado · Luis"]
+}

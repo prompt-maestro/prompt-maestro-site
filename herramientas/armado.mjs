@@ -6,9 +6,17 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { avanzar, conversacionDeEjemplo, escenaDe, estadoInicial, presentacionDe } from '../fuente/js/demo.js';
+import {
+  avanzar,
+  conversacionDeEjemplo,
+  escenaDe,
+  estadoInicial,
+  presentacionDe,
+  rotulosDeEjemplo,
+} from '../fuente/js/demo.js';
+import { pesos } from '../fuente/js/redaccion.js';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
-import { planesPublicos } from './planes.mjs';
+import { planesParaPagina, planesPublicos } from './planes.mjs';
 import { pintar } from './plantilla.mjs';
 
 /** @typedef {'publica' | 'previa'} Destino */
@@ -132,14 +140,17 @@ function huellaDe(activos) {
 }
 
 /**
- * Todo lo que la demostracion puede llegar a decir con un ejemplo: cada dia, cada hora y las dos respuestas. Si algun
- * texto deja un hueco sin llenar, truena aqui, al armar, y no en el telefono de una visitante.
+ * Todo lo que la demostracion puede llegar a decir con un ejemplo: cada dia, cada hora y las dos respuestas, y lo que
+ * la pagina dice de el fuera del telefono (su nombre para elegirlo, la leyenda y el aviso del cambio). Si algun texto
+ * deja un hueco sin llenar, truena aqui, al armar, y no en el telefono de una visitante.
  * @param {Ejemplo} ejemplo
  * @returns {string[]}
  */
 function textosDe(ejemplo) {
   const { giro, guion, rotulos } = ejemplo;
   const textos = new Set(Object.values(rotulos).filter((texto) => !/[{}]/.test(texto)));
+  textos.add(giro.nombre);
+  for (const texto of Object.values(rotulosDeEjemplo(giro, rotulos))) textos.add(texto);
   for (const telefono of /** @type {const} */ (['cliente', 'profesional'])) {
     for (const texto of Object.values(presentacionDe(giro, rotulos, telefono))) textos.add(texto);
   }
@@ -172,8 +183,9 @@ function textosDe(ejemplo) {
 }
 
 /**
- * Los ejemplos de la demostracion: cada giro con su guion. Se detiene si a un giro le falta el guion o si alguna
- * frase deja un hueco sin llenar, y anota como problema cualquier guion largo en lo que el JavaScript va a pintar.
+ * Los ejemplos de la demostracion: cada giro con su guion, en el orden en que se eligen. Se detiene si a un giro le
+ * falta el guion, si dos llevan la misma clave o si alguna frase de CUALQUIERA de ellos queda vacia o con un hueco sin
+ * llenar, y anota como problema cualquier guion largo en lo que el JavaScript va a pintar.
  * @param {Record<string, unknown>} datos
  * @param {string} alta  a donde lleva "Empieza ahora"
  * @param {string[]} problemas
@@ -187,8 +199,13 @@ function prepararDemo(datos, alta, problemas) {
     if (!guion) throw new Error(`Demostracion: al ejemplo "${giro.clave}" le falta su guion`);
     return { giro, guion };
   });
+  // El selector distingue los ejemplos por su clave.
+  if (new Set(giros.map((giro) => giro.clave)).size !== giros.length) {
+    throw new Error('Demostracion: dos ejemplos llevan la misma clave');
+  }
   for (const ejemplo of ejemplos) {
     for (const texto of textosDe({ ...ejemplo, fijos, tu, rotulos })) {
+      if (!texto) throw new Error(`Demostracion: al ejemplo "${ejemplo.giro.clave}" le falta un texto`);
       for (const hallazgo of guionesEn(texto)) problemas.push(`demostracion (${ejemplo.giro.clave}): ${hallazgo}`);
     }
   }
@@ -205,6 +222,7 @@ function prepararDemo(datos, alta, problemas) {
       ...primero.giro,
       pregunta: primero.guion.pregunta,
       ...presentacionDe(primero.giro, rotulos, 'cliente'),
+      leyenda: rotulosDeEjemplo(primero.giro, rotulos).leyenda,
       dia: reposo.dia.charAt(0).toUpperCase() + reposo.dia.slice(1),
       filas: reposo.filas,
     },
@@ -267,7 +285,7 @@ export async function armarSitio({ raiz, destino }) {
   }
   const contexto = {
     ...datos,
-    planes,
+    planes: planesParaPagina(planes, pesos),
     ejemplo: demo.ejemplo,
     conversacion: demo.conversacion,
     armado: {

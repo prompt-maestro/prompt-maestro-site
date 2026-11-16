@@ -31,6 +31,18 @@ async function tocar(demo, nombre, paso) {
   await expect(demo).toHaveAttribute('data-paso', paso, { timeout: 15_000 });
 }
 
+/**
+ * Elige un ejemplo en el selector y espera a que la historia quede en reposo con el.
+ * @param {import('@playwright/test').Locator} demo
+ * @param {string} nombre
+ * @param {string} clave
+ */
+async function elegir(demo, nombre, clave) {
+  await demo.getByRole('group', { name: 'Ejemplo' }).getByRole('button', { name: nombre, exact: true }).click();
+  await expect(demo).toHaveAttribute('data-ejemplo', clave);
+  await expect(demo).toHaveAttribute('data-paso', 'reposo');
+}
+
 /** @param {import('@playwright/test').Locator} demo */
 async function hastaApartado(demo) {
   await tocar(demo, 'Enviar', 'precio');
@@ -72,7 +84,8 @@ test('si nadie la toca, arranca sola a los 4 segundos de estar a la vista y lueg
   const demo = await abrir(page);
   await demo.locator('.telefono').scrollIntoViewIfNeeded();
   await expect(demo).toHaveAttribute('data-paso', 'reposo');
-  await expect(demo).toHaveAttribute('data-paso', 'precio', { timeout: 8000 });
+  // Son 4 segundos de reloj; con la maquina cargada (cinco navegadores a la vez) Firefox tarda mas en contarlos.
+  await expect(demo).toHaveAttribute('data-paso', 'precio', { timeout: 15_000 });
   // Ya arranco: ahora le toca a la visitante. No sigue sola.
   await page.waitForTimeout(2500);
   await expect(demo).toHaveAttribute('data-paso', 'precio');
@@ -131,7 +144,7 @@ test('al pagar se ve, en este orden: el dinero en su cuenta, la cita en su calen
   await expect(demo.locator('[data-demo-tu-resumen]')).toHaveText('$150 de anticipo, directo en tu Mercado Pago.');
   await expect(demo.locator('.agenda__fila[data-estado="garantizada"]')).toContainText('Gelish · Ana');
   await expect(demo.getByRole('img', { name: 'Garantizada: anticipo pagado' })).toBeVisible();
-  await sinFaltasDeAccesibilidad(page);
+  await sinFaltasDeAccesibilidad(page, '#citas');
 });
 
 test('el azul se guarda para lo pagado: el sello, Pago aprobado y el boton del cierre', async ({ page }) => {
@@ -152,9 +165,9 @@ test('al terminar la cita cambia la escena: ahora es la profesional, y su asiste
   await hastaAsistencia(demo);
   await expect(demo).toHaveAttribute('data-telefono', 'profesional');
   await expect(demo.locator('[data-demo-nombre]')).toHaveText('Marifer');
-  await expect(demo.locator('[data-demo-atiende]')).toHaveText('Tu asistente, en tu WhatsApp');
+  await expect(demo.locator('[data-demo-atiende]')).toHaveText('Tu agente, en tu WhatsApp');
   const chat = demo.getByRole('log');
-  await expect(chat).toContainText('Ahora eres tú. Al terminar la cita, tu asistente te escribe.');
+  await expect(chat).toContainText('Ahora eres tú. Al terminar la cita, tu agente te escribe.');
   await expect(chat).toContainText(
     '¡Hola! ¿Asistió Ana a su cita de Gelish semipermanente hoy a las 5:00 pm? Toca un botón y lo dejo registrado.',
   );
@@ -164,7 +177,7 @@ test('al terminar la cita cambia la escena: ahora es la profesional, y su asiste
   await expect(demo.getByRole('button', { name: 'No', exact: true })).toBeVisible();
   // La cita sigue a la vista, con su sello.
   await expect(demo.locator('.agenda__fila[data-estado="garantizada"] .sello')).toBeVisible();
-  await sinFaltasDeAccesibilidad(page);
+  await sinFaltasDeAccesibilidad(page, '#citas');
 });
 
 test('si asistio: queda registrado y el cuadro final ensena el dia entero sellado, con Empieza ahora', async ({
@@ -190,7 +203,7 @@ test('si asistio: queda registrado y el cuadro final ensena el dia entero sellad
   await expect(empieza).not.toHaveAttribute('target', /.*/);
   await expect(empieza).toHaveCSS('background-color', AZUL_DEL_BOTON);
   await expect(demo.getByRole('button', { name: 'Ver otra vez' })).toBeVisible();
-  await sinFaltasDeAccesibilidad(page);
+  await sinFaltasDeAccesibilidad(page, '#citas');
 });
 
 test('si no asistio: el anticipo se queda con ella segun su politica, y da tiempo de leerlo', async ({ page }) => {
@@ -219,7 +232,7 @@ test('Ver otra vez y Reiniciar regresan al principio, limpio', async ({ page }) 
   await expect(demo.locator('[data-demo-nombre]')).toHaveText('Studio Bella');
   await expect(demo.locator('.burbuja, .cobro, .cierre, .sello')).toHaveCount(0);
   await expect(demo.locator('.agenda__fila[data-estado="libre"]')).toHaveCount(4);
-  await expect(demo.locator('[data-demo-tu-resumen]')).toHaveText('Tú, atendiendo. Tu asistente, contestando.');
+  await expect(demo.locator('[data-demo-tu-resumen]')).toHaveText('Tú, atendiendo. Tu agente, contestando.');
   await expect(demo.getByRole('log')).toContainText('Eres Ana y le escribes a Studio Bella.');
   await tocar(demo, 'Enviar', 'precio');
   await demo.getByRole('button', { name: 'Reiniciar' }).click();
@@ -256,7 +269,7 @@ test('se completa solo con el teclado, el foco no se pierde y cada novedad se an
   await demo.getByRole('button', { name: 'Enviar' }).focus();
   /** @type {[string, string][]} */
   const pasos = [
-    ['precio', 'Tú, atendiendo. Tu asistente, contestando.'],
+    ['precio', 'Tú, atendiendo. Tu agente, contestando.'],
     ['horarios', 'Ofrece solo los horarios libres de tu Google Calendar.'],
     ['apartado', 'Lugar apartado unos minutos, mientras paga.'],
     ['pagado', '$150 de anticipo, directo en tu Mercado Pago.'],
@@ -288,6 +301,162 @@ test('quien esta en Ver todo solo con el teclado conserva su lugar', async ({ pa
   await page.keyboard.press('Enter');
   await expect(demo).toHaveAttribute('data-paso', 'horarios', { timeout: 15_000 });
   await expect(sola).toBeFocused();
+});
+
+test('elegir Dentista cambia la cabecera, la pregunta, la agenda y la leyenda, y lo anuncia', async ({ page }) => {
+  const fallas = vigilar(page);
+  const demo = await abrir(page);
+  const selector = demo.getByRole('group', { name: 'Ejemplo' });
+  await expect(selector.getByRole('button')).toHaveText(['Uñas', 'Dentista', 'Médico']);
+  await expect(selector.getByRole('button', { name: 'Uñas' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(demo.locator('[data-demo-leyenda]')).toContainText('Demostración con un salón de uñas de ejemplo.');
+  await elegir(demo, 'Dentista', 'dentista');
+  await expect(selector.getByRole('button', { name: 'Dentista' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(selector.locator('[aria-pressed="true"]')).toHaveCount(1);
+  await expect(demo.locator('[data-demo-nombre]')).toHaveText('Dental Sonría');
+  await expect(demo.locator('[data-demo-atiende]')).toHaveText('Sofi, asistente virtual');
+  await expect(demo.locator('[data-demo-iniciales]')).toHaveText('DS');
+  await expect(demo.getByRole('log')).toContainText('Eres Carla y le escribes a Dental Sonría.');
+  await expect(demo.locator('.chat__borrador')).toHaveText('Hola, ¿cuánto cuesta la limpieza dental?');
+  await expect(demo.getByRole('button', { name: 'Enviar' })).toHaveClass(/pista/);
+  await expect(demo.locator('[data-demo-dia]')).toHaveText('Miércoles');
+  await expect(demo.locator('.agenda__hora')).toHaveText(['9:00 am', '11:30 am', '4:00 pm', '6:00 pm']);
+  await expect(demo.locator('.agenda__fila[data-estado="libre"]')).toHaveCount(4);
+  await expect(demo.locator('[data-demo-leyenda]')).toHaveText(
+    'Demostración con un consultorio dental de ejemplo. Tócala y vívela como si fueras quien pide la cita.',
+  );
+  await expect(demo.locator('[data-demo-anuncio]')).toHaveText(
+    'Ejemplo: Dentista. Eres Carla y le escribes a Dental Sonría.',
+  );
+  expect(fallas).toEqual([]);
+  // La accesibilidad se mide con el selector y el telefono a la vista, debajo de la barra.
+  await page.evaluate(() => document.querySelector('#demo')?.scrollIntoView({ block: 'start' }));
+  await expect(selector).toBeInViewport({ ratio: 1 });
+  await sinFaltasDeAccesibilidad(page, '#citas');
+});
+
+test('la historia completa de Dentista llega al pago de $200 y a la pregunta de asistencia', async ({ page }) => {
+  const demo = await abrir(page);
+  await elegir(demo, 'Dentista', 'dentista');
+  const chat = demo.getByRole('log');
+  await tocar(demo, 'Enviar', 'precio');
+  await expect(chat).toContainText('Hola, ¿cuánto cuesta la limpieza dental?');
+  await expect(chat).toContainText('Soy Sofi, la asistente virtual de Dental Sonría');
+  await expect(chat).toContainText('La limpieza dental cuesta $650');
+  await expect(chat).toContainText(
+    'Si en algún momento prefieres hablar con una persona del consultorio, escribe PERSONA y le aviso.',
+  );
+  await tocar(demo, 'El miércoles', 'horarios');
+  await expect(chat).toContainText(
+    'Te puedo ofrecer el miércoles a las 9:00 am, 11:30 am, 4:00 pm o 6:00 pm. ¿Cuál te acomoda?',
+  );
+  await tocar(demo, '4:00 pm', 'apartado');
+  await expect(chat).toContainText('te aparté el lugar para el miércoles a las 4:00 pm');
+  await expect(demo.locator('.cobro__concepto')).toHaveText('Anticipo Limpieza dental');
+  await expect(demo.locator('.cobro__monto')).toHaveText('$200');
+  await tocar(demo, 'Pagar anticipo (simulado)', 'pagado');
+  await expect(chat).toContainText(
+    '¡Listo, Carla! Recibimos tu anticipo de $200 y tu cita de Limpieza dental quedó confirmada para el miércoles a las 4:00 pm. Te esperamos en Av. de la Sonrisa 100, colonia Providencia.',
+  );
+  await expect(demo.locator('[data-demo-tu-resumen]')).toHaveText('$200 de anticipo, directo en tu Mercado Pago.');
+  await expect(demo.locator('.agenda__fila[data-estado="garantizada"]')).toContainText('Limpieza · Carla');
+  await expect(demo.locator('.agenda__fila .sello')).toBeVisible();
+  await tocar(demo, 'Ver qué pasa después', 'recordatorios');
+  await expect(chat).toContainText(
+    '¡Hola Carla! Te recordamos tu cita de Limpieza dental mañana miércoles a las 4:00 pm.',
+  );
+  await tocar(demo, 'Ir al final de la cita', 'asistencia');
+  // El segundo acto: ahora es la doctora, y le escribe su asistente.
+  await expect(demo).toHaveAttribute('data-telefono', 'profesional');
+  await expect(demo.locator('[data-demo-nombre]')).toHaveText('Sofi');
+  await expect(chat).toContainText(
+    '¡Hola! ¿Asistió Carla a su cita de Limpieza dental hoy a las 4:00 pm? Toca un botón y lo dejo registrado.',
+  );
+  await expect(chat).not.toContainText('clienta');
+  await demo.getByRole('button', { name: 'No', exact: true }).click();
+  await expect(demo).toHaveAttribute('data-paso', 'finNo');
+  await expect(chat).toContainText('Su anticipo de $200 queda retenido y le ofrecí reagendar.');
+  await expect(demo).toHaveAttribute('data-paso', 'cierre');
+  await expect(demo.locator('.agenda__fila .sello')).toHaveCount(4);
+  await expect(demo.locator('.agenda__fila[data-estado="falto"]')).toContainText('No asistió · Carla');
+  await expect(demo.locator('.agenda__filas')).toContainText('Valoración · Iván');
+  await sinFaltasDeAccesibilidad(page, '#citas');
+});
+
+test('el selector de ejemplos se maneja con el teclado y marca cual esta puesto', async ({ page }) => {
+  const demo = await abrir(page);
+  const selector = demo.getByRole('group', { name: 'Ejemplo' });
+  const unas = selector.getByRole('button', { name: 'Uñas' });
+  const dentista = selector.getByRole('button', { name: 'Dentista' });
+  const medico = selector.getByRole('button', { name: 'Médico' });
+  // Son botones de verdad, del tamano de un dedo.
+  for (const boton of await selector.getByRole('button').all()) {
+    const caja = await boton.boundingBox();
+    expect(caja?.width).toBeGreaterThanOrEqual(44);
+    expect(caja?.height).toBeGreaterThanOrEqual(44);
+  }
+  await unas.focus();
+  await page.keyboard.press('Tab');
+  await expect(dentista).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(dentista).toHaveAttribute('aria-pressed', 'true');
+  await expect(unas).toHaveAttribute('aria-pressed', 'false');
+  await expect(medico).toHaveAttribute('aria-pressed', 'false');
+  await expect(demo.locator('[data-demo-nombre]')).toHaveText('Dental Sonría');
+  // El foco se queda en el boton que eligio: puede seguir al siguiente.
+  await expect(dentista).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(medico).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(medico).toHaveAttribute('aria-pressed', 'true');
+  await expect(dentista).toHaveAttribute('aria-pressed', 'false');
+  await expect(demo.locator('[data-demo-nombre]')).toHaveText('Consultorio Médico Aurora');
+  await expect(demo.locator('.chat__borrador')).toHaveText('Buenas tardes, ¿cuánto cuesta la consulta?');
+  await expect(demo.locator('[data-demo-anuncio]')).toHaveText(
+    'Ejemplo: Médico. Eres Paty y le escribes a Consultorio Médico Aurora.',
+  );
+  await expect(medico).toBeFocused();
+  // Y de regreso al primero, tambien con el teclado.
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(unas).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(unas).toHaveAttribute('aria-pressed', 'true');
+  await expect(demo.locator('[data-demo-nombre]')).toHaveText('Studio Bella');
+  await expect(demo.locator('.chat__borrador')).toHaveText('Hola, ¿cuánto cuesta el gelish?');
+});
+
+test('elegir otro ejemplo a media historia la regresa al reposo; si iba sola, se detiene', async ({ page }) => {
+  test.slow();
+  const demo = await abrir(page);
+  await demo.getByRole('button', { name: 'Ver todo solo' }).click();
+  await expect(demo).toHaveAttribute('data-paso', 'horarios', { timeout: 15_000 });
+  await elegir(demo, 'Médico', 'medico');
+  await expect(demo).toHaveAttribute('data-telefono', 'cliente');
+  await expect(demo.locator('[data-demo-nombre]')).toHaveText('Consultorio Médico Aurora');
+  await expect(demo.locator('[data-demo-atiende]')).toHaveText('Elena, asistente virtual');
+  await expect(demo.locator('.burbuja, .cobro, .cierre, .sello')).toHaveCount(0);
+  await expect(demo.locator('[data-demo-dia]')).toHaveText('Lunes');
+  await expect(demo.locator('.agenda__fila[data-estado="libre"]')).toHaveCount(4);
+  await expect(demo.locator('[data-demo-tu-resumen]')).toHaveText('Tú, atendiendo. Tu agente, contestando.');
+  // Ya no corre sola: espera a la visitante.
+  await page.waitForTimeout(2500);
+  await expect(demo).toHaveAttribute('data-paso', 'reposo');
+  await expect(demo.locator('.burbuja')).toHaveCount(0);
+  // Reiniciar conserva el ejemplo elegido, y la historia de Médico llega completa al cuadro final.
+  await tocar(demo, 'Enviar', 'precio');
+  await expect(demo.getByRole('log')).toContainText('Soy Elena, la asistente virtual del Consultorio Médico Aurora');
+  await demo.getByRole('button', { name: 'Reiniciar' }).click();
+  await expect(demo).toHaveAttribute('data-paso', 'reposo');
+  await expect(demo).toHaveAttribute('data-ejemplo', 'medico');
+  await expect(demo.locator('[data-demo-nombre]')).toHaveText('Consultorio Médico Aurora');
+  await demo.getByRole('button', { name: 'Ver todo solo' }).click();
+  await expect(demo).toHaveAttribute('data-paso', 'cierre', { timeout: 40_000 });
+  await expect(demo.locator('.agenda__fila .sello')).toHaveCount(4);
+  await expect(demo.locator('.agenda__fila[data-estado="asistio"]')).toContainText('Asistió · Paty');
+  await expect(demo.locator('.agenda__filas')).toContainText('Consulta en línea · Marta');
+  await expect(demo.getByRole('link', { name: 'Empieza ahora' })).toBeVisible();
+  await sinFaltasDeAccesibilidad(page, '#citas');
 });
 
 test('con movimiento reducido no hay animaciones y la historia sigue completa', async ({ page }) => {
@@ -336,6 +505,7 @@ test('si el codigo de la demostracion no llega, queda la conversacion escrita', 
   await expect(escrita).toContainText('Así se ve una conversación:');
   await expect(escrita).toContainText('quedó confirmada');
   await expect(page.locator('.chat__pie')).toBeHidden();
+  await expect(page.locator('.demo__ejemplos')).toBeHidden();
 });
 
 test.describe('sin JavaScript', () => {
@@ -350,10 +520,13 @@ test.describe('sin JavaScript', () => {
     await expect(escrita).toContainText('Ana: Hola, ¿cuánto cuesta el gelish?');
     await expect(escrita).toContainText('Marifer: ¡Hola! Soy Marifer, la asistente virtual de Studio Bella');
     await expect(escrita).toContainText('Recibimos tu anticipo de $150');
-    await expect(escrita).toContainText('Ahora eres tú. Al terminar la cita, tu asistente te escribe.');
+    await expect(escrita).toContainText('Ahora eres tú. Al terminar la cita, tu agente te escribe.');
     await expect(escrita).toContainText('Marifer, a Bella: ¡Hola! ¿Asistió Ana a su cita');
     await expect(escrita).toContainText('Bella: Sí');
     await expect(page.locator('.chat__pie')).toBeHidden();
     await expect(page.locator('.tu')).toBeHidden();
+    // Sin JavaScript no hay nada que elegir: queda el primer ejemplo, escrito.
+    await expect(page.locator('.demo__ejemplos')).toBeHidden();
+    await expect(page.locator('.demo__leyenda')).toContainText('Demostración con un salón de uñas de ejemplo.');
   });
 });

@@ -47,7 +47,7 @@ test('abre en el ruido: la promesa, el oficio de unas y sus mensajes sin contest
   const avisos = pelicula.locator('.panel[data-panel="unas"] .aviso');
   await expect(avisos.last()).toBeVisible();
   await expect(avisos.last()).toContainText('Hola, ¿tienes lugar el sábado?');
-  await sinFaltasDeAccesibilidad(page);
+  await sinFaltasDeAccesibilidad(page, '.barra', '#inicio');
   expect(fallas).toEqual([]);
 });
 
@@ -64,9 +64,9 @@ test('cada ventaja la protagoniza su oficio y se ve su charla', async ({ page })
   const pelicula = await abrir(page);
   const casos = [
     { toma: 'texto', oficio: 'unas', dice: '¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm.' },
-    { toma: 'voz', oficio: 'dentista', dice: 'Buenas tardes, señor Robles. Hoy tengo lugar a las 5:30 pm.' },
+    { toma: 'voz', oficio: 'dentista', dice: 'Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm.' },
     { toma: 'foto', oficio: 'unas', dice: 'Ya vi tu diseño: francesas con decorado.' },
-    { toma: 'pago', oficio: 'medico', dice: 'el anticipo es de $200' },
+    { toma: 'pago', oficio: 'medico', dice: 'el anticipo es de $300' },
   ];
   for (const { toma, oficio, dice } of casos) {
     await irA(page, pelicula, toma);
@@ -83,9 +83,9 @@ test('la cita solo aparece agendada con el pago aprobado y su sello', async ({ p
   await irA(page, pelicula, 'pago');
   const charla = pelicula.locator('.charla[data-charla="pago"]');
   await expect(charla.locator('.charla__pago')).toContainText('Pago aprobado');
-  await expect(charla.locator('.charla__cita')).toContainText('Sábado 10:00 am · Elvira');
+  await expect(charla.locator('.charla__cita')).toContainText('Jueves 10:00 am · Elvira');
   await expect(charla.getByRole('img', { name: 'Garantizada: anticipo pagado' })).toBeVisible();
-  await sinFaltasDeAccesibilidad(page);
+  await sinFaltasDeAccesibilidad(page, '.barra', '#inicio');
 });
 
 test('en la duda se ve el lugar vacio y las citas que nadie sabe si llegaran', async ({ page }) => {
@@ -108,7 +108,7 @@ test('el cartel cierra con el boton al alta y el contador en cero', async ({ pag
   await expect(empieza).toHaveAttribute('href', ALTA);
   await expect(empieza).not.toHaveAttribute('target', /.*/);
   await expect(pelicula.locator('[data-cuenta]')).toHaveText('0');
-  await sinFaltasDeAccesibilidad(page);
+  await sinFaltasDeAccesibilidad(page, '.barra', '#inicio');
 });
 
 test('en celular se elige el oficio; en pantallas anchas se ven los tres a la vez', async ({ page }) => {
@@ -127,7 +127,7 @@ test('en celular se elige el oficio; en pantallas anchas se ven los tres a la ve
   await expect(pelicula).toHaveAttribute('data-oficio', 'dentista');
   await expect(dentista).toHaveAttribute('aria-pressed', 'true');
   await expect(pelicula.locator('.panel[data-panel="dentista"]')).toBeVisible();
-  await expect(pelicula.locator('.panel[data-panel="dentista"] .aviso').last()).toContainText('Sr. Robles');
+  await expect(pelicula.locator('.panel[data-panel="dentista"] .aviso').last()).toContainText('Sr. Medina');
   // La duda conserva el oficio que la visitante eligio.
   await irA(page, pelicula, 'duda');
   await expect(pelicula).toHaveAttribute('data-oficio', 'dentista');
@@ -243,7 +243,7 @@ test.describe('sin JavaScript', () => {
     for (const titulo of [
       '¿Y si no llega?',
       'Prompt Maestro',
-      'Responde al momento.',
+      'Contesta en menos de un minuto.',
       'Entiende notas de voz.',
       'Ve las fotos.',
       'Agenda solo con pago previo.',

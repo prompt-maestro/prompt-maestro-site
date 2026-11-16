@@ -8,12 +8,16 @@ import {
   accionesDe,
   avanzar,
   conversacionDeEjemplo,
+  elegirEjemplo,
   escenaDe,
   estadoInicial,
+  opcionesDeEjemplo,
   porDefecto,
   presentacionDe,
+  rotulosDeEjemplo,
   telefonoDe,
 } from '../../fuente/js/demo.js';
+import { pesos } from '../../fuente/js/redaccion.js';
 
 /** @typedef {import('../../fuente/js/demo.js').Ejemplo} Ejemplo */
 /** @typedef {import('../../fuente/js/demo.js').Evento} Evento */
@@ -35,6 +39,10 @@ for (const giro of giros) {
   });
 }
 const unas = /** @type {Ejemplo} */ (ejemplos[0]);
+/** @param {string} clave */
+const ejemploDe = (clave) => /** @type {Ejemplo} */ (ejemplos.find((ejemplo) => ejemplo.giro.clave === clave));
+// En salud a quien se atiende se le dice paciente: asi se reconocen esos ejemplos, tambien los que se sumen despues.
+const deSalud = ejemplos.filter((ejemplo) => ejemplo.giro.persona === 'paciente');
 
 /**
  * Lleva la demostracion por una ruta de eventos.
@@ -62,6 +70,50 @@ const SI = { tipo: 'asistio', valor: true };
 const NO = { tipo: 'asistio', valor: false };
 /** @type {Evento} */
 const SEGUIR = { tipo: 'seguir' };
+
+/**
+ * Todo lo que un ejemplo puede llegar a decir: cada dia, cada hora y las dos respuestas, de reposo a cierre, mas lo
+ * que la pagina dice de el fuera del telefono. Comprueba de paso que cada camino llega al cierre con lo elegido.
+ * @param {Ejemplo} ejemplo
+ * @returns {string[]}
+ */
+function todoLoQueDice(ejemplo) {
+  const { giro, guion, rotulos } = ejemplo;
+  const textos = [giro.nombre, ...Object.values(rotulosDeEjemplo(giro, rotulos))];
+  for (const telefono of /** @type {const} */ (['cliente', 'profesional'])) {
+    textos.push(...Object.values(presentacionDe(giro, rotulos, telefono)));
+  }
+  for (const opcion of guion.cuando) {
+    for (const hora of opcion.horas) {
+      for (const respuesta of [SI, NO]) {
+        /** @type {Evento[]} */
+        const ruta = [
+          { tipo: 'enviar' },
+          { tipo: 'cuando', id: opcion.id },
+          { tipo: 'hora', hora },
+          { tipo: 'pagar' },
+          SEGUIR,
+          SEGUIR,
+          respuesta,
+          SEGUIR,
+        ];
+        let estado = estadoInicial();
+        for (const evento of [null, ...ruta]) {
+          if (evento) estado = avanzar(estado, evento, guion);
+          const escena = escenaDe(estado, ejemplo);
+          textos.push(...escena.chat.map((entrada) => entrada.texto), ...escena.tu.filas.map((fila) => fila.texto));
+          textos.push(escena.tu.resumen, escena.tu.dia);
+        }
+        assert.deepEqual(
+          estado,
+          { paso: 'cierre', cuando: opcion.id, hora, asistio: respuesta === SI },
+          `${giro.clave}: el ${opcion.dia} ${hora} no llega al cierre`,
+        );
+      }
+    }
+  }
+  return textos;
+}
 
 test('empieza en reposo, sin nada elegido', () => {
   assert.deepEqual(estadoInicial(), { paso: 'reposo', cuando: null, hora: null, asistio: null });
@@ -214,9 +266,101 @@ test('el telefono es el de quien pide la cita hasta que la cita termina; despues
   }
 });
 
+test('los tres ejemplos del arranque estan, con unas primero, y cada uno se elige por su nombre', () => {
+  assert.deepEqual(
+    ejemplos.slice(0, 3).map((ejemplo) => [ejemplo.giro.clave, ejemplo.giro.nombre]),
+    [
+      ['unas', 'Uñas'],
+      ['dentista', 'Dentista'],
+      ['medico', 'Médico'],
+    ],
+  );
+  assert.equal(new Set(ejemplos.map((ejemplo) => ejemplo.giro.clave)).size, ejemplos.length, 'ninguna clave repetida');
+  const opciones = opcionesDeEjemplo(ejemplos, ejemploDe('dentista'));
+  assert.deepEqual(
+    opciones.map((opcion) => [opcion.clave, opcion.nombre]),
+    ejemplos.map((ejemplo) => [ejemplo.giro.clave, ejemplo.giro.nombre]),
+  );
+  assert.deepEqual(
+    opciones.filter((opcion) => opcion.elegido).map((opcion) => opcion.clave),
+    ['dentista'],
+    'solo el que esta puesto queda marcado',
+  );
+});
+
+test('cambiar de ejemplo regresa al estado inicial con el nuevo ejemplo, vaya por donde vaya la historia', () => {
+  const dentista = ejemploDe('dentista');
+  for (const eventos of [[], HASTA_ASISTENCIA.slice(0, 3), HASTA_ASISTENCIA, [...HASTA_ASISTENCIA, SI, SEGUIR]]) {
+    const sesion = { ejemplo: unas, estado: recorrer(eventos) };
+    const copia = { ...sesion.estado };
+    const nueva = elegirEjemplo(ejemplos, sesion, 'dentista');
+    assert.equal(nueva.ejemplo, dentista);
+    assert.deepEqual(nueva.estado, estadoInicial(), `desde ${sesion.estado.paso}`);
+    assert.deepEqual(sesion, { ejemplo: unas, estado: copia }, 'no cambia la sesion que recibe');
+    // Y de regreso: cada ejemplo empieza limpio, sin nada del anterior.
+    assert.deepEqual(elegirEjemplo(ejemplos, nueva, 'unas'), { ejemplo: unas, estado: estadoInicial() });
+  }
+});
+
+test('elegir el ejemplo que ya esta puesto, o uno que no existe, no mueve nada', () => {
+  const sesion = { ejemplo: unas, estado: recorrer(HASTA_ASISTENCIA) };
+  assert.equal(elegirEjemplo(ejemplos, sesion, 'unas'), sesion, 'la historia sigue donde iba');
+  assert.equal(elegirEjemplo(ejemplos, sesion, 'veterinaria'), sesion);
+  assert.equal(elegirEjemplo(ejemplos, sesion, ''), sesion);
+});
+
+test('la salida PERSONA es la frase fija de cada giro: la duena en unas, una persona del consultorio en salud', () => {
+  /** @param {Ejemplo} ejemplo */
+  const salida = (ejemplo) => escenaDe(recorrer([{ tipo: 'enviar' }], ejemplo), ejemplo).chat.at(-1);
+  assert.deepEqual(salida(unas), {
+    de: 'asistente',
+    texto: 'Si en algún momento prefieres hablar con la dueña, escribe PERSONA y le aviso.',
+  });
+  assert.ok(deSalud.includes(ejemploDe('dentista')) && deSalud.includes(ejemploDe('medico')));
+  for (const ejemplo of deSalud) {
+    assert.deepEqual(salida(ejemplo), {
+      de: 'asistente',
+      texto: 'Si en algún momento prefieres hablar con una persona del consultorio, escribe PERSONA y le aviso.',
+    });
+  }
+});
+
+test('en salud el guion nunca habla de dolor, sintomas, diagnosticos ni medicamentos, ni le dice clienta a nadie', () => {
+  for (const ejemplo of deSalud) {
+    // Lo que se llega a ver y, ademas, el guion y el giro tal como estan escritos.
+    for (const texto of [...todoLoQueDice(ejemplo), JSON.stringify(ejemplo.guion), JSON.stringify(ejemplo.giro)]) {
+      assert.doesNotMatch(texto, /dolor|s[ií]ntoma|diagn[oó]stic|medicament|clienta/i, ejemplo.giro.clave);
+    }
+  }
+});
+
 for (const ejemplo of ejemplos) {
   const nombre = ejemplo.giro.clave;
   const { giro, guion } = ejemplo;
+
+  test(`${nombre}: llega al cierre por cada dia y cada hora, con si y con no, sin un texto vacio ni un hueco`, () => {
+    assert.equal(guion.cuando.length, 2, 'ofrece dos dias');
+    for (const opcion of guion.cuando) {
+      assert.equal(opcion.horas.length, 4, `cuatro horas el ${opcion.dia}`);
+      for (const hora of opcion.horas) assert.match(hora, /^([1-9]|1[0-2]):[0-5]\d (am|pm)$/);
+    }
+    const textos = todoLoQueDice(ejemplo);
+    assert.ok(textos.length > 100);
+    for (const texto of textos) {
+      assert.equal(typeof texto, 'string');
+      assert.ok(texto.length > 0, 'un texto vacio');
+      assert.doesNotMatch(texto, /[{}]/, texto);
+    }
+  });
+
+  test(`${nombre}: fuera del telefono, la leyenda nombra el tipo de negocio y el aviso dice que ejemplo es`, () => {
+    const { leyenda, anuncio } = rotulosDeEjemplo(giro, ejemplo.rotulos);
+    assert.equal(
+      leyenda,
+      `Demostración con ${giro.lugar} de ejemplo. Tócala y vívela como si fueras quien pide la cita.`,
+    );
+    assert.equal(anuncio, `Ejemplo: ${giro.nombre}. Eres ${giro.cliente} y le escribes a ${giro.negocio}.`);
+  });
 
   /** @param {Evento[]} eventos */
   const escenaTras = (eventos) => escenaDe(recorrer(eventos, ejemplo), ejemplo);
@@ -263,7 +407,10 @@ for (const ejemplo of ejemplos) {
     assert.match(dicho, /asistente virtual/);
     assert.match(dicho, /escribe PERSONA y le aviso/);
     assert.ok(dicho.includes(giro.asistente));
+    assert.ok(dicho.includes(`cuesta ${pesos(giro.precio)}`), 'da el precio real');
+    assert.match(dicho, /te busco un horario/, 'invita a agendar');
     assert.equal(escena.chat[0]?.de, 'cliente');
+    assert.match(escena.chat[0]?.texto ?? '', /¿cuánto cuesta/, 'la pregunta inicial es de precio');
     assert.equal(escena.telefono, 'cliente');
   });
 

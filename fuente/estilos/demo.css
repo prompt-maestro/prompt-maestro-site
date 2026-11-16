@@ -26,6 +26,49 @@
   font-size: var(--t-nota);
 }
 
+/* ---------- Los ejemplos para elegir: la misma historia con otro oficio ---------- */
+.demo__ejemplos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  /* Con este espacio los tres caben en un renglon tambien en el telefono mas angosto. */
+  gap: 0 var(--e-3);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.demo__ejemplos-rotulo {
+  color: var(--tinta-3);
+}
+
+.demo__ejemplo {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tinta-2);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.demo__ejemplo:hover {
+  color: var(--tinta);
+}
+
+/* El que esta puesto: mas claro y con una raya de la luz de la marca debajo. */
+.demo__ejemplo[aria-pressed="true"] {
+  background: linear-gradient(var(--sello-2), var(--sello-2)) 0 calc(50% + 14px) / 100% 2px no-repeat;
+  color: var(--tinta);
+  font-weight: 600;
+}
+
 /* ---------- El telefono ---------- */
 .telefono {
   display: grid;
@@ -449,6 +492,7 @@ html:not(.con-js) .telefono {
 
 html:not(.con-js) .chat__pie,
 html:not(.con-js) .tu,
+html:not(.con-js) .demo__ejemplos,
 html:not(.con-js) .demo__controles,
 html:not(.con-js) .chat__mensajes .chat__salto {
   display: none;
@@ -482,6 +526,7 @@ html:not(.con-js) .chat__mensajes .chat__salto {
     height: clamp(520px, calc(100svh - 184px), 640px);
   }
 
+  .demo__ejemplos,
   .demo__leyenda,
   .demo__controles {
     justify-content: center;
@@ -582,6 +627,10 @@ html:not(.con-js) .chat__mensajes .chat__salto {
     transition:
       background-color var(--d-toque) var(--suave),
       color var(--d-toque) var(--suave);
+  }
+
+  .demo__ejemplo {
+    transition: color var(--d-toque) var(--suave);
   }
 
   /* La pista: lo que toca tocar late despacio unas veces y se queda quieto (nada se mueve sin fin). */

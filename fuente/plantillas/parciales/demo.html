@@ -1,0 +1,44 @@
+    <div class="demo" id="demo" data-demo data-ejemplo="{{ejemplo.clave}}" data-paso="reposo" data-telefono="cliente">
+      <div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">
+        <span class="demo__ejemplos-rotulo" id="demo-ejemplos">{{demo.rotulos.ejemplo}}</span>
+{{#cada giros}}        <button class="demo__ejemplo" type="button" data-demo-ejemplo="{{clave}}" aria-pressed="{{#si @primero}}true{{/si}}{{#no @primero}}false{{/no}}">{{nombre}}</button>
+{{/cada}}      </div>
+      <div class="demo__escena">
+        <div class="telefono">
+          <div class="chat__cabeza">
+            <span class="chat__avatar" aria-hidden="true" data-demo-iniciales>{{ejemplo.iniciales}}</span>
+            <p class="chat__quien"><strong data-demo-nombre>{{ejemplo.negocio}}</strong> <span data-demo-atiende>{{ejemplo.atiende}}</span></p>
+          </div>
+          <div class="chat__mensajes" data-demo-chat data-acotacion role="log" aria-label="{{demo.rotulos.registro}}" tabindex="0">
+            <p class="chat__salto">{{ejemplo.papel}}</p>
+            <div class="transcripcion" data-demo-transcripcion>
+              <p class="transcripcion__titulo">{{demo.rotulos.sinJs}}</p>
+{{#cada conversacion}}{{#si quien}}              <p><b>{{quien}}:</b> {{texto}}</p>
+{{/si}}{{#no quien}}              <p class="transcripcion__salto">{{texto}}</p>
+{{/no}}{{/cada}}            </div>
+          </div>
+          <section class="tu" data-demo-tu aria-label="{{demo.rotulos.tuTitulo}}">
+            <p class="tu__narra"><span class="tu__rotulo">{{demo.rotulos.tuTitulo}}</span> <span class="tu__resumen" data-demo-tu-resumen>{{demo.tu.reposo}}</span></p>
+            <div class="agenda">
+              <p class="agenda__cabeza"><span class="agenda__dia" data-demo-dia>{{ejemplo.dia}}</span> <span class="agenda__de">{{demo.rotulos.calendario}}</span></p>
+              <ol class="agenda__filas" role="list" data-demo-filas>
+{{#cada ejemplo.filas}}                <li class="agenda__fila" data-estado="{{estado}}"><span class="agenda__hora">{{hora}}</span><span class="agenda__estado">{{texto}}</span></li>
+{{/cada}}              </ol>
+            </div>
+          </section>
+          <div class="chat__pie" data-demo-pie>
+            <p class="chat__borrador">{{ejemplo.pregunta}}</p>
+            <button class="boton boton--enviar" type="button">{{demo.rotulos.enviar}}</button>
+          </div>
+        </div>
+      </div>
+      <p class="demo__leyenda" data-demo-leyenda>{{ejemplo.leyenda}}</p>
+      <p class="demo__controles">
+        <button class="enlace" type="button" data-demo-sola>{{demo.rotulos.verTodo}}</button>
+        <button class="enlace" type="button" data-demo-reiniciar>{{demo.rotulos.reiniciar}}</button>
+      </p>
+      <p class="solo-lector" aria-live="polite" data-demo-anuncio></p>
+      <template data-demo-sello>{{> sello}}</template>
+      <template data-demo-palomita><svg class="cobro__palomita" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></template>
+      <script type="application/json" data-demo-datos>{{{armado.datosDemo}}}</script>
+    </div>

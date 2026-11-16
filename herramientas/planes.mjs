@@ -73,3 +73,26 @@ export function planesPublicos(origen) {
   const dePrueba = o.dePrueba === true || (typeof o.nota === 'string' && /prueba/i.test(o.nota));
   return { moneda, dePrueba, planes };
 }
+
+/**
+ * Los planes como los pinta la pagina: los mismos datos mas cada precio ya escrito como dinero ("$1,490"). La
+ * instalacion se toma del primer plan: hoy es la misma en todos, y si un dia no lo fuera, la armada se detiene.
+ * @param {Planes} publicos
+ * @param {(cantidad: number) => string} pesos
+ */
+export function planesParaPagina(publicos, pesos) {
+  const [primero] = publicos.planes;
+  if (!primero) throw new Error('Planes: no hay ningun plan');
+  if (publicos.planes.some((plan) => plan.instalacion !== primero.instalacion)) {
+    throw new Error('Planes: la instalacion ya no es igual en todos los planes; la pagina la ensena como una sola');
+  }
+  return {
+    ...publicos,
+    instalacionTexto: pesos(primero.instalacion),
+    planes: publicos.planes.map((plan) => ({
+      ...plan,
+      mensualTexto: pesos(plan.mensual),
+      anualTexto: pesos(plan.anual),
+    })),
+  };
+}

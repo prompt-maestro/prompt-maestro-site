@@ -1,5 +1,6 @@
 {
   "fijos": {
+    "salida": "Si en algún momento prefieres hablar con {humano}, escribe PERSONA y le aviso.",
     "horarios": "Te puedo ofrecer el {dia} {horas}. ¿Cuál te acomoda?",
     "cobro": "Anticipo {servicio}",
     "confirmacion": "¡Listo, {cliente}! Recibimos tu anticipo de {anticipo} y tu cita de {servicio} quedó confirmada para el {dia} {aLaHora}. Te esperamos en {direccion}. Si necesitas mover tu cita, escríbenos con gusto.",
@@ -10,10 +11,13 @@
     "registroNo": "Listo, registré que {cliente} no asistió a su cita de {servicio} hoy {aLaHora}. Su anticipo de {anticipo} queda retenido y le ofrecí reagendar."
   },
   "rotulos": {
+    "ejemplo": "Ejemplo",
+    "ejemploElegido": "Ejemplo: {nombre}.",
+    "leyenda": "Demostración con {lugar} de ejemplo. Tócala y vívela como si fueras quien pide la cita.",
     "papel": "Eres {cliente} y le escribes a {negocio}.",
     "atiende": "{asistente}, asistente virtual",
-    "papelTu": "Ahora eres tú. Al terminar la cita, tu asistente te escribe.",
-    "atiendeTu": "Tu asistente, en tu WhatsApp",
+    "papelTu": "Ahora eres tú. Al terminar la cita, tu agente te escribe.",
+    "atiendeTu": "Tu agente, en tu WhatsApp",
     "registro": "Conversación de ejemplo",
     "sinJs": "Así se ve una conversación:",
     "enviar": "Enviar",
@@ -41,8 +45,8 @@
     "reiniciar": "Reiniciar"
   },
   "tu": {
-    "reposo": "Tú, atendiendo. Tu asistente, contestando.",
-    "precio": "Tú, atendiendo. Tu asistente, contestando.",
+    "reposo": "Tú, atendiendo. Tu agente, contestando.",
+    "precio": "Tú, atendiendo. Tu agente, contestando.",
     "horarios": "Ofrece solo los horarios libres de tu Google Calendar.",
     "apartado": "Lugar apartado unos minutos, mientras paga.",
     "pagado": "{anticipo} de anticipo, directo en tu Mercado Pago.",

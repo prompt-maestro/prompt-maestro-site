@@ -5,6 +5,9 @@
 //
 // La historia tiene dos actos. En el primero la visitante es quien pide la cita y el telefono es el suyo. En el
 // segundo (desde "asistencia") es la profesional: el telefono pasa a ser el de ella y quien le escribe es su asistente.
+//
+// La misma historia se cuenta con varios ejemplos (unas, dentista, medico). Un ejemplo es un giro de datos/giros.json
+// con su guion de datos/guiones/: sumar un oficio es sumar esas dos cosas, sin tocar este archivo.
 import { aLaHora, conMayuscula, listaDeHoras, pesos, rellenar } from './redaccion.js';
 
 /** @typedef {'reposo' | 'precio' | 'horarios' | 'apartado' | 'pagado' | 'recordatorios' | 'asistencia' | 'finSi' | 'finNo' | 'cierre'} Paso */
@@ -20,15 +23,22 @@ import { aLaHora, conMayuscula, listaDeHoras, pesos, rellenar } from './redaccio
  *   apartado: string, otras: string[] }} Guion
  */
 /**
- * @typedef {{ clave: string, nombre: string, persona: string, negocio: string, asistente: string, profesional: string,
- *   cliente: string, servicio: string, servicioCorto: string, precio: number, anticipo: number, direccion: string }} Giro
+ * El negocio del ejemplo. "nombre" es con lo que se elige el ejemplo; "lugar", como se le llama a ese tipo de negocio
+ * ("un consultorio dental"); "persona", como le dice ese giro a quien atiende (clienta, paciente), y "humano", con
+ * quien la comunica la salida PERSONA ("la duena", "una persona del consultorio").
+ * @typedef {{ clave: string, nombre: string, lugar: string, persona: string, humano: string, negocio: string,
+ *   asistente: string, profesional: string, cliente: string, servicio: string, servicioCorto: string, precio: number,
+ *   anticipo: number, direccion: string }} Giro
  */
 /**
- * Las frases que el motor manda tal cual, iguales en todos los ejemplos.
- * @typedef {Record<'horarios' | 'cobro' | 'confirmacion' | 'recordatorioDia' | 'recordatorioHora' | 'preguntaAsistencia'
- *   | 'registroSi' | 'registroNo', string>} Fijos
+ * Las frases que el motor manda tal cual, iguales en todos los ejemplos. Lo que cambia de un giro a otro dentro de
+ * una frase fija (con quien pasa la salida PERSONA) es un dato del giro, nunca otra frase.
+ * @typedef {Record<'salida' | 'horarios' | 'cobro' | 'confirmacion' | 'recordatorioDia' | 'recordatorioHora'
+ *   | 'preguntaAsistencia' | 'registroSi' | 'registroNo', string>} Fijos
  */
 /** @typedef {{ giro: Giro, guion: Guion, fijos: Fijos, tu: Record<Paso, string>, rotulos: Record<string, string> }} Ejemplo */
+/** La demostracion en un momento dado: que ejemplo esta puesto y por donde va su historia. @typedef {{ ejemplo: Ejemplo, estado: Estado }} Sesion */
+/** Un ejemplo que se puede elegir; el elegido es el que esta puesto. @typedef {{ clave: string, nombre: string, elegido: boolean }} OpcionDeEjemplo */
 /** @typedef {'cliente' | 'profesional'} Telefono  de quien es el telefono que se ve */
 /**
  * Un mensaje nuevo del chat. "cliente" y "profesional" son la visitante, segun el acto; "salto" es un paso del tiempo.
@@ -204,6 +214,7 @@ export function escenaDe(estado, ejemplo) {
     negocio: giro.negocio,
     profesional: giro.profesional,
     cliente: giro.cliente,
+    humano: giro.humano,
     servicio: giro.servicio,
     direccion: giro.direccion,
     precio: pesos(giro.precio),
@@ -225,7 +236,12 @@ export function escenaDe(estado, ejemplo) {
   let chat = [];
   switch (estado.paso) {
     case 'precio':
-      chat = [dice('cliente', guion.pregunta), ...guion.saludo.map((texto) => dice('asistente', texto))];
+      // El saludo lo redacta el asistente con su tono; la salida PERSONA es frase fija y cierra su primer mensaje.
+      chat = [
+        dice('cliente', guion.pregunta),
+        ...guion.saludo.map((texto) => dice('asistente', texto)),
+        dice('asistente', fijos.salida),
+      ];
       break;
     case 'horarios':
       chat = [dice('cliente', opcion?.dice ?? ''), dice('asistente', fijos.horarios)];
@@ -304,6 +320,50 @@ export function presentacionDe(giro, rotulos, telefono) {
     nombre,
     atiende: rellenar(rotulos[deLaProfesional ? 'atiendeTu' : 'atiende'] ?? '', datos),
     papel: rellenar(rotulos[deLaProfesional ? 'papelTu' : 'papel'] ?? '', datos),
+  };
+}
+
+/**
+ * Los ejemplos que la visitante puede elegir, en su orden, con el que esta puesto marcado.
+ * @param {Ejemplo[]} ejemplos
+ * @param {Ejemplo} actual
+ * @returns {OpcionDeEjemplo[]}
+ */
+export function opcionesDeEjemplo(ejemplos, actual) {
+  return ejemplos.map(({ giro }) => ({
+    clave: giro.clave,
+    nombre: giro.nombre,
+    elegido: giro.clave === actual.giro.clave,
+  }));
+}
+
+/**
+ * La visitante elige un ejemplo: la historia vuelve al reposo con ese ejemplo, vaya por donde vaya. Elegir el que ya
+ * esta puesto, o uno que no existe, devuelve la misma sesion sin cambiarla: la historia sigue donde iba.
+ * @param {Ejemplo[]} ejemplos
+ * @param {Sesion} sesion
+ * @param {string} clave
+ * @returns {Sesion}
+ */
+export function elegirEjemplo(ejemplos, sesion, clave) {
+  const ejemplo = ejemplos.find((uno) => uno.giro.clave === clave);
+  if (!ejemplo || clave === sesion.ejemplo.giro.clave) return sesion;
+  return { ejemplo, estado: estadoInicial() };
+}
+
+/**
+ * Lo que la pagina dice de un ejemplo fuera del telefono: la leyenda al pie y el aviso, para quien no lo ve cambiar,
+ * de cual es ahora el ejemplo y que papel le toca.
+ * @param {Giro} giro
+ * @param {Record<string, string>} rotulos
+ * @returns {{ leyenda: string, anuncio: string }}
+ */
+export function rotulosDeEjemplo(giro, rotulos) {
+  const datos = { nombre: giro.nombre, lugar: giro.lugar };
+  const elegido = rellenar(rotulos.ejemploElegido ?? '', datos);
+  return {
+    leyenda: rellenar(rotulos.leyenda ?? '', datos),
+    anuncio: `${elegido} ${presentacionDe(giro, rotulos, 'cliente').papel}`,
   };
 }
 

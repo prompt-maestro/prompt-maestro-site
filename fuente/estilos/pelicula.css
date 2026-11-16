@@ -543,6 +543,8 @@ html.con-pelicula .rotulo[data-activo] a {
   color: var(--luz);
   font-size: 0.6875rem;
   letter-spacing: 0.24em;
+  /* Si no cabe en un renglon, se parte parejo: nunca una palabra sola abajo. */
+  text-wrap: balance;
 }
 
 .rotulo__titulo {

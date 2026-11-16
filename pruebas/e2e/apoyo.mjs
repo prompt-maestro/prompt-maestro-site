@@ -28,10 +28,13 @@ export function vigilar(pagina) {
 }
 
 /**
- * Accesibilidad WCAG 2.2 AA con axe: ni una falta.
+ * Accesibilidad WCAG 2.2 AA con axe: ni una falta. Sin mas, revisa la pagina entera (asi lo hace la prueba de humo);
+ * con selectores revisa solo esas partes, que es lo que cambia en la prueba que la llama. La pagina completa es larga
+ * y revisarla entera en cada prueba hacia tronar el reloj en Firefox con la maquina cargada.
  * @param {import('@playwright/test').Page} pagina
+ * @param {...string} partes  selectores CSS de lo que se revisa
  */
-export async function sinFaltasDeAccesibilidad(pagina) {
+export async function sinFaltasDeAccesibilidad(pagina, ...partes) {
   // A media entrada un texto todavia es translucido y su contraste no es el de verdad: se mide ya asentado.
   // Las animaciones que nunca terminan (la pista que late) no cambian el color del texto y no se esperan.
   await pagina.evaluate(() =>
@@ -42,9 +45,16 @@ export async function sinFaltasDeAccesibilidad(pagina) {
         .map((animacion) => animacion.finished.catch(() => undefined)),
     ),
   );
-  const resultado = await new AxeBuilder({ page: pagina })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
-    .analyze();
+  const axe = new AxeBuilder({ page: pagina }).withTags([
+    'wcag2a',
+    'wcag2aa',
+    'wcag21a',
+    'wcag21aa',
+    'wcag22aa',
+    'best-practice',
+  ]);
+  for (const parte of partes) axe.include(parte);
+  const resultado = await axe.analyze();
   const faltas = resultado.violations.map(
     (v) => `${v.id} (${v.impact}): ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
   );

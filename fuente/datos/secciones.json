@@ -1,0 +1,138 @@
+{
+  "pasos": {
+    "sobre": "Cómo funciona",
+    "titulo": "De «hola» a «asistió»,",
+    "tituloFuerte": "casi sin tocar el celular.",
+    "lista": [
+      {
+        "texto": "Le escriben al WhatsApp de tu negocio."
+      },
+      {
+        "texto": "Tu agente contesta con tus precios y ofrece horarios reales de tu Google Calendar."
+      },
+      {
+        "texto": "Aparta el lugar unos minutos y manda el enlace para pagar el anticipo."
+      },
+      {
+        "texto": "Pagan, y la cita entra sola a tu calendario, ya garantizada."
+      },
+      {
+        "texto": "Les recuerda la cita un día antes y una hora antes."
+      },
+      {
+        "texto": "Al terminar, tú tocas sí o no: ¿asistió?"
+      }
+    ],
+    "tuTitulo": "Lo que haces tú",
+    "tu": [
+      {
+        "texto": "Tocar sí o no al final de cada cita."
+      },
+      {
+        "texto": "Contestar tú cuando tu agente te avise que no sabe algo."
+      },
+      {
+        "texto": "Pedirle cambios por WhatsApp: nada se aplica sin tu sí."
+      }
+    ]
+  },
+  "confianza": {
+    "titulo": "Tu número, tu dinero,",
+    "tituloFuerte": "tus reglas.",
+    "lista": [
+      {
+        "titulo": "Tu número sigue en tu celular",
+        "texto": "Puedes entrar a cualquier conversación cuando quieras; tu agente se hace a un lado."
+      },
+      {
+        "titulo": "Tu dinero no pasa por nosotros",
+        "texto": "Cada anticipo cae directo en tu Mercado Pago. No cobramos comisión por cita."
+      },
+      {
+        "titulo": "Tus reglas",
+        "texto": "Tú pones los precios, los horarios, el anticipo y lo que no haces."
+      }
+    ],
+    "noHaceMas": [
+      {
+        "texto": "No diagnostica ni recomienda medicamentos. Una urgencia te llega a ti."
+      },
+      {
+        "texto": "No te trae clientela nueva: atiende de maravilla a quien ya te escribe."
+      }
+    ]
+  },
+  "paraQuien": {
+    "sobre": "Para quién",
+    "titulo": "Hoy, para uñas, dentistas y médicos.",
+    "tituloFuerte": "Pronto, más oficios.",
+    "otro": "¿El tuyo no está? Escríbenos y te avisamos."
+  },
+  "planes": {
+    "sobre": "Planes",
+    "titulo": "Haz la cuenta",
+    "tituloFuerte": "con tus números.",
+    "calculadora": {
+      "citas": "¿Cuántas citas te plantan al mes?",
+      "precio": "¿Cuánto cobras por cita?",
+      "vacia": "Pon tus números y haz la cuenta.",
+      "fueraCitas": "Escribe un número entre 1 y 500.",
+      "fueraPrecio": "Escribe lo que cobras por cita, en pesos.",
+      "perdido": "Hoy se te van cerca de {perdido} al mes.",
+      "unaCita": "El plan {plan} cuesta {mensualidad} al mes: con 1 cita que sí llegue, ya se pagó.",
+      "variasCitas": "El plan {plan} cuesta {mensualidad} al mes: con {citas} citas que sí lleguen, ya se pagó.",
+      "soloCosto": "El plan {plan} cuesta {mensualidad} al mes.",
+      "ejemplo": "Un ejemplo: te plantan {plantones} citas de {precio} al mes.",
+      "ejemploCitas": "6",
+      "ejemploPrecio": "400"
+    },
+    "alMes": "al mes",
+    "oAnual": "o",
+    "alAnio": "al año",
+    "elegir": "Empieza con",
+    "requisitosTitulo": "Qué necesitas para empezar",
+    "requisitos": [
+      {
+        "texto": "Un número solo para tu negocio con WhatsApp Business. Puede ser un chip aparte en tu mismo celular."
+      },
+      {
+        "texto": "Una cuenta de Google, para tu calendario."
+      },
+      {
+        "texto": "Una cuenta de Mercado Pago, para recibir tus anticipos."
+      },
+      {
+        "texto": "Tu lista de precios: con una foto basta."
+      },
+      {
+        "texto": "Si eres dentista o médico, tu cédula profesional."
+      }
+    ],
+    "recomendado": "Recomendado",
+    "notaInstalacion": "Instalación única de",
+    "notaResto": "La mensualidad empieza el día que tu agente queda activo. Pago con tarjeta. No cobramos comisión por cita."
+  },
+  "preguntas": {
+    "sobre": "Preguntas",
+    "titulo": "Lo que nos preguntan",
+    "tituloFuerte": "antes de empezar."
+  },
+  "cierre": {
+    "titulo": "Tu próxima cita",
+    "tituloFuerte": "ya puede llegar pagada.",
+    "accion": "Empieza ahora",
+    "otra": "Prefiero que me acompañen",
+    "nota": "Hoy pagas solo la instalación. La mensualidad empieza cuando tu agente ya está trabajando."
+  },
+  "pie": {
+    "terminos": "Términos",
+    "terminosUrl": "https://prompt-maestro.com/terminos",
+    "privacidad": "Aviso de privacidad",
+    "privacidadUrl": "https://prompt-maestro.com/privacidad",
+    "contacto": "Contacto",
+    "marcas": "WhatsApp, Mercado Pago y Google Calendar son marcas de sus dueños; Prompt Maestro es un servicio independiente y no está afiliado a ellas.",
+    "imagenes": "Las escenas y los negocios de esta página son ejemplos.",
+    "enlaces": "Legales y contacto"
+  },
+  "barraMovil": "Empieza ahora"
+}

@@ -2,7 +2,9 @@
   {
     "clave": "unas",
     "nombre": "Uñas",
+    "lugar": "un salón de uñas",
     "persona": "clienta",
+    "humano": "la dueña",
     "negocio": "Studio Bella",
     "asistente": "Marifer",
     "profesional": "Bella",
@@ -12,5 +14,37 @@
     "precio": 350,
     "anticipo": 150,
     "direccion": "Av. Chapultepec 234, colonia Americana"
+  },
+  {
+    "clave": "dentista",
+    "nombre": "Dentista",
+    "lugar": "un consultorio dental",
+    "persona": "paciente",
+    "humano": "una persona del consultorio",
+    "negocio": "Dental Sonría",
+    "asistente": "Sofi",
+    "profesional": "Dra. Robles",
+    "cliente": "Carla",
+    "servicio": "Limpieza dental",
+    "servicioCorto": "Limpieza",
+    "precio": 650,
+    "anticipo": 200,
+    "direccion": "Av. de la Sonrisa 100, colonia Providencia"
+  },
+  {
+    "clave": "medico",
+    "nombre": "Médico",
+    "lugar": "un consultorio médico",
+    "persona": "paciente",
+    "humano": "una persona del consultorio",
+    "negocio": "Consultorio Médico Aurora",
+    "asistente": "Elena",
+    "profesional": "Dr. Villalobos",
+    "cliente": "Paty",
+    "servicio": "Consulta de primera vez",
+    "servicioCorto": "Consulta",
+    "precio": 900,
+    "anticipo": 300,
+    "direccion": "Av. del Bienestar 200, colonia Chapalita"
   }
 ]

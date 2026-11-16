@@ -1,8 +1,7 @@
 {
   "pregunta": "Hola, ¿cuánto cuesta el gelish?",
   "saludo": [
-    "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. El gelish semipermanente cuesta {precio} y dura de 2 a 3 semanas. Si te animas, te busco un horario.",
-    "Si en algún momento prefieres hablar con la dueña, escribe PERSONA y le aviso."
+    "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. El gelish semipermanente cuesta {precio} y dura de 2 a 3 semanas. Si te animas, te busco un horario."
   ],
   "cuando": [
     {

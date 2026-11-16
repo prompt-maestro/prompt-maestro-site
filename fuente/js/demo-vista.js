@@ -2,7 +2,17 @@
 // La vista de la demostracion: pinta lo que demo.js decide. Aqui viven los tiempos, el foco y el movimiento; ninguna
 // regla de la historia. Si el visitante pidio menos movimiento, cada paso aparece completo y sin animacion, pero
 // conserva el tiempo para leer entre un paso y el siguiente.
-import { accionesDe, avanzar, escenaDe, estadoInicial, porDefecto, presentacionDe } from './demo.js';
+import {
+  accionesDe,
+  avanzar,
+  elegirEjemplo,
+  escenaDe,
+  estadoInicial,
+  opcionesDeEjemplo,
+  porDefecto,
+  presentacionDe,
+  rotulosDeEjemplo,
+} from './demo.js';
 import { conMayuscula, pesos } from './redaccion.js';
 
 /** @typedef {import('./demo.js').Ejemplo} Ejemplo */
@@ -85,11 +95,14 @@ export function montarDemo(raiz) {
   const iniciales = pieza(raiz, '[data-demo-iniciales]');
   const nombre = pieza(raiz, '[data-demo-nombre]');
   const atiende = pieza(raiz, '[data-demo-atiende]');
+  const leyenda = pieza(raiz, '[data-demo-leyenda]');
+  const botonesDeEjemplo = /** @type {NodeListOf<HTMLButtonElement>} */ (raiz.querySelectorAll('[data-demo-ejemplo]'));
   const plantillaSello = /** @type {HTMLTemplateElement} */ (pieza(raiz, '[data-demo-sello]'));
   const plantillaPalomita = /** @type {HTMLTemplateElement} */ (pieza(raiz, '[data-demo-palomita]'));
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  const ejemplo = /** @type {Ejemplo} */ (ejemplos[0]);
+  // La pagina llega con el primer ejemplo; la visitante puede elegir otro.
+  let ejemplo = /** @type {Ejemplo} */ (ejemplos[0]);
   let estado = estadoInicial();
   /** @type {Telefono} */
   let telefono = 'cliente';
@@ -371,23 +384,53 @@ export function montarDemo(raiz) {
     despachar(evento);
   }
 
-  function reiniciar() {
-    const conFoco = pie.contains(document.activeElement);
+  /**
+   * Pinta el reposo del ejemplo puesto, sin esperas. Corta lo que venia pintandose y lo que corria solo.
+   * @returns {string} la acotacion
+   */
+  function ponerEnReposo() {
     turno += 1;
     tocada = true;
     sola = false;
     ocupada = false;
     vigia.disconnect();
-    estado = avanzar(estado, { tipo: 'reiniciar' }, ejemplo.guion);
     const papel = presentar('cliente');
     raiz.dataset.paso = estado.paso;
     raiz.removeAttribute('data-final');
     // Sin esperas: en reposo la agenda no tiene nada que sellar.
     void pintarTu(escenaDe(estado, ejemplo).tu, turno);
-    anuncio.textContent = papel;
     pintarPie(accionesDe(estado, ejemplo));
+    return papel;
+  }
+
+  function reiniciar() {
+    const conFoco = pie.contains(document.activeElement);
+    estado = avanzar(estado, { tipo: 'reiniciar' }, ejemplo.guion);
+    anuncio.textContent = ponerEnReposo();
     devolverFoco = conFoco;
     regresarElFoco();
+  }
+
+  /**
+   * La visitante eligio un ejemplo. Si es otro, la historia vuelve al reposo con el: cambian la cabecera, la pregunta,
+   * la agenda y la leyenda, y el cambio se anuncia. El foco se queda en el boton que toco.
+   * @param {string} clave
+   */
+  function elegir(clave) {
+    const sesion = elegirEjemplo(ejemplos, { ejemplo, estado }, clave);
+    if (sesion.ejemplo === ejemplo) return;
+    ({ ejemplo, estado } = sesion);
+    devolverFoco = false;
+    ponerEnReposo();
+    const opciones = opcionesDeEjemplo(ejemplos, ejemplo);
+    for (const boton of botonesDeEjemplo) {
+      const puesto = opciones.some((opcion) => opcion.elegido && opcion.clave === boton.dataset.demoEjemplo);
+      boton.setAttribute('aria-pressed', String(puesto));
+    }
+    const palabras = rotulosDeEjemplo(ejemplo.giro, rotulos);
+    raiz.dataset.ejemplo = ejemplo.giro.clave;
+    leyenda.textContent = palabras.leyenda;
+    anuncio.textContent = palabras.anuncio;
   }
 
   // Si nadie la toca, manda sola el primer mensaje a los 4 segundos de estar a la vista. De ahi en adelante espera.
@@ -414,6 +457,9 @@ export function montarDemo(raiz) {
     .join('|');
   pintarPie(accionesDe(estado, ejemplo));
   pieza(raiz, '[data-demo-reiniciar]').addEventListener('click', reiniciar);
+  for (const boton of botonesDeEjemplo) {
+    boton.addEventListener('click', () => elegir(boton.dataset.demoEjemplo ?? ''));
+  }
   pieza(raiz, '[data-demo-sola]').addEventListener('click', () => {
     if (estado.paso === 'cierre') reiniciar();
     tocada = true;

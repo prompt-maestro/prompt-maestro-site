@@ -8,9 +8,11 @@
 <link rel="modulepreload" href="{{armado.activos}}js/demo-vista.js">
 <link rel="modulepreload" href="{{armado.activos}}js/demo.js">
 <link rel="modulepreload" href="{{armado.activos}}js/redaccion.js">
+<link rel="modulepreload" href="{{armado.activos}}js/calculadora-vista.js">
+<link rel="modulepreload" href="{{armado.activos}}js/calculadora.js">
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
 <title>Citas Garantizadas: tu agente de WhatsApp que agenda con anticipo pagado</title>
-<meta name="description" content="Despreocúpate: nuestro agente se encarga de tu agenda por WhatsApp. Contesta mensajes y notas de voz, ve fotos y agenda solo con el anticipo pagado. Para cualquier profesión u oficio.">
+<meta name="description" content="Despreocúpate: nuestro agente se encarga de tu agenda por WhatsApp. Contesta mensajes y notas de voz, ve fotos y agenda solo con el anticipo pagado. Hoy para uñas, dentistas y médicos.">
 <link rel="canonical" href="{{armado.origen}}{{armado.base}}">
 </head>
 <body>
@@ -19,8 +21,9 @@
   <div class="barra__dentro">
     <a class="marca" href="{{armado.base}}" aria-label="{{sitio.nombre}}, inicio">{{> marca}}{{> nombre}}</a>
     <nav class="barra__nav" aria-label="Secciones">
-      <a class="barra__enlace" href="#citas" data-lugar="barra">Cómo funciona</a>
-      <a class="barra__enlace" href="#agente" data-lugar="barra">Ventajas</a>
+      <a class="barra__enlace" href="#como-funciona" data-lugar="barra">Cómo funciona</a>
+      <a class="barra__enlace" href="#planes" data-lugar="barra">Planes</a>
+      <a class="barra__enlace" href="#preguntas" data-lugar="barra">Preguntas</a>
       <a class="boton boton--chico boton--contorno" href="{{sitio.alta}}" data-lugar="barra">Empieza ahora</a>
     </nav>
   </div>
@@ -84,54 +87,30 @@
     <div class="garantia__promesa">
       <p class="sobre">Tu dinero</p>
       <h2 class="garantia__titulo" id="titulo-citas">No pierdas ingresos por citas <em>no concretadas.</em></h2>
-      <p class="garantia__texto">Tu agente aparta la cita solo cuando el anticipo ya está pagado, y el dinero cae directo en tu cuenta. Vívelo aquí mismo, como si fueras quien pide la cita.</p>
+      <p class="garantia__texto">Tu agente confirma la cita solo cuando el anticipo ya está pagado, y el dinero cae directo en tu Mercado Pago. Vívelo aquí mismo, como si fueras quien pide la cita.</p>
     </div>
-    <div class="demo" id="demo" data-demo data-paso="reposo" data-telefono="cliente">
-      <div class="demo__escena">
-        <div class="telefono">
-          <div class="chat__cabeza">
-            <span class="chat__avatar" aria-hidden="true" data-demo-iniciales>{{ejemplo.iniciales}}</span>
-            <p class="chat__quien"><strong data-demo-nombre>{{ejemplo.negocio}}</strong> <span data-demo-atiende>{{ejemplo.atiende}}</span></p>
-          </div>
-          <div class="chat__mensajes" data-demo-chat data-acotacion role="log" aria-label="{{demo.rotulos.registro}}" tabindex="0">
-            <p class="chat__salto">{{ejemplo.papel}}</p>
-            <div class="transcripcion" data-demo-transcripcion>
-              <p class="transcripcion__titulo">{{demo.rotulos.sinJs}}</p>
-{{#cada conversacion}}{{#si quien}}              <p><b>{{quien}}:</b> {{texto}}</p>
-{{/si}}{{#no quien}}              <p class="transcripcion__salto">{{texto}}</p>
-{{/no}}{{/cada}}            </div>
-          </div>
-          <section class="tu" data-demo-tu aria-label="{{demo.rotulos.tuTitulo}}">
-            <p class="tu__narra"><span class="tu__rotulo">{{demo.rotulos.tuTitulo}}</span> <span class="tu__resumen" data-demo-tu-resumen>{{demo.tu.reposo}}</span></p>
-            <div class="agenda">
-              <p class="agenda__cabeza"><span class="agenda__dia" data-demo-dia>{{ejemplo.dia}}</span> <span class="agenda__de">{{demo.rotulos.calendario}}</span></p>
-              <ol class="agenda__filas" role="list" data-demo-filas>
-{{#cada ejemplo.filas}}                <li class="agenda__fila" data-estado="{{estado}}"><span class="agenda__hora">{{hora}}</span><span class="agenda__estado">{{texto}}</span></li>
-{{/cada}}              </ol>
-            </div>
-          </section>
-          <div class="chat__pie" data-demo-pie>
-            <p class="chat__borrador">{{ejemplo.pregunta}}</p>
-            <button class="boton boton--enviar" type="button">{{demo.rotulos.enviar}}</button>
-          </div>
-        </div>
-      </div>
-      <p class="demo__leyenda">Demostración con un negocio de ejemplo. Tócala y vívela como si fueras quien pide la cita.</p>
-      <p class="demo__controles">
-        <button class="enlace" type="button" data-demo-sola>{{demo.rotulos.verTodo}}</button>
-        <button class="enlace" type="button" data-demo-reiniciar>{{demo.rotulos.reiniciar}}</button>
-      </p>
-      <p class="solo-lector" aria-live="polite" data-demo-anuncio></p>
-      <template data-demo-sello>{{> sello}}</template>
-      <template data-demo-palomita><svg class="cobro__palomita" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></template>
-      <script type="application/json" data-demo-datos>{{{armado.datosDemo}}}</script>
-    </div>
-    <div class="garantia__cierre">
+{{> demo}}    <div class="garantia__cierre">
       <div class="garantia__acciones">
         <a class="boton" href="{{sitio.alta}}" data-lugar="citas">Empieza ahora</a>
         <a class="enlace" href="{{sitio.contacto}}" data-lugar="citas">Prefiero que me acompañen</a>
       </div>
-      <p class="garantia__nota">Instalación hoy. La mensualidad empieza cuando tu agente ya está trabajando.</p>
+      <p class="garantia__nota">{{secciones.cierre.nota}}</p>
+    </div>
+  </section>
+
+  <section class="pasos" id="como-funciona" aria-labelledby="titulo-pasos">
+    <div class="seccion__cabeza">
+      <p class="sobre">{{secciones.pasos.sobre}}</p>
+      <h2 class="seccion__titulo" id="titulo-pasos">{{secciones.pasos.titulo}} <em>{{secciones.pasos.tituloFuerte}}</em></h2>
+    </div>
+    <ol class="pasos__lista" role="list">
+{{#cada secciones.pasos.lista}}      <li class="pasos__paso"><span class="pasos__numero" aria-hidden="true">0{{@numero}}</span><p>{{texto}}</p></li>
+{{/cada}}    </ol>
+    <div class="pasos__tu">
+      <h3 class="pasos__subtitulo">{{secciones.pasos.tuTitulo}}</h3>
+      <ul class="pasos__tareas" role="list">
+{{#cada secciones.pasos.tu}}        <li>{{texto}}</li>
+{{/cada}}      </ul>
     </div>
   </section>
 
@@ -143,23 +122,102 @@
     <ol class="agentes__lista" role="list">
 {{#cada agentes.hace}}      <li class="agentes__punto"><h3 class="agentes__nombre">{{titulo}}</h3><p>{{texto}}</p></li>
 {{/cada}}    </ol>
+    <div class="agentes__confianza">
+      <h3 class="agentes__subtitulo agentes__subtitulo--grande">{{secciones.confianza.titulo}} <em>{{secciones.confianza.tituloFuerte}}</em></h3>
+      <ul class="agentes__cuidamos" role="list">
+{{#cada secciones.confianza.lista}}        <li><h4>{{titulo}}</h4><p>{{texto}}</p></li>
+{{/cada}}      </ul>
+    </div>
     <div class="agentes__limites">
       <h3 class="agentes__subtitulo">{{agentes.limitesTitulo}}</h3>
       <ul class="agentes__no" role="list">
 {{#cada agentes.noHace}}        <li>{{texto}}</li>
+{{/cada}}{{#cada secciones.confianza.noHaceMas}}        <li>{{texto}}</li>
 {{/cada}}      </ul>
     </div>
   </section>
+
+  <section class="oficio" id="para-quien" aria-labelledby="titulo-oficios">
+    <div class="seccion__cabeza">
+      <p class="sobre">{{secciones.paraQuien.sobre}}</p>
+      <h2 class="seccion__titulo" id="titulo-oficios">{{secciones.paraQuien.titulo}} <em>{{secciones.paraQuien.tituloFuerte}}</em></h2>
+    </div>
+    <ul class="oficio__lista" role="list">
+{{#cada pelicula.oficios}}      <li class="oficio__tarjeta">
+        <picture>
+          <source type="image/avif" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.avif">
+          <img class="oficio__foto" src="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp" alt="" width="720" height="1290" loading="lazy" decoding="async">
+        </picture>
+        <div class="oficio__texto"><h3>{{nombre}}</h3><p>{{tarjeta}}</p></div>
+      </li>
+{{/cada}}    </ul>
+    <p class="oficio__otro"><a class="enlace" href="{{sitio.contactoOficio}}" data-lugar="para-quien">{{secciones.paraQuien.otro}}</a></p>
+  </section>
+
+  <section class="planes" id="planes" aria-labelledby="titulo-planes">
+    <div class="seccion__cabeza">
+      <p class="sobre">{{secciones.planes.sobre}}</p>
+      <h2 class="seccion__titulo" id="titulo-planes">{{secciones.planes.titulo}} <em>{{secciones.planes.tituloFuerte}}</em></h2>
+    </div>
+    <div class="calculadora" data-calculadora data-vacia="{{secciones.planes.calculadora.vacia}}" data-fuera-citas="{{secciones.planes.calculadora.fueraCitas}}" data-fuera-precio="{{secciones.planes.calculadora.fueraPrecio}}" data-perdido="{{secciones.planes.calculadora.perdido}}" data-una-cita="{{secciones.planes.calculadora.unaCita}}" data-varias-citas="{{secciones.planes.calculadora.variasCitas}}" data-ejemplo="{{secciones.planes.calculadora.ejemplo}}" data-solo-costo="{{secciones.planes.calculadora.soloCosto}}">
+      <div class="calculadora__casillas">
+        <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.citas}}</span><input class="calculadora__numero" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="{{secciones.planes.calculadora.ejemploCitas}}" data-calculadora-citas></label>
+        <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.precio}}</span><span class="calculadora__pesos"><span aria-hidden="true">$</span><input class="calculadora__numero" type="text" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="{{secciones.planes.calculadora.ejemploPrecio}}" data-calculadora-precio></span></label>
+      </div>
+      <p class="calculadora__salida" data-calculadora-salida>{{secciones.planes.calculadora.vacia}}</p>
+    </div>
+    <ul class="planes__lista" role="list">
+{{#cada planes.planes}}      <li class="plan{{#si destacado}} plan--destacado{{/si}}" data-plan="{{nombre}}" data-mensual="{{mensual}}">
+{{#si destacado}}        <p class="plan__marca">{{secciones.planes.recomendado}}</p>
+{{/si}}        <h3 class="plan__nombre">{{nombre}}</h3>
+        <p class="plan__precio"><strong>{{mensualTexto}}</strong> <span>{{secciones.planes.alMes}}</span></p>
+        <p class="plan__anual">{{secciones.planes.oAnual}} {{anualTexto}} {{secciones.planes.alAnio}}</p>
+        <ul class="plan__incluye" role="list">
+{{#cada incluye}}          <li>{{> palomita}}<span>{{este}}</span></li>
+{{/cada}}        </ul>
+        <a class="boton{{#si destacado}} boton--sello{{/si}}{{#no destacado}} boton--contorno{{/no}}" href="{{sitio.alta}}" data-lugar="planes">{{secciones.planes.elegir}} {{nombre}}</a>
+      </li>
+{{/cada}}    </ul>
+    <p class="planes__nota">{{secciones.planes.notaInstalacion}} {{planes.instalacionTexto}}. {{secciones.planes.notaResto}}</p>
+    <div class="planes__requisitos">
+      <h3 class="planes__subtitulo">{{secciones.planes.requisitosTitulo}}</h3>
+      <ul role="list">
+{{#cada secciones.planes.requisitos}}        <li>{{texto}}</li>
+{{/cada}}      </ul>
+    </div>
+  </section>
+
+  <section class="preguntas" id="preguntas" aria-labelledby="titulo-preguntas">
+    <div class="seccion__cabeza">
+      <p class="sobre">{{secciones.preguntas.sobre}}</p>
+      <h2 class="seccion__titulo" id="titulo-preguntas">{{secciones.preguntas.titulo}} <em>{{secciones.preguntas.tituloFuerte}}</em></h2>
+    </div>
+    <div class="preguntas__lista">
+{{#cada preguntas}}      <details class="pregunta"><summary><h3>{{pregunta}}</h3></summary><p>{{respuesta}}</p></details>
+{{/cada}}    </div>
+  </section>
+
+  <section class="final" id="empieza" aria-labelledby="titulo-final">
+    <h2 class="seccion__titulo final__titulo" id="titulo-final">{{secciones.cierre.titulo}} <em>{{secciones.cierre.tituloFuerte}}</em></h2>
+    <p class="final__acciones"><a class="boton boton--sello" href="{{sitio.alta}}" data-lugar="cierre">{{secciones.cierre.accion}}</a> <a class="enlace" href="{{sitio.contacto}}" data-lugar="cierre">{{secciones.cierre.otra}}</a></p>
+    <p class="final__nota">{{secciones.cierre.nota}}</p>
+    <span class="final__sello" aria-hidden="true">{{> sello}}</span>
+  </section>
 </main>
+<aside class="barra-movil" data-barra-movil aria-label="Acceso rápido"><a class="boton boton--sello" href="{{sitio.alta}}" data-lugar="barra-movil">{{secciones.barraMovil}}</a></aside>
 <footer class="pie">
   <div class="pie__dentro">
     <p class="pie__firma" aria-hidden="true">{{> marca}}</p>
     <div class="pie__texto">
       <p class="pie__nombre">{{sitio.nombre}}</p>
       <p class="pie__lema">{{sitio.lema}}</p>
-      <p><a class="boton boton--sello" href="{{sitio.alta}}" data-lugar="pie">Empieza ahora</a></p>
+      <nav class="pie__enlaces" aria-label="{{secciones.pie.enlaces}}">
+        <a class="enlace" href="{{secciones.pie.terminosUrl}}">{{secciones.pie.terminos}}</a>
+        <a class="enlace" href="{{secciones.pie.privacidadUrl}}">{{secciones.pie.privacidad}}</a>
+        <a class="enlace" href="{{sitio.contactoGeneral}}" data-lugar="pie">{{secciones.pie.contacto}}</a>
+      </nav>
     </div>
-    <p class="pie__nota">{{sitio.lugar}} · {{sitio.notaWhatsApp}}</p>
+    <p class="pie__nota">{{sitio.lugar}} · © {{sitio.anio}} {{sitio.nombre}}. {{secciones.pie.marcas}} {{secciones.pie.imagenes}}</p>
   </div>
 </footer>
 </body>

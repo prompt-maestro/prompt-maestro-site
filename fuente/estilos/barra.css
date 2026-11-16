@@ -115,3 +115,10 @@ html.con-pelicula .barra--pelicula:not([data-fondo]) {
     font-size: 0.9375rem;
   }
 }
+
+/* En celular, cuando la barra de abajo ya ofrece el boton principal, el de arriba se guarda: uno solo a la vez. */
+@media (max-width: 899px) {
+  html[data-barra-abajo] .barra .boton {
+    visibility: hidden;
+  }
+}

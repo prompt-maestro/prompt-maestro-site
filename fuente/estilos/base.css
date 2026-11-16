@@ -26,6 +26,7 @@ body {
 h1,
 h2,
 h3,
+h4,
 p,
 ol,
 ul {
@@ -86,9 +87,9 @@ svg {
   transform: none;
 }
 
-/* El renglon chico en mayusculas que va arriba de un titulo. */
+/* El renglon chico en mayusculas que va arriba de un titulo: lleva la luz de la marca. */
 .sobre {
-  color: var(--tinta-2);
+  color: var(--luz);
   font-size: var(--t-nota);
   font-weight: 600;
   letter-spacing: 0.12em;

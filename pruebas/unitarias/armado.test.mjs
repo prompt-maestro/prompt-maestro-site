@@ -97,6 +97,30 @@ test('toda pagina lleva la politica de contenido y el idioma', async () => {
   }
 });
 
+test('la demostracion lleva un boton por ejemplo, con el primero puesto, y los datos de todos', async () => {
+  const { archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
+  const inicio = leer(archivos, 'index.html');
+  /** @type {{ clave: string, nombre: string, lugar: string }[]} */
+  const giros = JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', 'giros.json'), 'utf8'));
+  assert.ok(giros.length >= 3);
+  const botones = [
+    ...inicio.matchAll(/<button class="demo__ejemplo"[^>]* data-demo-ejemplo="([^"]+)" aria-pressed="(\w+)">([^<]+)</g),
+  ].map(([, clave, puesto, nombre]) => [clave, puesto, nombre]);
+  assert.deepEqual(
+    botones,
+    giros.map((giro, indice) => [giro.clave, String(indice === 0), giro.nombre]),
+  );
+  assert.match(inicio, /<div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">/);
+  // Lo que la pagina trae escrito es el primer ejemplo; los demas viajan en los datos, cada uno con su guion.
+  assert.ok(inicio.includes(`data-demo-leyenda>Demostración con ${giros[0]?.lugar} de ejemplo.`));
+  const datos = JSON.parse(/<script type="application\/json" data-demo-datos>(.*?)<\/script>/s.exec(inicio)?.[1] ?? '');
+  assert.deepEqual(
+    datos.ejemplos.map((/** @type {{ giro: { clave: string } }} */ ejemplo) => ejemplo.giro.clave),
+    giros.map((giro) => giro.clave),
+  );
+  for (const ejemplo of datos.ejemplos) assert.equal(ejemplo.guion.cuando.length, 2, ejemplo.giro.clave);
+});
+
 test('la armada avisa que no se puede publicar justo mientras los precios sean de prueba', async () => {
   const { avisos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
   const planes = JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', 'planes.json'), 'utf8'));

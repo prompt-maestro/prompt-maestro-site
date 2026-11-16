@@ -42,5 +42,12 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   originales, pesados, viven en `originales/` (fuera del repo); aquí solo entra lo ya optimizado, sin audio.
 - Sumar un oficio al comercial no toca el diseño: sus dos fotos en `originales/comercial/` (`<oficio>-trabajo.png` y
   `<oficio>-espera.png`), su nombre en la lista de `optimizar.mjs` y su entrada en `fuente/datos/pelicula.json`.
+- Sumar un oficio a la demostración tampoco toca el código: su entrada en `fuente/datos/giros.json` y su guion en
+  `fuente/datos/guiones/<oficio>.json`. La armada se detiene si a algún ejemplo le falta un texto.
+- Los textos de las secciones viven en `fuente/datos/secciones.json` y `preguntas.json`. Ninguno promete algo que el
+  producto no hace: se revisan contra la tabla de la verdad del PRD antes de cambiarse.
+- `herramientas/publicar.mjs` sin banderas es un ENSAYO: dice qué entraría, qué se conserva y qué se retira de `main`, y
+  no toca nada. Con `--si` (solo con la autorización escrita del dueño) deja un commit nuevo en `main` y su etiqueta
+  `pagina-vN`, sin reescribir la historia. Se niega con precios de prueba, cambios sin confirmar o la rama sin subir.
 - Este repo es público. Ningún commit lleva un correo personal y ningún archivo lleva llaves: el gancho de `pre-push`
   lo revisa, y además bloquea cualquier push directo a `main`.

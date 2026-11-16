@@ -1,0 +1,54 @@
+[
+  {
+    "pregunta": "¿Mi clientela tiene que instalar algo?",
+    "respuesta": "No. Todo pasa en el WhatsApp de siempre."
+  },
+  {
+    "pregunta": "¿Y si no quieren pagar anticipo?",
+    "respuesta": "Tú decides cuánto se pide. Quien sí va a ir lo paga; por eso la cita queda garantizada."
+  },
+  {
+    "pregunta": "¿El dinero pasa por ustedes?",
+    "respuesta": "No. Cada anticipo cae directo en tu Mercado Pago."
+  },
+  {
+    "pregunta": "¿Qué pasa si no llega?",
+    "respuesta": "Tú tocas «No» y el anticipo se queda contigo, según la política que tú pones. A la persona se le ofrece agendar de nuevo."
+  },
+  {
+    "pregunta": "¿Tengo que cambiar de número?",
+    "respuesta": "Tu número personal no se toca. Tu agente vive en el número de tu negocio, que sigue en tu celular."
+  },
+  {
+    "pregunta": "¿Puedo contestar yo?",
+    "respuesta": "Sí, desde tu app, cuando quieras. Tu agente se hace a un lado."
+  },
+  {
+    "pregunta": "¿Y si no sabe algo?",
+    "respuesta": "No inventa. Toma el recado, te avisa por WhatsApp y tú contestas desde tu app."
+  },
+  {
+    "pregunta": "Soy dentista o médico. ¿Va a opinar de salud?",
+    "respuesta": "Nunca. No diagnostica ni recomienda medicamentos, y una urgencia te llega a ti."
+  },
+  {
+    "pregunta": "¿Reemplaza mi agenda o mi expediente?",
+    "respuesta": "No. Trabaja con tu Google Calendar y no guarda expedientes."
+  },
+  {
+    "pregunta": "¿Me trae clientela nueva?",
+    "respuesta": "No. Hace que quienes ya te escriben sí lleguen, y con su anticipo pagado."
+  },
+  {
+    "pregunta": "¿Cómo sé que no se va a equivocar con mis precios?",
+    "respuesta": "Antes de atender presenta un examen con tus datos, tres veces y sin errores graves. Además, tú lo pruebas antes que tu clientela."
+  },
+  {
+    "pregunta": "¿Qué pasa con los datos de mis pacientes o clientas?",
+    "respuesta": "Los mensajes se borran a los 90 días, y los audios y las fotos no se guardan. En salud, las fotos clínicas no se analizan."
+  },
+  {
+    "pregunta": "¿Mi profesión u oficio no está?",
+    "respuesta": "Escríbenos y te avisamos cuando llegue."
+  }
+]
