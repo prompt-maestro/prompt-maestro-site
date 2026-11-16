@@ -205,6 +205,13 @@ html.con-pelicula .pelicula__pasos {
   visibility: inherit;
 }
 
+/* En celular, lo que flota sobre un oficio que ya se va se apaga de inmediato: nunca se enciman los mensajes de dos
+   oficios mientras una toma se funde con la otra. */
+.panel:not([data-activo]) :is(.avisos, .citas) {
+  opacity: 0;
+  transition-duration: 0ms;
+}
+
 /* En pantallas muy bajitas (un celular acostado) no cabe nada flotando: queda la toma y su rotulo. */
 @media (max-height: 30rem) {
   html.con-pelicula :is(.avisos, .citas, .charla, .cuenta) {
@@ -901,6 +908,12 @@ html.con-pelicula .pelicula__pie {
 
   .cita:nth-child(3) {
     display: none;
+  }
+
+  /* Aqui los tres oficios se ven a la vez: todos ensenan sus avisos y sus citas. */
+  .pelicula[data-toma="ruido"] .pelicula__paneles .avisos,
+  .pelicula[data-toma="duda"] .pelicula__paneles .citas {
+    opacity: 1;
   }
 
   .panel__nombre {
