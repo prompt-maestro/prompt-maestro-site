@@ -1,19 +1,22 @@
 /* Los tokens de la pagina: color, letra, espacio, radio, sombra y movimiento. Todo lo demas se escribe con ellos. */
 :root {
-  --papel: #f8f5ef;
-  --papel-2: #efe9df;
-  --superficie: #ffffff;
-  --tinta: #16193a;
-  --tinta-2: #44496a;
-  --tinta-3: #5f6480;
-  --sello: #1e2a8f;
-  --sello-2: #141d6b;
-  --sello-suave: #eef0fa;
-  --linea: #e6dfd3;
-  --bien: #1b7046;
-  --error: #af2318;
+  /* El tema es de tecnologia: fondo de noche, texto claro y UNA sola luz, el azul de la marca. Los nombres vienen
+     de la primera version (papel y tinta) y se conservan: --papel es el fondo y --tinta es el texto. */
+  --papel: #070916;
+  --papel-2: #0c1027;
+  --superficie: #12173a;
+  --tinta: #f5f4f0;
+  --tinta-2: #c4c9e4;
+  --tinta-3: #979ec4;
+  --sello: #3f5cf5;
+  --sello-2: #5873ff;
+  --sello-suave: rgb(77 107 255 / 0.16);
+  --luz: #8497ff;
+  --linea: rgb(255 255 255 / 0.14);
+  --bien: #58d68d;
+  --error: #ff8f80;
 
-  --f-titulo: "Playfair Display", Georgia, "Times New Roman", serif;
+  --f-titulo: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-texto: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --t-heroe: clamp(2.5rem, 1.2rem + 6.4vw, 5.5rem);
@@ -35,8 +38,8 @@
   --r-control: 12px;
   --r-tarjeta: 18px;
   --r-telefono: 36px;
-  --sombra-1: 0 1px 2px rgba(22, 25, 58, 0.06), 0 4px 12px rgba(22, 25, 58, 0.06);
-  --sombra-2: 0 2px 6px rgba(22, 25, 58, 0.08), 0 18px 40px rgba(22, 25, 58, 0.12);
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.3);
+  --sombra-2: 0 2px 6px rgb(0 0 0 / 0.35), 0 18px 40px rgb(0 0 0 / 0.45);
 
   --suave: cubic-bezier(0.2, 0.7, 0.2, 1);
   --d-toque: 160ms;

@@ -38,8 +38,10 @@ ul {
   list-style: none;
 }
 
+/* La palabra que importa no se inclina: se enciende con la luz de la marca. */
 em {
-  font-style: italic;
+  color: var(--luz);
+  font-style: normal;
 }
 
 button {
@@ -138,11 +140,11 @@ svg {
   background: var(--papel-2);
 }
 
-/* El unico boton azul: va donde la cita ya quedo sellada. La tinta azul es de lo pagado y lo garantizado. */
+/* El boton azul: va donde la cita ya quedo sellada y donde cierra el comercial. El azul es de lo pagado y lo garantizado. */
 .boton--sello {
   border-color: var(--sello);
   background: var(--sello);
-  color: var(--superficie);
+  color: #fff;
 }
 
 .boton--sello:hover {
@@ -208,14 +210,10 @@ svg {
 .obra__titulo {
   font-family: var(--f-titulo);
   font-size: var(--t-heroe);
-  font-weight: 600;
-  line-height: 1.02;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-
-.obra__titulo em {
   font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .obra__texto {

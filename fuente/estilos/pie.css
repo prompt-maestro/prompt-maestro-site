@@ -1,0 +1,60 @@
+/* El pie: la firma. El logotipo enorme, casi apagado, y abajo lo que hay que decir. */
+.pie {
+  overflow: hidden;
+  border-top: 1px solid var(--linea);
+  background: var(--papel-2);
+}
+
+.pie__dentro {
+  display: grid;
+  gap: var(--e-8);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--e-16) clamp(20px, 5.5vw, 56px) var(--e-8);
+}
+
+.pie__firma {
+  color: rgb(245 244 240 / 0.08);
+}
+
+.pie__firma .marca__pm {
+  width: min(100%, 44rem);
+  height: auto;
+}
+
+.pie__texto {
+  display: grid;
+  justify-items: start;
+  gap: var(--e-2);
+}
+
+.pie__nombre {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.pie__lema {
+  margin-bottom: var(--e-4);
+  color: var(--tinta-2);
+}
+
+.pie__nota {
+  max-width: 46rem;
+  padding-top: var(--e-6);
+  border-top: 1px solid var(--linea);
+  color: var(--tinta-3);
+  font-size: var(--t-nota);
+}
+
+@media (min-width: 900px) {
+  .pie__dentro {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: end;
+    padding-top: var(--e-24);
+  }
+
+  .pie__nota {
+    grid-column: 1 / -1;
+  }
+}

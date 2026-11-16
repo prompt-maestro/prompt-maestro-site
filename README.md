@@ -38,5 +38,9 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
 - `herramientas/armar.mjs` une plantillas y datos y escribe HTML estático. Es estricto: un dato que falta detiene la
   armada. `--previa` arma la versión de revisión y `--comprobar` falla si la carpeta en disco no coincide con la fuente.
 - Los precios no se editan aquí: se copian con `herramientas/sincronizar-planes.mjs`.
+- Las fotos y el video del comercial se convierten con `herramientas/optimizar.mjs` (necesita ffmpeg en la laptop). Los
+  originales, pesados, viven en `originales/` (fuera del repo); aquí solo entra lo ya optimizado, sin audio.
+- Sumar un oficio al comercial no toca el diseño: sus dos fotos en `originales/comercial/` (`<oficio>-trabajo.png` y
+  `<oficio>-espera.png`), su nombre en la lista de `optimizar.mjs` y su entrada en `fuente/datos/pelicula.json`.
 - Este repo es público. Ningún commit lleva un correo personal y ningún archivo lleva llaves: el gancho de `pre-push`
   lo revisa, y además bloquea cualquier push directo a `main`.

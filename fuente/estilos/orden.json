@@ -1,1 +1,12 @@
-["tokens.css", "fuentes.css", "base.css", "barra.css", "heroe.css", "demo.css", "sello.css"]
+[
+  "tokens.css",
+  "fuentes.css",
+  "base.css",
+  "barra.css",
+  "pelicula.css",
+  "garantia.css",
+  "demo.css",
+  "sello.css",
+  "agentes.css",
+  "pie.css"
+]

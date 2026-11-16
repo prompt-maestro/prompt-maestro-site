@@ -1,0 +1,43 @@
+{
+  "hace": [
+    {
+      "titulo": "Entiende notas de voz",
+      "texto": "Si tu clienta manda un audio, lo escucha y le contesta por escrito."
+    },
+    {
+      "titulo": "Lee la foto de referencia",
+      "texto": "En uñas, revisa el diseño que quiere tu clienta. Si el precio no está en tu catálogo, te pregunta a ti antes de cotizar."
+    },
+    {
+      "titulo": "Habla de tú o de usted",
+      "texto": "Si tu clienta escribe de usted, le contesta de usted. Con el tono de tu negocio."
+    },
+    {
+      "titulo": "Te pasa los recados",
+      "texto": "Cuando alguien necesita hablar contigo, toma el recado y te avisa a tu WhatsApp personal."
+    },
+    {
+      "titulo": "Recuerda la cita",
+      "texto": "Manda los recordatorios y después te pregunta si la persona asistió."
+    },
+    {
+      "titulo": "Pasa un examen antes de atender",
+      "texto": "Antes de su primera conversación real, lo examinamos tres veces seguidas. Si falla algo grave, no sale."
+    }
+  ],
+  "limitesTitulo": "Lo que tu agente no hace",
+  "noHace": [
+    {
+      "texto": "No confirma una cita sin anticipo, salvo que tú lo autorices."
+    },
+    {
+      "texto": "No inventa precios: los toma de tu catálogo."
+    },
+    {
+      "texto": "No se hace pasar por una persona. Avisa que es un asistente virtual y, si tu clienta lo pide, te la pasa."
+    },
+    {
+      "texto": "No cobra el resto del servicio. Solo el anticipo que garantiza la cita."
+    }
+  ]
+}

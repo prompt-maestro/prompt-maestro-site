@@ -194,9 +194,9 @@
   font-size: var(--t-nota);
 }
 
-/* La primera gota de tinta azul: el pago ya entro. */
+/* La primera luz azul: el pago ya entro. */
 .cobro--aprobado .cobro__estado {
-  color: var(--sello);
+  color: var(--luz);
   font-weight: 600;
 }
 

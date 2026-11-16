@@ -3,7 +3,9 @@ import { expect, test } from '@playwright/test';
 import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
 
 const ALTA = 'https://alta.prompt-maestro.com/';
-const AZUL_DEL_SELLO = 'rgb(30, 42, 143)';
+// El azul de la marca tiene dos tonos: el del boton que cierra (relleno) y la luz de lo ya pagado (texto y sello).
+const AZUL_DEL_BOTON = 'rgb(63, 92, 245)';
+const LUZ_DE_LO_PAGADO = 'rgb(132, 151, 255)';
 
 /**
  * @param {import('@playwright/test').Page} page
@@ -134,16 +136,15 @@ test('al pagar se ve, en este orden: el dinero en su cuenta, la cita en su calen
 
 test('el azul se guarda para lo pagado: el sello, Pago aprobado y el boton del cierre', async ({ page }) => {
   const demo = await abrir(page);
-  await expect(page.locator('.heroe__acciones .boton')).not.toHaveCSS('background-color', AZUL_DEL_SELLO);
-  await expect(page.locator('.heroe__titulo em')).not.toHaveCSS('color', AZUL_DEL_SELLO);
+  await expect(page.locator('.garantia__acciones .boton')).not.toHaveCSS('background-color', AZUL_DEL_BOTON);
   await hastaApartado(demo);
   await expect(demo.getByRole('button', { name: 'Pagar anticipo (simulado)' })).not.toHaveCSS(
     'background-color',
-    AZUL_DEL_SELLO,
+    AZUL_DEL_BOTON,
   );
   await tocar(demo, 'Pagar anticipo (simulado)', 'pagado');
-  await expect(demo.locator('.cobro__estado')).toHaveCSS('color', AZUL_DEL_SELLO);
-  await expect(demo.locator('.agenda__fila .sello')).toHaveCSS('color', AZUL_DEL_SELLO);
+  await expect(demo.locator('.cobro__estado')).toHaveCSS('color', LUZ_DE_LO_PAGADO);
+  await expect(demo.locator('.agenda__fila .sello')).toHaveCSS('color', LUZ_DE_LO_PAGADO);
 });
 
 test('al terminar la cita cambia la escena: ahora es la profesional, y su asistente le pregunta', async ({ page }) => {
@@ -187,7 +188,7 @@ test('si asistio: queda registrado y el cuadro final ensena el dia entero sellad
   await expect(empieza).toBeVisible();
   await expect(empieza).toHaveAttribute('href', ALTA);
   await expect(empieza).not.toHaveAttribute('target', /.*/);
-  await expect(empieza).toHaveCSS('background-color', AZUL_DEL_SELLO);
+  await expect(empieza).toHaveCSS('background-color', AZUL_DEL_BOTON);
   await expect(demo.getByRole('button', { name: 'Ver otra vez' })).toBeVisible();
   await sinFaltasDeAccesibilidad(page);
 });
@@ -306,6 +307,8 @@ test('con movimiento reducido no hay animaciones y la historia sigue completa', 
 test('la conversacion no atrapa el desplazamiento de la pagina', async ({ page, browserName }, info) => {
   test.skip(browserName === 'webkit' && info.project.name !== 'escritorio', 'el telefono de WebKit no tiene rueda');
   const demo = await abrir(page);
+  // La demostracion ya no es la primera pantalla: primero hay que llegar a ella.
+  await demo.getByRole('log').scrollIntoViewIfNeeded();
   const caja = await demo.getByRole('log').boundingBox();
   if (!caja) throw new Error('no encontre la conversacion');
   await page.mouse.move(caja.x + caja.width / 2, caja.y + 40);
@@ -340,7 +343,7 @@ test.describe('sin JavaScript', () => {
 
   test('estan la promesa, los botones y la conversacion de ejemplo como texto', async ({ page }) => {
     await page.goto('./');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Se acabaron los plantones.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Despreocúpate');
     await expect(page.getByRole('link', { name: 'Empieza ahora' }).first()).toHaveAttribute('href', ALTA);
     const escrita = page.locator('.transcripcion');
     await expect(escrita).toBeVisible();

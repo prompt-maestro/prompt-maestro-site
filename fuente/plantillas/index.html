@@ -1,29 +1,90 @@
 <!doctype html>
 <html lang="es-MX">
 <head>
-{{> cabeza}}<script src="{{armado.activos}}js/arranque.js"></script>
+{{> cabeza}}<link rel="preload" as="image" type="image/avif" imagesrcset="{{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-1080.avif 1080w" imagesizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" fetchpriority="high">
+<script src="{{armado.activos}}js/arranque.js"></script>
+<link rel="modulepreload" href="{{armado.activos}}js/pelicula-vista.js">
+<link rel="modulepreload" href="{{armado.activos}}js/pelicula.js">
 <link rel="modulepreload" href="{{armado.activos}}js/demo-vista.js">
 <link rel="modulepreload" href="{{armado.activos}}js/demo.js">
 <link rel="modulepreload" href="{{armado.activos}}js/redaccion.js">
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
-<title>Citas Garantizadas: agenda por WhatsApp con anticipo pagado</title>
-<meta name="description" content="Tu asistente con IA contesta tu WhatsApp y agenda solo con el anticipo pagado. El dinero cae directo en tu cuenta. Para profesionales con agenda.">
+<title>Citas Garantizadas: tu agente de WhatsApp que agenda con anticipo pagado</title>
+<meta name="description" content="Despreocúpate: nuestro agente se encarga de tu agenda por WhatsApp. Contesta mensajes y notas de voz, ve fotos y agenda solo con el anticipo pagado. Para cualquier profesión u oficio.">
 <link rel="canonical" href="{{armado.origen}}{{armado.base}}">
 </head>
 <body>
 {{> cinta-previa}}{{> tinta}}<a class="salto" href="#contenido">Saltar al contenido</a>
-<header class="barra">
+<header class="barra barra--pelicula" data-barra>
   <div class="barra__dentro">
     <a class="marca" href="{{armado.base}}" aria-label="{{sitio.nombre}}, inicio">{{> marca}}{{> nombre}}</a>
-    <a class="boton boton--chico boton--contorno" href="{{sitio.alta}}" data-lugar="barra">Empieza ahora</a>
+    <nav class="barra__nav" aria-label="Secciones">
+      <a class="barra__enlace" href="#citas" data-lugar="barra">Cómo funciona</a>
+      <a class="barra__enlace" href="#agente" data-lugar="barra">Ventajas</a>
+      <a class="boton boton--chico boton--contorno" href="{{sitio.alta}}" data-lugar="barra">Empieza ahora</a>
+    </nav>
   </div>
 </header>
 <main id="contenido">
-  <section class="heroe" id="inicio" aria-labelledby="titulo-heroe">
-    <div class="heroe__promesa">
-      <p class="sobre">{{sitio.producto}}<span class="sobre__resto"> · tu asistente en WhatsApp</span></p>
-      <h1 class="heroe__titulo" id="titulo-heroe">Se acabaron los <em>plantones.</em></h1>
-      <p class="heroe__texto">Tu asistente contesta tu WhatsApp, aparta la cita solo cuando el anticipo ya está pagado y el dinero cae directo en tu cuenta. Tú, a lo tuyo.</p>
+  <section class="pelicula" id="inicio" data-pelicula data-toma="ruido" data-oficio="{{pelicula.oficios.0.clave}}" aria-labelledby="titulo-pelicula">
+    <div class="pelicula__escenario">
+      <div class="pelicula__paneles">
+{{#cada pelicula.oficios}}        <div class="panel" data-panel="{{clave}}"{{#si @primero}} data-activo{{/si}}>
+          <div class="panel__mundo" role="img" aria-label="{{foto}}">
+            <picture>
+              <source type="image/avif" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.avif 1080w" sizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw">
+              <img class="panel__toma" src="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.webp 1080w" sizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" alt="" decoding="async"{{#si @primero}} fetchpriority="high"{{/si}}>
+            </picture>
+            <div class="panel__espera" data-espera data-webp="{{armado.recursos}}comercial/{{clave}}-espera-720.webp" data-avif="{{armado.recursos}}comercial/{{clave}}-espera-720.avif" data-avif-fina="{{armado.recursos}}comercial/{{clave}}-espera-1080.avif"></div>
+{{#si video}}            <video class="panel__video" muted loop playsinline preload="none" aria-hidden="true" data-src="{{armado.recursos}}comercial/{{clave}}-trabajo.mp4"></video>
+{{/si}}          </div>
+          <ol class="avisos" role="list" aria-label="{{pelicula.avisosTitulo}}">
+{{#cada mensajes}}            <li class="aviso"><span class="aviso__inicial" aria-hidden="true">{{inicial}}</span><span class="aviso__cuerpo"><b>{{quien}}</b><span class="aviso__dice">{{#si foto}}<span class="aviso__foto" aria-hidden="true"></span><span class="solo-lector">Foto. </span>{{/si}}{{#si voz}}{{> onda}}<span class="solo-lector">Nota de voz, </span>{{voz}}{{/si}}{{texto}}</span></span><span class="aviso__hace">{{hace}}</span></li>
+{{/cada}}          </ol>
+          <ol class="citas" role="list" aria-label="{{pelicula.citasTitulo}}">
+{{#cada citas}}            <li class="cita{{#si falto}} cita--falto{{/si}}"><small>{{cuando}}</small><b>{{quien}}</b><span class="cita__estado">{{estado}}</span></li>
+{{/cada}}          </ol>
+{{#cada charlas}}          <div class="charla" data-charla="{{toma}}" role="group" aria-label="{{pelicula.charlaTitulo}}">
+            <p class="globo globo--entra"><b>{{quien}}</b>{{#si foto}}<span class="globo__foto" aria-hidden="true"></span><span class="solo-lector">Foto. </span>{{/si}}{{#si voz}}<span class="globo__voz">{{> onda}}<span class="solo-lector">Nota de voz, </span>{{voz}}</span>{{/si}}{{#si entra}}<span>{{entra}}</span>{{/si}}</p>
+{{#si nota}}            <p class="charla__nota">{{nota}}</p>
+{{/si}}            <p class="globo globo--sale"><b>{{pelicula.agente}}</b><span>{{sale}}</span>{{> palomitas}}</p>
+{{#si pago}}            <p class="charla__pago">{{> palomita}}<span><b>{{pelicula.pagoAprobado}}</b> {{pago}}</span></p>
+{{/si}}{{#si cita}}            <p class="charla__cita"><span>{{cita}}</span>{{> sello}}</p>
+{{/si}}          </div>
+{{/cada}}          <p class="panel__nombre"><span>0{{@numero}}</span> {{nombre}}</p>
+        </div>
+{{/cada}}      </div>
+      <div class="pelicula__velo" aria-hidden="true"></div>
+      <div class="pelicula__pie">
+        <p class="cuenta"><span class="cuenta__punto" aria-hidden="true"></span><span data-cuenta>{{pelicula.cuentaInicial}}</span> {{pelicula.sinContestar}}</p>
+        <div class="oficios" role="group" aria-label="{{pelicula.elegirOficio}}">
+{{#cada pelicula.oficios}}          <button class="oficios__boton" type="button" data-elegir="{{clave}}" aria-pressed="false">{{nombre}}</button>
+{{/cada}}          <span class="oficios__mas">{{pelicula.yMas}}</span>
+        </div>
+        <button class="pausa" type="button" data-pausa aria-pressed="false" aria-label="{{pelicula.pausar}}"><svg class="pausa__para" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12 10v10M18 10v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="pausa__sigue" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12.5 10l8 5-8 5z" fill="currentColor"/></svg></button>
+        <p class="desliza" aria-hidden="true">{{pelicula.desliza}}</p>
+      </div>
+      <div class="pelicula__textos">
+{{#cada pelicula.tomas}}        <div class="rotulo{{#si marca}} rotulo--marca{{/si}}" data-rotulo="{{clave}}"{{#si primera}} data-activo{{/si}}>
+{{#si marca}}          <p class="rotulo__logo">{{> marca}}</p>
+{{/si}}          <p class="sobre">{{sobre}}</p>
+{{#si primera}}          <h1 class="rotulo__titulo rotulo__titulo--grande" id="titulo-pelicula">{{titulo}}<span class="cursor" aria-hidden="true"></span></h1>
+{{/si}}{{#no primera}}          <h2 class="rotulo__titulo">{{titulo}}</h2>
+{{/no}}          <p class="rotulo__texto">{{texto}}</p>
+{{#si ultima}}          <p class="rotulo__acciones"><a class="boton boton--sello" href="{{sitio.alta}}" data-lugar="pelicula">{{pelicula.accion}}</a> <a class="enlace" href="#citas" data-lugar="pelicula">{{pelicula.otra}}</a></p>
+{{/si}}        </div>
+{{/cada}}      </div>
+    </div>
+    <div class="pelicula__pasos" aria-hidden="true">
+{{#cada pelicula.tomas}}      <i data-paso="{{clave}}" data-oficio="{{oficio}}"></i>
+{{/cada}}    </div>
+  </section>
+
+  <section class="garantia" id="citas" aria-labelledby="titulo-citas">
+    <div class="garantia__promesa">
+      <p class="sobre">Tu dinero</p>
+      <h2 class="garantia__titulo" id="titulo-citas">No pierdas ingresos por citas <em>no concretadas.</em></h2>
+      <p class="garantia__texto">Tu agente aparta la cita solo cuando el anticipo ya está pagado, y el dinero cae directo en tu cuenta. Vívelo aquí mismo, como si fueras quien pide la cita.</p>
     </div>
     <div class="demo" id="demo" data-demo data-paso="reposo" data-telefono="cliente">
       <div class="demo__escena">
@@ -65,14 +126,41 @@
       <template data-demo-palomita><svg class="cobro__palomita" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></template>
       <script type="application/json" data-demo-datos>{{{armado.datosDemo}}}</script>
     </div>
-    <div class="heroe__cierre">
-      <div class="heroe__acciones">
-        <a class="boton" href="{{sitio.alta}}" data-lugar="heroe">Empieza ahora</a>
-        <a class="enlace" href="{{sitio.contacto}}" data-lugar="heroe">Prefiero que me acompañen</a>
+    <div class="garantia__cierre">
+      <div class="garantia__acciones">
+        <a class="boton" href="{{sitio.alta}}" data-lugar="citas">Empieza ahora</a>
+        <a class="enlace" href="{{sitio.contacto}}" data-lugar="citas">Prefiero que me acompañen</a>
       </div>
-      <p class="heroe__nota">Instalación hoy. La mensualidad empieza cuando tu asistente ya está trabajando.</p>
+      <p class="garantia__nota">Instalación hoy. La mensualidad empieza cuando tu agente ya está trabajando.</p>
+    </div>
+  </section>
+
+  <section class="agentes" id="agente" aria-labelledby="titulo-agentes">
+    <div class="agentes__cabeza">
+      <p class="sobre">Tu agente</p>
+      <h2 class="agentes__titulo" id="titulo-agentes">Atiende como tú lo harías. <em>A cualquier hora.</em></h2>
+    </div>
+    <ol class="agentes__lista" role="list">
+{{#cada agentes.hace}}      <li class="agentes__punto"><h3 class="agentes__nombre">{{titulo}}</h3><p>{{texto}}</p></li>
+{{/cada}}    </ol>
+    <div class="agentes__limites">
+      <h3 class="agentes__subtitulo">{{agentes.limitesTitulo}}</h3>
+      <ul class="agentes__no" role="list">
+{{#cada agentes.noHace}}        <li>{{texto}}</li>
+{{/cada}}      </ul>
     </div>
   </section>
 </main>
+<footer class="pie">
+  <div class="pie__dentro">
+    <p class="pie__firma" aria-hidden="true">{{> marca}}</p>
+    <div class="pie__texto">
+      <p class="pie__nombre">{{sitio.nombre}}</p>
+      <p class="pie__lema">{{sitio.lema}}</p>
+      <p><a class="boton boton--sello" href="{{sitio.alta}}" data-lugar="pie">Empieza ahora</a></p>
+    </div>
+    <p class="pie__nota">{{sitio.lugar}} · {{sitio.notaWhatsApp}}</p>
+  </div>
+</footer>
 </body>
 </html>

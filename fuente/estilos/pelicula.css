@@ -1,0 +1,1076 @@
+/* El comercial de la primera pantalla. Un escenario fijo y, al bajar, ocho tomas: el ruido de WhatsApp mientras ella
+   trabaja, la duda de si llegara la cita, la marca, cuatro ventajas a la vista y el cartel. El mundo de atras son tomas
+   reales de un oficio (unas, dentista, medico): en celular se ve uno a la vez; en pantallas anchas, los tres lado a lado.
+
+   Las reglas describen primero lo que no depende de JavaScript. La toma que corre la dice data-toma, en el comercial;
+   el oficio a la vista lo marca data-activo, en su panel. */
+.pelicula {
+  /* Sin JavaScript el escenario crece con su texto y tiene un piso. Las medidas llevan primero la que entiende
+     cualquier navegador y despues, donde existe, la que descuenta las barras del celular. */
+  --alto: max(100vh, 36rem);
+  --tramo: 92vh;
+  --margen: clamp(20px, 5.5vw, 56px);
+  --vidrio: rgb(13 17 40 / 0.6);
+  --raya: rgb(255 255 255 / 0.16);
+  position: relative;
+  background: var(--papel);
+  color: var(--tinta);
+}
+
+@supports (height: 100svh) {
+  .pelicula {
+    --alto: max(100svh, 36rem);
+    --tramo: 92svh;
+  }
+}
+
+/* Con la barra transparente encima, el comercial sube hasta el borde de la pantalla. El escenario fijo mide justo la
+   pantalla (nunca mas: lo que quedara abajo no se alcanzaria a ver). */
+html.con-pelicula .pelicula {
+  --alto: 100vh;
+  margin-top: calc(-1 * var(--barra-alto));
+}
+
+/* En celular la pantalla crece cuando el navegador esconde su barra: el escenario crece con ella. */
+@supports (height: 100dvh) {
+  html.con-pelicula .pelicula {
+    --alto: 100dvh;
+  }
+}
+
+.pelicula__escenario {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: var(--alto);
+}
+
+html.con-pelicula .pelicula__escenario {
+  position: sticky;
+  top: 0;
+  height: var(--alto);
+}
+
+/* El recorrido: un tramo por toma. No se ve; solo le da largo a la pagina para que el escenario se quede fijo. */
+.pelicula__pasos {
+  display: none;
+}
+
+html.con-pelicula .pelicula__pasos {
+  display: block;
+  margin-top: calc(-1 * var(--alto));
+  pointer-events: none;
+}
+
+.pelicula__pasos i {
+  display: block;
+  height: var(--tramo);
+}
+
+.pelicula__pasos i:first-child {
+  height: var(--alto);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Los paneles: un oficio cada uno.
+   --------------------------------------------------------------------------------------------------------------- */
+.pelicula__paneles {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* El oficio a la vista lo marca data-activo (al abrir, el primero; despues, el codigo). */
+.panel[data-activo] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.panel__mundo,
+.panel__toma,
+.panel__espera,
+.panel__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* La foto se pega abajo: el celular, que esta en primer plano, nunca se corta. */
+.panel__toma,
+.panel__video {
+  object-fit: cover;
+  object-position: 50% 100%;
+}
+
+/* La luz de cada toma: fria mientras nadie contesta, apagada en la marca, calida cuando ya trabaja el agente. */
+.panel__mundo {
+  filter: saturate(0.82) brightness(0.8) contrast(1.06) hue-rotate(-6deg);
+}
+
+.pelicula[data-toma="duda"] .panel__mundo {
+  filter: saturate(0.74) brightness(0.74) contrast(1.04);
+}
+
+.pelicula[data-toma="marca"] .panel__mundo {
+  filter: saturate(0.6) brightness(0.26) blur(6px);
+}
+
+.pelicula:is([data-toma="texto"], [data-toma="voz"], [data-toma="foto"], [data-toma="pago"], [data-toma="cartel"])
+  .panel__mundo {
+  filter: saturate(1.06) brightness(0.96);
+}
+
+/* La toma viva (el video) va encima de su foto en cuanto empieza a correr. */
+.panel__video {
+  opacity: 0;
+}
+
+.panel[data-viva] .panel__video {
+  opacity: 1;
+}
+
+/* La espera: el lugar del cliente vacio. Su foto la pone el codigo despues de lo que se ve al abrir. */
+.panel__espera {
+  background: 50% 100% / cover no-repeat;
+  opacity: 0;
+}
+
+.pelicula[data-toma="duda"] .panel__espera {
+  opacity: 1;
+}
+
+.pelicula[data-toma="duda"] .panel .panel__video {
+  opacity: 0;
+}
+
+/* El nombre del oficio al pie de su panel: solo donde se ven los tres. */
+.panel__nombre {
+  display: none;
+}
+
+/* El velo: oscurece arriba, donde va el texto, y un poco abajo, donde van los controles. */
+.pelicula__velo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom, rgb(7 9 22 / 0.94) 0%, rgb(7 9 22 / 0.72) 24%, rgb(7 9 22 / 0) 54%),
+    linear-gradient(to top, rgb(7 9 22 / 0.66) 0%, rgb(7 9 22 / 0) 17%);
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Lo que flota sobre la toma: los avisos, las citas en duda y la charla del agente. Todo se apoya sobre el celular,
+   que ocupa el tercio de abajo de la foto.
+   --------------------------------------------------------------------------------------------------------------- */
+.avisos,
+.citas,
+.charla {
+  position: absolute;
+  right: 18px;
+  bottom: 29%;
+  left: 18px;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.avisos,
+.charla {
+  display: grid;
+  gap: 9px;
+  max-width: 30rem;
+}
+
+.citas {
+  height: 236px;
+}
+
+.pelicula[data-toma="ruido"] .avisos,
+.pelicula[data-toma="duda"] .citas,
+.pelicula[data-toma="texto"] .charla[data-charla="texto"],
+.pelicula[data-toma="voz"] .charla[data-charla="voz"],
+.pelicula[data-toma="foto"] .charla[data-charla="foto"],
+.pelicula[data-toma="pago"] .charla[data-charla="pago"] {
+  opacity: 1;
+  /* Hereda de su panel: lo de un oficio que no esta a la vista tampoco lo lee un lector de pantalla. */
+  visibility: inherit;
+}
+
+/* En pantallas muy bajitas (un celular acostado) no cabe nada flotando: queda la toma y su rotulo. */
+@media (max-height: 30rem) {
+  html.con-pelicula :is(.avisos, .citas, .charla, .cuenta) {
+    display: none;
+  }
+}
+
+/* Sin JavaScript el comercial es texto corrido sobre la primera toma, oscurecida: nada flota encima del texto. */
+html:not(.con-pelicula) :is(.avisos, .citas, .charla) {
+  display: none;
+}
+
+html:not(.con-pelicula) .pelicula__velo {
+  background: rgb(7 9 22 / 0.82);
+}
+
+/* Un aviso de WhatsApp sin contestar. */
+.aviso {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px 9px 10px;
+  border: 1px solid var(--raya);
+  border-radius: 16px;
+  background: var(--vidrio);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.aviso:nth-child(odd) {
+  margin-right: 54px;
+}
+
+.aviso:nth-child(even) {
+  margin-left: 54px;
+}
+
+/* Los mas viejos se van quedando atras. */
+.aviso:nth-last-child(4) {
+  opacity: 0.5;
+  scale: 0.94;
+}
+
+.aviso:nth-last-child(3) {
+  opacity: 0.76;
+  scale: 0.97;
+}
+
+.aviso__inicial,
+.globo__inicial {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.12);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.aviso b,
+.globo b {
+  display: block;
+  font-weight: 600;
+}
+
+.aviso__dice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgb(245 244 240 / 0.86);
+  font-weight: 300;
+}
+
+.aviso__hace {
+  align-self: start;
+  margin-top: 2px;
+  color: rgb(245 244 240 / 0.66);
+  font-size: 0.6875rem;
+}
+
+.onda {
+  flex: none;
+  width: 66px;
+  height: 18px;
+}
+
+.aviso__foto,
+.globo__foto {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: #8d4a63 url("../recursos/comercial/referencia-unas.webp") 50% 50% / cover no-repeat;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+
+/* Las citas del dia, chuecas y encimadas: nadie sabe si van a llegar. */
+.cita {
+  position: absolute;
+  display: grid;
+  justify-items: start;
+  gap: 1px;
+  width: min(236px, 74%);
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgb(245 244 240 / 0.95);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.45);
+  color: #16193a;
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+
+.cita:nth-child(1) {
+  top: 6px;
+  left: 0;
+  rotate: -5deg;
+}
+
+.cita:nth-child(2) {
+  top: 84px;
+  right: 0;
+  rotate: 3.5deg;
+}
+
+.cita:nth-child(3) {
+  top: 166px;
+  left: 16px;
+  rotate: -2deg;
+}
+
+.cita small {
+  color: #555a7a;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cita b {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cita--falto b {
+  color: #555a7a;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.cita__estado {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  margin-top: 7px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #fff0cf;
+  color: #7a4d00;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cita--falto .cita__estado {
+  background: #fde1dc;
+  color: #96231a;
+}
+
+/* La charla: lo que entra, lo que el agente entendio y lo que contesta. */
+.globo {
+  display: grid;
+  gap: 3px;
+  max-width: 86%;
+  padding: 9px 13px;
+  border: 1px solid var(--raya);
+  border-radius: 16px;
+  background: var(--vidrio);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  font-size: 0.9375rem;
+  line-height: 1.3;
+}
+
+.globo b {
+  color: rgb(245 244 240 / 0.74);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.globo--entra {
+  justify-self: start;
+  border-bottom-left-radius: 5px;
+}
+
+.globo--sale {
+  position: relative;
+  justify-self: end;
+  padding-right: 40px;
+  border-color: rgb(132 151 255 / 0.5);
+  border-bottom-right-radius: 5px;
+  background: rgb(47 70 200 / 0.86);
+}
+
+.globo--sale b {
+  color: rgb(255 255 255 / 0.84);
+}
+
+.palomitas {
+  position: absolute;
+  right: 11px;
+  bottom: 9px;
+  width: 20px;
+  height: 13px;
+  color: #c9d3ff;
+}
+
+.globo__voz {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.globo__foto {
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+}
+
+.charla__nota {
+  justify-self: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgb(7 9 22 / 0.72);
+  color: var(--tinta-2);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.charla__pago {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px 7px 9px;
+  border-radius: 999px;
+  background: rgb(18 60 40 / 0.86);
+  box-shadow: inset 0 0 0 1px rgb(88 214 141 / 0.5);
+  font-size: 0.875rem;
+}
+
+.charla__pago b {
+  font-weight: 600;
+}
+
+.palomita {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--bien);
+}
+
+/* La cita ya agendada, con su sello. */
+.charla__cita {
+  position: relative;
+  justify-self: end;
+  padding: 11px 104px 11px 14px;
+  border-radius: 14px;
+  background: rgb(245 244 240 / 0.96);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.45);
+  color: #16193a;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.charla__cita .sello {
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  width: 108px;
+  color: #2f46c8;
+  translate: 0 -50%;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Los rotulos: lo que dice cada toma. Estan todos en la pagina, uno tras otro; con JavaScript ocupan el mismo
+   lugar y se ve solo el de la toma que corre.
+   --------------------------------------------------------------------------------------------------------------- */
+.pelicula__textos {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: var(--e-8);
+  padding: calc(var(--barra-alto) + var(--e-3)) var(--margen) var(--e-12);
+}
+
+html.con-pelicula .pelicula__textos {
+  position: absolute;
+  inset: 0;
+  gap: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+
+.rotulo {
+  max-width: 34rem;
+}
+
+html.con-pelicula .rotulo {
+  grid-area: 1 / 1;
+  align-self: start;
+  opacity: 0;
+}
+
+html.con-pelicula .rotulo[data-activo] {
+  opacity: 1;
+}
+
+html.con-pelicula .rotulo[data-activo] a {
+  pointer-events: auto;
+}
+
+.pelicula .sobre {
+  color: var(--luz);
+  font-size: 0.6875rem;
+  letter-spacing: 0.24em;
+}
+
+.rotulo__titulo {
+  margin-top: 10px;
+  font-size: clamp(2.125rem, 9.6vw, 3rem);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.rotulo__titulo--grande {
+  font-size: clamp(2.5rem, 12.4vw, 3.5rem);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* El cursor de la marca: el mismo guion bajo que cierra "PM". */
+.cursor {
+  display: inline-block;
+  width: 0.42em;
+  height: 0.11em;
+  margin-left: 0.06em;
+  background: var(--sello-2);
+  box-shadow: 0 0 18px rgb(88 115 255 / 0.9);
+}
+
+.rotulo__texto {
+  max-width: 22em;
+  margin-top: 14px;
+  color: rgb(245 244 240 / 0.9);
+  font-size: 1.0625rem;
+  font-weight: 300;
+  line-height: 1.42;
+  text-wrap: pretty;
+}
+
+.rotulo__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-1) var(--e-6);
+  margin-top: var(--e-6);
+}
+
+/* La toma de la marca: el logotipo solo, al centro. */
+.rotulo__logo {
+  margin-bottom: var(--e-6);
+  color: var(--tinta);
+}
+
+.rotulo__logo .marca__pm {
+  width: auto;
+  height: 76px;
+}
+
+html.con-pelicula .rotulo--marca {
+  align-self: center;
+  justify-self: center;
+  margin-top: calc(-1 * var(--barra-alto));
+  text-align: center;
+}
+
+html.con-pelicula .rotulo--marca .rotulo__logo {
+  display: grid;
+  justify-items: center;
+}
+
+html.con-pelicula .rotulo--marca .rotulo__texto {
+  margin-inline: auto;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El pie: el contador de mensajes, los oficios para elegir y la pista de que la pagina sigue.
+   --------------------------------------------------------------------------------------------------------------- */
+.pelicula__pie {
+  display: none;
+}
+
+html.con-pelicula .pelicula__pie {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  pointer-events: none;
+}
+
+.cuenta {
+  position: absolute;
+  right: 20px;
+  bottom: 19.5%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 13px 0 10px;
+  border: 1px solid var(--raya);
+  border-radius: 999px;
+  background: rgb(7 9 22 / 0.8);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.pelicula:is([data-toma="ruido"], [data-toma="cartel"]) .cuenta {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cuenta__punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff6a5c;
+  box-shadow: 0 0 10px #ff6a5c;
+}
+
+.pelicula[data-toma="cartel"] .cuenta__punto {
+  background: var(--sello-2);
+  box-shadow: 0 0 10px var(--sello-2);
+}
+
+.oficios {
+  position: absolute;
+  right: var(--margen);
+  bottom: 30px;
+  left: var(--margen);
+  display: flex;
+  align-items: center;
+  gap: 4px 18px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.pelicula:is([data-toma="ruido"], [data-toma="duda"]) .oficios {
+  opacity: 1;
+  visibility: visible;
+}
+
+.oficios__boton {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(245 244 240 / 0.7);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.oficios__boton[aria-pressed="true"] {
+  color: var(--tinta);
+  font-weight: 600;
+  background: linear-gradient(var(--sello-2), var(--sello-2)) 0 calc(50% + 14px) / 100% 2px no-repeat;
+}
+
+.oficios__mas {
+  color: rgb(245 244 240 / 0.7);
+}
+
+.desliza {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  color: rgb(245 244 240 / 0.7);
+  font-size: 0.625rem;
+  letter-spacing: 0.34em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* El turno de cada aviso y de cada renglon de la charla: asi llegan uno tras otro y no todos a la vez. */
+.aviso:nth-child(2) {
+  --turno: 700ms;
+}
+
+.aviso:nth-child(3) {
+  --turno: 1400ms;
+}
+
+.aviso:nth-child(4) {
+  --turno: 2100ms;
+}
+
+.charla > :nth-child(2) {
+  --turno: 1100ms;
+}
+
+.charla > :nth-child(3) {
+  --turno: 1900ms;
+}
+
+.charla > :nth-child(4) {
+  --turno: 2700ms;
+}
+
+.charla > :nth-child(5) {
+  --turno: 3400ms;
+}
+
+/* El boton de pausa: detiene el video, el cambio de oficio y lo que parpadea. */
+.pausa {
+  position: absolute;
+  right: 12px;
+  bottom: 22px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: rgb(245 244 240 / 0.8);
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pausa svg {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--raya);
+  border-radius: 50%;
+  background: rgb(7 9 22 / 0.6);
+}
+
+.pausa:hover {
+  color: var(--tinta);
+}
+
+.pausa__sigue,
+.pausa[aria-pressed="true"] .pausa__para {
+  display: none;
+}
+
+.pausa[aria-pressed="true"] .pausa__sigue {
+  display: block;
+}
+
+.desliza::after {
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin: 3px auto 0;
+  border-right: 1.5px solid var(--luz);
+  border-bottom: 1.5px solid var(--luz);
+  content: "";
+  rotate: 45deg;
+}
+
+.pelicula[data-toma="cartel"] .desliza {
+  opacity: 0;
+}
+
+/* Pantallas bajitas: todo se aprieta un poco para que el texto de arriba y la charla no se encimen. */
+@media (max-height: 43rem) {
+  .rotulo__titulo {
+    font-size: clamp(1.875rem, 8.4vw, 2.5rem);
+  }
+
+  .rotulo__titulo--grande {
+    font-size: clamp(2.375rem, 11.6vw, 3.25rem);
+  }
+
+  .rotulo__texto {
+    margin-top: 10px;
+    font-size: 1rem;
+  }
+
+  .avisos,
+  .charla {
+    bottom: 27%;
+    gap: 7px;
+  }
+
+  .globo {
+    padding: 7px 12px;
+    font-size: 0.875rem;
+  }
+
+  .globo--sale {
+    padding-right: 38px;
+  }
+
+  .globo__foto {
+    width: 64px;
+    height: 64px;
+  }
+
+  .aviso {
+    padding-block: 7px;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Pantallas anchas: los tres oficios lado a lado. En las tomas de las ventajas, el que la protagoniza queda
+   iluminado y los otros dos se apagan.
+   --------------------------------------------------------------------------------------------------------------- */
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
+  .pelicula__paneles {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+  }
+
+  .pelicula .pelicula__paneles .panel {
+    position: relative;
+    inset: auto;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .pelicula .pelicula__paneles .panel + .panel {
+    border-left: 1px solid rgb(255 255 255 / 0.14);
+  }
+
+  .pelicula:is([data-toma="texto"], [data-toma="voz"], [data-toma="foto"], [data-toma="pago"]) .panel__mundo {
+    filter: saturate(0.5) brightness(0.3);
+  }
+
+  .pelicula:is([data-toma="texto"], [data-toma="voz"], [data-toma="foto"], [data-toma="pago"])
+    .panel[data-activo]
+    .panel__mundo {
+    filter: saturate(1.06) brightness(0.98);
+  }
+
+  .pelicula__velo {
+    background:
+      linear-gradient(to bottom, rgb(7 9 22 / 0.96) 0%, rgb(7 9 22 / 0.8) 30%, rgb(7 9 22 / 0) 62%),
+      linear-gradient(to top, rgb(7 9 22 / 0.72) 0%, rgb(7 9 22 / 0) 15%);
+  }
+
+  .avisos,
+  .citas,
+  .charla {
+    right: 9%;
+    bottom: 33%;
+    left: 9%;
+  }
+
+  /* Con los tres a la vista bastan los dos avisos mas nuevos de cada uno. */
+  .aviso:nth-last-child(n + 3) {
+    display: none;
+  }
+
+  .aviso:nth-child(n) {
+    margin-inline: 0;
+  }
+
+  .citas {
+    height: 170px;
+  }
+
+  .cita:nth-child(3) {
+    display: none;
+  }
+
+  .panel__nombre {
+    position: absolute;
+    bottom: 26px;
+    left: 28px;
+    z-index: 1;
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .panel__nombre span {
+    margin-right: 10px;
+    color: var(--luz);
+  }
+
+  .pelicula__textos {
+    padding-top: calc(var(--barra-alto) + var(--e-8));
+  }
+
+  .rotulo {
+    max-width: 46rem;
+  }
+
+  .pelicula .sobre {
+    font-size: 0.8125rem;
+  }
+
+  .rotulo__titulo {
+    margin-top: 14px;
+    font-size: clamp(3rem, min(5.6vw, 10svh), 5rem);
+  }
+
+  .rotulo__titulo--grande {
+    font-size: clamp(4rem, min(7.8vw, 15svh), 7rem);
+  }
+
+  /* El texto que explica la promesa se lee sin esfuerzo: grande, con peso y con su propia sombra sobre la foto. */
+  .rotulo__texto {
+    max-width: 30em;
+    margin-top: 22px;
+    color: var(--tinta);
+    font-size: clamp(1.375rem, 1.9vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.4;
+    text-shadow: 0 1px 24px rgb(7 9 22 / 0.9);
+  }
+
+  .rotulo__logo .marca__pm {
+    height: 112px;
+  }
+
+  .globo__foto {
+    width: 112px;
+    height: 112px;
+  }
+
+  .cuenta,
+  .oficios {
+    display: none;
+  }
+
+  .desliza {
+    bottom: 14px;
+  }
+
+  .pausa {
+    right: 24px;
+    bottom: 16px;
+  }
+
+  /* Con los tres a la vista solo se ven los dos avisos mas nuevos: llegan primero. */
+  .aviso:nth-last-child(2) {
+    --turno: 0ms;
+  }
+
+  .aviso:nth-last-child(1) {
+    --turno: 700ms;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El movimiento, solo para quien no pidio reducirlo.
+   --------------------------------------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .panel,
+  .panel__espera,
+  .panel__video,
+  .avisos,
+  .citas,
+  .charla,
+  .cuenta,
+  .oficios,
+  .desliza,
+  html.con-pelicula .rotulo {
+    transition:
+      opacity 520ms var(--suave),
+      visibility 520ms var(--suave);
+  }
+
+  .panel__mundo {
+    transition: filter 700ms var(--suave);
+  }
+
+  /* El rotulo que llega espera a que se vaya el anterior. */
+  html.con-pelicula .rotulo[data-activo] {
+    transition-delay: 220ms;
+  }
+
+  /* Los avisos van cayendo uno tras otro, del mas viejo al mas nuevo, cada vez que su oficio entra a cuadro. */
+  .pelicula[data-toma="ruido"] .panel[data-activo] .aviso {
+    animation: llega 460ms var(--suave) var(--turno, 0ms) both var(--marcha, running);
+  }
+
+  /* La charla se escribe en orden: entra el mensaje, el agente lo entiende, contesta, cobra y agenda. */
+  .pelicula[data-toma="texto"] .charla[data-charla="texto"] > *,
+  .pelicula[data-toma="voz"] .charla[data-charla="voz"] > *,
+  .pelicula[data-toma="foto"] .charla[data-charla="foto"] > *,
+  .pelicula[data-toma="pago"] .charla[data-charla="pago"] > * {
+    animation: llega 460ms var(--suave) var(--turno, 300ms) both var(--marcha, running);
+  }
+
+  /* Las citas en duda parpadean: nadie sabe. */
+  .pelicula[data-toma="duda"] .cita:not(.cita--falto) .cita__estado {
+    animation: duda 1600ms ease-in-out infinite var(--marcha, running);
+  }
+
+  .cursor {
+    animation: parpadea 1100ms steps(1, end) infinite var(--marcha, running);
+  }
+
+  /* El cursor del logotipo parpadea unas veces al llegar y se queda encendido. */
+  .marca__cursor {
+    animation: parpadea 1100ms steps(1, end) 5;
+  }
+
+  .desliza {
+    animation: respira 2400ms ease-in-out infinite var(--marcha, running);
+  }
+
+  /* Con el boton de pausa todo lo que se mueve en el comercial se detiene: cada animacion lleva esta marcha. */
+  .pelicula[data-pausada] {
+    --marcha: paused;
+  }
+}
+
+@keyframes llega {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+
+@keyframes duda {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes parpadea {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes respira {
+  50% {
+    translate: 0 4px;
+  }
+}

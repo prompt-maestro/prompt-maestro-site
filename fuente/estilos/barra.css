@@ -1,9 +1,14 @@
-/* La barra de arriba: el nombre y el boton que importa, siempre a la mano. */
+/* La barra de arriba: la marca y el boton que importa, siempre a la mano. */
+:root {
+  --barra-alto: 64px;
+}
+
 .barra {
   position: sticky;
   top: 0;
   z-index: 10;
   background: var(--papel);
+  color: var(--tinta);
 }
 
 .barra__dentro {
@@ -12,37 +17,90 @@
   justify-content: space-between;
   gap: var(--e-4);
   max-width: 1440px;
-  min-height: 64px;
+  min-height: var(--barra-alto);
   margin: 0 auto;
-  padding: var(--e-2) clamp(20px, 5.5vw, 88px);
+  padding: var(--e-2) clamp(20px, 5.5vw, 56px);
 }
 
 .marca {
   display: inline-flex;
   align-items: center;
-  gap: var(--e-2);
+  gap: 14px;
   min-height: 44px;
-  color: var(--tinta);
+  color: inherit;
   text-decoration: none;
 }
 
-.marca__sello {
-  width: 34px;
-  height: 34px;
-  color: var(--sello);
+/* El logotipo: PM y el cursor de un "prompt". El cursor es lo unico encendido. */
+.marca__pm {
+  width: auto;
+  height: 24px;
 }
 
+.marca__cursor {
+  fill: var(--sello-2);
+}
+
+/* En celular la marca es solo el logotipo; el nombre completo va donde cabe. */
 .marca__nombre {
-  font-family: var(--f-titulo);
+  display: none;
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
-/* La regla de la marca aplicada a su nombre: la palabra que importa va inclinada, con la misma M del sello. */
-.marca__nombre em {
-  font-weight: 500;
+.barra__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--e-8);
+}
+
+/* Los enlaces a las secciones solo van donde caben. */
+.barra__enlace {
+  display: none;
+  min-height: 44px;
+  align-items: center;
+  color: var(--tinta-2);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.barra__enlace:hover {
+  color: var(--tinta);
+}
+
+/* Encima del comercial la barra es transparente: la toma llega hasta el borde de la pantalla. Al pasarlo, toma su
+   fondo. Sin JavaScript siempre lo tiene. */
+html.con-pelicula .barra--pelicula:not([data-fondo]) {
+  background: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .barra--pelicula {
+    transition: background-color var(--d-entrada) var(--suave);
+  }
+}
+
+@media (min-width: 600px) {
+  .marca__nombre {
+    display: inline;
+  }
+}
+
+/* En pantallas anchas el logotipo crece: es la firma de la pagina. */
+@media (min-width: 960px) {
+  .barra__enlace {
+    display: inline-flex;
+  }
+
+  .marca__pm {
+    height: 34px;
+  }
+
+  .marca__nombre {
+    font-size: 1.3125rem;
+  }
 }
 
 /* En los telefonos mas angostos la barra se aprieta para que el boton quepa entero. */
@@ -50,15 +108,6 @@
   .barra__dentro {
     gap: var(--e-2);
     padding-inline: var(--e-4);
-  }
-
-  .marca__sello {
-    width: 30px;
-    height: 30px;
-  }
-
-  .marca__nombre {
-    font-size: 1rem;
   }
 
   .barra .boton--chico {

@@ -14,7 +14,11 @@ export function vigilar(pagina) {
     if (mensaje.type() === 'error') fallas.push(`consola: ${mensaje.text()} (${mensaje.location().url})`);
   });
   pagina.on('pageerror', (error) => fallas.push(`javascript: ${error.message}`));
-  pagina.on('requestfailed', (peticion) => fallas.push(`peticion rota: ${peticion.url()}`));
+  pagina.on('requestfailed', (peticion) => {
+    // Lo que el navegador cancela porque la visitante ya se fue a otra pagina no es una peticion rota.
+    if (/abort|cancel/i.test(peticion.failure()?.errorText ?? '')) return;
+    fallas.push(`peticion rota: ${peticion.url()}`);
+  });
   pagina.on('response', (respuesta) => {
     if (respuesta.status() >= 400 && respuesta.request().resourceType() !== 'document') {
       fallas.push(`${respuesta.status()}: ${respuesta.url()}`);

@@ -1,20 +1,4 @@
-/* Las tipografias se sirven desde la propia pagina. Son variables: un archivo cubre todos los pesos. */
-@font-face {
-  font-family: "Playfair Display";
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url("../recursos/fuentes/playfair-display.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Playfair Display";
-  font-style: italic;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url("../recursos/fuentes/playfair-display-italica.woff2") format("woff2");
-}
-
+/* La tipografia se sirve desde la propia pagina. Es variable: un archivo cubre todos los pesos. */
 @font-face {
   font-family: "Outfit";
   font-style: normal;

@@ -6,6 +6,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 import { DESTINOS } from './armado.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -75,10 +76,46 @@ const servidor = createServer(async (peticion, respuesta) => {
   const final = archivo ?? path.join(raizSitio, '404.html');
   try {
     const contenido = await readFile(final);
-    respuesta.writeHead(archivo ? 200 : 404, {
+    const cabeceras = {
       'content-type': TIPOS[path.extname(final)] ?? 'application/octet-stream',
       'cache-control': 'no-store',
-    });
+      'accept-ranges': 'bytes',
+    };
+    // Los videos se piden por pedazos (Safari no reproduce uno si el servidor no sabe contestar asi), igual que en
+    // GitHub Pages.
+    const pedazo = archivo ? /^bytes=(\d*)-(\d*)$/.exec(peticion.headers.range ?? '') : null;
+    if (pedazo && (pedazo[1] || pedazo[2])) {
+      const total = contenido.length;
+      const desde = pedazo[1] ? Number(pedazo[1]) : Math.max(0, total - Number(pedazo[2]));
+      const hasta = pedazo[1] && pedazo[2] ? Math.min(Number(pedazo[2]), total - 1) : total - 1;
+      if (desde > hasta || desde >= total) {
+        respuesta.writeHead(416, { 'content-range': `bytes */${total}` });
+        respuesta.end();
+        return;
+      }
+      respuesta.writeHead(206, {
+        ...cabeceras,
+        'content-range': `bytes ${desde}-${hasta}/${total}`,
+        'content-length': hasta - desde + 1,
+      });
+      respuesta.end(contenido.subarray(desde, hasta + 1));
+      return;
+    }
+    // El texto viaja comprimido, igual que en GitHub Pages: asi el peso que se mide aqui es el que le llega a la visitante.
+    const esTexto = /^(text\/|application\/(json|xml|manifest\+json)|image\/svg)/.test(cabeceras['content-type']);
+    if (esTexto && /\bgzip\b(?!\s*;\s*q=0(\.0+)?\s*(,|$))/.test(String(peticion.headers['accept-encoding'] ?? ''))) {
+      // Se comprime antes de escribir las cabeceras: si algo fallara, todavia se puede contestar otra cosa.
+      const comprimido = gzipSync(contenido);
+      respuesta.writeHead(archivo ? 200 : 404, {
+        ...cabeceras,
+        'content-encoding': 'gzip',
+        'content-length': comprimido.length,
+        vary: 'accept-encoding',
+      });
+      respuesta.end(comprimido);
+      return;
+    }
+    respuesta.writeHead(archivo ? 200 : 404, { ...cabeceras, 'content-length': contenido.length });
     respuesta.end(contenido);
   } catch {
     respuesta.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });

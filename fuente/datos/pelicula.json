@@ -1,0 +1,307 @@
+{
+  "canal": "WhatsApp",
+  "sinContestar": "sin contestar",
+  "avisosTitulo": "Mensajes de WhatsApp sin contestar",
+  "citasTitulo": "Citas del día",
+  "charlaTitulo": "Así lo atiende tu agente",
+  "ejemplo": "Ejemplo",
+  "elegirOficio": "Elige un oficio",
+  "yMas": "y más",
+  "desliza": "Desliza",
+  "accion": "Empieza ahora",
+  "otra": "Vívelo tú",
+  "pagoAprobado": "Pago aprobado",
+  "oficios": [
+    {
+      "clave": "unas",
+      "nombre": "Uñas",
+      "foto": "Una manicurista pinta las uñas de una clienta. En primer plano, su celular encendido sobre la mesa.",
+      "mensajes": [
+        {
+          "quien": "Lupita",
+          "inicial": "L",
+          "texto": "¿Me puedes llamar mañana?",
+          "voz": "",
+          "foto": false,
+          "hace": "4 min"
+        },
+        {
+          "quien": "Renata",
+          "inicial": "R",
+          "texto": "¿Cuánto por este diseño?",
+          "voz": "",
+          "foto": true,
+          "hace": "2 min"
+        },
+        {
+          "quien": "Sofía",
+          "inicial": "S",
+          "texto": "",
+          "voz": "0:14",
+          "foto": false,
+          "hace": "1 min"
+        },
+        {
+          "quien": "Ana",
+          "inicial": "A",
+          "texto": "Hola, ¿tienes lugar el sábado?",
+          "voz": "",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "citas": [
+        {
+          "cuando": "Jueves · 4:00 pm",
+          "quien": "Sofía · Acrílicas",
+          "estado": "No llegó",
+          "falto": true
+        },
+        {
+          "cuando": "Jueves · 5:00 pm",
+          "quien": "Renata · Gelish",
+          "estado": "¿Llegará?",
+          "falto": false
+        },
+        {
+          "cuando": "Jueves · 6:30 pm",
+          "quien": "Lupita · Pedicure",
+          "estado": "¿Llegará?",
+          "falto": false
+        }
+      ],
+      "charlas": [
+        {
+          "toma": "texto",
+          "quien": "Ana",
+          "inicial": "A",
+          "entra": "Hola, ¿tienes lugar el sábado?",
+          "voz": "",
+          "foto": false,
+          "nota": "",
+          "sale": "¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?",
+          "pago": "",
+          "cita": ""
+        },
+        {
+          "toma": "foto",
+          "quien": "Renata",
+          "inicial": "R",
+          "entra": "¿Cuánto por este diseño?",
+          "voz": "",
+          "foto": true,
+          "nota": "Vio la foto: francesas con decorado",
+          "sale": "Ya vi tu diseño: francesas con decorado. Queda en $420. ¿Te aparto lugar?",
+          "pago": "",
+          "cita": ""
+        }
+      ],
+      "video": true
+    },
+    {
+      "clave": "dentista",
+      "nombre": "Dentista",
+      "foto": "Un dentista atiende a un paciente en el sillón. En primer plano, su celular encendido sobre la barra.",
+      "mensajes": [
+        {
+          "quien": "Iván",
+          "inicial": "I",
+          "texto": "¿Atienden hoy en la tarde?",
+          "voz": "",
+          "foto": false,
+          "hace": "5 min"
+        },
+        {
+          "quien": "Carla",
+          "inicial": "C",
+          "texto": "¿Cuánto cuesta una limpieza?",
+          "voz": "",
+          "foto": false,
+          "hace": "3 min"
+        },
+        {
+          "quien": "Sr. Robles",
+          "inicial": "R",
+          "texto": "",
+          "voz": "0:21",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "citas": [
+        {
+          "cuando": "Viernes · 10:00 am",
+          "quien": "Carla · Limpieza",
+          "estado": "No llegó",
+          "falto": true
+        },
+        {
+          "cuando": "Viernes · 11:30 am",
+          "quien": "Iván · Revisión",
+          "estado": "¿Llegará?",
+          "falto": false
+        }
+      ],
+      "charlas": [
+        {
+          "toma": "voz",
+          "quien": "Sr. Robles",
+          "inicial": "R",
+          "entra": "",
+          "voz": "0:21",
+          "foto": false,
+          "nota": "Escuchó: «Doctor, se me cayó una amalgama. ¿Me podría atender hoy?»",
+          "sale": "Buenas tardes, señor Robles. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?",
+          "pago": "",
+          "cita": ""
+        }
+      ],
+      "video": false
+    },
+    {
+      "clave": "medico",
+      "nombre": "Médico",
+      "foto": "Un médico revisa a un paciente con el estetoscopio. En primer plano, su celular encendido sobre el escritorio.",
+      "mensajes": [
+        {
+          "quien": "Paty",
+          "inicial": "P",
+          "texto": "¿Tiene cita para mañana?",
+          "voz": "",
+          "foto": false,
+          "hace": "6 min"
+        },
+        {
+          "quien": "Jorge",
+          "inicial": "J",
+          "texto": "",
+          "voz": "0:09",
+          "foto": false,
+          "hace": "2 min"
+        },
+        {
+          "quien": "Doña Elvira",
+          "inicial": "E",
+          "texto": "¿Cuánto cuesta la consulta?",
+          "voz": "",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "citas": [
+        {
+          "cuando": "Lunes · 9:00 am",
+          "quien": "Jorge · Consulta",
+          "estado": "No llegó",
+          "falto": true
+        },
+        {
+          "cuando": "Lunes · 10:30 am",
+          "quien": "Paty · Consulta",
+          "estado": "¿Llegará?",
+          "falto": false
+        }
+      ],
+      "charlas": [
+        {
+          "toma": "pago",
+          "quien": "Doña Elvira",
+          "inicial": "E",
+          "entra": "Sí, aparte el sábado a las 10, por favor.",
+          "voz": "",
+          "foto": false,
+          "nota": "",
+          "sale": "Con gusto. Para apartar su consulta, el anticipo es de $200. Aquí está su enlace de pago.",
+          "pago": "$200 · Mercado Pago",
+          "cita": "Sábado 10:00 am · Elvira"
+        }
+      ],
+      "video": false
+    }
+  ],
+  "tomas": [
+    {
+      "clave": "ruido",
+      "oficio": "",
+      "sobre": "No importa tu profesión u oficio",
+      "titulo": "Despreocúpate",
+      "texto": "Nuestro agente se encarga de tu agenda por WhatsApp: contesta, agenda y cobra el anticipo mientras tú trabajas.",
+      "primera": true,
+      "ultima": false,
+      "marca": false
+    },
+    {
+      "clave": "duda",
+      "oficio": "",
+      "sobre": "El problema",
+      "titulo": "¿Y si no llega?",
+      "texto": "Apartaste la hora, le dijiste que no a alguien más y nadie avisó.",
+      "primera": false,
+      "ultima": false,
+      "marca": false
+    },
+    {
+      "clave": "marca",
+      "oficio": "",
+      "sobre": "La solución",
+      "titulo": "Prompt Maestro",
+      "texto": "Tu agente virtual de WhatsApp. Trabaja mientras tú trabajas.",
+      "primera": false,
+      "ultima": false,
+      "marca": true
+    },
+    {
+      "clave": "texto",
+      "oficio": "unas",
+      "sobre": "01 · Contesta",
+      "titulo": "Responde al momento.",
+      "texto": "Precios, horarios y dudas, a cualquier hora y con el tono de tu negocio.",
+      "primera": false,
+      "ultima": false,
+      "marca": false
+    },
+    {
+      "clave": "voz",
+      "oficio": "dentista",
+      "sobre": "02 · Escucha",
+      "titulo": "Entiende notas de voz.",
+      "texto": "Tu clientela habla como siempre. Tu agente la escucha y le contesta por escrito.",
+      "primera": false,
+      "ultima": false,
+      "marca": false
+    },
+    {
+      "clave": "foto",
+      "oficio": "unas",
+      "sobre": "03 · Mira",
+      "titulo": "Ve las fotos.",
+      "texto": "En uñas, revisa el diseño y cotiza con tu catálogo. Si no está ahí, te pregunta.",
+      "primera": false,
+      "ultima": false,
+      "marca": false
+    },
+    {
+      "clave": "pago",
+      "oficio": "medico",
+      "sobre": "04 · Agenda",
+      "titulo": "Agenda solo con pago previo.",
+      "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo en tu cuenta.",
+      "primera": false,
+      "ultima": false,
+      "marca": false
+    },
+    {
+      "clave": "cartel",
+      "oficio": "",
+      "sobre": "Citas Garantizadas",
+      "titulo": "Tú, a lo tuyo.",
+      "texto": "Tu agente también recuerda la cita, te pregunta si asistió y te pasa los recados.",
+      "primera": false,
+      "ultima": true,
+      "marca": false
+    }
+  ],
+  "agente": "Tu agente",
+  "pausar": "Pausar el movimiento",
+  "cuentaInicial": 4
+}

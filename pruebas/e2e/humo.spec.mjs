@@ -9,8 +9,8 @@ test('el inicio abre limpio: un titulo, estilos puestos, cero errores y accesibl
   await expect(page).toHaveTitle(/Citas Garantizadas/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'es-MX');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-  // Si la hoja de estilos no llego (una ruta rota en la carpeta de la previa), el fondo seria blanco.
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 245, 239)');
+  // Si la hoja de estilos no llego (una ruta rota en la carpeta de la previa), el fondo seria blanco y no de noche.
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(7, 9, 22)');
   await sinFaltasDeAccesibilidad(page);
   expect(fallas).toEqual([]);
 });
@@ -40,7 +40,7 @@ test('una direccion que no existe contesta 404 con la pagina propia y regresa al
   await expect(page.getByRole('heading', { level: 1 })).toContainText('no llegó a su cita');
   await sinFaltasDeAccesibilidad(page);
   await page.getByRole('link', { name: 'Ir al inicio' }).click();
-  await expect(page).toHaveTitle(/Citas Garantizadas: agenda/);
+  await expect(page).toHaveTitle(/Citas Garantizadas: tu agente/);
   expect(fallas.filter((falla) => !falla.includes('no-existe'))).toEqual([]);
 });
 

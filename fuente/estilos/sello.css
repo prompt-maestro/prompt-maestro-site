@@ -1,12 +1,10 @@
-/* El sello de Garantizada: tinta azul sobre papel. Es el gesto de la marca, por eso es lo unico que cae con peso,
+/* El sello de Garantizada: luz azul sobre la noche. Es el gesto de la marca, por eso es lo unico que cae con peso,
    y por eso el azul no se gasta en nada mas. */
 .sello {
   width: 176px;
   height: auto;
   overflow: visible;
-  color: var(--sello);
-  /* La tinta se mezcla con el papel de abajo, no lo tapa. */
-  mix-blend-mode: multiply;
+  color: var(--luz);
   transform: rotate(-7deg);
 }
 
