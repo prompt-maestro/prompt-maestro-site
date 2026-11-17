@@ -1,4 +1,4 @@
-/* Las secciones de despues del comercial y la demostracion: como funciona, para quien, planes, preguntas y el cierre.
+/* Las secciones de despues del inicio y la demostracion: como funciona, para quien, planes, preguntas y el cierre.
    Todas comparten el mismo marco: un renglon chico encendido, un titulo grande y aire. */
 .pasos,
 .oficio,
@@ -559,7 +559,7 @@ html:not(.con-cuenta) .calculadora {
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
-   La barra de abajo, solo en celular: el boton principal a la mano despues del comercial.
+   La barra de abajo, solo en celular: el boton principal a la mano despues del inicio.
    --------------------------------------------------------------------------------------------------------------- */
 .barra-movil {
   position: fixed;
@@ -666,7 +666,7 @@ html:not(.con-cuenta) .calculadora {
 
 /* Con la barra de abajo a la vista, lo que recibe el foco no se queda escondido detras de ella. */
 /* Solo mientras la barra de abajo se ve: si no, el navegador moveria la pagina al enfocar los controles del
-   comercial, que viven pegados al fondo de la pantalla. */
+   inicio, que viven pegados al fondo de la pantalla. */
 @media (max-width: 899px) {
   html[data-barra-abajo] {
     scroll-padding-bottom: 5.5rem;

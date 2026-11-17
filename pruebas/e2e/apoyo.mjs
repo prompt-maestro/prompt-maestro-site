@@ -60,3 +60,39 @@ export async function sinFaltasDeAccesibilidad(pagina, ...partes) {
   );
   expect(faltas).toEqual([]);
 }
+
+/** La hora que marca el reloj de la pagina en las pruebas del corto: un dia cualquiera, siempre el mismo. */
+const HORA_DE_PRUEBA = new Date('2026-03-02T10:00:00');
+
+/**
+ * Abre el inicio con el reloj de la pagina (el de Playwright) puesto y detenido desde antes de cargar: el corto se
+ * queda en el instante cero de su primera toma y solo avanza cuando la prueba adelanta el reloj (page.clock.runFor,
+ * o hastaElCuadro). Asi ninguna prueba depende de lo rapida que ande la maquina.
+ * @param {import('@playwright/test').Page} pagina
+ * @param {{ quieta?: boolean }} [opciones]  quieta: la visitante pidio menos movimiento (el corto no corre solo)
+ * @returns {Promise<import('@playwright/test').Locator>}  la seccion del inicio, ya viva
+ */
+export async function abrirCortoDetenido(pagina, { quieta = false } = {}) {
+  if (quieta) await pagina.emulateMedia({ reducedMotion: 'reduce' });
+  await pagina.clock.install({ time: HORA_DE_PRUEBA });
+  await pagina.clock.pauseAt(new Date(HORA_DE_PRUEBA.getTime() + 60_000));
+  await pagina.goto('./');
+  const corto = pagina.locator('[data-corto]');
+  await expect(corto).toHaveAttribute('data-viva', '');
+  return corto;
+}
+
+/**
+ * Adelanta el reloj de la pagina, a pasos, hasta que el corto llega a un momento (o a su cartel).
+ * @param {import('@playwright/test').Page} pagina
+ * @param {import('@playwright/test').Locator} corto
+ * @param {string} clave  el data-cuadro que se espera
+ */
+export async function hastaElCuadro(pagina, corto, clave) {
+  // A pasos de un tercio de segundo: el momento mas corto del corto dura mas de un segundo, asi que ninguno se salta.
+  for (let paso = 0; paso < 120; paso++) {
+    if ((await corto.getAttribute('data-cuadro')) === clave) return;
+    await pagina.clock.runFor(350);
+  }
+  throw new Error(`El corto no llego a "${clave}"`);
+}

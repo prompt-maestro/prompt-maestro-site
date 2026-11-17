@@ -230,7 +230,7 @@ test('en celular el boton principal baja a la mano y nunca hay dos a la vez ni e
     await expect(arriba).toBeVisible();
     return;
   }
-  // Sobre el comercial manda el boton de arriba.
+  // Sobre el inicio manda el boton de arriba.
   await expect(abajo).toBeHidden();
   await expect(arriba).toBeVisible();
   // En las secciones de lectura baja a la mano, y el de arriba se guarda: uno solo.

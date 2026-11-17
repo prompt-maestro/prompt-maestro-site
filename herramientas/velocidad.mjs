@@ -21,8 +21,9 @@ const MEDIDAS = /** @type {const} */ ({
   'total-blocking-time': { tope: 200, unidad: 'ms', nombre: 'Tiempo bloqueado' },
 });
 /** Peso maximo de lo que viaja, en KB. */
-// El total incluye la toma viva del comercial (un video de unos 340 KB) y las fotos de los tres oficios. El video se
-// pide cuando la pagina ya se ve y ya responde: no cuenta para el LCP ni para el tiempo bloqueado, que se miden arriba.
+// Se mide como celular, y en celular el corto no corre: del inicio viaja el cartel con los retratos de sus oficios
+// (chicos: se ve uno, al azar). Los videos del corto (unos 255 KB entre los tres) solo se piden en pantallas anchas,
+// cuando la pagina ya se ve.
 const PESOS = /** @type {const} */ ({ script: 60, stylesheet: 30, font: 120, total: 650 });
 
 const servidor = spawn(process.execPath, ['herramientas/servir.mjs', '--puerto', String(PUERTO)], {

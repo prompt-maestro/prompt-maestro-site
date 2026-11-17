@@ -1,0 +1,436 @@
+{
+  "guion": [
+    {
+      "clave": "presion",
+      "dura": 2600,
+      "letrero": "Trabajas.",
+      "cursor": false
+    },
+    {
+      "clave": "vibra",
+      "dura": 2800,
+      "letrero": "Y tu celular no para de sonar.",
+      "cursor": false
+    },
+    {
+      "clave": "avalancha",
+      "dura": 3000,
+      "letrero": "",
+      "cursor": false
+    },
+    {
+      "clave": "barrido",
+      "dura": 1400,
+      "letrero": "Despreocúpate",
+      "cursor": true
+    },
+    {
+      "clave": "marca",
+      "dura": 2600,
+      "letrero": "",
+      "cursor": false
+    },
+    {
+      "clave": "agente",
+      "dura": 3600,
+      "letrero": "",
+      "cursor": false
+    }
+  ],
+  "marca": {
+    "nombre": "Prompt Maestro",
+    "frase": "Deja que uno de nuestros agentes virtuales conteste por ti."
+  },
+  "pantalla": {
+    "hora": "7:42",
+    "dia": "jueves, en plena cita",
+    "sinContestar": "sin contestar",
+    "base": 7,
+    "tope": 23
+  },
+  "cartel": {
+    "sobre": "Uñas, dentistas, médicos y pronto más oficios",
+    "titulo": "Despreocúpate",
+    "frase": "Enfócate en tu trabajo, ahorra tiempo y úsalo en lo que quieras. Deja que nuestros agentes se encarguen de tu WhatsApp y tu agenda.",
+    "accion": "Empieza ahora",
+    "otra": "Vívelo tú",
+    "ejemplo": "Ejemplo: así atiende tu agente",
+    "tu": "Tú",
+    "enLoTuyo": "En lo tuyo",
+    "tuAgente": "Tu agente",
+    "agenteHace": "Contesta, cobra el anticipo y agenda",
+    "whatsapp": "WhatsApp Business",
+    "teEscriben": "Te escriben:",
+    "contesta": "Tu agente contesta:"
+  },
+  "controles": {
+    "titulo": "Video de inicio",
+    "saltar": "Saltar",
+    "pausar": "Pausar el video",
+    "verDeNuevo": "Ver de nuevo",
+    "verElVideo": "Ver el video"
+  },
+  "pagoAprobado": "Pago aprobado",
+  "oficios": [
+    {
+      "clave": "unas",
+      "nombre": "Uñas",
+      "video": true,
+      "tarjeta": "Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta.",
+      "mira": {
+        "persona": "50 30",
+        "celular": "46 78"
+      },
+      "llegan": [
+        {
+          "quien": "Renata",
+          "inicial": "R",
+          "texto": "¿Cuánto por este diseño?",
+          "voz": "",
+          "foto": true,
+          "hace": "ahora"
+        }
+      ],
+      "avisos": [
+        {
+          "quien": "Lupita",
+          "inicial": "L",
+          "texto": "¿Me puedes llamar mañana?",
+          "voz": "",
+          "foto": false,
+          "hace": "14 min"
+        },
+        {
+          "quien": "Renata",
+          "inicial": "R",
+          "texto": "¿Cuánto por este diseño?",
+          "voz": "",
+          "foto": true,
+          "hace": "12 min"
+        },
+        {
+          "quien": "Sofía",
+          "inicial": "S",
+          "texto": "",
+          "voz": "0:14",
+          "foto": false,
+          "hace": "9 min"
+        },
+        {
+          "quien": "Karla",
+          "inicial": "K",
+          "texto": "¿Sí tienes lugar hoy?",
+          "voz": "",
+          "foto": false,
+          "hace": "6 min"
+        },
+        {
+          "quien": "Ana",
+          "inicial": "A",
+          "texto": "Hola, ¿tienes lugar el sábado?",
+          "voz": "",
+          "foto": false,
+          "hace": "3 min"
+        },
+        {
+          "quien": "Mariana",
+          "inicial": "M",
+          "texto": "¿Cuánto cuesta el gelish?",
+          "voz": "",
+          "foto": false,
+          "hace": "2 min"
+        },
+        {
+          "quien": "Paola",
+          "inicial": "P",
+          "texto": "¿Sigues ahí?",
+          "voz": "",
+          "foto": false,
+          "hace": "1 min"
+        },
+        {
+          "quien": "Renata",
+          "inicial": "R",
+          "texto": "¿Hola?",
+          "voz": "",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "hecho": {
+        "quien": "Renata",
+        "inicial": "R",
+        "texto": "¿Cuánto por este diseño?",
+        "voz": "",
+        "foto": true,
+        "hizo": "Vio la foto y cotizó: $420.",
+        "pago": "",
+        "cuando": "",
+        "cita": ""
+      },
+      "cartel": {
+        "tarjeta": "cartel/unas-vida-tarjeta",
+        "alt": "La manicurista pasea por un parque de la mano de su hija; las dos sonríen.",
+        "encuadre": 72,
+        "cuando": "Sábado · 11:00 am",
+        "quien": "Ana · Gelish",
+        "tu": {
+          "foto": "cartel/unas-tu",
+          "alt": "Una manicurista, concentrada, pinta las uñas de una clienta bajo un aro de luz.",
+          "recorte": {
+            "x": 9,
+            "y": 11.5,
+            "ancho": 74
+          }
+        },
+        "charla": {
+          "negocio": "Studio Bella",
+          "iniciales": "SB",
+          "entra": "Hola, ¿tienes lugar el sábado?",
+          "responde": "¡Hola, Ana! Sí, a las 11:00 am. Para apartarla, el anticipo es de $150.",
+          "anticipo": "$150"
+        }
+      }
+    },
+    {
+      "clave": "dentista",
+      "nombre": "Dentista",
+      "video": true,
+      "tarjeta": "Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.",
+      "mira": {
+        "persona": "50 41",
+        "celular": "46 80.5"
+      },
+      "llegan": [
+        {
+          "quien": "Sr. Medina",
+          "inicial": "M",
+          "texto": "",
+          "voz": "0:21",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "avisos": [
+        {
+          "quien": "Iván",
+          "inicial": "I",
+          "texto": "¿Atienden hoy en la tarde?",
+          "voz": "",
+          "foto": false,
+          "hace": "16 min"
+        },
+        {
+          "quien": "Carla",
+          "inicial": "C",
+          "texto": "¿Cuánto cuesta una limpieza?",
+          "voz": "",
+          "foto": false,
+          "hace": "11 min"
+        },
+        {
+          "quien": "Sr. Medina",
+          "inicial": "M",
+          "texto": "",
+          "voz": "0:21",
+          "foto": false,
+          "hace": "8 min"
+        },
+        {
+          "quien": "Rosa",
+          "inicial": "R",
+          "texto": "¿Tienen cita el viernes?",
+          "voz": "",
+          "foto": false,
+          "hace": "6 min"
+        },
+        {
+          "quien": "Luis",
+          "inicial": "L",
+          "texto": "¿Me pueden atender mañana?",
+          "voz": "",
+          "foto": false,
+          "hace": "4 min"
+        },
+        {
+          "quien": "Elena",
+          "inicial": "E",
+          "texto": "¿Aceptan tarjeta?",
+          "voz": "",
+          "foto": false,
+          "hace": "2 min"
+        },
+        {
+          "quien": "Carla",
+          "inicial": "C",
+          "texto": "¿Hola?",
+          "voz": "",
+          "foto": false,
+          "hace": "1 min"
+        },
+        {
+          "quien": "Iván",
+          "inicial": "I",
+          "texto": "¿Sí atienden?",
+          "voz": "",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "hecho": {
+        "quien": "Sr. Medina",
+        "inicial": "M",
+        "texto": "",
+        "voz": "0:21",
+        "foto": false,
+        "hizo": "Escuchó su audio y le ofreció hoy 5:30 pm.",
+        "pago": "",
+        "cuando": "",
+        "cita": ""
+      },
+      "cartel": {
+        "tarjeta": "cartel/dentista-vida-tarjeta",
+        "alt": "El dentista llega a casa y su hijo lo recibe con un abrazo en la entrada.",
+        "encuadre": 58,
+        "cuando": "Miércoles · 4:00 pm",
+        "quien": "Carla · Limpieza",
+        "tu": {
+          "foto": "cartel/dentista-tu",
+          "alt": "Un dentista con cubrebocas y guantes atiende a un paciente bajo la lámpara del consultorio.",
+          "recorte": {
+            "x": 22,
+            "y": 13.5,
+            "ancho": 74
+          }
+        },
+        "charla": {
+          "negocio": "Dental Sonría",
+          "iniciales": "DS",
+          "entra": "Hola, ¿tienen cita el miércoles?",
+          "responde": "¡Hola, Carla! Sí, a las 4:00 pm. Para apartarla, el anticipo es de $200.",
+          "anticipo": "$200"
+        }
+      }
+    },
+    {
+      "clave": "medico",
+      "nombre": "Médico",
+      "video": true,
+      "tarjeta": "Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.",
+      "mira": {
+        "persona": "50 43",
+        "celular": "50 84"
+      },
+      "llegan": [
+        {
+          "quien": "Doña Elvira",
+          "inicial": "E",
+          "texto": "¿Tiene cita para mañana?",
+          "voz": "",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "avisos": [
+        {
+          "quien": "Doña Elvira",
+          "inicial": "E",
+          "texto": "¿Tiene cita para mañana?",
+          "voz": "",
+          "foto": false,
+          "hace": "15 min"
+        },
+        {
+          "quien": "Jorge",
+          "inicial": "J",
+          "texto": "",
+          "voz": "0:32",
+          "foto": false,
+          "hace": "12 min"
+        },
+        {
+          "quien": "Paty",
+          "inicial": "P",
+          "texto": "¿Cuánto cuesta la consulta?",
+          "voz": "",
+          "foto": false,
+          "hace": "9 min"
+        },
+        {
+          "quien": "Raúl",
+          "inicial": "R",
+          "texto": "¿A qué hora abre el consultorio?",
+          "voz": "",
+          "foto": false,
+          "hace": "7 min"
+        },
+        {
+          "quien": "Lucía",
+          "inicial": "L",
+          "texto": "¿Me aparta el jueves?",
+          "voz": "",
+          "foto": false,
+          "hace": "4 min"
+        },
+        {
+          "quien": "Marta",
+          "inicial": "M",
+          "texto": "¿Sigue la consulta de hoy?",
+          "voz": "",
+          "foto": false,
+          "hace": "2 min"
+        },
+        {
+          "quien": "Jorge",
+          "inicial": "J",
+          "texto": "¿Doctor?",
+          "voz": "",
+          "foto": false,
+          "hace": "1 min"
+        },
+        {
+          "quien": "Paty",
+          "inicial": "P",
+          "texto": "¿Hola?",
+          "voz": "",
+          "foto": false,
+          "hace": "ahora"
+        }
+      ],
+      "hecho": {
+        "quien": "",
+        "inicial": "",
+        "texto": "",
+        "voz": "",
+        "foto": false,
+        "hizo": "",
+        "pago": "$300 · Mercado Pago",
+        "cuando": "Jueves · 10:00 am",
+        "cita": "Doña Elvira · Consulta"
+      },
+      "cartel": {
+        "tarjeta": "cartel/medico-vida-tarjeta",
+        "alt": "El médico lee con calma en la mesa de su casa, con una taza de café al lado.",
+        "encuadre": 82,
+        "cuando": "Jueves · 10:00 am",
+        "quien": "Doña Elvira · Consulta",
+        "tu": {
+          "foto": "cartel/medico-tu",
+          "alt": "Un médico escucha con su estetoscopio la espalda de un paciente en el consultorio.",
+          "recorte": {
+            "x": 17,
+            "y": 11,
+            "ancho": 82
+          }
+        },
+        "charla": {
+          "negocio": "Consultorio Médico Aurora",
+          "iniciales": "CA",
+          "entra": "Buenas tardes, ¿tiene cita el jueves?",
+          "responde": "Buenas tardes. Sí, a las 10:00 am. Para apartarla, el anticipo es de $300.",
+          "anticipo": "$300"
+        }
+      }
+    }
+  ]
+}

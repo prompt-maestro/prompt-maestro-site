@@ -144,7 +144,7 @@ svg {
   box-shadow: none;
 }
 
-/* El boton azul: va donde la cita ya quedo sellada y donde cierra el comercial. El azul es de lo pagado y lo garantizado. */
+/* El boton azul: va donde la cita ya quedo sellada y en el cartel del inicio. El azul es de lo pagado y lo garantizado. */
 .boton--sello {
   border-color: var(--sello);
   background: var(--sello);

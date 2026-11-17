@@ -243,7 +243,11 @@ test('ningun archivo del repo trae un correo personal ni una ruta de la laptop',
   /** @type {string[]} */
   const hallazgos = [];
   for (const ruta of archivos) {
-    const texto = await readFile(path.join(RAIZ, ruta), 'utf8');
+    // Un archivo borrado que todavia no se confirma sigue en la lista de git, pero ya no hay nada que leerle.
+    const texto = await readFile(path.join(RAIZ, ruta), 'utf8').catch((error) => {
+      if (error.code === 'ENOENT') return '';
+      throw error;
+    });
     for (const [hallado] of texto.matchAll(correo)) {
       if (!permitido.test(hallado) && !deUnaLicencia(ruta, hallado)) {
         hallazgos.push(`${ruta}: un correo que no es de la casa`);

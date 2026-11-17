@@ -70,14 +70,14 @@
   color: var(--tinta);
 }
 
-/* Encima del comercial la barra es transparente: la toma llega hasta el borde de la pantalla. Al pasarlo, toma su
-   fondo. Sin JavaScript siempre lo tiene. */
-html.con-pelicula .barra--pelicula:not([data-fondo]) {
+/* Encima del inicio la barra es transparente: el corto llega hasta el borde de la pantalla. En cuanto la pagina
+   baja, toma su fondo. Sin JavaScript siempre lo tiene. */
+html.con-corto .barra--corto:not([data-fondo]) {
   background: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .barra--pelicula {
+  .barra--corto {
     transition: background-color var(--d-entrada) var(--suave);
   }
 }

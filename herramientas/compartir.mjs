@@ -1,6 +1,6 @@
 // @ts-check
 // La imagen que se ve al compartir el enlace (WhatsApp, Facebook, Messages):  node herramientas/compartir.mjs
-// La compone con lo que la pagina ya tiene: la toma de unas del comercial, la tipografia, el logotipo y el titulo.
+// La compone con lo que la pagina ya tiene: la toma de unas del corto, la tipografia, el logotipo y el titulo.
 // Escribe fuente/raiz/compartir.jpg (1200 por 630, ligera: WhatsApp no ensena imagenes pesadas) y, de paso, el icono
 // que el iPhone pone en la pantalla de inicio (fuente/raiz/apple-touch-icon.png, 180 por 180). Se corre a mano
 // cuando cambia el titulo o la toma; necesita el navegador de las pruebas (npx playwright install chromium).
@@ -18,10 +18,9 @@ const ALTO = 630;
 const leer = async (/** @type {string} */ ruta) => JSON.parse(await readFile(path.join(RAIZ, ruta), 'utf8'));
 const direccion = (/** @type {string} */ ruta) => pathToFileURL(path.join(RAIZ, ruta)).href;
 
-const pelicula = await leer('fuente/datos/pelicula.json');
+const corto = await leer('fuente/datos/corto.json');
 const sitio = await leer('fuente/datos/sitio.json');
 const marca = await readFile(path.join(RAIZ, 'fuente', 'plantillas', 'parciales', 'marca.html'), 'utf8');
-const [promesa] = pelicula.tomas;
 
 // Los mismos colores que fuente/estilos/tokens.css.
 const html = `<!doctype html>
@@ -49,7 +48,7 @@ const html = `<!doctype html>
   <div class="marca">${marca}<span>${sitio.nombre}</span></div>
   <div>
     <p class="sobre">${sitio.producto}</p>
-    <h1>${promesa.titulo}<i></i></h1>
+    <h1>${corto.cartel.titulo}<i></i></h1>
     <p class="texto">${sitio.compartirTexto}</p>
   </div>
   <p class="pie">prompt-maestro.com</p>

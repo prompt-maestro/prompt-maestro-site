@@ -1,125 +1,133 @@
 // @ts-check
 // Lo que encontro la prueba de uso real (fase 5) y ninguna prueba veia: cada falla quedo aqui para que no regrese.
-import { vigilar } from './apoyo.mjs';
+// Las del comercial viejo (que avanzaba con el scroll) quedaron adaptadas al corto del inicio, que corre solo.
+import { abrirCortoDetenido, hastaElCuadro, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
-const ANCHA = '(min-width: 900px) and (min-aspect-ratio: 1/1)';
+/** Los perfiles con pantalla ancha: los unicos donde corre el corto (y donde el cartel ensena las tres fotos). */
+const ANCHOS = ['escritorio', 'firefox'];
+
+/** @param {import('@playwright/test').TestInfo} info */
+const esAncho = (info) => ANCHOS.includes(info.project.name);
 
 /**
- * Abre la pagina CON movimiento (varias de estas fallas solo existian con las animaciones corriendo).
+ * Abre la pagina con menos movimiento: el corto no corre solo y se ve su cartel.
  * @param {import('@playwright/test').Page} page
  */
-async function abrir(page) {
+async function abrirQuieta(page) {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
-  const pelicula = page.locator('[data-pelicula]');
-  await expect(pelicula).toHaveAttribute('data-viva', '');
-  return pelicula;
+  const corto = page.locator('[data-corto]');
+  await expect(corto).toHaveAttribute('data-viva', '');
+  return corto;
 }
 
-/**
- * @param {import('@playwright/test').Page} page
- * @param {import('@playwright/test').Locator} pelicula
- * @param {string} toma
- */
-async function irA(page, pelicula, toma) {
-  await page.evaluate(
-    (clave) => document.querySelector(`[data-paso="${clave}"]`)?.scrollIntoView({ block: 'center' }),
-    toma,
-  );
-  await expect(pelicula).toHaveAttribute('data-toma', toma);
-}
-
-test('en pausa las conversaciones del comercial se ven completas, quietas: la pausa no las borra', async ({ page }) => {
-  const pelicula = await abrir(page);
-  const pausa = pelicula.getByRole('button', { name: 'Pausar el movimiento' });
-  await pausa.click();
-  await expect(pelicula).toHaveAttribute('data-pausada', '');
-  for (const toma of ['texto', 'voz', 'foto', 'pago']) {
-    await irA(page, pelicula, toma);
-    const renglones = pelicula.locator(`.panel[data-activo] .charla[data-charla="${toma}"] > *`);
-    expect(await renglones.count()).toBeGreaterThan(1);
-    // Cada renglon esta puesto y a la vista: en pausa nada se queda a medio entrar.
-    for (const renglon of await renglones.all()) {
-      await expect(renglon).toBeVisible();
-      await expect(renglon).toHaveCSS('opacity', '1');
-    }
+test('en pausa lo que el agente ya hizo se queda a la vista, quieto: la pausa no lo borra', async ({ page }, info) => {
+  test.skip(!esAncho(info), 'el corto solo corre en pantallas anchas');
+  // Con el corto corriendo el navegador de pruebas va despacio: se le da su tiempo.
+  test.slow();
+  const corto = await abrirCortoDetenido(page);
+  await hastaElCuadro(page, corto, 'agente');
+  const renglones = corto.locator('.franja__sobre--hecho > *');
+  expect(await renglones.count()).toBeGreaterThan(2);
+  // Entran uno tras otro: se espera a que esten todos.
+  for (const renglon of await renglones.all()) await expect(renglon).toHaveCSS('opacity', '1');
+  await corto.getByRole('button', { name: 'Pausar el video' }).click();
+  await expect(corto).toHaveAttribute('data-pausada', '');
+  // Cada renglon sigue puesto y a la vista: en pausa nada se queda a medio entrar ni se borra.
+  for (const renglon of await renglones.all()) {
+    await expect(renglon).toBeVisible();
+    await expect(renglon).toHaveCSS('opacity', '1');
   }
-  // Y al regresar a la primera toma, sus avisos tambien.
-  await irA(page, pelicula, 'ruido');
-  const avisos = pelicula.locator('.panel[data-activo] .aviso');
-  for (const aviso of await avisos.filter({ visible: true }).all()) {
-    expect(Number(await aviso.evaluate((el) => getComputedStyle(el).opacity))).toBeGreaterThan(0.7);
-  }
+  await expect(corto.locator('.franja__sobre--hecho .sello')).toBeVisible();
 });
 
-test('en pausa el contador de mensajes sin contestar tampoco avanza, y al reanudar sigue', async ({ page }) => {
-  const pelicula = await abrir(page);
-  const esAncha = await page.evaluate((consulta) => matchMedia(consulta).matches, ANCHA);
-  test.skip(esAncha, 'el contador solo se ve con un oficio a la vez');
-  const cuenta = pelicula.locator('[data-cuenta]');
-  const pausa = pelicula.getByRole('button', { name: 'Pausar el movimiento' });
-  await expect.poll(async () => Number(await cuenta.textContent()), { timeout: 10_000 }).toBeGreaterThan(4);
+test('en pausa el contador de mensajes sin contestar tampoco avanza, y al reanudar sigue', async ({ page }, info) => {
+  test.skip(!esAncho(info), 'el corto solo corre en pantallas anchas');
+  // Con el corto corriendo el navegador de pruebas va despacio: se le da su tiempo.
+  test.slow();
+  const corto = await abrirCortoDetenido(page);
+  await hastaElCuadro(page, corto, 'avalancha');
+  await page.clock.runFor(500);
+  const cuenta = corto.locator('[data-corto-cuenta]').first();
+  const pausa = corto.getByRole('button', { name: 'Pausar el video' });
   await pausa.click();
   const enPausa = await cuenta.textContent();
-  await page.waitForTimeout(4000);
+  await page.clock.runFor(10_000);
   await expect(cuenta).toHaveText(enPausa ?? '');
+  await expect(corto).toHaveAttribute('data-cuadro', 'avalancha');
   await pausa.click();
-  await expect
-    .poll(async () => Number(await cuenta.textContent()), { timeout: 10_000 })
-    .toBeGreaterThan(Number(enPausa));
+  await page.clock.runFor(900);
+  expect(Number(await cuenta.textContent())).toBeGreaterThan(Number(enPausa));
 });
 
-test('con movimiento reducido el contador se queda en su numero: nada se mueve solo', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  const pelicula = await abrir(page);
-  const cuenta = pelicula.locator('[data-cuenta]');
-  const alAbrir = await cuenta.textContent();
-  await page.waitForTimeout(3500);
-  await expect(cuenta).toHaveText(alAbrir ?? '');
+test('con movimiento reducido nada del inicio se mueve solo: ni el corto ni una sola animacion', async ({ page }) => {
+  const corto = await abrirQuieta(page);
+  await expect(corto).toHaveAttribute('data-cuadro', 'cartel');
+  await page.waitForTimeout(1200);
+  await expect(corto).toHaveAttribute('data-cuadro', 'cartel');
+  const animaciones = await corto.evaluate((el) =>
+    el.getAnimations({ subtree: true }).map((animacion) => animacion.playState),
+  );
+  expect(animaciones).toEqual([]);
 });
 
-test('en celular, enfocar los controles del comercial no mueve la pagina', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  const pelicula = await abrir(page);
-  const esAncha = await page.evaluate((consulta) => matchMedia(consulta).matches, ANCHA);
-  test.skip(esAncha, 'las pestanas de oficio solo existen con un oficio a la vez');
-  // Lo mas que la pagina puede moverse es lo que haya arriba del comercial (en la previa, su cinta): nunca un brinco.
-  const arriba = await pelicula.evaluate((el) => Math.ceil(el.getBoundingClientRect().top + scrollY));
-  for (const nombre of ['Uñas', 'Dentista', 'Médico']) {
-    await pelicula.getByRole('button', { name: nombre, exact: true }).focus();
+test('en celular, recorrer el cartel con el teclado no mueve la pagina, y de la imagen no hay nada que enfocar', async ({
+  page,
+}, info) => {
+  test.skip(esAncho(info), 'en pantallas anchas el inicio trae los controles del corto');
+  const corto = await abrirQuieta(page);
+  // Lo mas que la pagina puede moverse es lo que haya arriba del inicio (en la previa, su cinta): nunca un brinco.
+  const arriba = await corto.evaluate((el) => Math.ceil(el.getBoundingClientRect().top + scrollY));
+  // Las paradas del inicio son sus dos enlaces y nada mas: "Tu y tu agente" se mira y se lee, no se toca.
+  const paradas = await corto.evaluate((raiz) =>
+    [...raiz.querySelectorAll('a[href], button, input, video, [tabindex]')]
+      .filter((uno) => uno.getClientRects().length > 0 && uno.getAttribute('tabindex') !== '-1')
+      .map((uno) => uno.textContent?.trim()),
+  );
+  expect(paradas).toEqual(['Empieza ahora', 'Vívelo tú']);
+  for (const nombre of paradas) {
+    await corto.getByRole('link', { name: nombre, exact: true }).focus();
     expect(await page.evaluate(() => scrollY)).toBeLessThanOrEqual(arriba);
-    await expect(pelicula).toHaveAttribute('data-toma', 'ruido');
+    await expect(corto).toHaveAttribute('data-cuadro', 'cartel');
   }
-  await pelicula.getByRole('button', { name: 'Pausar el movimiento' }).focus();
-  expect(await page.evaluate(() => scrollY)).toBeLessThanOrEqual(arriba);
 });
 
-test('quien llega por un ancla y sube entra al comercial por su final, no por la primera toma', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+test('quien llega por un ancla y sube encuentra el cartel, no el corto a medias', async ({ page }, info) => {
+  // Con movimiento: aun asi el corto no corre a espaldas de quien no lo tiene enfrente.
   await page.goto('./#planes');
-  const pelicula = page.locator('[data-pelicula]');
-  await expect(pelicula).toHaveAttribute('data-viva', '');
-  await expect(pelicula).toHaveAttribute('data-toma', 'cartel');
+  const corto = page.locator('[data-corto]');
+  await expect(corto).toHaveAttribute('data-viva', '');
+  await expect(corto).toHaveAttribute('data-cuadro', 'cartel');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(corto.getByRole('heading', { level: 1 })).toBeInViewport({ ratio: 1 });
+  await expect(corto.locator('[data-corto-cine]')).toBeHidden();
+  // En pantallas anchas, como no lo vio, el boton le ofrece verlo (no "verlo de nuevo"); en las demas no hay corto.
+  const ver = corto.locator('[data-corto-ver]');
+  if (esAncho(info)) await expect(ver).toHaveText('Ver el video');
+  await expect(ver).toBeVisible({ visible: esAncho(info) });
 });
 
-test('el video del comercial no es una parada del teclado', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  const pelicula = await abrir(page);
-  const video = pelicula.locator('video').first();
-  await expect(video).toHaveAttribute('tabindex', '-1');
-  await expect(video).toHaveAttribute('aria-hidden', 'true');
+test('los videos del corto no son una parada del teclado', async ({ page }) => {
+  const corto = await abrirQuieta(page);
+  const videos = await corto.locator('video').all();
+  expect(videos.length).toBeGreaterThan(0);
+  for (const video of videos) {
+    await expect(video).toHaveAttribute('tabindex', '-1');
+    await expect(video).toHaveAttribute('aria-hidden', 'true');
+  }
 });
 
 test('si no llega el archivo de una sola pieza, las demas arrancan igual', async ({ page }) => {
-  // El archivo menos importante (la medicion) ya no puede tumbar el comercial, la demostracion y la calculadora.
+  // El archivo menos importante (la medicion) ya no puede tumbar el corto, la demostracion y la calculadora.
   await page.route('**/js/medicion-vista.js', (ruta) => ruta.abort());
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
-  await expect(page.locator('[data-pelicula]')).toHaveAttribute('data-viva', '');
+  await expect(page.locator('[data-corto]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('[data-calculadora]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('html')).toHaveClass(/con-js/);
-  await expect(page.locator('html')).toHaveClass(/con-pelicula/);
+  await expect(page.locator('html')).toHaveClass(/con-corto/);
   await expect(page.locator('html')).toHaveClass(/con-cuenta/);
 });
 
@@ -160,12 +168,19 @@ test('la calculadora no regana a medio teclear, y su aviso de error queda ligado
 test.describe('en una pantalla diminuta (zoom de 400 %, o un celular acostado)', () => {
   test.use({ viewport: { width: 320, height: 256 } });
 
-  test('el comercial se queda como texto corrido, que se lee completo y trae su boton', async ({ page }) => {
+  test('el inicio se queda en su cartel, que se lee completo y trae su boton', async ({ page }) => {
     const fallas = vigilar(page);
     await page.goto('./');
-    await expect(page.locator('html')).not.toHaveClass(/con-pelicula/);
+    await expect(page.locator('html')).not.toHaveClass(/con-corto/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Despreocúpate');
-    const empieza = page.locator('.pelicula').getByRole('link', { name: 'Empieza ahora' });
+    // Aqui el corto no cabe: ni sus capas ni sus botones. Tampoco la imagen del cartel: queda el texto corrido.
+    await expect(page.locator('[data-corto-cine]')).toBeHidden();
+    await expect(page.locator('[data-corto-control]')).toBeHidden();
+    await expect(page.locator('[data-corto-ver]')).toBeHidden();
+    await expect(page.locator('[data-corto] button').filter({ visible: true })).toHaveCount(0);
+    await expect(page.locator('[data-corto] .duo')).toBeHidden();
+    await expect(page.locator('[data-corto] .vidas')).toBeHidden();
+    const empieza = page.locator('.corto').getByRole('link', { name: 'Empieza ahora' });
     await empieza.scrollIntoViewIfNeeded();
     await expect(empieza).toBeVisible();
     // Nada se sale a lo ancho: se lee bajando, sin mover la pagina de lado.

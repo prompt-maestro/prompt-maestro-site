@@ -38,10 +38,38 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
 - `herramientas/armar.mjs` une plantillas y datos y escribe HTML estático. Es estricto: un dato que falta detiene la
   armada. `--previa` arma la versión de revisión y `--comprobar` falla si la carpeta en disco no coincide con la fuente.
 - Los precios no se editan aquí: se copian con `herramientas/sincronizar-planes.mjs`.
-- Las fotos y el video del comercial se convierten con `herramientas/optimizar.mjs` (necesita ffmpeg en la laptop). Los
-  originales, pesados, viven en `originales/` (fuera del repo); aquí solo entra lo ya optimizado, sin audio.
-- Sumar un oficio al comercial no toca el diseño: sus dos fotos en `originales/comercial/` (`<oficio>-trabajo.png` y
-  `<oficio>-espera.png`), su nombre en la lista de `optimizar.mjs` y su entrada en `fuente/datos/pelicula.json`.
+- La primera pantalla es el cartel (título, frase, botones y una imagen) y, solo en pantallas anchas (900 o más, y
+  más anchas que altas), el corto: una película de unos 16 segundos que corre sola al abrir y, al terminar, deja a la
+  vista el cartel, que siempre estuvo debajo. En celular y en tableta de pie el corto no existe: se ve el cartel,
+  quieto, y no se pide ni un video. El cartel también es lo que se ve sin JavaScript y con movimiento reducido. El
+  guion del corto (sus momentos y lo que dura cada uno) y los textos viven en `fuente/datos/corto.json`; qué momento
+  toca lo decide `fuente/js/corto.js` y la página la mueve `fuente/js/corto-vista.js`.
+- El cartel no depende del corto, y su imagen cambia con la pantalla. En pantallas más anchas que altas son las tres
+  fotos de «su tiempo» como tarjetas (`cartel.tarjeta` de cada oficio, sin tamaño ni extensión), con la cita del
+  primer oficio debajo (`fuente/plantillas/parciales/cartel-flota.html`). En celular y en tableta de pie es «Tú y tu
+  agente»: la foto de quien trabaja (`cartel.tu`) y un celular dibujado con HTML y CSS donde su agente contesta,
+  cobra el anticipo y agenda (`cartel.charla`, más la cita del oficio). Todo se dibuja con una sola unidad, el ancho
+  de la imagen entre 350, así que es la misma composición en un celular angosto y en una tableta.
+- En celular se ve UN oficio, al azar en cada visita. La página trae escrita una escena por oficio y solo la primera
+  a la vista (es la que se ve sin JavaScript); `fuente/js/arranque.js`, que corre en el `<head>` antes del primer
+  pintado, elige uno, lo deja escrito en `<html data-oficio>` y guarda o enseña cada escena en cuanto el navegador la
+  lee: nunca se pinta una para cambiarla por otra. Los oficios que hay se los dice su propia etiqueta
+  (`data-oficios`), que sale de los datos.
+- En celular lo primero es que el cartel se vea: las piezas de JavaScript (la demostración, la calculadora, la
+  medición) se traen cuando el navegador ya pintó la página (`fuente/js/pagina.js`), y por eso sus `modulepreload`
+  solo valen en pantallas anchas, donde el inicio es el corto y lo mueve una pieza. Si se cambia esa regla, medir con
+  `npm run velocidad`: con una foto como lo más grande de la pantalla, todo lo que llega antes de pintarla cuenta
+  para el LCP.
+- Las fotos y los videos del corto y de su cartel se convierten con `herramientas/optimizar.mjs` (necesita ffmpeg en
+  la laptop). Los originales, pesados, viven en `originales/` (fuera del repo); aquí solo entra lo ya optimizado, sin
+  audio.
+- Sumar un oficio no toca el diseño ni el código: sus originales en `originales/comercial/` (`<oficio>-trabajo.png`
+  y, si tiene toma viva, `<oficio>-trabajo-viva.mp4`) y en `originales/cartel/` (`<oficio>-vida.png`), su entrada en
+  `fuente/datos/corto.json` (avisos, lo que hizo el agente, su cita, a dónde mira la cámara en cada foto y, para el
+  cartel, sus fotos, el recorte de su retrato y su conversación) y correr `node herramientas/optimizar.mjs <oficio>`,
+  que toma los oficios de ese mismo archivo. El retrato del cartel de celular se recorta de la foto de trabajo
+  (`cartel.tu.recorte`: desde dónde y cuánto de lo ancho, en por ciento; mide tres por cuatro). La lista de oficios
+  es una sola: de ahí salen también las tarjetas de «Para quién» y los oficios entre los que elige el azar.
 - Sumar un oficio a la demostración casi no toca el código: su entrada en `fuente/datos/giros.json`, su guion en
   `fuente/datos/guiones/<oficio>.json` y su clave en la lista `GIROS` de `fuente/js/medicion.js` (la medición solo
   acepta valores de una lista cerrada; una prueba avisa si falta). La armada se detiene si a un ejemplo le falta un texto.
@@ -51,7 +79,7 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   estructurados van dentro del HTML y, solo en el dominio, se escriben `robots.txt`, `sitemap.xml` y `llms.txt`. El
   título y la descripción viven en `fuente/datos/sitio.json`; la armada se detiene si no caben en un resultado.
 - La imagen que se ve al compartir el enlace (`fuente/raiz/compartir.jpg`) se compone con `herramientas/compartir.mjs`
-  a partir del título y de una toma del comercial. Se vuelve a correr a mano si cambia alguno de los dos.
+  a partir del título y de una toma del corto. Se vuelve a correr a mano si cambia alguno de los dos.
 - La medición (Umami, sin cookies) se enciende con los cuatro datos de `medicion` en `sitio.json`; vacío, está
   apagada. La etiqueta va solo en el dominio (la previa y la 404 nunca miden). El script de Umami no se carga de su
   servidor: es una copia revisada que sirve la propia página (`fuente/js/terceros/`, con su licencia al lado), así

@@ -15,7 +15,10 @@ export const GIROS = /** @type {const} */ (['unas', 'dentista', 'medico']);
 export const PASOS = /** @type {const} */ (['precio', 'horarios', 'apartado', 'pagado', 'recordatorios', 'asistencia']);
 /** Como arranco la demostracion: la persona la toco, o arranco sola. */
 export const MODOS = /** @type {const} */ (['toque', 'sola']);
-/** Los data-lugar de la pagina: donde esta el enlace que se toco. */
+/**
+ * Los data-lugar de la pagina: donde esta el enlace que se toco. "pelicula" es el inicio (el cartel del corto): conserva
+ * el nombre con el que ya se venia midiendo, para que la cuenta de antes y la de ahora sean la misma serie.
+ */
 export const LUGARES = /** @type {const} */ ([
   'barra',
   'barra-movil',

@@ -155,7 +155,7 @@ test('pregunta_abre lleva la posicion de la pregunta, de 1 en adelante', () => {
 test('archivoDe deja solo el nombre del archivo: sin sitio, sin carpetas, sin parametros y sin ancla', () => {
   assert.equal(archivoDe('https://prompt-maestro.com/a/0123456789/js/demo-vista.js'), 'demo-vista.js');
   assert.equal(archivoDe('https://prompt-maestro.com/a/0123456789/js/pagina.js?v=3&correo=ana@x.com#l10'), 'pagina.js');
-  assert.equal(archivoDe('http://127.0.0.1:4173/pagina-previa/a/abc/js/pelicula-vista.js'), 'pelicula-vista.js');
+  assert.equal(archivoDe('http://127.0.0.1:4173/pagina-previa/a/abc/js/corto-vista.js'), 'corto-vista.js');
   assert.equal(archivoDe('https://cloud.umami.is/script.js'), 'script.js');
   assert.equal(archivoDe('https://prompt-maestro.com/index.html'), 'index.html');
 });

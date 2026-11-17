@@ -1,20 +1,21 @@
 <!doctype html>
 <html lang="es-MX">
 <head>
-{{> cabeza}}<script src="{{armado.activos}}js/arranque.js"></script>
-<link rel="modulepreload" href="{{armado.activos}}js/pelicula-vista.js">
-<link rel="modulepreload" href="{{armado.activos}}js/pelicula.js">
-<link rel="modulepreload" href="{{armado.activos}}js/demo-vista.js">
-<link rel="modulepreload" href="{{armado.activos}}js/demo.js">
-<link rel="modulepreload" href="{{armado.activos}}js/redaccion.js">
-<link rel="modulepreload" href="{{armado.activos}}js/calculadora-vista.js">
-<link rel="modulepreload" href="{{armado.activos}}js/calculadora.js">
-<link rel="modulepreload" href="{{armado.activos}}js/medicion-vista.js">
-<link rel="modulepreload" href="{{armado.activos}}js/medicion.js">
+{{> cabeza}}<script src="{{armado.activos}}js/arranque.js" data-oficios="{{#cada corto.oficios}}{{clave}}{{#no @ultimo}} {{/no}}{{/cada}}"></script>
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/cartel-vista.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/corto-vista.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/corto.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/demo-vista.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/demo.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/redaccion.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/calculadora-vista.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/calculadora.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/medicion-vista.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/medicion.js">
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
 <link rel="stylesheet" href="{{armado.activos}}estilos/pagina.css">
-<link rel="preload" as="image" type="image/avif" imagesrcset="{{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{pelicula.oficios.0.clave}}-trabajo-1080.avif 1080w" imagesizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" fetchpriority="high">
-{{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true"></script>
+{{#cada corto.oficios}}<link rel="preload" as="image" type="image/avif" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" imagesrcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.avif 1080w" imagesizes="34vw"{{#si @primero}} fetchpriority="high"{{/si}}>
+{{/cada}}{{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true"></script>
 {{/si}}<title>{{sitio.titulo}}</title>
 <meta name="description" content="{{sitio.descripcion}}">
 <link rel="canonical" href="{{armado.origen}}{{armado.base}}">
@@ -33,7 +34,7 @@
 </head>
 <body>
 {{> cinta-previa}}{{> tinta}}<a class="salto" href="#contenido">Saltar al contenido</a>
-<header class="barra barra--pelicula" data-barra>
+<header class="barra barra--corto" data-barra>
   <div class="barra__dentro">
     <a class="marca" href="{{armado.base}}" aria-label="{{sitio.nombre}}, inicio">{{> marca}}{{> nombre}}</a>
     <nav class="barra__nav" aria-label="Secciones">
@@ -45,58 +46,108 @@
   </div>
 </header>
 <main id="contenido">
-  <section class="pelicula" id="inicio" data-pelicula data-toma="ruido" data-oficio="{{pelicula.oficios.0.clave}}" aria-labelledby="titulo-pelicula">
-    <div class="pelicula__escenario">
-      <div class="pelicula__paneles">
-{{#cada pelicula.oficios}}        <div class="panel" data-panel="{{clave}}"{{#si @primero}} data-activo{{/si}}>
-          <div class="panel__mundo" role="img" aria-label="{{foto}}">
-            <picture>
-              <source type="image/avif" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.avif 1080w" sizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw">
-              <img class="panel__toma" src="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.webp 1080w" sizes="(min-width: 900px) and (min-aspect-ratio: 1/1) 34vw, 100vw" alt="" decoding="async"{{#si @primero}} fetchpriority="high"{{/si}}>
-            </picture>
-            <div class="panel__espera" data-espera data-webp="{{armado.recursos}}comercial/{{clave}}-espera-720.webp" data-avif="{{armado.recursos}}comercial/{{clave}}-espera-720.avif" data-avif-fina="{{armado.recursos}}comercial/{{clave}}-espera-1080.avif"></div>
-{{#si video}}            <video class="panel__video" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-src="{{armado.recursos}}comercial/{{clave}}-trabajo.mp4"></video>
-{{/si}}          </div>
-          <ol class="avisos" role="list" aria-label="{{pelicula.avisosTitulo}}">
-{{#cada mensajes}}            <li class="aviso"><span class="aviso__inicial" aria-hidden="true">{{inicial}}</span><span class="aviso__cuerpo"><b>{{quien}}</b><span class="aviso__dice">{{#si foto}}<span class="aviso__foto" aria-hidden="true"></span><span class="solo-lector">Foto. </span>{{/si}}{{#si voz}}{{> onda}}<span class="solo-lector">Nota de voz, </span>{{voz}}{{/si}}{{texto}}</span></span><span class="aviso__hace">{{hace}}</span></li>
-{{/cada}}          </ol>
-          <ol class="citas" role="list" aria-label="{{pelicula.citasTitulo}}">
-{{#cada citas}}            <li class="cita{{#si falto}} cita--falto{{/si}}"><small>{{cuando}}</small><b>{{quien}}</b><span class="cita__estado">{{estado}}</span></li>
-{{/cada}}          </ol>
-{{#cada charlas}}          <div class="charla" data-charla="{{toma}}" role="group" aria-label="{{pelicula.charlaTitulo}}">
-            <p class="globo globo--entra"><b>{{quien}}</b>{{#si foto}}<span class="globo__foto" aria-hidden="true"></span><span class="solo-lector">Foto. </span>{{/si}}{{#si voz}}<span class="globo__voz">{{> onda}}<span class="solo-lector">Nota de voz, </span>{{voz}}</span>{{/si}}{{#si entra}}<span>{{entra}}</span>{{/si}}</p>
-{{#si nota}}            <p class="charla__nota">{{nota}}</p>
-{{/si}}            <p class="globo globo--sale"><b>{{pelicula.agente}}</b><span>{{sale}}</span>{{> palomitas}}</p>
-{{#si pago}}            <p class="charla__pago">{{> palomita}}<span><b>{{pelicula.pagoAprobado}}</b> {{pago}}</span></p>
-{{/si}}{{#si cita}}            <p class="charla__cita"><span>{{cita}}</span>{{> sello}}</p>
-{{/si}}          </div>
-{{/cada}}          <p class="panel__nombre"><span>0{{@numero}}</span> {{nombre}}</p>
-        </div>
-{{/cada}}      </div>
-      <div class="pelicula__velo" aria-hidden="true"></div>
-      <div class="pelicula__pie">
-        <p class="cuenta"><span class="cuenta__punto" aria-hidden="true"></span><span data-cuenta>{{pelicula.cuentaInicial}}</span> {{pelicula.sinContestar}}</p>
-        <div class="oficios" role="group" aria-label="{{pelicula.elegirOficio}}">
-{{#cada pelicula.oficios}}          <button class="oficios__boton" type="button" data-elegir="{{clave}}" aria-pressed="false">{{nombre}}</button>
-{{/cada}}          <span class="oficios__mas">{{pelicula.yMas}}</span>
-        </div>
-        <button class="pausa" type="button" data-pausa aria-pressed="false" aria-label="{{pelicula.pausar}}"><svg class="pausa__para" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12 10v10M18 10v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="pausa__sigue" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12.5 10l8 5-8 5z" fill="currentColor"/></svg></button>
-        <p class="desliza" aria-hidden="true">{{pelicula.desliza}}</p>
-      </div>
-      <div class="pelicula__textos">
-{{#cada pelicula.tomas}}        <div class="rotulo{{#si marca}} rotulo--marca{{/si}}" data-rotulo="{{clave}}"{{#si primera}} data-activo{{/si}}>
-{{#si marca}}          <p class="rotulo__logo">{{> marca}}</p>
-{{/si}}          <p class="sobre">{{sobre}}</p>
-{{#si primera}}          <h1 class="rotulo__titulo rotulo__titulo--grande" id="titulo-pelicula">{{titulo}}<span class="cursor" aria-hidden="true"></span></h1>
-{{/si}}{{#no primera}}          <h2 class="rotulo__titulo">{{titulo}}</h2>
-{{/no}}          <p class="rotulo__texto">{{texto}}</p>
-{{#si ultima}}          <p class="rotulo__acciones"><a class="boton boton--sello" href="{{sitio.alta}}" data-lugar="pelicula">{{pelicula.accion}}</a> <a class="enlace" href="#citas" data-lugar="pelicula">{{pelicula.otra}}</a></p>
-{{/si}}        </div>
-{{/cada}}      </div>
+  <section class="corto" id="inicio" data-corto data-cuadro="{{corto.guion.0.clave}}" data-guion="{{#cada corto.guion}}{{clave}}:{{dura}} {{/cada}}" data-cuenta-base="{{corto.pantalla.base}}" data-cuenta-tope="{{corto.pantalla.tope}}" aria-labelledby="titulo-inicio">
+    <div class="control" role="group" aria-label="{{corto.controles.titulo}}" data-corto-control hidden>
+      <span class="control__linea" aria-hidden="true"><i data-corto-avance></i></span>
+      <button class="control__boton" type="button" data-corto-saltar><span class="control__pastilla">{{corto.controles.saltar}}</span></button>
+      <button class="control__pausa" type="button" data-corto-pausa aria-pressed="false" aria-label="{{corto.controles.pausar}}"><svg class="control__para" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12 10v10M18 10v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="control__sigue" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12.5 10l8 5-8 5z" fill="currentColor"/></svg></button>
     </div>
-    <div class="pelicula__pasos" aria-hidden="true">
-{{#cada pelicula.tomas}}      <i data-paso="{{clave}}" data-oficio="{{oficio}}"></i>
-{{/cada}}    </div>
+    <div class="cartel" data-cartel>
+      <div class="cartel__texto">
+        <p class="sobre">{{corto.cartel.sobre}}</p>
+        <h1 class="cartel__titulo" id="titulo-inicio">{{corto.cartel.titulo}}<span class="cursor" aria-hidden="true"></span></h1>
+        <p class="cartel__frase">{{corto.cartel.frase}}</p>
+        <p class="cartel__acciones"><a class="boton boton--sello" href="{{sitio.alta}}" data-lugar="pelicula">{{corto.cartel.accion}}</a> <a class="enlace" href="#citas" data-lugar="pelicula">{{corto.cartel.otra}}</a></p>
+      </div>
+      <ul class="vidas" role="list">
+{{#cada corto.oficios}}        <li class="vida" data-vida="{{clave}}"{{#si @primero}} data-activo{{/si}}>
+          <figure class="vida__marco">
+            <picture>
+              <source type="image/avif" srcset="{{armado.recursos}}{{cartel.tarjeta}}-600.avif">
+              <img class="vida__foto" src="{{armado.recursos}}{{cartel.tarjeta}}-600.webp" alt="{{cartel.alt}}" width="600" height="1492" loading="lazy" decoding="async">
+            </picture>
+            <figcaption class="vida__nombre">{{nombre}}</figcaption>
+          </figure>
+          <div class="vida__flota">
+            {{> cartel-flota}}
+          </div>
+        </li>
+{{/cada}}      </ul>
+      <div class="duo">
+{{#cada corto.oficios}}        <figure class="duo__escena" data-duo="{{clave}}" aria-label="{{corto.cartel.ejemplo}}"{{#no @primero}} hidden{{/no}}>
+          <div class="duo__lado">
+            <div class="duo__tu">
+              <picture>
+                <source media="not all and (min-width: 480px) and (min-aspect-ratio: 1/1)" type="image/avif" srcset="{{armado.recursos}}{{cartel.tu.foto}}-540.avif 540w, {{armado.recursos}}{{cartel.tu.foto}}-840.avif 840w" sizes="(min-width: 854px) 400px, 47vw">
+                <source media="not all and (min-width: 480px) and (min-aspect-ratio: 1/1)" srcset="{{armado.recursos}}{{cartel.tu.foto}}-540.webp 540w, {{armado.recursos}}{{cartel.tu.foto}}-840.webp 840w" sizes="(min-width: 854px) 400px, 47vw">
+                <img class="duo__foto" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="{{cartel.tu.alt}}" width="540" height="720" decoding="sync" fetchpriority="high" elementtiming="retrato">
+              </picture>
+              <p class="duo__rotulo"><span>{{corto.cartel.tu}}</span> <b>{{corto.cartel.enLoTuyo}}</b></p>
+            </div>
+            <p class="duo__rotulo duo__agente"><span>{{corto.cartel.tuAgente}}</span> <b>{{corto.cartel.agenteHace}}</b></p>
+          </div>
+          <div class="cel">
+            <div class="cel__marco">
+              <div class="cel__pantalla">
+                <p class="cel__cabeza"><span class="cel__inicial" aria-hidden="true">{{cartel.charla.iniciales}}</span><span class="cel__negocio"><b>{{cartel.charla.negocio}}</b> <small>{{corto.cartel.whatsapp}}</small></span></p>
+                <div class="cel__charla">
+                  <p class="globo"><span class="solo-lector">{{corto.cartel.teEscriben}}</span> {{cartel.charla.entra}}</p>
+                  <p class="globo globo--agente"><span class="solo-lector">{{corto.cartel.contesta}}</span> {{cartel.charla.responde}}{{> palomitas}}</p>
+                  <p class="pago">{{> palomita}}<span><b>{{corto.pagoAprobado}}</b> {{cartel.charla.anticipo}}</span></p>
+                  <p class="cita"><small>{{cartel.cuando}}</small><span>{{cartel.quien}}</span>{{> sello}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </figure>
+{{/cada}}      </div>
+      <div class="cartel__pie">
+        <button class="otra" type="button" data-corto-ver data-de-nuevo="{{corto.controles.verDeNuevo}}" data-el-video="{{corto.controles.verElVideo}}" hidden><svg class="otra__flecha" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M13.5 8a5.5 5.5 0 1 1-1.7-4M12 1.5V4.4H9.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-corto-ver-texto>{{corto.controles.verElVideo}}</span></button>
+      </div>
+    </div>
+    <div class="corto__cine" data-corto-cine data-momento="{{corto.guion.0.clave}}" aria-hidden="true">
+      <div class="tri tri--calida" data-tri="calida">
+{{#cada corto.oficios}}        <div class="franja" data-franja="{{clave}}" data-persona="{{mira.persona}}" data-celular="{{mira.celular}}">
+          <div class="foto"><div class="foto__vivo"><div class="foto__luz" data-corto-luz>{{> foto-trabajo}}</div></div></div>
+          <p class="franja__nombre">{{nombre}}</p>
+          <div class="franja__sobre franja__sobre--hecho">
+            {{> hecho}}
+          </div>
+        </div>
+{{/cada}}      </div>
+      <div class="corto__antes" data-corto-antes>
+        <div class="corto__antes-dentro" data-corto-antes-dentro>
+          <div class="corto__frio">
+            <div class="tri tri--fria" data-tri="fria">
+{{#cada corto.oficios}}              <div class="franja" data-franja="{{clave}}" data-persona="{{mira.persona}}" data-celular="{{mira.celular}}">
+                <div class="foto"><div class="foto__vivo"><div class="foto__luz" data-corto-luz>{{> foto-trabajo}}{{#si video}}<video class="foto__video" muted playsinline preload="none" tabindex="-1" aria-hidden="true" disablepictureinpicture disableremoteplayback data-src="{{armado.recursos}}comercial/{{clave}}-trabajo.mp4"></video>{{/si}}</div></div></div>
+                <p class="franja__nombre">{{nombre}}</p>
+                <div class="franja__sobre franja__sobre--llega">
+{{#cada llegan}}                  {{> aviso}}
+{{/cada}}                </div>
+              </div>
+{{/cada}}            </div>
+            <div class="telefonos">
+{{#cada corto.oficios}}              <div class="pantalla">
+                <p class="pantalla__hora">{{corto.pantalla.hora}}</p>
+                <p class="pantalla__dia">{{corto.pantalla.dia}}</p>
+                <p class="cuenta"><span class="cuenta__punto"></span><span><b data-corto-cuenta>{{corto.pantalla.tope}}</b> {{corto.pantalla.sinContestar}}</span></p>
+                <div class="pantalla__avisos">
+{{#cada avisos}}                  {{> aviso}}
+{{/cada}}                </div>
+              </div>
+{{/cada}}            </div>
+          </div>
+        </div>
+      </div>
+      <div class="corto__carro" data-corto-carro><span class="corto__estela"></span><span class="corto__rayo"></span></div>
+      <div class="corto__marca">
+        <p class="corto__logo">{{> marca}}</p>
+        <p class="corto__nombre">{{corto.marca.nombre}}</p>
+        <p class="corto__frase">{{corto.marca.frase}}</p>
+      </div>
+{{#cada corto.guion}}{{#si letrero}}      <p class="letrero" data-letrero="{{clave}}">{{letrero}}{{#si cursor}}<span class="cursor"></span>{{/si}}</p>
+{{/si}}{{/cada}}    </div>
   </section>
 
   <section class="garantia" id="citas" aria-labelledby="titulo-citas">
@@ -159,7 +210,7 @@
       <h2 class="seccion__titulo" id="titulo-oficios">{{secciones.paraQuien.titulo}} <em>{{secciones.paraQuien.tituloFuerte}}</em></h2>
     </div>
     <ul class="oficio__lista" role="list">
-{{#cada pelicula.oficios}}      <li class="oficio__tarjeta">
+{{#cada corto.oficios}}      <li class="oficio__tarjeta">
         <picture>
           <source type="image/avif" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.avif">
           <img class="oficio__foto" src="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp" srcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.webp 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.webp 1080w" sizes="(min-width: 900px) 30vw, 100vw" alt="" width="720" height="1290" loading="lazy" decoding="async">

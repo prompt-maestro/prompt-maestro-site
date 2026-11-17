@@ -1,0 +1,1741 @@
+/* El inicio: el cartel y, solo en pantallas anchas, el corto.
+
+   El cartel (titulo, frase, botones y una imagen) SIEMPRE esta en la pagina. En celular y en tableta de pie es todo
+   lo que hay, quieto desde el primer momento, y su imagen es "Tu y tu agente": ella en lo suyo y un celular donde su
+   agente contesta, cobra el anticipo y agenda. En pantallas anchas su imagen son las tres fotos de "su tiempo".
+   Tambien es lo que se lee sin JavaScript, con movimiento reducido y en pantallas muy bajitas.
+
+   El corto es una pelicula de unos 16 segundos que corre sola al abrir la pagina en una pantalla ancha (900 o mas, y
+   mas ancha que alta) y, al terminar, deja a la vista el cartel, que ya estaba debajo. Son capas opacas encima: las
+   tres franjas de trabajo con luz fria, los celulares que vibran, las pantallas que se llenan de avisos, el barrido
+   de luz, la marca y lo que hizo el agente con luz calida.
+
+   Que se ve lo dicen dos datos: data-cuadro, en la seccion (el momento que corre, o "cartel"), y data-momento, en las
+   capas del corto (el ultimo momento que corrio: asi el corto se funde desde donde iba, tambien al saltarlo). */
+.corto {
+  /* Una sola pantalla. La centesima del alto es la que entiende cualquier navegador y, donde existe, la que descuenta
+     las barras del celular: con ella se mide todo lo que aqui depende del alto. --arriba es lo que haya encima de la
+     seccion (la cinta de la previa). */
+  --svh: 1vh;
+  --alto: calc(100 * var(--svh) - var(--arriba, 0px));
+  /* El mismo canal que el resto de la pagina; en pantallas mas anchas que la pagina, se alinea con su columna. */
+  --margen: max(var(--canal), calc((100vw - 1440px) / 2 + var(--canal)));
+  --vidrio: rgb(13 17 40 / 0.78);
+  --raya: rgb(255 255 255 / 0.16);
+  /* La letra de lo que flota sobre una franja del corto: el aviso que llega y lo que hizo el agente. */
+  --letra-de-franja: clamp(0.8125rem, 1.04vw, 1.0625rem);
+  /* Cada animacion del corto lleva esta marcha: con la pausa, todas se detienen donde iban. */
+  --marcha: running;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  /* La barra de arriba queda encima: el inicio sube hasta el borde de la pantalla. */
+  margin-top: calc(-1 * var(--barra-alto));
+  background: var(--papel);
+  color: var(--tinta);
+}
+
+@supports (height: 100svh) {
+  .corto {
+    --svh: 1svh;
+  }
+}
+
+.corto[data-pausada] {
+  --marcha: paused;
+}
+
+/* Lo que el codigo guarda (lo que solo sirve con JavaScript) no se ensena aunque su regla diga como acomodarse. */
+.corto [hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El cartel. Arriba, el texto: el renglon chico, el titulo, la frase y los dos botones. Debajo, en celular y en
+   tableta de pie, "Tu y tu agente"; donde la pantalla es mas ancha que alta, el texto va a la izquierda y las tres
+   fotos de "su tiempo", como tarjetas, a la derecha.
+   --------------------------------------------------------------------------------------------------------------- */
+.cartel {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: var(--alto);
+  padding-top: var(--barra-alto);
+}
+
+/* Detras, la noche con un resplandor de la luz de la marca: en celular cae donde esta el celular dibujado. */
+.cartel::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(80% 44% at 50% 76%, rgb(63 92 245 / 0.3), rgb(63 92 245 / 0) 72%);
+  content: "";
+}
+
+.cartel__texto {
+  position: relative;
+  padding: 12px var(--margen) 0;
+}
+
+.corto .sobre {
+  max-width: 22em;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  letter-spacing: 0.24em;
+  /* Si no cabe en un renglon, se parte parejo: nunca una palabra sola abajo. */
+  text-wrap: balance;
+}
+
+.cartel__titulo {
+  margin-top: 8px;
+  font-size: clamp(2.25rem, 12.3vw, 4.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+/* En celular, si alguien fuerza el espaciado de las letras, el titulo se parte en vez de salirse de la pantalla.
+   Con la letra normal cabe en un renglon. */
+@media (max-width: 899px) {
+  .cartel__titulo {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* El cursor de la marca: el mismo guion bajo que cierra "PM". */
+.cursor {
+  display: inline-block;
+  width: 0.42em;
+  height: 0.11em;
+  margin-left: 0.06em;
+  background: var(--sello-2);
+  box-shadow: 0 0 18px rgb(88 115 255 / 0.9);
+}
+
+.cartel__frase {
+  max-width: 21.5em;
+  margin-top: 14px;
+  color: rgb(245 244 240 / 0.92);
+  font-size: 1.0625rem;
+  font-weight: 300;
+  line-height: 1.42;
+  text-wrap: balance;
+}
+
+.cartel__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 22px;
+  margin-top: 22px;
+}
+
+.cartel__acciones .boton {
+  min-height: 54px;
+  padding: 0 28px;
+  font-size: 1.0625rem;
+  box-shadow: 0 10px 34px rgb(63 92 245 / 0.45);
+}
+
+/* Las tarjetas de "su tiempo" solo van en pantallas anchas: mas abajo se les da su lugar. */
+.vidas {
+  display: none;
+}
+
+/* Los mensajes sin contestar de la pantalla de un celular del corto. */
+.cuenta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 13px 0 11px;
+  border-radius: 999px;
+  background: rgb(7 9 22 / 0.82);
+  box-shadow: inset 0 0 0 1px var(--raya);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cuenta b {
+  font-weight: 700;
+}
+
+.cuenta__punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff6b5e;
+  box-shadow: 0 0 10px #ff6b5e;
+}
+
+/* La cita ya agendada, con su sello. */
+.cita {
+  position: relative;
+  display: grid;
+  gap: 1px;
+  padding: 9px 104px 9px 13px;
+  border-radius: 13px;
+  background: rgb(245 244 240 / 0.97);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.4);
+  color: #16193a;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.cita small {
+  color: #555a7a;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cita .sello {
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  width: 104px;
+  color: #2f46c8;
+  transform: translateY(-50%) rotate(-7deg);
+}
+
+/* El pago aprobado, con su palomita. */
+.pago {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.54em;
+  max-width: 100%;
+  padding: 0.46em 0.92em 0.46em 0.62em;
+  border-radius: 999px;
+  background: rgb(18 60 40 / 0.92);
+  box-shadow: inset 0 0 0 1px rgb(88 214 141 / 0.5);
+  font-size: var(--letra-de-franja);
+  white-space: nowrap;
+}
+
+.pago b {
+  font-weight: 600;
+}
+
+.palomita {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--bien);
+}
+
+/* Las dos palomitas de un mensaje del agente. */
+.palomitas {
+  width: 1.23em;
+  height: 0.77em;
+  color: var(--luz);
+}
+
+/* El pie del cartel: ahi vive, en pantallas anchas, el boton que corre el corto. */
+.cartel__pie {
+  position: absolute;
+  right: var(--margen);
+  bottom: 8px;
+  left: var(--margen);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   "Tu y tu agente": la imagen del cartel en celular y en tableta de pie. A la derecha, la tarjeta con la foto de
+   quien trabaja ("Tu, en lo tuyo"); a la izquierda, encimado sobre ella y saliendose por abajo de la pantalla, un
+   celular dibujado donde su agente contesta, cobra el anticipo y agenda; debajo de la tarjeta, lo que hace el agente.
+
+   Hay una escena por oficio y se ve solo una: la primera, o la que arranque.js eligio al azar antes del primer
+   pintado. Las demas llevan "hidden": ni se pintan ni las leen los lectores de pantalla.
+
+   Todo se dibuja con una sola unidad, --u: el ancho de la imagen entre 350, que es lo que mide su boceto. Asi es la
+   misma composicion en un celular angosto y en una tableta. A lo alto se acomoda sola: en una pantalla bajita la
+   tarjeta se acorta y el celular sube, para que la respuesta del agente y el pago se alcancen a ver.
+   --------------------------------------------------------------------------------------------------------------- */
+.duo {
+  position: relative;
+  flex: 1 0 auto;
+  max-width: 760px;
+  /* Lo menos que mide: lo que ocupa el celular hasta su pago. Si la pantalla no da, el cartel crece hacia abajo. */
+  min-height: min(calc((100vw - 2 * var(--margen)) * 0.835), 634px);
+  /* El aire de arriba se da con el alto de la pantalla: en una bajita, casi nada. */
+  margin: clamp(12px, calc(13.5 * var(--svh) - 68px), 46px) var(--margen) 0;
+  container-type: size;
+}
+
+.duo__escena {
+  --u: min(calc((100vw - 2 * var(--margen)) / 350), 2.1714px);
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+
+/* Donde el navegador sabe medir la caja, la unidad sale de su ancho de verdad (sin contar la barra de scroll). */
+@supports (width: 1cqw) {
+  .duo__escena {
+    --u: calc(100cqw / 350);
+  }
+}
+
+/* La columna de la derecha: la tarjeta, un poco de aire y lo que hace el agente. */
+.duo__lado {
+  position: absolute;
+  top: 0;
+  right: calc(-4 * var(--u));
+  bottom: max(14px, calc(14 * var(--u)));
+  display: flex;
+  flex-direction: column;
+  width: calc(184 * var(--u));
+}
+
+/* El aire entre la tarjeta y el rotulo es lo primero que se encoge cuando la pantalla es bajita. */
+.duo__lado::before {
+  order: 1;
+  flex: 0 100 calc(40 * var(--u));
+  min-height: max(14px, calc(18 * var(--u)));
+  content: "";
+}
+
+/* La tarjeta: se acorta, sin deformar la foto, si no hay alto para ella y para el rotulo. */
+.duo__tu {
+  position: relative;
+  flex: 0 1 calc(244 * var(--u));
+  min-height: calc(104 * var(--u));
+  overflow: hidden;
+  border-radius: calc(22 * var(--u));
+  background: var(--papel-2);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.16),
+    0 30px 70px rgb(0 0 0 / 0.6);
+  transform: rotate(3deg);
+}
+
+.duo__foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+}
+
+/* La noche sube por el pie de la foto, lo que mide el rotulo: arriba, la cara y las manos se ven limpias. Se mide
+   desde abajo, asi el rotulo se lee igual cuando la tarjeta se acorta. */
+.duo__tu::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    0deg,
+    rgb(7 9 22 / 0.94) 0,
+    rgb(7 9 22 / 0.86) calc(34 * var(--u)),
+    rgb(7 9 22 / 0.56) calc(64 * var(--u)),
+    rgb(7 9 22 / 0) calc(108 * var(--u))
+  );
+  content: "";
+}
+
+/* Un rotulo: el renglon chico encendido y, debajo, lo que dice. */
+.duo__rotulo {
+  color: var(--luz);
+  font-size: clamp(0.625rem, calc(10 * var(--u)), 1.125rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.duo__rotulo b {
+  display: block;
+  margin-top: 3px;
+  color: var(--tinta);
+  font-size: clamp(0.875rem, calc(15 * var(--u)), 1.75rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+/* El de la tarjeta va abajo, a la derecha de donde la tapa el celular. Sobre una foto, su renglon chico va un
+   poco mas claro: asi se lee tambien donde la foto es clara. */
+.duo__tu .duo__rotulo {
+  position: absolute;
+  right: calc(10 * var(--u));
+  bottom: calc(14 * var(--u));
+  left: calc(64 * var(--u));
+  z-index: 1;
+  color: #a9b6ff;
+}
+
+/* Lo que hace el agente va encima de la sombra del celular. */
+.duo__agente {
+  position: relative;
+  z-index: 2;
+  order: 2;
+  flex: none;
+  margin: 0 calc(4 * var(--u)) 0 calc(52 * var(--u));
+}
+
+.duo__agente::before {
+  display: block;
+  width: calc(28 * var(--u));
+  height: 1px;
+  margin-bottom: calc(10 * var(--u));
+  background: var(--luz);
+  content: "";
+}
+
+/* El celular. Su columna mide lo que la imagen; arriba lleva un aire que se encoge hasta cero cuando la pantalla
+   es bajita, y lo que nunca cede es su parte de arriba, hasta el pago. De ahi para abajo se sale de la pantalla. */
+.cel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(-4 * var(--u));
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: calc(214 * var(--u));
+}
+
+.cel::before {
+  flex: 0 1 calc(72 * var(--u));
+  content: "";
+}
+
+.cel__marco {
+  position: relative;
+  flex: 0 0 calc(294 * var(--u));
+  /* Su caja no crece con lo que lleva dentro: el celular se sale de ella a proposito. */
+  min-height: 0;
+  transform: rotate(-2deg);
+  transform-origin: 50% calc(243 * var(--u));
+}
+
+/* El cuerpo del celular: mas alto que su caja, para que siempre se salga por abajo. */
+.cel__marco::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: calc(600 * var(--u));
+  border-radius: calc(40 * var(--u));
+  background: linear-gradient(155deg, #3a4170 0%, #10142e 34%, #0a0d20 62%, #2a3162 100%);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.2),
+    0 40px 90px rgb(0 0 0 / 0.75),
+    0 0 110px rgb(63 92 245 / 0.42);
+  content: "";
+}
+
+/* La camara. */
+.cel__marco::after {
+  position: absolute;
+  top: calc(18 * var(--u));
+  left: calc(71 * var(--u));
+  width: calc(72 * var(--u));
+  height: calc(20 * var(--u));
+  border-radius: calc(20 * var(--u));
+  background: #000;
+  content: "";
+}
+
+.cel__pantalla {
+  position: relative;
+  height: calc(584 * var(--u));
+  margin: calc(8 * var(--u));
+  overflow: hidden;
+  border-radius: calc(33 * var(--u));
+  background: linear-gradient(180deg, #0c1028, #080b1c);
+}
+
+/* En una pantalla muy alta y angosta el celular se alarga con ella: nunca se le ve el final. */
+@supports (height: 1cqh) {
+  .cel__marco::before {
+    height: max(calc(600 * var(--u)), 100cqh);
+  }
+
+  .cel__pantalla {
+    height: max(calc(584 * var(--u)), calc(100cqh - 16 * var(--u)));
+  }
+}
+
+.cel__cabeza {
+  display: flex;
+  align-items: center;
+  gap: calc(9 * var(--u));
+  padding: calc(44 * var(--u)) calc(13 * var(--u)) calc(10 * var(--u));
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(20 26 62 / 0.9);
+}
+
+.cel__inicial {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(32 * var(--u));
+  height: calc(32 * var(--u));
+  border-radius: 50%;
+  background: linear-gradient(140deg, #445cea, #2a3fb8);
+  font-size: calc(11 * var(--u));
+  font-weight: 700;
+}
+
+.cel__negocio {
+  display: grid;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.cel__negocio b {
+  font-size: calc(14 * var(--u));
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.cel__negocio small {
+  color: var(--tinta-3);
+  font-size: calc(11 * var(--u));
+}
+
+.cel__charla {
+  display: grid;
+  /* Su columna mide lo que la pantalla: un texto largo no la ensancha. */
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(7 * var(--u));
+  padding: calc(10 * var(--u)) calc(8 * var(--u));
+  font-size: calc(12.5 * var(--u));
+  line-height: 1.32;
+}
+
+/* Un mensaje: el que entra, a la izquierda; el del agente, azul, a la derecha y con sus palomitas. */
+.globo {
+  position: relative;
+  justify-self: start;
+  max-width: 86%;
+  padding: calc(7 * var(--u)) calc(10 * var(--u));
+  border-radius: calc(13 * var(--u)) calc(13 * var(--u)) calc(13 * var(--u)) calc(4 * var(--u));
+  background: #1b2250;
+}
+
+.globo--agente {
+  justify-self: end;
+  padding-right: calc(30 * var(--u));
+  border-radius: calc(13 * var(--u)) calc(13 * var(--u)) calc(4 * var(--u));
+  background: #2f46c8;
+  box-shadow: inset 0 0 0 1px rgb(132 151 255 / 0.4);
+}
+
+.globo .palomitas {
+  position: absolute;
+  right: calc(8 * var(--u));
+  bottom: calc(7 * var(--u));
+  width: calc(16 * var(--u));
+  height: calc(10 * var(--u));
+  color: #c9d3ff;
+}
+
+.cel .pago {
+  justify-self: end;
+  font-size: inherit;
+}
+
+.cel .palomita {
+  width: calc(14 * var(--u));
+  height: calc(14 * var(--u));
+}
+
+/* La cita en el celular: el texto manda y el sello toma lo que queda, hasta salirse un poco de la hoja. Con un
+   nombre largo el sello se achica en vez de taparlo. */
+.cel .cita {
+  /* Dos renglones de texto en la primera columna; el sello, en la segunda, a lo alto de los dos. */
+  grid-template: auto auto / auto minmax(calc(34 * var(--u)), 1fr);
+  grid-auto-flow: column;
+  align-items: center;
+  column-gap: calc(3 * var(--u));
+  margin: calc(2 * var(--u)) calc(8 * var(--u)) 0 0;
+  padding: calc(9 * var(--u)) 0 calc(9 * var(--u)) calc(11 * var(--u));
+  border-radius: calc(13 * var(--u));
+  font-size: calc(12 * var(--u));
+}
+
+.cel .cita small {
+  font-size: calc(9.5 * var(--u));
+  letter-spacing: 0.04em;
+}
+
+.cel .cita .sello {
+  position: static;
+  grid-area: 1 / 2 / 3;
+  justify-self: end;
+  width: min(calc(78 * var(--u)), calc(100% + 18 * var(--u)));
+  margin-right: calc(-18 * var(--u));
+  transform: rotate(-7deg);
+}
+
+/* Celulares bajitos: el texto del cartel se aprieta para dejarle alto a la imagen. */
+@media (max-height: 620px) and (max-aspect-ratio: 999 / 1000) {
+  .cartel__texto {
+    padding-top: 4px;
+  }
+
+  .cartel__frase {
+    margin-top: 10px;
+    font-size: 1rem;
+  }
+
+  .cartel__acciones {
+    margin-top: 14px;
+  }
+
+  .cartel__acciones .boton {
+    min-height: 50px;
+  }
+}
+
+/* En pantallas bajitas el celular dibujado gana unos puntos arriba: su pago queda mas lejos del borde. */
+@media (max-height: 700px) and (max-aspect-ratio: 999 / 1000) {
+  .cel__marco::after {
+    top: calc(14 * var(--u));
+    height: calc(18 * var(--u));
+  }
+
+  .cel__cabeza {
+    padding-top: calc(38 * var(--u));
+  }
+}
+
+/* Tableta de pie: el mismo acomodo del celular, con la letra a su escala. */
+@media (min-width: 600px) and (max-aspect-ratio: 999 / 1000) {
+  .corto .sobre {
+    font-size: 0.8125rem;
+  }
+
+  .cartel__frase {
+    font-size: 1.25rem;
+  }
+}
+
+/* En una ventana muy bajita (o con mucho zoom) el cartel es texto corrido: la imagen no cabe y no va. */
+@media (max-height: 479px) {
+  .duo {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Lo que solo existe en pantallas anchas, donde corre el corto: sus controles (la raya de avance, "Saltar" y la
+   pausa) y el boton del cartel que lo corre. En las demas no estan.
+   --------------------------------------------------------------------------------------------------------------- */
+.control,
+.otra {
+  display: none;
+}
+
+.control {
+  position: absolute;
+  right: var(--margen);
+  bottom: clamp(13px, 3.2 * var(--svh), 29px);
+  left: var(--margen);
+  z-index: 3;
+  align-items: center;
+  gap: 9px;
+  transition: opacity 520ms var(--suave);
+}
+
+/* Cada vez que el corto arranca, sus controles entran con un fundido. */
+.corto[data-viva]:not([data-cuadro="cartel"]) .control {
+  animation: aparece 520ms var(--suave);
+}
+
+/* Al terminar se funden y, ya fundidos, dejan de ser paradas del teclado. Al volver a correr estan ahi de inmediato:
+   el foco puede caer en la pausa sin esperar. */
+html.con-corto .corto[data-cuadro="cartel"] .control {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 520ms var(--suave),
+    visibility 0s 520ms;
+}
+
+.control__linea {
+  flex: 1;
+  height: 2px;
+  margin-right: 5px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.25);
+}
+
+.control__linea i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  box-shadow: 0 0 10px rgb(132 151 255 / 0.9);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+/* Los dos botones miden 44 de alto para el dedo; lo que se ve es la pastilla de adentro. */
+.control__boton,
+.control__pausa {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tinta);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.control__pastilla {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgb(7 9 22 / 0.72);
+  box-shadow: inset 0 0 0 1px var(--raya);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.control__pausa {
+  width: 44px;
+  margin-right: -5px;
+  border-radius: 50%;
+}
+
+.control__pausa svg {
+  width: 34px;
+  height: 34px;
+  padding: 2px;
+  border-radius: 50%;
+  background: rgb(7 9 22 / 0.72);
+  box-shadow: inset 0 0 0 1px var(--raya);
+}
+
+.control__boton:hover .control__pastilla,
+.control__pausa:hover svg {
+  background: rgb(7 9 22 / 0.92);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.42);
+}
+
+.control__sigue,
+.control__pausa[aria-pressed="true"] .control__para {
+  display: none;
+}
+
+.control__pausa[aria-pressed="true"] .control__sigue {
+  display: block;
+}
+
+/* El foco se ve tambien sobre una mesa clara: el contorno claro lleva debajo un aro de noche. */
+.control :focus-visible,
+.cartel__pie :focus-visible {
+  box-shadow: 0 0 0 3px rgb(7 9 22 / 0.85);
+}
+
+/* El boton del cartel que corre el corto: "Ver el video" antes de que haya corrido, "Ver de nuevo" despues. */
+.otra {
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(245 244 240 / 0.88);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.otra:hover {
+  color: #fff;
+}
+
+.otra__flecha {
+  width: 15px;
+  height: 15px;
+}
+
+/* Mientras el corto corre, ese boton queda debajo: no es una parada del teclado. */
+.corto[data-viva]:not([data-cuadro="cartel"]) .otra {
+  visibility: hidden;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El corto. Solo se pinta en pantallas anchas y con JavaScript (lo enciende la regla de mas abajo); con movimiento
+   reducido, solo si ella lo pidio; en ventanas muy bajitas no cabe y queda el cartel.
+   --------------------------------------------------------------------------------------------------------------- */
+.corto__cine {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  overflow: hidden;
+  background: #000;
+  transition: opacity 700ms var(--suave);
+}
+
+/* Al volver a correr, el corto entra un poco mas rapido de lo que se fue. */
+.corto:not([data-cuadro="cartel"]) .corto__cine {
+  transition-duration: 420ms;
+}
+
+/* Al terminar, las capas se funden y dejan ver el cartel, que ya estaba debajo y ya se puede tocar. */
+html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 700ms var(--suave),
+    visibility 0s 700ms;
+}
+
+/* Arriba y abajo, un poco de noche: la barra y los controles se leen sobre cualquier toma. */
+.corto__cine::before,
+.corto__cine::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 7;
+  content: "";
+  pointer-events: none;
+}
+
+.corto__cine::before {
+  top: 0;
+  height: calc(var(--barra-alto) + 40px);
+  background: linear-gradient(180deg, rgb(7 9 22 / 0.8), rgb(7 9 22 / 0));
+}
+
+.corto__cine::after {
+  bottom: 0;
+  height: 92px;
+  background: linear-gradient(0deg, rgb(7 9 22 / 0.5), rgb(7 9 22 / 0));
+}
+
+/* Las franjas, lado a lado: un oficio cada una. Hay dos juegos, uno con luz fria y otro con luz calida: es LA MISMA
+   foto con un filtro fijo, y para pasar de una luz a otra se funden. */
+.tri {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 3px;
+  background: #000;
+}
+
+.tri--calida {
+  z-index: 1;
+  visibility: hidden;
+}
+
+.franja {
+  /* A donde mira la camara, en fracciones de la foto: a la persona (--fx, --fy) o al celular (--cx, --cy). Los pone
+     el codigo con el dato de cada oficio; estos son de respaldo. */
+  --fx: 0.5;
+  --fy: 0.3;
+  --cx: 0.46;
+  --cy: 0.78;
+  /* El turno de cada franja: lo suyo entra un poco despues que lo de la anterior. */
+  --turno: calc(var(--n, 0) * 450ms + 350ms);
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  background: #05060f;
+  container-type: size;
+}
+
+/* La foto cubre su franja con cualquier forma de pantalla y la camara se mueve solo con transform: se acomoda para
+   que el punto que mira (--mx, --my) caiga en el lugar de la franja que se le pide (--px, --py), con su acercamiento
+   (--z), sin dejar nunca un hueco en la orilla. */
+.foto {
+  --z: 1;
+  --mx: var(--fx);
+  --my: var(--fy);
+  --px: 0.5;
+  --py: 0.5;
+  --fw: max(100cqw, 55.82cqh);
+  --fh: calc(var(--fw) * 1.79167);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--fw);
+  height: var(--fh);
+  transform: translate(
+      clamp(100cqw - var(--z) * var(--fw), var(--px) * 100cqw - var(--z) * var(--mx) * var(--fw), 0px),
+      clamp(100cqh - var(--z) * var(--fh), var(--py) * 100cqh - var(--z) * var(--my) * var(--fh), 0px)
+    )
+    scale(var(--z));
+  transform-origin: 0 0;
+}
+
+/* El acercamiento lento de cada toma, hacia la persona. */
+.foto__vivo {
+  position: absolute;
+  inset: 0;
+  transform-origin: calc(var(--fx) * 100%) calc(var(--fy) * 100%);
+}
+
+.foto__luz,
+.foto__toma {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tri--fria .foto__luz {
+  filter: brightness(0.5) saturate(0.5) contrast(1.12);
+}
+
+.tri--calida .foto__luz {
+  filter: brightness(1.16) saturate(1.08) contrast(0.98);
+}
+
+.franja::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.tri--fria .franja::after {
+  background: linear-gradient(180deg, rgb(8 16 62 / 0.42), rgb(4 8 30 / 0.5));
+}
+
+.tri--calida .franja::after {
+  background: radial-gradient(90% 70% at 78% 12%, rgb(255 216 160 / 0.26), rgb(255 216 160 / 0) 70%);
+}
+
+/* La toma viva va encima de su foto, de arriba hasta donde empieza la mesa (el 68.36 % del cuadro: el mismo corte
+   de herramientas/optimizar.mjs) y se funde con ella en su orilla: el celular, abajo, es siempre el de la foto. Entra
+   con un fundido en cuanto empieza a correr. */
+.foto__video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 68.36%;
+  object-fit: fill;
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(#000 95.4%, transparent);
+  mask-image: linear-gradient(#000 95.4%, transparent);
+  transition: opacity 600ms var(--suave);
+}
+
+.franja[data-con-video] .foto__video {
+  opacity: 1;
+}
+
+/* La vibracion: dos copias de la foto, recortadas al celular y sin oscurecer (la pantalla se enciende), que tiemblan
+   una contra otra. Son tiras angostas, no la foto entera: asi pesan poco al moverse. */
+.fantasma {
+  position: absolute;
+  top: calc((var(--cy) - 0.12) * 100%);
+  left: 0;
+  width: 100%;
+  height: 24%;
+  overflow: hidden;
+  opacity: 0;
+  filter: brightness(1.05) saturate(0.9);
+  -webkit-mask-image: radial-gradient(ellipse 46% 43.75% at calc(var(--cx) * 100%) 50%, #000 52%, transparent 100%);
+  mask-image: radial-gradient(ellipse 46% 43.75% at calc(var(--cx) * 100%) 50%, #000 52%, transparent 100%);
+  transform-origin: calc(var(--cx) * 100%) 50%;
+  transition: opacity 600ms var(--suave);
+}
+
+.fantasma--b {
+  --lado: -1;
+}
+
+.fantasma .foto__toma {
+  inset: auto;
+  top: calc((0.12 - var(--cy)) * 416.667%);
+  left: 0;
+  height: 416.667%;
+}
+
+/* El nombre de cada oficio, al pie de su franja. */
+.franja__nombre {
+  position: absolute;
+  bottom: clamp(58px, 8.2 * var(--svh), 74px);
+  left: 28px;
+  z-index: 2;
+  color: rgb(245 244 240 / 0.86);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.55),
+    0 1px 10px rgb(0 0 0 / 0.7);
+  text-transform: uppercase;
+}
+
+/* Lo que flota sobre una franja: el aviso que llega (arriba del celular) y lo que hizo el agente (abajo). */
+.franja__sobre {
+  position: absolute;
+  right: 20px;
+  bottom: clamp(88px, 12.2 * var(--svh), 110px);
+  left: 28px;
+  z-index: 3;
+  display: grid;
+  justify-items: start;
+  gap: 9px;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 520ms var(--suave),
+    visibility 520ms var(--suave);
+}
+
+/* En la primera franja, el nombre y lo que hizo el agente arrancan en la misma linea que el logotipo. */
+.franja:first-child .franja__nombre,
+.franja:first-child .franja__sobre {
+  left: min(var(--margen), 88px);
+}
+
+.franja__sobre--llega,
+.franja:first-child .franja__sobre--llega {
+  top: 26%;
+  bottom: auto;
+  left: 20px;
+  justify-items: center;
+}
+
+/* Un aviso de WhatsApp sin contestar. Sus medidas van en "em": en la pantalla del celular se achica entero. */
+.aviso {
+  display: grid;
+  grid-template-columns: 2em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.69em;
+  max-width: 100%;
+  padding: 0.54em 0.85em 0.54em 0.62em;
+  border: 1px solid var(--raya);
+  border-radius: 1.08em;
+  background: var(--vidrio);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+  font-size: 0.8125em;
+  line-height: 1.25;
+}
+
+.franja__sobre .aviso,
+.hecho {
+  font-size: var(--letra-de-franja);
+}
+
+.franja__sobre .aviso,
+.hecho {
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  backdrop-filter: blur(16px) saturate(1.3);
+}
+
+.aviso__inicial {
+  display: grid;
+  place-items: center;
+  width: 2.17em;
+  height: 2.17em;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.13);
+  font-size: 0.92em;
+  font-weight: 600;
+}
+
+.aviso__cuerpo {
+  min-width: 0;
+}
+
+.aviso b {
+  display: block;
+  font-weight: 600;
+}
+
+/* Como en el celular de verdad: si el mensaje no cabe, se corta con puntos. */
+.aviso__dice,
+.hecho__entra {
+  display: block;
+  overflow: hidden;
+  font-weight: 300;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aviso__dice {
+  color: rgb(245 244 240 / 0.84);
+}
+
+.aviso__dice > *,
+.hecho__entra > * {
+  display: inline-block;
+  margin-right: 0.54em;
+  vertical-align: middle;
+}
+
+.aviso__hace {
+  align-self: start;
+  margin-top: 0.15em;
+  color: rgb(245 244 240 / 0.7);
+  font-size: 0.77em;
+  white-space: nowrap;
+}
+
+.onda {
+  flex: none;
+  width: 4em;
+  height: 1.08em;
+}
+
+/* La foto de referencia que manda una clienta. */
+.fotito {
+  width: 1.69em;
+  height: 1.69em;
+  border-radius: 0.38em;
+  background: #8d4a63 url("../recursos/comercial/referencia-unas.webp") 50% 50% / cover no-repeat;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+
+/* Lo que hizo el agente con un mensaje: lo que entro y, debajo, lo que resolvio. */
+.hecho {
+  display: grid;
+  grid-template-columns: 2em minmax(0, 1fr);
+  align-items: center;
+  gap: 0.69em;
+  max-width: 100%;
+  padding: 0.54em 0.92em 0.62em 0.62em;
+  border: 1px solid rgb(132 151 255 / 0.4);
+  border-radius: 1.08em;
+  background: rgb(13 17 40 / 0.82);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  line-height: 1.25;
+}
+
+.hecho__cuerpo {
+  display: grid;
+  gap: 0.23em;
+  min-width: 0;
+}
+
+.hecho__entra {
+  color: rgb(245 244 240 / 0.78);
+}
+
+.hecho__entra b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.hecho__hizo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.54em;
+  color: #e3e8ff;
+  font-weight: 500;
+  /* Si no cabe en un renglon, se parte parejo. */
+  text-wrap: balance;
+}
+
+/* Lo de antes del barrido: las franjas frias y las pantallas de los celulares. Va en una caja mas ancha que la
+   pantalla, que el codigo corre hacia la derecha mientras su contenido se corre igual hacia la izquierda: lo de
+   adentro no se mueve y la orilla (inclinada, como la raya de luz) lo va destapando. Solo transform. */
+.corto__antes,
+.corto__carro {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -20vw;
+  width: calc(100% + 40vw);
+}
+
+.corto__antes {
+  z-index: 2;
+  overflow: hidden;
+}
+
+.corto__antes-dentro {
+  position: absolute;
+  inset: 0;
+}
+
+.corto__frio {
+  position: absolute;
+  inset: 0 20vw;
+}
+
+/* La raya de luz azul que cruza, con su estela. */
+.corto__carro {
+  z-index: 5;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.corto__rayo {
+  position: absolute;
+  top: -6%;
+  bottom: -6%;
+  left: -5px;
+  width: 10px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 0 22px 6px rgb(132 151 255 / 0.95),
+    0 0 90px 30px rgb(63 92 245 / 0.75);
+}
+
+.corto__estela {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 24%;
+  background: linear-gradient(90deg, rgb(120 142 255 / 0.5), rgb(88 115 255 / 0));
+}
+
+/* La avalancha: un celular con marco por oficio, su pantalla de bloqueo llenandose de avisos. */
+.telefonos {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 520ms var(--suave),
+    visibility 520ms var(--suave);
+}
+
+.telefonos::before {
+  position: absolute;
+  inset: 0;
+  background: rgb(4 6 18 / 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  content: "";
+}
+
+/* Cada celular mide lo que le deja el alto de la pantalla, y todo lo de adentro (en "em") se achica con el. */
+.pantalla {
+  --marco: clamp(300px, min(73.3 * var(--svh), 60vw), 760px);
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.4375em;
+  width: calc(var(--marco) / 2);
+  height: var(--marco);
+  margin-top: calc(6.6 * var(--svh));
+  padding: 2.875em 1em 0;
+  overflow: hidden;
+  border: 2px solid rgb(255 255 255 / 0.2);
+  border-radius: 2.875em;
+  background: rgb(7 9 22 / 0.78);
+  box-shadow:
+    0 30px 90px rgb(0 0 0 / 0.6),
+    inset 0 0 0 6px rgb(0 0 0 / 0.5);
+  font-size: calc(var(--marco) / 41.25);
+}
+
+.pantalla__hora {
+  justify-self: center;
+  font-size: 3.8em;
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.pantalla__dia {
+  justify-self: center;
+  margin-bottom: 0.67em;
+  color: var(--tinta-2);
+  font-size: 0.9375em;
+  font-weight: 300;
+}
+
+.pantalla .cuenta {
+  justify-self: center;
+  gap: 0.62em;
+  height: 2.3em;
+  margin-bottom: 0.62em;
+  padding: 0 1em 0 0.85em;
+  font-size: 0.8125em;
+}
+
+.pantalla .cuenta__punto {
+  width: 0.62em;
+  height: 0.62em;
+}
+
+.pantalla__avisos {
+  display: grid;
+  gap: 0.375em;
+}
+
+/* La marca entra: el logotipo grande, el nombre y la frase, con las franjas un poco fuera de foco detras. */
+.corto__marca {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  padding: 0 28px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 520ms var(--suave),
+    visibility 520ms var(--suave);
+}
+
+.corto__marca::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(46% 40% at 50% 50%, rgb(7 9 22 / 0.78), rgb(7 9 22 / 0) 100%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  content: "";
+}
+
+.corto__logo .marca__pm {
+  width: auto;
+  height: min(132px, 14.7 * var(--svh));
+  filter: drop-shadow(0 4px 30px rgb(0 0 0 / 0.5));
+}
+
+.corto__nombre {
+  margin-top: clamp(16px, 3.3 * var(--svh), 30px);
+  font-size: clamp(2.2rem, min(3.8vw, 6 * var(--svh)), 3.4rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 0.6);
+}
+
+.corto__frase {
+  max-width: 20em;
+  margin-top: 12px;
+  color: rgb(245 244 240 / 0.95);
+  font-size: clamp(1.125rem, min(1.67vw, 2.7 * var(--svh)), 1.5rem);
+  font-weight: 300;
+  line-height: 1.35;
+  text-shadow: 0 1px 16px rgb(0 0 0 / 0.7);
+  text-wrap: balance;
+}
+
+/* Los letreros del corto: pocas palabras, grandes. */
+.letrero {
+  position: absolute;
+  bottom: max(112px, 16.7 * var(--svh));
+  left: var(--margen);
+  z-index: 8;
+  max-width: 12em;
+  font-size: clamp(2.5rem, min(5.1vw, 10 * var(--svh)), 6rem);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-shadow:
+    0 2px 30px rgb(0 0 0 / 0.75),
+    0 1px 3px rgb(0 0 0 / 0.5);
+  text-wrap: balance;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 520ms var(--suave),
+    visibility 520ms var(--suave);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Que se ve en cada momento.
+   --------------------------------------------------------------------------------------------------------------- */
+
+/* vibra: la camara baja al celular y se acerca (el celular llena su franja), que se enciende, y llega un aviso por
+   oficio. Asi sigue debajo de la avalancha. */
+.corto__cine:is([data-momento="vibra"], [data-momento="avalancha"], [data-momento="barrido"]) .tri--fria .foto {
+  --z: 1.75;
+  --mx: var(--cx);
+  --my: var(--cy);
+  --px: 0.46;
+  --py: 0.62;
+}
+
+.corto__cine:is([data-momento="vibra"], [data-momento="avalancha"], [data-momento="barrido"]) .fantasma {
+  opacity: 0.6;
+}
+
+/* Lo que se enciende hereda si se ve o no: cuando las capas del corto se esconden, nada de adentro queda encima
+   del cartel atrapando los toques. */
+.corto__cine[data-momento="vibra"] .franja__sobre--llega,
+.corto__cine[data-momento="agente"] .franja__sobre--hecho,
+.corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .telefonos,
+.corto__cine[data-momento="marca"] .corto__marca,
+.corto[data-viva] .letrero[data-activo] {
+  opacity: 1;
+  visibility: inherit;
+}
+
+/* Las franjas calidas esperan debajo desde la avalancha: cuando llega el barrido ya estan pintadas. */
+.corto__cine:is([data-momento="avalancha"], [data-momento="barrido"], [data-momento="marca"], [data-momento="agente"])
+  .tri--calida,
+.corto__cine[data-momento="barrido"] .corto__carro {
+  visibility: inherit;
+}
+
+.corto__cine:is([data-momento="marca"], [data-momento="agente"]) .corto__antes {
+  visibility: hidden;
+}
+
+.corto__cine[data-momento="barrido"] :is(.corto__antes, .corto__antes-dentro, .corto__carro) {
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El movimiento. Las transiciones son suaves y cortas; nada rebota. Solo se animan transform y opacity.
+   --------------------------------------------------------------------------------------------------------------- */
+
+/* La camara solo se mueve al bajar al celular: al volver a empezar regresa de golpe, sin que nadie la vea. */
+.corto__cine[data-momento="vibra"] .tri--fria .foto {
+  transition: transform 1200ms var(--suave);
+}
+
+.corto[data-viva]
+  .corto__cine:is(
+    [data-momento="presion"],
+    [data-momento="vibra"],
+    [data-momento="avalancha"],
+    [data-momento="barrido"]
+  )
+  .tri--fria
+  .foto__vivo {
+  animation: acerca 6500ms linear both var(--marcha);
+}
+
+.corto[data-viva]
+  .corto__cine:is([data-momento="barrido"], [data-momento="marca"], [data-momento="agente"])
+  .tri--calida
+  .foto__vivo {
+  animation: acerca 9000ms linear both var(--marcha);
+}
+
+.corto[data-viva] .letrero[data-activo] {
+  animation: sube 620ms var(--suave) both var(--marcha);
+}
+
+/* El cursor del letrero parpadea solo mientras su letrero esta puesto. */
+.corto[data-viva]:not([data-cuadro="cartel"]) .letrero[data-activo] .cursor {
+  animation: parpadea 1100ms steps(1, end) infinite var(--marcha);
+}
+
+/* El celular vibra a ratos: tiembla, descansa, vuelve a temblar. Cada uno a su tiempo. Debajo de las pantallas de
+   la avalancha ya no se le ve: ahi descansa. */
+.corto[data-viva]:not([data-cuadro="cartel"]) .corto__cine[data-momento="vibra"] .fantasma {
+  animation: tiembla 1100ms linear calc(var(--n, 0) * 290ms) infinite var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="vibra"] .franja__sobre--llega .aviso {
+  animation: llega 480ms var(--suave) calc(var(--turno) + 150ms) both var(--marcha);
+}
+
+/* Cada celular de la avalancha entra un poco despues que el anterior, y sus avisos caen uno tras otro. */
+.corto[data-viva] .corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .pantalla {
+  animation: sube 700ms var(--suave) calc(var(--n, 0) * 110ms) both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .pantalla .aviso {
+  animation: llega 420ms var(--suave) calc(var(--i, 0) * 240ms + var(--n, 0) * 110ms + 260ms) both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="marca"] .corto__logo {
+  animation: asoma 700ms var(--suave) 120ms both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="marca"] .corto__nombre {
+  animation: sube 620ms var(--suave) 300ms both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="marca"] .corto__frase {
+  animation: sube 620ms var(--suave) 460ms both var(--marcha);
+}
+
+/* Lo que hizo el agente entra en orden, y el sello de la cita cae al final, con peso. */
+.corto[data-viva] .corto__cine[data-momento="agente"] .franja__sobre--hecho > * {
+  animation: sube 520ms var(--suave) var(--turno) both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="agente"] .franja__sobre--hecho > :nth-child(2) {
+  animation-delay: calc(var(--turno) + 420ms);
+}
+
+.corto[data-viva] .corto__cine[data-momento="agente"] .cita .sello {
+  animation: sello-cae 240ms cubic-bezier(0.55, 0, 0.9, 0.35) calc(var(--turno) + 1050ms) both var(--marcha);
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* El cursor del titulo parpadea unas veces cuando el cartel queda a la vista y se queda encendido. */
+  .corto[data-cuadro="cartel"] .cartel .cursor,
+  .marca__cursor {
+    animation: parpadea 1100ms steps(1, end) 4;
+  }
+}
+
+@keyframes aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes acerca {
+  to {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes sube {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes asoma {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@keyframes llega {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+
+@keyframes parpadea {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Una copia tiembla hacia un lado y la otra hacia el contrario (--lado). */
+@keyframes tiembla {
+  3%,
+  15%,
+  27%,
+  39% {
+    transform: translate(calc(var(--lado, 1) * -5px), calc(var(--lado, 1) * 1px)) rotate(calc(var(--lado, 1) * -0.4deg));
+  }
+
+  9%,
+  21%,
+  33% {
+    transform: translate(calc(var(--lado, 1) * -1px), 0) rotate(calc(var(--lado, 1) * -0.1deg));
+  }
+
+  0%,
+  46%,
+  100% {
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Donde la pantalla es mas ancha que alta (una computadora, una tableta o un celular acostados), el cartel pone el
+   texto a la izquierda y, en lugar de "Tu y tu agente", las fotos de "su tiempo" de los oficios como tarjetas. Las
+   medidas van con el alto de la pantalla: en una laptop bajita todo cabe.
+   --------------------------------------------------------------------------------------------------------------- */
+@media (min-width: 480px) and (min-aspect-ratio: 1 / 1) {
+  .cartel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: var(--barra-alto) var(--margen) 0;
+  }
+
+  /* Detras de las tarjetas, un resto de la luz calida. */
+  .cartel::before {
+    background: radial-gradient(
+      50% 70% at 76% 46%,
+      rgb(255 205 150 / 0.13),
+      rgb(63 92 245 / 0.1) 46%,
+      rgb(63 92 245 / 0) 76%
+    );
+  }
+
+  .cartel__texto {
+    padding: 0 0 40px;
+  }
+
+  .corto .sobre {
+    max-width: none;
+    font-size: clamp(0.6875rem, 0.97vw, 0.875rem);
+  }
+
+  .cartel__titulo {
+    margin-top: 18px;
+    font-size: clamp(2rem, min(8.2vw - 2.2rem, 12 * var(--svh)), 5.2rem);
+  }
+
+  .cartel__frase {
+    max-width: 24em;
+    margin-top: clamp(14px, 2.9 * var(--svh), 26px);
+    font-size: clamp(1.0625rem, 1.56vw, 1.4rem);
+    line-height: 1.45;
+  }
+
+  .cartel__acciones {
+    gap: 6px 28px;
+    margin-top: clamp(20px, 3.8 * var(--svh), 34px);
+  }
+
+  .cartel__acciones .boton {
+    min-height: 58px;
+    padding: 0 32px;
+    font-size: 1.125rem;
+  }
+
+  /* El enlace lleva detras un poco de noche: se despega del resplandor. */
+  .cartel__acciones .enlace {
+    text-shadow: 0 1px 14px rgb(7 9 22 / 0.9);
+  }
+
+  .duo {
+    display: none;
+  }
+
+  /* Las tarjetas: altas y angostas; las pares, un poco mas grandes. Su alto sale del alto de la pantalla. */
+  .vidas {
+    --tarjeta: min(55.6 * var(--svh), 36vw, 500px);
+    position: relative;
+    z-index: 0;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: clamp(10px, 1.25vw, 18px);
+    min-height: 0;
+    margin: 0 0 30px;
+  }
+
+  .vida__marco {
+    position: relative;
+    width: calc(var(--tarjeta) * 0.416);
+    height: var(--tarjeta);
+    margin: 0;
+    overflow: hidden;
+    border-radius: 22px;
+    box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
+  }
+
+  .vida:nth-child(even) .vida__marco {
+    width: calc(var(--tarjeta) * 0.456);
+    height: calc(var(--tarjeta) * 1.16);
+  }
+
+  .vida__foto {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .vida__marco::after {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgb(7 9 22 / 0) 62%, rgb(7 9 22 / 0.72) 100%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+    content: "";
+  }
+
+  .vida__nombre {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    z-index: 1;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  /* La cita del primer oficio se asoma debajo de las tarjetas, a la derecha. */
+  .vida__flota {
+    position: absolute;
+    top: calc(100% - 15px);
+    right: 0;
+    z-index: 2;
+  }
+
+  .vida:not([data-activo]) .vida__flota {
+    display: none;
+  }
+
+  .cita {
+    padding-right: 118px;
+    font-size: 1rem;
+  }
+
+  .cita .sello {
+    width: 118px;
+  }
+
+  .cartel__pie {
+    bottom: clamp(8px, 2 * var(--svh), 18px);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Y solo en pantallas anchas de verdad (900 o mas, y mas anchas que altas) corre el corto: ahi se pintan sus capas
+   y existen sus controles y el boton del cartel que lo corre.
+   --------------------------------------------------------------------------------------------------------------- */
+@media (min-width: 900px) and (min-aspect-ratio: 1 / 1) {
+  .control {
+    display: flex;
+  }
+
+  .otra {
+    display: inline-flex;
+  }
+
+  html.con-corto .corto__cine {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.con-corto .corto:not([data-pedido]) .corto__cine {
+    display: none;
+  }
+}
+
+@media (max-height: 479px) {
+  html.con-corto .corto .corto__cine {
+    display: none;
+  }
+}

@@ -47,7 +47,7 @@
   --d-escena: 640ms;
 }
 
-/* El canal: el aire a los lados de la pagina. Uno solo para la barra, el comercial, las secciones y el pie, para que
+/* El canal: el aire a los lados de la pagina. Uno solo para la barra, el inicio, las secciones y el pie, para que
    el logotipo, los titulos y el texto legal arranquen en la misma linea en cualquier ancho. */
 :root {
   --canal: clamp(20px, 5.5vw, 88px);

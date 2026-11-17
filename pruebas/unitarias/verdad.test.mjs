@@ -1,6 +1,6 @@
 // @ts-check
 // La pagina nunca promete algo que el producto no hace. Aqui se lee TODO lo que una persona ve en la pagina ya armada
-// (plantilla, datos, comercial y demostracion) y se buscan las promesas prohibidas de la tabla de la verdad del PRD.
+// (plantilla, datos, el corto del inicio y demostracion) y se buscan las promesas prohibidas de la tabla de la verdad del PRD.
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { before, test } from 'node:test';
@@ -80,7 +80,6 @@ for (const [patron, porque] of PROHIBIDO) {
 
 test('lo que la pagina si tiene que decir, con las palabras de la tabla de la verdad', () => {
   for (const frase of [
-    'menos de un minuto',
     'tu mercado pago',
     'según la política que tú pones',
     'asistente virtual',
