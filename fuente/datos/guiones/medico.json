@@ -2,7 +2,7 @@
   "charla": "12:42 pm",
   "pregunta": "Buenas tardes, ¿cuánto cuesta la consulta?",
   "saludo": [
-    "Buenas tardes. Soy {asistente}, la asistente virtual del {negocio}. La consulta de primera vez con el {profesional} cuesta {precio} y dura alrededor de 45 minutos. Si lo deseas, con gusto te busco un horario."
+    "Buenas tardes. Soy {asistente}, la asistente virtual del {negocio}. La consulta de primera vez con la {profesional} cuesta {precio} y dura alrededor de 45 minutos. Si lo deseas, con gusto te busco un horario."
   ],
   "pideDia": "Sí, por favor. ¿Hay lugar el lunes?",
   "dia": "lunes",

@@ -822,7 +822,7 @@ test('la historia de Dentista llega al pago de $200 y a su pregunta de asistenci
   );
   await expect(chat.locator('.wa__m--entra .wa__hora').last()).toHaveText('3:00 p. m.');
   await avanzarParadas(demo, 1);
-  // El celular de la doctora: le escribe su agente.
+  // El celular del doctor: le escribe su agente.
   await expect(demo).toHaveAttribute('data-telefono', 'profesional');
   await expect(demo.locator('[data-demo-nombre]')).toHaveText('Tu agente');
   await expect(demo.locator('[data-demo-detalle]')).toHaveText('Dental Sonría');
@@ -833,7 +833,7 @@ test('la historia de Dentista llega al pago de $200 y a su pregunta de asistenci
   await expect(tarjeta(demo, 'asistencia').locator('[data-demo-asistencia-titulo]')).toHaveText('¿Asistió Carla?');
   await chat.getByRole('button', { name: 'No', exact: true }).click();
   await expect(demo).toHaveAttribute('data-paso', 'finNo');
-  await expect(chat).toContainText('Dra. Robles: No');
+  await expect(chat).toContainText('Dr. Robles: No');
   await expect(chat).toContainText('Su anticipo de $200 queda retenido y le ofrecí reagendar.');
   // En salud a nadie se le dice clienta: ni en la conversacion, ni en el letrero, ni en las tarjetas.
   for (const pieza of [chat, demo.locator('.guia'), demo.locator('.llega')]) {

@@ -420,3 +420,21 @@ test('ninguna hoja pisa una animacion de otra: cada @keyframes de la pagina llev
   assert.ok(usadas.length >= 4);
   for (const nombre of usadas) assert.ok(vistas.has(nombre), `no existe la animacion "${nombre}"`);
 });
+
+test('el trato de la profesional de ejemplo concuerda con su foto y con su guion: "la Dra." o "el Dr."', async () => {
+  // Decision de Jose (18-nov-2026): "Dra." si es mujer y "Dr." si es hombre. En las fotos de la pagina la medica es
+  // una doctora y el dentista es un hombre.
+  const de = (/** @type {string} */ clave) => giros.find((/** @type {any} */ giro) => giro.clave === clave);
+  assert.equal(de('medico').profesional, 'Dra. Villalobos');
+  assert.match(de('medico').tarjeta.alt, /^Doctora /);
+  assert.equal(de('dentista').profesional, 'Dr. Robles');
+  // El guion que la nombra con articulo lo lleva en el mismo genero.
+  for (const giro of giros) {
+    const guion = JSON.stringify(await leer(`guiones/${giro.clave}.json`));
+    const femenino = !/^Dr\. /.test(giro.profesional);
+    assert.ok(
+      !guion.includes(`con ${femenino ? 'el' : 'la'} {profesional}`),
+      `${giro.clave}: el articulo no concuerda`,
+    );
+  }
+});

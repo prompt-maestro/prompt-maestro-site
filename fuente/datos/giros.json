@@ -26,7 +26,7 @@
     "persona": "paciente",
     "negocio": "Dental Sonría",
     "asistente": "Sofi",
-    "profesional": "Dra. Robles",
+    "profesional": "Dr. Robles",
     "cliente": "Carla",
     "servicio": "Limpieza dental",
     "servicioCorto": "Limpieza",
@@ -46,7 +46,7 @@
     "persona": "paciente",
     "negocio": "Consultorio Médico Aurora",
     "asistente": "Elena",
-    "profesional": "Dr. Villalobos",
+    "profesional": "Dra. Villalobos",
     "cliente": "Paty",
     "servicio": "Consulta de primera vez",
     "servicioCorto": "Consulta",
@@ -56,7 +56,7 @@
     "tarjeta": {
       "nombre": "Médicos generales y especialistas",
       "texto": "Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.",
-      "alt": "Médico auscultando a un paciente"
+      "alt": "Doctora auscultando a un paciente"
     }
   }
 ]

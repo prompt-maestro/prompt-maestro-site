@@ -445,7 +445,7 @@ test('para quien: tres retratos enmarcados, con la foto completa y nitida y, deb
   const ALTS = [
     'Manicurista pintando las uñas de una clienta',
     'Dentista atendiendo a un paciente',
-    'Médico auscultando a un paciente',
+    'Doctora auscultando a un paciente',
   ];
   for (const [lugar, tarjeta] of (await tarjetas.all()).entries()) {
     const foto = tarjeta.locator('img.oficio__foto');
