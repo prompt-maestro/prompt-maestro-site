@@ -21,7 +21,7 @@
   --alto: calc(100 * var(--svh) - var(--arriba, 0px));
   /* El mismo canal que el resto de la pagina; en pantallas mas anchas que la pagina, se alinea con su columna. */
   --margen: max(var(--canal), calc((100vw - 1440px) / 2 + var(--canal)));
-  --vidrio: rgb(13 17 40 / 0.78);
+  --vidrio: rgb(24 26 33 / 0.8);
   --raya: rgb(255 255 255 / 0.16);
   /* La letra de lo que flota sobre la escena del corto: el aviso que llega y lo que hizo el agente. Se miden con
      lo ancho y con lo alto de la pantalla: en una ventana angosta o bajita caben igual. */
@@ -168,7 +168,7 @@
   height: 30px;
   padding: 0 13px 0 11px;
   border-radius: 999px;
-  background: rgb(7 9 22 / 0.82);
+  background: rgb(var(--papel-rgb) / 0.82);
   box-shadow: inset 0 0 0 1px var(--raya);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -349,10 +349,10 @@
   inset: 0;
   background: linear-gradient(
     0deg,
-    rgb(7 9 22 / 0.94) 0,
-    rgb(7 9 22 / 0.86) calc(34 * var(--u)),
-    rgb(7 9 22 / 0.56) calc(64 * var(--u)),
-    rgb(7 9 22 / 0) calc(108 * var(--u))
+    rgb(var(--papel-rgb) / 0.94) 0,
+    rgb(var(--papel-rgb) / 0.86) calc(34 * var(--u)),
+    rgb(var(--papel-rgb) / 0.56) calc(64 * var(--u)),
+    rgb(var(--papel-rgb) / 0) calc(108 * var(--u))
   );
   content: "";
 }
@@ -442,7 +442,7 @@
   left: 0;
   height: calc(600 * var(--u));
   border-radius: calc(40 * var(--u));
-  background: linear-gradient(155deg, #3a4170 0%, #10142e 34%, #0a0d20 62%, #2a3162 100%);
+  background: linear-gradient(155deg, #4a4e60 0%, #1b1d25 34%, #121318 62%, #363a4c 100%);
   box-shadow:
     0 0 0 1px rgb(255 255 255 / 0.2),
     0 40px 90px rgb(0 0 0 / 0.75),
@@ -468,7 +468,7 @@
   margin: calc(8 * var(--u));
   overflow: hidden;
   border-radius: calc(33 * var(--u));
-  background: linear-gradient(180deg, #0c1028, #080b1c);
+  background: linear-gradient(180deg, #17191f, #101116);
 }
 
 /* En una pantalla muy alta y angosta el celular se alarga con ella: nunca se le ve el final. */
@@ -720,7 +720,7 @@ html.con-corto .corto[data-cuadro="cartel"] .control {
   height: 34px;
   padding: 0 14px;
   border-radius: 999px;
-  background: rgb(7 9 22 / 0.72);
+  background: rgb(var(--papel-rgb) / 0.72);
   box-shadow: inset 0 0 0 1px var(--raya);
   font-size: 0.75rem;
   font-weight: 600;
@@ -739,13 +739,13 @@ html.con-corto .corto[data-cuadro="cartel"] .control {
   height: 34px;
   padding: 2px;
   border-radius: 50%;
-  background: rgb(7 9 22 / 0.72);
+  background: rgb(var(--papel-rgb) / 0.72);
   box-shadow: inset 0 0 0 1px var(--raya);
 }
 
 .control__boton:hover .control__pastilla,
 .control__pausa:hover svg {
-  background: rgb(7 9 22 / 0.92);
+  background: rgb(var(--papel-rgb) / 0.92);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.42);
 }
 
@@ -761,7 +761,7 @@ html.con-corto .corto[data-cuadro="cartel"] .control {
 /* El foco se ve tambien sobre una mesa clara: el contorno claro lleva debajo un aro de noche. */
 .control :focus-visible,
 .cartel__pie :focus-visible {
-  box-shadow: 0 0 0 3px rgb(7 9 22 / 0.85);
+  box-shadow: 0 0 0 3px rgb(var(--papel-rgb) / 0.85);
 }
 
 /* El boton del cartel que corre el corto: "Ver el video" antes de que haya corrido, "Ver de nuevo" despues. */
@@ -841,13 +841,13 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 .corto__cine::before {
   top: 0;
   height: calc(var(--barra-alto) + 40px);
-  background: linear-gradient(180deg, rgb(7 9 22 / 0.8), rgb(7 9 22 / 0));
+  background: linear-gradient(180deg, rgb(var(--papel-rgb) / 0.8), rgb(var(--papel-rgb) / 0));
 }
 
 .corto__cine::after {
   bottom: 0;
   height: 92px;
-  background: linear-gradient(0deg, rgb(7 9 22 / 0.5), rgb(7 9 22 / 0));
+  background: linear-gradient(0deg, rgb(var(--papel-rgb) / 0.5), rgb(var(--papel-rgb) / 0));
 }
 
 /* Las escenas: una por oficio, cada una a pantalla completa, y a la vista solo la del oficio de esta visita (las demas
@@ -886,7 +886,7 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   --tx: clamp(100cqw - var(--z) * var(--fw), var(--px) * 100cqw - var(--z) * var(--mx) * var(--fw), 0px);
   --ty: clamp(100cqh - var(--z) * var(--fh), var(--py) * 100cqh - var(--z) * var(--my) * var(--fh), 0px);
   overflow: hidden;
-  background: #05060f;
+  background: var(--papel);
   container-type: size;
 }
 
@@ -1196,10 +1196,10 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   z-index: -1;
   background: linear-gradient(
     270deg,
-    rgb(7 9 22 / 0),
-    rgb(7 9 22 / 0.32) 46cqw,
-    rgb(7 9 22 / 0.54) 100cqw,
-    rgb(7 9 22 / 0.62) 146cqw
+    rgb(var(--papel-rgb) / 0),
+    rgb(var(--papel-rgb) / 0.32) 46cqw,
+    rgb(var(--papel-rgb) / 0.54) 100cqw,
+    rgb(var(--papel-rgb) / 0.62) 146cqw
   );
   content: "";
   pointer-events: none;
@@ -1283,7 +1283,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   color: rgb(245 244 240 / 0.84);
   font-size: max(0.76em, 0.75rem);
   letter-spacing: 0.01em;
-  text-shadow: 0 1px 8px rgb(7 9 22 / 0.85);
+  text-shadow: 0 1px 8px rgb(var(--papel-rgb) / 0.85);
 }
 
 .ficha {
@@ -1478,7 +1478,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 .telefono::before {
   position: absolute;
   inset: 0;
-  background: rgb(4 6 18 / 0.6);
+  background: rgb(8 9 12 / 0.62);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   content: "";
@@ -1501,7 +1501,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   overflow: hidden;
   border: 2px solid rgb(255 255 255 / 0.2);
   border-radius: 2.875em;
-  background: rgb(7 9 22 / 0.82);
+  background: rgb(var(--papel-rgb) / 0.82);
   box-shadow:
     0 30px 90px rgb(0 0 0 / 0.6),
     0 0 120px rgb(63 92 245 / 0.22),
@@ -1567,7 +1567,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(46% 40% at 50% 50%, rgb(7 9 22 / 0.78), rgb(7 9 22 / 0) 100%);
+  background: radial-gradient(46% 40% at 50% 50%, rgb(var(--papel-rgb) / 0.78), rgb(var(--papel-rgb) / 0) 100%);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   content: "";
@@ -1653,7 +1653,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   inset: 0;
   background:
     radial-gradient(84% 62% at 50% -4%, rgb(104 128 255 / 0.6), rgb(70 92 220 / 0) 72%),
-    radial-gradient(closest-side, rgb(12 16 46 / 0.84), rgb(5 7 22 / 0.92));
+    radial-gradient(closest-side, rgb(21 23 31 / 0.86), rgb(10 11 14 / 0.94));
   -webkit-backdrop-filter: blur(22px) saturate(1.15);
   backdrop-filter: blur(22px) saturate(1.15);
   box-shadow:
@@ -1728,7 +1728,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
    leen su nombre, su agente y el letrero del cierre. */
 .franja::after {
   background:
-    linear-gradient(0deg, rgb(7 9 22 / 0.9), rgb(7 9 22 / 0.66) 30%, rgb(7 9 22 / 0) 64%),
+    linear-gradient(0deg, rgb(var(--papel-rgb) / 0.9), rgb(var(--papel-rgb) / 0.66) 30%, rgb(var(--papel-rgb) / 0) 64%),
     radial-gradient(90% 70% at 78% 12%, rgb(255 216 160 / 0.26), rgb(255 216 160 / 0) 70%);
 }
 
@@ -2269,7 +2269,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
   /* El enlace lleva detras un poco de noche: se despega del resplandor. */
   .cartel__acciones .enlace {
-    text-shadow: 0 1px 14px rgb(7 9 22 / 0.9);
+    text-shadow: 0 1px 14px rgb(var(--papel-rgb) / 0.9);
   }
 
   .duo {
@@ -2317,7 +2317,7 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(180deg, rgb(7 9 22 / 0) 62%, rgb(7 9 22 / 0.72) 100%);
+    background: linear-gradient(180deg, rgb(var(--papel-rgb) / 0) 62%, rgb(var(--papel-rgb) / 0.72) 100%);
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
     content: "";
   }
@@ -2405,5 +2405,13 @@ html[data-ahorro] .corto:not([data-pedido]) .corto__cine {
   .control,
   .otra {
     display: none;
+  }
+}
+
+/* La luz del boton principal del cartel: le da sus dos vueltas cuando el cartel queda a la vista (al terminar el
+   corto o, en celular, al abrir la pagina) y, como en los demas botones con luz, una mas con el cursor o el foco. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .corto[data-cuadro="cartel"] .boton--luz:not(:hover, :focus-visible)::before {
+    animation: boton-vuelta 2400ms linear 700ms 2;
   }
 }

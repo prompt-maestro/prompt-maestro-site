@@ -635,7 +635,7 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
   assert.ok(delCartel.includes(corto.cartel.frase));
   assert.match(
     delCartel,
-    /<a class="boton boton--sello" href="https:\/\/alta\.prompt-maestro\.com\/" data-lugar="pelicula">/,
+    /<a class="boton boton--sello boton--luz" href="https:\/\/alta\.prompt-maestro\.com\/" data-lugar="pelicula">/,
   );
   assert.match(delCartel, /<a class="enlace" href="#citas" data-lugar="pelicula">Vívelo tú<\/a>/);
   assert.equal(html.match(/<h1\b/g)?.length, 1, 'un solo h1 en la pagina');
