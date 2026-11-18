@@ -15,61 +15,110 @@
 }
 
 /* ---------- Los ejemplos para elegir: la misma historia con otro oficio ---------- */
+/* Un selector que se nota que se toca: su letrero arriba y, en una sola capsula, los tres oficios con su icono. La
+   unica linea es la de la capsula: los botones se distinguen por su relleno, y el elegido va en el azul de la marca. */
 .demo__ejemplos {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  justify-items: center;
   gap: var(--e-2);
-  /* Las pastillas se ven bajitas, pero cada una se toca en 44 px: el sobrante no separa mas de la cuenta. */
-  margin-block: -6px;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 10px var(--e-2) var(--e-2);
+  border-radius: 26px;
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: inset 0 0 0 1px var(--linea);
+}
+
+.demo__elige {
+  color: var(--tinta-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.demo__opciones {
+  display: flex;
+  gap: 6px;
 }
 
 .demo__ejemplo {
-  position: relative;
-  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e-2);
   min-width: 44px;
   min-height: 44px;
-  padding: 0 var(--e-4);
+  padding: 0 var(--e-4) 0 13px;
   border: 0;
   border-radius: 999px;
-  background: none;
-  color: var(--tinta-3);
-  font-size: 0.8125rem;
+  background: rgb(255 255 255 / 0.07);
+  color: var(--tinta-2);
+  font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* La pastilla que se ve. */
-.demo__ejemplo::before {
-  content: "";
-  position: absolute;
-  inset: 6px 0;
-  z-index: -1;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px var(--linea);
+.demo__oficio {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--luz);
 }
 
 .demo__ejemplo:hover {
+  background: rgb(255 255 255 / 0.15);
   color: var(--tinta);
 }
 
-.demo__ejemplo:hover::before {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3);
-}
-
-/* El que esta puesto se enciende con la luz de la marca. */
+/* El que esta puesto se enciende con el azul de la marca. */
 .demo__ejemplo[aria-pressed="true"] {
-  color: var(--tinta);
+  background: var(--sello);
+  box-shadow: 0 8px 24px rgb(63 92 245 / 0.5);
+  color: #fff;
 }
 
-.demo__ejemplo[aria-pressed="true"]::before {
-  background: rgb(132 151 255 / 0.16);
-  box-shadow: inset 0 0 0 1px rgb(132 151 255 / 0.7);
+.demo__ejemplo[aria-pressed="true"] .demo__oficio {
+  color: #fff;
 }
 
 .demo__ejemplo:focus-visible {
-  outline-offset: -3px;
+  outline-offset: 2px;
+}
+
+/* En los celulares mas angostos los tres caben mas juntos y, en el mas chico, sin icono. */
+@media (max-width: 479.98px) {
+  .demo__ejemplo {
+    gap: 6px;
+    padding: 0 var(--e-3) 0 10px;
+    font-size: 0.875rem;
+  }
+
+  .demo__oficio {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .demo__ejemplo {
+    padding-inline: var(--e-3);
+  }
+
+  .demo__oficio {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .demo__ejemplo {
+    transition:
+      background-color var(--d-toque) var(--suave),
+      color var(--d-toque) var(--suave);
+  }
 }
 
 /* ---------- El celular ---------- */

@@ -104,14 +104,21 @@ test('la demostracion lleva un boton por ejemplo, con el primero puesto, y los d
   /** @type {{ clave: string, nombre: string, lugar: string }[]} */
   const giros = JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', 'giros.json'), 'utf8'));
   assert.ok(giros.length >= 3);
+  // Cada boton lleva el icono de su oficio (de adorno) y su nombre.
   const botones = [
-    ...inicio.matchAll(/<button class="demo__ejemplo"[^>]* data-demo-ejemplo="([^"]+)" aria-pressed="(\w+)">([^<]+)</g),
-  ].map(([, clave, puesto, nombre]) => [clave, puesto, nombre]);
+    ...inicio.matchAll(
+      /<button class="demo__ejemplo"[^>]* data-demo-ejemplo="([^"]+)" aria-pressed="(\w+)"><svg class="demo__oficio" aria-hidden="true" focusable="false"><use href="#i-oficio-([a-z]+)"\/><\/svg>([^<]+)</g,
+    ),
+  ].map(([, clave, puesto, icono, nombre]) => [clave, puesto, icono, nombre]);
   assert.deepEqual(
     botones,
-    giros.map((giro, indice) => [giro.clave, String(indice === 0), giro.nombre]),
+    giros.map((giro, indice) => [giro.clave, String(indice === 0), giro.clave, giro.nombre]),
   );
+  // Y el icono de cada oficio existe en la pagina.
+  for (const { clave } of giros) assert.ok(inicio.includes(`<symbol id="i-oficio-${clave}" `), clave);
+  // El selector dice para que sirve, a la vista: ese letrero es tambien el nombre del grupo.
   assert.match(inicio, /<div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">/);
+  assert.ok(inicio.includes('<span class="demo__elige" id="demo-ejemplos">Mira el ejemplo de tu oficio</span>'));
   // Lo que la pagina trae escrito es el primer ejemplo, en reposo. Que es un ejemplo lo dice el nombre de la
   // demostracion, para quien no la ve; los demas ejemplos viajan en los datos, cada uno con su guion.
   assert.ok(inicio.includes(` role="group" aria-label="Demostración con ${giros[0]?.lugar} de ejemplo.">`));

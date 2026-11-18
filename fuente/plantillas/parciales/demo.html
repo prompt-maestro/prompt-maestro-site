@@ -1,8 +1,10 @@
     <div class="demo" id="demo" data-demo data-ejemplo="{{ejemplo.clave}}" data-paso="reposo" data-momento="0" data-telefono="cliente" role="group" aria-label="{{ejemplo.leyenda}}">
       <div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">
-        <span class="solo-lector" id="demo-ejemplos">{{demo.rotulos.ejemplo}}</span>
-{{#cada giros}}        <button class="demo__ejemplo" type="button" data-demo-ejemplo="{{clave}}" aria-pressed="{{#si @primero}}true{{/si}}{{#no @primero}}false{{/no}}">{{nombre}}</button>
-{{/cada}}      </div>
+        <span class="demo__elige" id="demo-ejemplos">{{demo.rotulos.ejemplo}}</span>
+        <div class="demo__opciones">
+{{#cada giros}}          <button class="demo__ejemplo" type="button" data-demo-ejemplo="{{clave}}" aria-pressed="{{#si @primero}}true{{/si}}{{#no @primero}}false{{/no}}"><svg class="demo__oficio" aria-hidden="true" focusable="false"><use href="#i-oficio-{{clave}}"/></svg>{{nombre}}</button>
+{{/cada}}        </div>
+      </div>
       <div class="demo__escena">
         <div class="tel" data-demo-tel>
           <div class="wa" data-demo-pantalla>

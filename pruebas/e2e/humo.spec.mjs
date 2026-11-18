@@ -11,7 +11,7 @@ test('el inicio abre limpio: un titulo, estilos puestos, cero errores y accesibl
   await expect(page.locator('html')).toHaveAttribute('lang', 'es-MX');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Si la hoja de estilos no llego (una ruta rota en la carpeta de la previa), el fondo seria blanco y no de noche.
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(7, 9, 22)');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(15, 16, 20)');
   await sinFaltasDeAccesibilidad(page);
   expect(fallas).toEqual([]);
 });

@@ -605,7 +605,12 @@ export function montarDemo(raiz) {
   pausa.addEventListener('click', alTocarLaPausa);
   for (const tramo of tramos) tramo.addEventListener('click', () => brincar(Number(tramo.dataset.demoTramo)));
   for (const boton of botonesDeEjemplo) {
-    boton.addEventListener('click', () => elegir(boton.dataset.demoEjemplo ?? ''));
+    boton.addEventListener('click', () => {
+      elegir(boton.dataset.demoEjemplo ?? '');
+      // Quien elige un ejemplo quiere verlo: si el celular no alcanza a verse (en un telefono bajito queda a medias
+      // debajo del selector), la pagina lo acerca, con el selector arriba, y ahi la historia arranca.
+      if (!aLaVista) raiz.scrollIntoView({ block: 'start', behavior: sinMovimiento.matches ? 'auto' : 'smooth' });
+    });
   }
   // La historia solo corre con el celular a la vista: por lo menos su mitad o, si no cabe, media pantalla de el.
   new IntersectionObserver(

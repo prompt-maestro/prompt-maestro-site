@@ -1,9 +1,12 @@
 /* Los tokens de la pagina: color, letra, espacio, radio, sombra y movimiento. Todo lo demas se escribe con ellos. */
 :root {
-  /* El tema es de tecnologia: fondo de noche, texto claro y UNA sola luz, el azul de la marca. Los nombres vienen
-     de la primera version (papel y tinta) y se conservan: --papel es el fondo y --tinta es el texto. */
-  --papel: #070916;
-  --papel-2: #0c1027;
+  /* El tema es de tecnologia: fondo de carbon, texto claro y UNA sola luz, el azul de la marca. Los nombres vienen
+     de la primera version (papel y tinta) y se conservan: --papel es el fondo y --tinta es el texto. El carbon lo
+     pidio Jose el 18-nov-2026 ("el color que ya tenemos pero combinado con charcoal"): el azul queda en la luz y en
+     lo encendido. --papel-rgb son los mismos tres numeros de --papel, para escribir transparencias del fondo. */
+  --papel: #0f1014;
+  --papel-rgb: 15 16 20;
+  --papel-2: #16181d;
   --superficie: #12173a;
   --tinta: #f5f4f0;
   --tinta-2: #c4c9e4;

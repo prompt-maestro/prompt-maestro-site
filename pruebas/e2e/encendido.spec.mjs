@@ -9,7 +9,8 @@ import { expect, test } from './base.mjs';
 const SECCIONES = ['como-funciona', 'para-quien', 'en-una-frase', 'planes', 'preguntas'];
 /** Las tres que traen piezas que se encienden: seis estaciones, tres retratos y el antes y el despues. */
 const CON_ENCENDIDO = ['#como-funciona', '#para-quien', '#en-una-frase'];
-const PIEZAS = 6 + 3 + 2;
+// Y una mas: el boton con luz de "Citas garantizadas", que da sus dos vueltas al llegar a el.
+const PIEZAS = 1 + 6 + 3 + 2;
 /** Los tamanos en que se revisa que nada se salga: tres celulares o tabletas de pie y tres computadoras. */
 const TAMANOS = /** @type {const} */ ([
   [360, 740],
@@ -229,6 +230,48 @@ test('al imprimir o guardar en PDF todo sale encendido, aunque no se haya recorr
     ...ENCENDIDO,
     linea: expect.stringMatching(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/),
   });
+});
+
+test('el boton con luz: dos vueltas al llegar y se detiene antes de cinco segundos; despues, solo su halo', async ({
+  page,
+}) => {
+  await avisarAlMontar(page);
+  await page.goto('./');
+  await yaMonto(page);
+  const boton = page.locator('#citas .boton--luz');
+  await expect(boton).toHaveText('Empieza ahora');
+  await expect(boton).toHaveAttribute('data-enciende', 'espera');
+  /** Las vueltas de la luz: cual corre, cuantas veces y cuanto dura todo. */
+  const vueltas = () =>
+    boton.evaluate((el) =>
+      el.getAnimations({ subtree: true }).map((animacion) => {
+        const tiempos = animacion.effect?.getComputedTiming();
+        return {
+          nombre: /** @type {CSSAnimation} */ (animacion).animationName,
+          veces: tiempos?.iterations,
+          total: Number(tiempos?.activeDuration),
+        };
+      }),
+    );
+  // Antes de llegar no se mueve nada: el halo esta, la luz no.
+  expect(await vueltas()).toEqual([]);
+  expect(await boton.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none');
+  await llegarA(boton);
+  await expect(boton).toHaveAttribute('data-enciende', 'ya');
+  // Dos vueltas y ya: todo lo que se mueve solo dura menos de cinco segundos (WCAG 2.2.2).
+  const alLlegar = await vueltas();
+  expect(alLlegar).toEqual([{ nombre: 'boton-vuelta', veces: 2, total: 4800 }]);
+  expect(alLlegar[0]?.total).toBeLessThan(5000);
+  await quieta(page);
+  expect(await vueltas()).toEqual([]);
+  expect(await boton.evaluate((el) => getComputedStyle(el, '::before').opacity)).toBe('0');
+  // Con menos movimiento la luz no corre nunca; el halo se queda.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.reload();
+  await yaMonto(page);
+  await llegarA(boton);
+  expect(await vueltas()).toEqual([]);
+  expect(await boton.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none');
 });
 
 test('con movimiento reducido nada espera apagado ni se mueve: todo esta encendido y quieto', async ({ page }) => {

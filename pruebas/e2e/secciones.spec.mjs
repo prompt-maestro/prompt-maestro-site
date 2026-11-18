@@ -351,7 +351,7 @@ test('como funciona es una ruta de seis estaciones con su mini escena, y cada un
   const acostada = await page.evaluate(() => matchMedia('(min-width: 900px)').matches);
   const fila = seccion.locator('.ruta__quienes');
   // El punto de ella es blanco; los demas, huecos, con el filo de luz.
-  expect(cajas.map(({ punto }) => punto)).toEqual([...Array(5).fill('rgb(7, 9, 22)'), 'rgb(245, 244, 240)']);
+  expect(cajas.map(({ punto }) => punto)).toEqual([...Array(5).fill('rgb(15, 16, 20)'), 'rgb(245, 244, 240)']);
   if (acostada) {
     // La ruta va acostada: las seis escenas en un renglon, de izquierda a derecha, cada una en su marco.
     for (const [lugar, { escena, rotulo, quien, marco }] of cajas.entries()) {

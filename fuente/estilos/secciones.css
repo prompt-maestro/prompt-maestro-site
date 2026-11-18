@@ -1210,7 +1210,7 @@ html:not(.con-cuenta) .calculadora {
   z-index: 9;
   padding: var(--e-2) var(--e-4) max(var(--e-2), env(safe-area-inset-bottom));
   border-top: 1px solid var(--linea);
-  background: rgb(7 9 22 / 0.9);
+  background: rgb(var(--papel-rgb) / 0.9);
   visibility: hidden;
   translate: 0 100%;
 }

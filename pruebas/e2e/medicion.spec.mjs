@@ -100,7 +100,9 @@ async function abrirConMovimiento(page) {
  * @param {string} nombre
  */
 function botonDeEjemplo(demo, nombre) {
-  return demo.getByRole('group', { name: 'Ejemplo' }).getByRole('button', { name: nombre, exact: true });
+  return demo
+    .getByRole('group', { name: 'Mira el ejemplo de tu oficio' })
+    .getByRole('button', { name: nombre, exact: true });
 }
 
 test('la demostracion avisa su inicio al toque, cada paso una vez y su final; verla otra vez es otra historia', async ({

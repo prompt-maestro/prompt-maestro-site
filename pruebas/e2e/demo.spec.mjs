@@ -144,7 +144,10 @@ async function avanzarParadas(demo, cuantas) {
  * @param {string} clave
  */
 async function elegir(demo, nombre, clave) {
-  await demo.getByRole('group', { name: 'Ejemplo' }).getByRole('button', { name: nombre, exact: true }).click();
+  await demo
+    .getByRole('group', { name: 'Mira el ejemplo de tu oficio' })
+    .getByRole('button', { name: nombre, exact: true })
+    .click();
   await expect(demo).toHaveAttribute('data-ejemplo', clave);
 }
 
@@ -205,8 +208,23 @@ test('en reposo: el celular del negocio en linea, el letrero del primer momento 
   await expect(demo.locator('.sello')).toHaveCount(0);
   // De la seccion ya no estan ni la leyenda, ni los enlaces de antes, ni el recuadro de la agenda.
   await expect(page.locator('#citas')).not.toContainText(/Tócala|Ver todo solo|Reiniciar|Lo que ves tú/);
-  await expect(page.locator('#citas .garantia__texto')).toHaveText(
-    'Tu agente agenda solo con el anticipo pagado, y el dinero cae directo en tu Mercado Pago.',
+  // La seccion se llama como el producto y dice, destacado, lo que hace garantizada a la cita.
+  await expect(page.locator('#citas .sobre')).toHaveText('Citas garantizadas');
+  await expect(page.locator('#citas .clave__titulo')).toHaveText([
+    'Primero el pago, después la cita',
+    'Directo a tu cuenta',
+  ]);
+  await expect(page.locator('#citas .clave__texto')).toHaveText([
+    'Tu agente comprueba el anticipo con Mercado Pago y solo entonces agenda.',
+    'El dinero cae en tu Mercado Pago, sin pasar por nosotros. Rápido para tu clientela y con tu agenda a la segura.',
+  ]);
+  await expect(page.locator('#citas .clave--principal')).toHaveCount(1);
+  // La transferencia va aparte y dice quien revisa y quien aprueba: ella.
+  await expect(page.locator('#citas .transferencia__titulo')).toHaveText(
+    '¿Prefieren transferencia? También se puede, si tú lo activas.',
+  );
+  await expect(page.locator('#citas .transferencia__texto')).toHaveText(
+    'Tu agente te avisa cuando llega el comprobante. Tú revisas en tu banco que el depósito llegó y, solo cuando tú lo apruebas, la cita se confirma y se agenda.',
   );
   // Pidio menos movimiento: no arranca sola, y el boton dice lo que hace.
   await expect(botonDePausa(demo)).toHaveAccessibleName('Reproducir');
@@ -753,7 +771,7 @@ test('elegir Dentista cambia el celular, la ficha del dia y las tarjetas, y la h
   const demo = await abrirDetenida(page);
   await aLaVista(demo);
   await hastaElPaso(page, demo, 'horarios');
-  const selector = demo.getByRole('group', { name: 'Ejemplo' });
+  const selector = demo.getByRole('group', { name: 'Mira el ejemplo de tu oficio' });
   await expect(selector.getByRole('button')).toHaveText(['Uñas', 'Dentista', 'Médico']);
   await expect(selector.getByRole('button', { name: 'Uñas' })).toHaveAttribute('aria-pressed', 'true');
   await elegir(demo, 'Dentista', 'dentista');
@@ -874,7 +892,7 @@ test('la historia de Médico platica en la tarde, con su consultorio y su ficha 
 test('todo se maneja con el teclado, y el foco nunca se pierde', async ({ page }) => {
   test.slow(); // la historia completa, tecla por tecla
   const demo = await abrir(page);
-  const selector = demo.getByRole('group', { name: 'Ejemplo' });
+  const selector = demo.getByRole('group', { name: 'Mira el ejemplo de tu oficio' });
   const pausa = botonDePausa(demo);
   // El orden: los tres ejemplos, las seis rayitas y la pausa.
   await selector.getByRole('button', { name: 'Uñas' }).focus();

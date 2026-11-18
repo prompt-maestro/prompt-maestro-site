@@ -161,14 +161,24 @@
     <div class="garantia__promesa">
       <p class="sobre">{{secciones.citas.sobre}}</p>
       <h2 class="garantia__titulo" id="titulo-citas">{{secciones.citas.titulo}} <em>{{secciones.citas.tituloFuerte}}</em></h2>
-      <p class="garantia__texto">{{secciones.citas.texto}}</p>
+      <ul class="claves" role="list">
+{{#cada secciones.citas.claves}}        <li class="clave{{#si principal}} clave--principal{{/si}}">
+          <span class="clave__marca" aria-hidden="true"><svg focusable="false"><use href="#i-{{icono}}"/></svg></span>
+          <div><h3 class="clave__titulo">{{titulo}}</h3><p class="clave__texto">{{antes}}<strong>{{fuerte}}</strong>{{despues}}</p></div>
+        </li>
+{{/cada}}      </ul>
     </div>
 {{> demo}}    <div class="garantia__cierre">
       <div class="garantia__acciones">
-        <a class="boton" href="{{sitio.alta}}" data-lugar="citas">{{secciones.cierre.accion}}</a>
+        <a class="boton boton--luz" href="{{sitio.alta}}" data-lugar="citas" data-enciende>{{secciones.cierre.accion}}</a>
         <a class="enlace" href="{{sitio.contacto}}" data-lugar="citas">{{secciones.cierre.otra}}</a>
       </div>
       <p class="garantia__nota">{{secciones.cierre.nota}}</p>
+    </div>
+    <div class="transferencia">
+      <span class="transferencia__marca" aria-hidden="true"><svg focusable="false"><use href="#i-banco"/></svg></span>
+      <h3 class="transferencia__titulo">{{secciones.citas.transferencia.titulo}}</h3>
+      <p class="transferencia__texto">{{secciones.citas.transferencia.texto}}</p>
     </div>
   </section>
 

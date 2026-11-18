@@ -157,6 +157,86 @@ svg {
   box-shadow: 0 8px 28px rgb(63 92 245 / 0.45);
 }
 
+/* El boton con luz: el principal de una seccion. En reposo lleva un halo azul; al entrar a la vista una lucecita le
+   da dos vueltas al borde (menos de cinco segundos, y ahi se detiene) y una mas al pasar el cursor o al recibir el
+   foco. Con movimiento reducido solo queda el halo. El angulo es una propiedad con tipo para que se pueda animar. */
+@property --vuelta {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.boton--luz {
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgb(132 151 255 / 0.4),
+    0 0 30px rgb(88 115 255 / 0.5);
+}
+
+.boton--luz:hover {
+  box-shadow:
+    0 0 0 1px rgb(132 151 255 / 0.7),
+    0 0 40px rgb(88 115 255 / 0.7);
+}
+
+/* El aro por donde corre la luz: un anillo de 2.5 px pegado por fuera del boton. */
+.boton--luz::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  padding: 2.5px;
+  border-radius: calc(var(--r-control) + 5px);
+  background: conic-gradient(
+    from var(--vuelta),
+    rgb(132 151 255 / 0) 0deg,
+    rgb(132 151 255 / 0) 210deg,
+    #8497ff 305deg,
+    #fff 348deg,
+    rgb(255 255 255 / 0) 360deg
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes boton-vuelta {
+  from {
+    opacity: 1;
+    --vuelta: 0deg;
+  }
+
+  to {
+    opacity: 1;
+    --vuelta: 360deg;
+  }
+}
+
+/* La misma vuelta con otro nombre: asi el cursor la echa a andar de nuevo aunque la de llegada ya haya terminado. */
+@keyframes boton-vuelta-otra {
+  from {
+    opacity: 1;
+    --vuelta: 0deg;
+  }
+
+  to {
+    opacity: 1;
+    --vuelta: 360deg;
+  }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  .boton--luz[data-enciende="ya"]::before {
+    animation: boton-vuelta 2400ms linear 2;
+  }
+
+  .boton--luz:hover::before,
+  .boton--luz:focus-visible::before {
+    animation: boton-vuelta-otra 2400ms linear 1;
+  }
+}
+
 .enlace {
   display: inline-flex;
   align-items: center;

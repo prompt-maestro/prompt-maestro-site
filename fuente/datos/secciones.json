@@ -1,9 +1,29 @@
 {
   "citas": {
-    "sobre": "Tu dinero",
+    "sobre": "Citas garantizadas",
     "titulo": "No pierdas ingresos por citas",
     "tituloFuerte": "no concretadas.",
-    "texto": "Tu agente agenda solo con el anticipo pagado, y el dinero cae directo en tu Mercado Pago."
+    "claves": [
+      {
+        "icono": "escudo",
+        "principal": true,
+        "titulo": "Primero el pago, después la cita",
+        "antes": "Tu agente comprueba el anticipo con Mercado Pago y ",
+        "fuerte": "solo entonces agenda",
+        "despues": "."
+      },
+      {
+        "icono": "cuenta",
+        "titulo": "Directo a tu cuenta",
+        "antes": "El dinero cae en ",
+        "fuerte": "tu Mercado Pago",
+        "despues": ", sin pasar por nosotros. Rápido para tu clientela y con tu agenda a la segura."
+      }
+    ],
+    "transferencia": {
+      "titulo": "¿Prefieren transferencia? También se puede, si tú lo activas.",
+      "texto": "Tu agente te avisa cuando llega el comprobante. Tú revisas en tu banco que el depósito llegó y, solo cuando tú lo apruebas, la cita se confirma y se agenda."
+    }
   },
   "pasos": {
     "sobre": "Cómo funciona",
