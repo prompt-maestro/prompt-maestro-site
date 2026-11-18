@@ -48,6 +48,7 @@ export function revisarGuiones(nombre, html) {
 
 /**
  * Todo lo que el HTML pide dentro del sitio (hojas de estilo, scripts, imagenes, enlaces) tiene que existir en lo armado.
+ * Tambien cada imagen de un juego de tamanos (srcset): el navegador elige una, y la que elija tiene que estar.
  * @param {string} nombre
  * @param {string} html
  * @param {string} base  la carpeta donde se sirve el sitio: "/" o "/pagina-previa/"
@@ -57,8 +58,12 @@ export function revisarGuiones(nombre, html) {
 export function revisarEnlacesInternos(nombre, html, base, existe) {
   /** @type {string[]} */
   const problemas = [];
-  for (const m of html.matchAll(/\s(?:href|src|poster)="([^"]*)"/g)) {
-    const destino = m[1] ?? '';
+  const pedidos = [...html.matchAll(/\s(?:href|src|poster)="([^"]*)"/g)].map((m) => m[1] ?? '');
+  for (const m of html.matchAll(/\s(?:srcset|imagesrcset)="([^"]*)"/g)) {
+    // Cada candidata es una direccion y, si acaso, su ancho o su densidad ("foto-480.avif 480w").
+    for (const candidata of (m[1] ?? '').split(',')) pedidos.push(candidata.trim().split(/\s+/)[0] ?? '');
+  }
+  for (const destino of pedidos) {
     if (/^(https?:|mailto:|tel:|data:|#)/.test(destino)) continue;
     if (!destino.startsWith(base)) {
       problemas.push(`${nombre}: "${destino}" no empieza con ${base} (se rompe en la previa o en el dominio)`);

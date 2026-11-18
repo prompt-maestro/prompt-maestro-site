@@ -16,8 +16,28 @@
   --bien: #58d68d;
   --error: #ff8f80;
 
+  /* Los colores de WhatsApp de dia: los del celular de la demostracion y los de las mini escenas de "Como funciona".
+     El gris de la hora y el azul de los enlaces van un tono mas oscuros que los de verdad: asi se leen con contraste
+     AA tambien sobre el globo verde y sobre la tarjeta del link. */
+  --wa-fondo: #efe9e0;
+  --wa-barra: #fff;
+  --wa-entra: #fff;
+  --wa-sale: #d9fdd3;
+  --wa-texto: #111b21;
+  --wa-2: #667781;
+  --wa-2-fuerte: #54656f;
+  --wa-tic: #34a7e0;
+  --wa-verde: #1daa61;
+  --wa-verde-texto: #0b7a43;
+  --wa-liga: #0270a3;
+  --wa-trama: rgb(60 40 10 / 0.05);
+  --wa-tarjeta: rgb(11 20 26 / 0.06);
+  --wa-sombra: 0 1px 0.5px rgb(11 20 26 / 0.13);
+
   --f-titulo: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-texto: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* La letra del sistema, como en WhatsApp de verdad: la del celular de la demostracion y la de las mini escenas. */
+  --f-sistema: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --t-heroe: clamp(2.5rem, 1.2rem + 6.4vw, 5.5rem);
   --t-seccion: clamp(1.875rem, 1.2rem + 3.2vw, 3.5rem);

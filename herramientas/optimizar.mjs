@@ -2,7 +2,8 @@
 // Convierte los originales (pesados, fuera del repo, en originales/) en lo que la pagina publica: fotos en AVIF y
 // WebP a varios anchos y video H.264 sin audio. Lo que sale va a fuente/recursos/ y SI
 // se confirma, para que armar la pagina no necesite ffmpeg. Uso: node herramientas/optimizar.mjs [nombre]
-// Los oficios salen de fuente/datos/corto.json: sumar uno ahi (con sus originales) basta para que se convierta.
+// Los oficios salen de fuente/datos/corto.json: sumar uno ahi (con sus originales) basta para que se convierta. Los
+// retratos de "Para quien" salen de fuente/datos/giros.json, que es de donde la pagina lee esas tarjetas.
 import { spawn } from 'node:child_process';
 import { mkdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -31,6 +32,10 @@ const PARTE_DE_TARJETA = 0.72;
 const RETRATO = { avif: 30, webp: 74 };
 /** Los anchos del retrato: el del celular y el de la tableta de pie. Mide tres de ancho por cuatro de alto. */
 const ANCHOS_DEL_RETRATO = [540, 840];
+/** Los retratos de "Para quien": nitidos y con luz de dia. Es lo mas fino que deja cada archivo en 60 KB o menos. */
+const OFICIO = { avif: 22, webp: 80 };
+/** Sus anchos: la computadora, la de pantalla densa y el celular (ahi la foto ocupa casi todo lo ancho). */
+const ANCHOS_DEL_OFICIO = [480, 720, 960];
 /**
  * Hasta que altura del cuadro (de 0 a 1) llega la toma viva. Se recorta antes de achicar, en renglones pares: de los
  * 1928 del original quedan 1318, el 68.36 %. Ese porcentaje es el alto del video en fuente/estilos/corto.css.
@@ -172,6 +177,8 @@ function viva({ de, a, ancho, crf }) {
  */
 /** @type {{ oficios: Oficio[] }} */
 const corto = JSON.parse(await readFile(path.join(raiz, 'fuente', 'datos', 'corto.json'), 'utf8'));
+/** @type {{ clave: string }[]} */
+const giros = JSON.parse(await readFile(path.join(raiz, 'fuente', 'datos', 'giros.json'), 'utf8'));
 
 /** @type {Trabajo[]} */
 const TRABAJOS = [
@@ -196,6 +203,12 @@ const TRABAJOS = [
       retrato(`comercial/${clave}-trabajo.png`, `cartel/${clave}-tu`, ancho, cartel.tu.recorte),
     ),
   ]),
+  // "Para quien": el retrato de cada oficio, entero (cuatro de ancho por cinco de alto) y sin recorte.
+  ...giros.flatMap(({ clave }) =>
+    ANCHOS_DEL_OFICIO.flatMap((ancho) =>
+      foto(`retratos/${clave}-retrato.png`, `retratos/${clave}-retrato`, ancho, OFICIO),
+    ),
+  ),
   // La foto de referencia que una clienta manda por WhatsApp.
   {
     de: 'comercial/referencia-unas.png',

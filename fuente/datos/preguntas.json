@@ -1,31 +1,36 @@
 [
   {
+    "pregunta": "¿El dinero pasa por ustedes?",
+    "respuesta": "No. Cada anticipo cae directo en tu Mercado Pago.",
+    "principal": true
+  },
+  {
+    "pregunta": "¿Qué pasa si no llega?",
+    "respuesta": "Tú tocas «No» y el anticipo se queda contigo, según la política que tú pones. A la persona se le ofrece agendar de nuevo.",
+    "principal": true
+  },
+  {
+    "pregunta": "¿Y si no quieren pagar anticipo?",
+    "respuesta": "Tú decides cuánto se pide. Quien sí va a ir lo paga; por eso la cita queda garantizada.",
+    "principal": true
+  },
+  {
+    "pregunta": "¿Tengo que cambiar de número?",
+    "respuesta": "Tu número personal no se toca. Tu agente vive en el número de tu negocio, que sigue en tu celular.",
+    "principal": true
+  },
+  {
+    "pregunta": "¿Y si no sabe algo?",
+    "respuesta": "No inventa. Toma el recado, te avisa por WhatsApp y tú contestas desde tu app.",
+    "principal": true
+  },
+  {
     "pregunta": "¿Mi clientela tiene que instalar algo?",
     "respuesta": "No. Todo pasa en el WhatsApp de siempre."
   },
   {
-    "pregunta": "¿Y si no quieren pagar anticipo?",
-    "respuesta": "Tú decides cuánto se pide. Quien sí va a ir lo paga; por eso la cita queda garantizada."
-  },
-  {
-    "pregunta": "¿El dinero pasa por ustedes?",
-    "respuesta": "No. Cada anticipo cae directo en tu Mercado Pago."
-  },
-  {
-    "pregunta": "¿Qué pasa si no llega?",
-    "respuesta": "Tú tocas «No» y el anticipo se queda contigo, según la política que tú pones. A la persona se le ofrece agendar de nuevo."
-  },
-  {
-    "pregunta": "¿Tengo que cambiar de número?",
-    "respuesta": "Tu número personal no se toca. Tu agente vive en el número de tu negocio, que sigue en tu celular."
-  },
-  {
     "pregunta": "¿Puedo contestar yo?",
     "respuesta": "Sí, desde tu app, cuando quieras. Tu agente se hace a un lado."
-  },
-  {
-    "pregunta": "¿Y si no sabe algo?",
-    "respuesta": "No inventa. Toma el recado, te avisa por WhatsApp y tú contestas desde tu app."
   },
   {
     "pregunta": "Soy dentista o médico. ¿Va a opinar de salud?",

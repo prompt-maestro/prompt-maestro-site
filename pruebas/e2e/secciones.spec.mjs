@@ -143,57 +143,476 @@ test('en pantalla ancha los botones de los tres planes quedan a la misma altura'
   expect(new Set(fondos).size).toBe(1);
 });
 
-test('cada pregunta se abre y se cierra, y la respuesta se lee', async ({ page }) => {
+test('la letra chica de los planes dice, sin porcentajes, que Mercado Pago cobra su comision por cada anticipo', async ({
+  page,
+}) => {
+  const planes = await abrirEn(page, 'planes');
+  const notas = planes.locator('.planes__nota');
+  await expect(notas).toHaveCount(2);
+  // La nota de la instalacion no cambia, y debajo va el renglon nuevo.
+  await expect(notas.first()).toContainText('No cobramos comisión por cita.');
+  await expect(notas.last()).toHaveText(
+    'Mercado Pago cobra su comisión por cada anticipo que recibes. La fija Mercado Pago, no nosotros.',
+  );
+  await expect(notas.last()).toBeVisible();
+  await expect(planes).not.toContainText('%');
+  const [arriba, abajo] = await notas.evaluateAll((renglones) =>
+    renglones.map((renglon) => ({
+      letra: Number.parseFloat(getComputedStyle(renglon).fontSize),
+      fondo: renglon.getBoundingClientRect().bottom,
+      tope: renglon.getBoundingClientRect().top,
+    })),
+  );
+  if (!arriba || !abajo) throw new Error('no encontre las dos notas');
+  // Es letra chica: mas chica que el texto de la pagina y nunca mas grande que la nota de arriba, pegada a ella.
+  expect(abajo.letra).toBeLessThanOrEqual(arriba.letra);
+  expect(abajo.letra).toBeLessThan(15);
+  expect(abajo.tope - arriba.fondo).toBeLessThan(16);
+  // El contraste de la letra chica lo revisa, con toda la seccion, la prueba de los planes.
+});
+
+test('preguntas: cinco a la vista, en su orden, y las otras ocho detras de "Ver más preguntas"', async ({ page }) => {
   const preguntas = await abrirEn(page, 'preguntas');
-  const primera = preguntas.locator('details').first();
+  const todas = preguntas.locator('details.pregunta');
+  await expect(todas).toHaveCount(13);
+  const aLaVista = [
+    '¿El dinero pasa por ustedes?',
+    '¿Qué pasa si no llega?',
+    '¿Y si no quieren pagar anticipo?',
+    '¿Tengo que cambiar de número?',
+    '¿Y si no sabe algo?',
+  ];
+  await expect(preguntas.getByRole('heading', { level: 3 }).filter({ visible: true })).toHaveText(aLaVista);
+  // Las demas existen (las abre la busqueda del navegador) pero no se ven.
+  const guardada = preguntas.getByRole('heading', { name: '¿Puedo contestar yo?' });
+  await expect(guardada).toBeHidden();
+  const mas = preguntas.locator('details.preguntas__mas');
+  const boton = mas.locator('summary.preguntas__ver');
+  await expect(mas).not.toHaveAttribute('open', /.*/);
+  await expect(boton).toHaveText('Ver más preguntas', { useInnerText: true });
+  // De los dos textos del boton solo se ve (y solo se le lee a quien no ve) el que toca.
+  await expect(boton.locator('.preguntas__ver-mas')).toBeVisible();
+  await expect(boton.locator('.preguntas__ver-menos')).toBeHidden();
+  // Se toca con el dedo: 44 px de alto, por lo menos.
+  /**
+   * Donde esta una pieza en la pagina (no en la pantalla: al tocar el boton el navegador puede recorrer la pagina
+   * para que la barra de abajo no lo tape) y cuanto mide de alto. De ancho, el boton cambia con su texto.
+   * @param {import('@playwright/test').Locator} pieza
+   */
+  const lugarDe = (pieza) =>
+    pieza.evaluate((el) => {
+      const caja = el.getBoundingClientRect();
+      return { x: Math.round(caja.x + scrollX), y: Math.round(caja.y + scrollY), alto: Math.round(caja.height) };
+    });
+  const lugarDelBoton = () => lugarDe(boton);
+  /**
+   * Que una pieza sigue donde estaba, con la misma altura. Se le perdona un punto: lo que redondea el navegador.
+   * @param {{ x: number, y: number, alto: number }} ahora
+   * @param {{ x: number, y: number, alto: number }} estaba
+   */
+  const sigueEnSuLugar = (ahora, estaba) => {
+    expect(Math.abs(ahora.x - estaba.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(ahora.y - estaba.y)).toBeLessThanOrEqual(1);
+    expect(ahora.alto).toBe(estaba.alto);
+  };
+  const antes = await lugarDelBoton();
+  expect(antes.alto).toBeGreaterThanOrEqual(44);
+  const quinta = await lugarDe(todas.nth(4));
+  await boton.click();
+  await expect(mas).toHaveAttribute('open', '');
+  await expect(boton).toHaveText('Ver menos preguntas', { useInnerText: true });
+  await expect(boton.locator('.preguntas__ver-mas')).toBeHidden();
+  await expect(boton.locator('.preguntas__ver-menos')).toBeVisible();
+  await expect(preguntas.getByRole('heading', { level: 3 }).filter({ visible: true })).toHaveCount(13);
+  await expect(guardada).toBeVisible();
+  // Nada brinca: el boton y las cinco de arriba se quedan donde estaban; lo que se abre, se abre debajo.
+  sigueEnSuLugar(await lugarDelBoton(), antes);
+  sigueEnSuLugar(await lugarDe(todas.nth(4)), quinta);
+  expect((await lugarDe(todas.nth(5))).y).toBeGreaterThanOrEqual(antes.y + antes.alto);
+  // Con las trece a la vista: ni una falta de accesibilidad.
+  await sinFaltasDeAccesibilidad(page, '#preguntas');
+  // Y se vuelven a guardar.
+  await boton.click();
+  await expect(mas).not.toHaveAttribute('open', /.*/);
+  await expect(boton).toHaveText('Ver más preguntas', { useInnerText: true });
+  await expect(guardada).toBeHidden();
+  sigueEnSuLugar(await lugarDelBoton(), antes);
+});
+
+test('cada pregunta se abre y se cierra, y la respuesta se lee: las de la vista y las de adentro', async ({ page }) => {
+  const preguntas = await abrirEn(page, 'preguntas');
+  const primera = preguntas.locator('details.pregunta').first();
   await expect(primera).not.toHaveAttribute('open', /.*/);
   await primera.locator('summary').click();
   await expect(primera).toHaveAttribute('open', '');
-  await expect(primera).toContainText('No. Todo pasa en el WhatsApp de siempre.');
+  await expect(primera).toContainText('No. Cada anticipo cae directo en tu Mercado Pago.');
   await primera.locator('summary').click();
   await expect(primera).not.toHaveAttribute('open', /.*/);
-  expect(await preguntas.locator('details').count()).toBeGreaterThanOrEqual(10);
+  // Una de las que estaban guardadas, ya desplegadas.
+  await preguntas.locator('summary.preguntas__ver').click();
+  const adentro = preguntas.locator('details.pregunta').filter({ hasText: '¿Mi clientela tiene que instalar algo?' });
+  await expect(adentro.locator('p')).toBeHidden();
+  await adentro.locator('summary').click();
+  await expect(adentro).toHaveAttribute('open', '');
+  await expect(adentro.locator('p')).toHaveText('No. Todo pasa en el WhatsApp de siempre.');
+  await expect(adentro.locator('p')).toBeVisible();
+  await adentro.locator('summary').click();
+  await expect(adentro).not.toHaveAttribute('open', /.*/);
   // Con una pregunta abierta y otra vez cerrada: la lista entera.
   await sinFaltasDeAccesibilidad(page, '#preguntas');
 });
 
-test('para quien ensena los tres oficios con su foto y deja la puerta abierta a mas', async ({ page }) => {
-  const seccion = await abrirEn(page, 'para-quien');
-  await expect(seccion.locator('.oficio__tarjeta')).toHaveCount(3);
-  for (const nombre of ['Uñas', 'Dentista', 'Médico'])
-    await expect(seccion.getByRole('heading', { name: nombre, exact: true })).toBeVisible();
-  const foto = seccion.locator('.oficio__foto').first();
-  await expect(foto).toHaveJSProperty('complete', true);
-  expect(await foto.evaluate((img) => /** @type {HTMLImageElement} */ (img).naturalWidth)).toBeGreaterThan(0);
-  // Pedir un oficio nuevo lleva su propio asunto: no el de "quiero que me acompanen".
-  const otro = seccion.getByRole('link', { name: '¿El tuyo no está? Escríbenos y te avisamos.' });
-  await expect(otro).toHaveAttribute('href', /^mailto:.*subject=.*oficio/);
+test('"Ver más preguntas" se maneja con el teclado y ensena su foco', async ({ page }) => {
+  const preguntas = await abrirEn(page, 'preguntas');
+  const mas = preguntas.locator('details.preguntas__mas');
+  const boton = mas.locator('summary.preguntas__ver');
+  // Llega con el tabulador, justo despues de la quinta pregunta.
+  await preguntas.locator('details.pregunta').nth(4).locator('summary').focus();
+  await page.keyboard.press('Tab');
+  await expect(boton).toBeFocused();
+  await expect(boton).toHaveCSS('outline-style', 'solid');
+  await page.keyboard.press('Enter');
+  await expect(mas).toHaveAttribute('open', '');
+  // El foco se queda en el boton, que ahora dice lo que hace; lo que sigue con el tabulador es la sexta pregunta.
+  await expect(boton).toBeFocused();
+  await expect(boton).toHaveText('Ver menos preguntas', { useInnerText: true });
+  await page.keyboard.press('Tab');
+  await expect(preguntas.locator('details.pregunta').nth(5).locator('summary')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Space');
+  await expect(mas).not.toHaveAttribute('open', /.*/);
+  await expect(boton).toBeFocused();
 });
 
-test('en una frase: tres definiciones y la comparacion, que en celular se lee opcion por opcion', async ({ page }) => {
-  const seccion = await abrirEn(page, 'en-una-frase');
-  await expect(seccion.locator('dt')).toHaveCount(3);
-  await expect(seccion.locator('dt').first()).toHaveText('Cita garantizada');
-  // Es una tabla de verdad tambien para quien no la ve: sus encabezados, sus filas y la propia marcada.
-  const tabla = seccion.getByRole('table', { name: 'En qué se distingue de otras opciones' });
-  await expect(tabla.getByRole('rowheader')).toHaveCount(4);
-  await expect(tabla.getByRole('rowheader', { name: 'Citas Garantizadas' })).toBeVisible();
-  await expect(tabla.locator('.compara__propia')).toHaveCount(1);
-  await expect(tabla.locator('.compara__propia')).toContainText('Entra a tu calendario solo con el anticipo pagado.');
-  const ancha = await page.evaluate(() => matchMedia('(min-width: 720px)').matches);
-  const rotulo = await tabla
-    .getByRole('cell')
-    .first()
-    .evaluate((celda) => getComputedStyle(celda, '::before').content);
-  if (ancha) {
-    await expect(tabla.getByRole('columnheader')).toHaveCount(3);
-    expect(rotulo).toBe('none');
-  } else {
-    // En celular no hay renglon de encabezados (ni a la vista ni para el lector de pantalla, que lo leeria doble):
-    // cada respuesta lleva su rotulo encima.
-    await expect(tabla.getByRole('columnheader')).toHaveCount(0);
-    expect(rotulo).toContain('Dónde conversa tu clientela');
+test('como funciona es una ruta de seis estaciones con su mini escena, y cada una dice quien la hace', async ({
+  page,
+}) => {
+  const seccion = await abrirEn(page, 'como-funciona');
+  await expect(seccion.getByRole('heading', { level: 2 })).toHaveText(
+    'De «hola» a «asistió», casi sin tocar el celular.',
+  );
+  // Una lista ordenada de seis: su rotulo y, para quien no la ve, quien hace ese paso.
+  const estaciones = seccion.locator('ol.ruta__lista > li');
+  const ESPERADAS = [
+    ['Tu clientela', 'Te escriben por WhatsApp'],
+    ['Tu agente', 'Contesta y ofrece tus horarios libres'],
+    ['Tu agente', 'Aparta el lugar y cobra el anticipo'],
+    ['Tu agente', 'La cita entra a tu calendario, garantizada'],
+    ['Tu agente', 'Recuerda la cita, un día y una hora antes'],
+    ['Tú', 'Tocas sí o no: ¿asistió?'],
+  ];
+  await expect(seccion.getByRole('list').first().getByRole('listitem')).toHaveCount(6);
+  await expect(estaciones.locator('.ruta__rotulo')).toHaveText(ESPERADAS.map(([, rotulo]) => rotulo ?? ''));
+  await expect(estaciones.locator('.ruta__quien')).toHaveText(ESPERADAS.map(([quien]) => quien ?? ''));
+  await expect(estaciones.locator('.ruta__numero')).toHaveText(['01', '02', '03', '04', '05', '06']);
+  // Las escenas son ilustraciones: se ven, pero no se le leen a quien no las ve.
+  const escenas = estaciones.locator('.ruta__escena');
+  await expect(escenas).toHaveCount(6);
+  for (const escena of await escenas.all()) {
+    await expect(escena).toHaveAttribute('aria-hidden', 'true');
+    await expect(escena.locator(':scope > *')).toBeVisible();
+    await expect(escena.locator(':scope > *')).toHaveCSS('opacity', '1');
   }
+  await expect(escenas.nth(0)).toContainText('Hola, ¿tienes lugar el jueves?');
+  await expect(escenas.nth(1).locator('.mini__horas span')).toHaveText(['10:00 am', '12:30 pm', '5:00 pm']);
+  await expect(escenas.nth(2)).toContainText('Anticipo Gelish');
+  await expect(escenas.nth(3).locator('.sello')).toBeVisible();
+  await expect(escenas.nth(4)).toContainText('Te recordamos tu cita');
+  await expect(escenas.nth(5).locator('span')).toHaveText(['Sí', 'No']);
+  // Dentro de las escenas la letra es la del sistema, como en el WhatsApp de la demostracion, y sus colores.
+  expect(
+    await escenas
+      .nth(0)
+      .locator('.mini')
+      .evaluate((pieza) => getComputedStyle(pieza).fontFamily),
+  ).toMatch(/^system-ui/);
+  await expect(escenas.nth(0).locator('.mini')).toHaveCSS('background-color', 'rgb(217, 253, 211)');
+  await expect(escenas.nth(5).locator('[data-toca]')).toHaveCSS('background-color', 'rgb(63, 92, 245)');
+
+  const cajas = await estaciones.evaluateAll((lista) =>
+    lista.map((estacion) => {
+      const caja = (/** @type {string} */ que) => {
+        const { top, left, right, bottom, width, height } = /** @type {Element} */ (
+          estacion.querySelector(que)
+        ).getBoundingClientRect();
+        return { top, left, right, bottom, width, height };
+      };
+      const punto = getComputedStyle(/** @type {Element} */ (estacion.querySelector('.ruta__punto')), '::after');
+      return {
+        escena: caja('.ruta__escena'),
+        rotulo: caja('.ruta__rotulo'),
+        quien: caja('.ruta__quien'),
+        panel: getComputedStyle(estacion, '::before').content,
+        marco: getComputedStyle(/** @type {Element} */ (estacion.querySelector('.ruta__escena'))).boxShadow,
+        punto: punto.backgroundColor,
+      };
+    }),
+  );
+  const acostada = await page.evaluate(() => matchMedia('(min-width: 900px)').matches);
+  const fila = seccion.locator('.ruta__quienes');
+  // El punto de ella es blanco; los demas, huecos, con el filo de luz.
+  expect(cajas.map(({ punto }) => punto)).toEqual([...Array(5).fill('rgb(7, 9, 22)'), 'rgb(245, 244, 240)']);
+  if (acostada) {
+    // La ruta va acostada: las seis escenas en un renglon, de izquierda a derecha, cada una en su marco.
+    for (const [lugar, { escena, rotulo, quien, marco }] of cajas.entries()) {
+      expect(Math.abs(escena.top - (cajas[0]?.escena.top ?? 0))).toBeLessThanOrEqual(1);
+      if (lugar > 0) expect(escena.left).toBeGreaterThan(cajas[lugar - 1]?.escena.right ?? 0);
+      // Debajo de cada escena, su rotulo; quien la hace ya esta arriba, y aqui solo queda para el lector de pantalla.
+      expect(rotulo.top).toBeGreaterThan(escena.bottom);
+      expect(quien.width).toBeLessThanOrEqual(1);
+      expect(marco).not.toBe('none');
+    }
+    // Arriba, quien hace que: el rotulo de su agente abarca sus cuatro estaciones, de la segunda a la quinta.
+    await expect(fila).toBeVisible();
+    await expect(fila).toHaveAttribute('aria-hidden', 'true');
+    await expect(fila.locator('span')).toHaveText(['Tu clientela', 'Tu agente', 'Tú']);
+    const [clientela, agente, tu] = await fila
+      .locator('span')
+      .evaluateAll((rotulos) => rotulos.map((rotulo) => rotulo.getBoundingClientRect().toJSON()));
+    expect(Math.abs(agente.left - (cajas[1]?.escena.left ?? 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs(agente.right - (cajas[4]?.escena.right ?? 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs(clientela.right - (cajas[0]?.escena.right ?? 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs(tu.left - (cajas[5]?.escena.left ?? 0))).toBeLessThanOrEqual(1);
+    expect(agente.bottom).toBeLessThan(cajas[1]?.escena.top ?? 0);
+    // La estacion de ella va resaltada: su marco lleva la luz de la marca, y solo el suyo.
+    expect(cajas.map(({ marco }) => marco.includes('rgba(132, 151, 255, 0.75)'))).toEqual([
+      ...Array(5).fill(false),
+      true,
+    ]);
+  } else {
+    // La ruta va de pie: una estacion debajo de otra, con la escena debajo o a un lado de su rotulo.
+    await expect(fila).toBeHidden();
+    for (const [lugar, { escena, rotulo, quien }] of cajas.entries()) {
+      if (lugar > 0) expect(rotulo.top).toBeGreaterThan(cajas[lugar - 1]?.rotulo.bottom ?? 0);
+      expect(escena.bottom).toBeGreaterThan(rotulo.top);
+      // Quien hace el paso se lee arriba de la estacion que abre su tramo: la 01, la 02 y la 06.
+      const abre = [0, 1, 5].includes(lugar);
+      if (abre) expect(quien.bottom).toBeLessThanOrEqual(rotulo.top);
+      expect(quien.height > 4).toBe(abre);
+    }
+    // La de ella va dentro de un panel resaltado, y solo la suya.
+    expect(cajas.map(({ panel }) => panel !== 'none')).toEqual([...Array(5).fill(false), true]);
+  }
+  await sinFaltasDeAccesibilidad(page, '#como-funciona');
+});
+
+test('lo que haces tu: sus tres renglones de siempre, en una tarjeta y cada uno con su icono', async ({ page }) => {
+  const seccion = await abrirEn(page, 'como-funciona');
+  const tarjeta = seccion.locator('.pasos__tu');
+  await expect(tarjeta.getByRole('heading', { level: 3 })).toHaveText('Lo que haces tú');
+  const renglones = tarjeta.getByRole('listitem');
+  await expect(renglones).toHaveText([
+    'Tocar sí o no al final de cada cita.',
+    'Contestar tú cuando tu agente te avise que no sabe algo.',
+    'Pedirle cambios por WhatsApp: nada se aplica sin tu sí.',
+  ]);
+  // Cada icono es de adorno, mide lo mismo y de verdad se dibuja: su figura existe en la pagina.
+  const iconos = await renglones.locator('svg').evaluateAll((lista) =>
+    lista.map((icono) => {
+      const figura = /** @type {SVGGraphicsElement} */ (icono.querySelector('use'));
+      const { width, height } = icono.getBoundingClientRect();
+      return {
+        adorno: icono.getAttribute('aria-hidden'),
+        cual: figura.getAttribute('href'),
+        existe: document.querySelector(figura.getAttribute('href') ?? 'nada') instanceof SVGSymbolElement,
+        ancho: Math.round(width),
+        alto: Math.round(height),
+      };
+    }),
+  );
+  expect(iconos).toEqual(
+    ['#i-toque', '#i-aviso', '#i-perillas'].map((cual) => ({
+      adorno: 'true',
+      cual,
+      existe: true,
+      ancho: 38,
+      alto: 38,
+    })),
+  );
+});
+
+test('para quien: tres retratos enmarcados, con la foto completa y nitida y, debajo, su nombre y su renglon', async ({
+  page,
+}) => {
+  const seccion = await abrirEn(page, 'para-quien');
+  const tarjetas = seccion.locator('.oficio__tarjeta');
+  await expect(tarjetas).toHaveCount(3);
+  await expect(seccion.getByRole('heading', { level: 3 })).toHaveText([
+    'Uñas',
+    'Dentistas',
+    'Médicos generales y especialistas',
+  ]);
+  const ALTS = [
+    'Manicurista pintando las uñas de una clienta',
+    'Dentista atendiendo a un paciente',
+    'Médico auscultando a un paciente',
+  ];
+  for (const [lugar, tarjeta] of (await tarjetas.all()).entries()) {
+    const foto = tarjeta.locator('img.oficio__foto');
+    // Cada foto llega cuando esta cerca: se le espera en su lugar.
+    await foto.scrollIntoViewIfNeeded();
+    await expect(foto).toHaveAttribute('alt', ALTS[lugar] ?? '');
+    await expect(foto).toHaveAttribute('loading', 'lazy');
+    await expect(foto).toHaveAttribute('width', '960');
+    await expect(foto).toHaveAttribute('height', '1192');
+    await expect(foto).toHaveJSProperty('complete', true);
+    await expect
+      .poll(() => foto.evaluate((img) => /** @type {HTMLImageElement} */ (img).naturalWidth))
+      .toBeGreaterThan(0);
+    await expect(foto).toHaveAccessibleName(ALTS[lugar] ?? '');
+    const medidas = await tarjeta.evaluate((li) => {
+      const img = /** @type {HTMLImageElement} */ (li.querySelector('img'));
+      const marco = /** @type {Element} */ (li.querySelector('.oficio__marco'));
+      const texto = /** @type {Element} */ (li.querySelector('.oficio__texto'));
+      const caja = img.getBoundingClientRect();
+      return {
+        pedida: img.currentSrc,
+        // Lo que mide en la pagina contra lo que mide el archivo: si coinciden, la foto no va recortada.
+        proporcion: caja.width / caja.height,
+        natural: img.naturalWidth / img.naturalHeight,
+        nitida: img.naturalWidth / caja.width,
+        llenaElMarco: Math.abs(caja.width - marco.getBoundingClientRect().width) <= 1,
+        esquinas: Number.parseFloat(getComputedStyle(marco).borderTopLeftRadius),
+        recorta: getComputedStyle(marco).overflow,
+        filtro: getComputedStyle(img).filter,
+        textoDebajo: texto.getBoundingClientRect().top - marco.getBoundingClientRect().bottom,
+        textoEncima: getComputedStyle(texto).position,
+        velo: getComputedStyle(texto).backgroundImage,
+      };
+    });
+    // Es una de las fotos nuevas, en el formato moderno, y con puntos de sobra para verse nitida en esa pantalla.
+    expect(medidas.pedida).toMatch(/\/retratos\/(unas|dentista|medico)-retrato-(480|720|960)\.(avif|webp)$/);
+    expect(medidas.nitida).toBeGreaterThanOrEqual(1);
+    expect(Math.abs(medidas.proporcion - medidas.natural)).toBeLessThan(0.01);
+    expect(medidas.llenaElMarco).toBe(true);
+    // El marco: esquinas redondas que recortan la foto; sin degradado ni sombra encima, y a todo color.
+    expect(medidas.esquinas).toBeGreaterThanOrEqual(12);
+    expect(medidas.recorta).toBe('hidden');
+    expect(medidas.filtro).toBe('none');
+    // El nombre y el renglon van debajo de la foto, en limpio: ni encima de ella ni sobre un velo.
+    expect(medidas.textoDebajo).toBeGreaterThanOrEqual(-0.5);
+    expect(medidas.textoEncima).toBe('static');
+    expect(medidas.velo).toBe('none');
+  }
+  await expect(tarjetas.first()).toContainText('Cotiza diseños con tu catálogo y agenda con el anticipo pagado');
+  // Pedir un oficio nuevo lleva su propio asunto (no el de "quiero que me acompanen"), y el renglon entero es el enlace.
+  const otro = seccion.getByRole('link', { name: '¿El tuyo no está? Escríbenos y te avisamos.' });
+  await expect(otro).toHaveAttribute('href', /^mailto:.*subject=.*oficio/);
+  await expect(otro.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  const renglon = await otro.boundingBox();
+  const lista = await seccion.locator('.oficio__lista').boundingBox();
+  if (!renglon || !lista) throw new Error('no encontre el renglon de los demas oficios');
+  expect(renglon.height).toBeGreaterThanOrEqual(44);
+  expect(Math.abs(renglon.width - lista.width)).toBeLessThanOrEqual(1);
+  expect(renglon.y).toBeGreaterThan(lista.y + lista.height);
+  await sinFaltasDeAccesibilidad(page, '#para-quien');
+});
+
+test('en una frase: la definicion, un antes y un despues en dos tarjetas, y las tres palabras, ya sin tabla', async ({
+  page,
+}) => {
+  const seccion = await abrirEn(page, 'en-una-frase');
+  await expect(seccion.getByRole('heading', { level: 2 })).toHaveText(
+    'Citas Garantizadas es un agente de WhatsApp que agenda solo con el anticipo pagado.',
+  );
+  // La tabla que comparaba con otras opciones ya no esta.
+  await expect(seccion.getByRole('table')).toHaveCount(0);
+  await expect(seccion).not.toContainText('En qué se distingue');
+  // Dos tarjetas, cada una con su rotulo, su frase y sus tres renglones.
+  const lados = seccion.locator('.frase__lado');
+  await expect(lados).toHaveCount(2);
+  const [antes, despues] = [lados.first(), lados.last()];
+  await expect(seccion.locator('.frase__rotulo')).toHaveText(['Antes', 'Con Citas Garantizadas']);
+  await expect(seccion.getByRole('heading', { level: 3 })).toHaveText([
+    'Tú trabajas y tu celular no para de sonar.',
+    'Te siguen escribiendo, y tu agente contesta por ti.',
+  ]);
+  await expect(antes.getByRole('listitem')).toHaveText([
+    'Contestas cuando puedes.',
+    'Apartas la hora sin anticipo.',
+    'Si no llega, pierdes la hora.',
+  ]);
+  await expect(despues.getByRole('listitem')).toHaveText([
+    'Contesta en menos de un minuto, a cualquier hora.',
+    'Agenda solo con el anticipo pagado.',
+    'Si no llega, el anticipo se queda contigo, según tu política.',
+  ]);
+  // Las pantallas son ilustraciones: los mismos tres mensajes, antes esperando y despues contestados.
+  for (const lado of [antes, despues]) {
+    const pantalla = lado.locator('.frase__pantalla');
+    await expect(pantalla).toHaveAttribute('aria-hidden', 'true');
+    await expect(pantalla.locator('.frase__msj > span')).toHaveText([
+      'Hola, ¿tienes lugar el jueves?',
+      'Nota de voz · 0:14',
+      '¿Cuánto por este diseño?',
+    ]);
+    await expect(pantalla.locator('.minicita')).toContainText('5:00 pm · Ana');
+  }
+  await expect(antes.locator('.frase__cuenta')).toHaveText('7 sin contestar4:12 pm');
+  await expect(antes.locator('.frase__msj small')).toHaveText(['hace 2 h', 'hace 1 h', 'hace 40 min']);
+  await expect(antes.locator('.minicita')).toContainText('Sin anticipo');
+  await expect(antes.locator('.frase__duda')).toHaveText('¿Llegará?');
+  await expect(antes.locator('.sello')).toHaveCount(0);
+  await expect(despues.locator('.frase__cuenta')).toHaveText('0 sin contestar4:12 pm');
+  await expect(despues.locator('.frase__msj small')).toHaveText(['Contestado', 'Contestado', 'Contestado']);
+  await expect(despues.locator('.minicita')).toContainText('Anticipo $150');
+  await expect(despues.locator('.sello')).toBeVisible();
+  // El sello no tapa el texto de la cita.
+  const sello = await despues.locator('.sello').boundingBox();
+  const cita = await despues.locator('.minicita__texto').boundingBox();
+  if (!sello || !cita) throw new Error('no encontre la cita sellada');
+  expect(sello.x).toBeGreaterThanOrEqual(cita.x + cita.width - 2);
+  // La de antes va apagada y gris; la de despues, encendida, con su borde de luz.
+  const luz = (/** @type {import('@playwright/test').Locator} */ lado) =>
+    lado.evaluate((tarjeta) => {
+      const capa = getComputedStyle(tarjeta, '::before');
+      return { capa: capa.content, borde: capa.boxShadow, se: capa.opacity };
+    });
+  expect((await luz(antes)).capa).toBe('none');
+  const encendida = await luz(despues);
+  expect(encendida.capa).not.toBe('none');
+  expect(encendida.borde).toContain('rgba(132, 151, 255, 0.75)');
+  expect(encendida.se).toBe('1');
+  await expect(antes.locator('.frase__dice')).toHaveCSS('color', 'rgb(196, 201, 228)');
+  await expect(despues.locator('.frase__dice')).toHaveCSS('color', 'rgb(245, 244, 240)');
+  // Lado a lado, con una flecha redonda en medio, donde caben; si no, una sobre otra y sin flecha.
+  const flecha = seccion.locator('.frase__flecha');
+  const izquierda = await antes.boundingBox();
+  const derecha = await despues.boundingBox();
+  if (!izquierda || !derecha) throw new Error('no encontre las dos tarjetas');
+  if (await page.evaluate(() => matchMedia('(min-width: 760px)').matches)) {
+    expect(derecha.x).toBeGreaterThan(izquierda.x + izquierda.width);
+    expect(Math.abs(derecha.y - izquierda.y)).toBeLessThanOrEqual(1);
+    expect(Math.abs(derecha.height - izquierda.height)).toBeLessThanOrEqual(1);
+    await flecha.scrollIntoViewIfNeeded();
+    await expect(flecha).toBeVisible();
+    const centro = await flecha.boundingBox();
+    if (!centro) throw new Error('no encontre la flecha');
+    const medio = (izquierda.x + izquierda.width + derecha.x) / 2;
+    expect(Math.abs(centro.x + centro.width / 2 - medio)).toBeLessThanOrEqual(1);
+    // Nada la tapa: es lo que esta encima en su propio centro.
+    expect(
+      await flecha.evaluate((el) => {
+        const { left, top, width, height } = el.getBoundingClientRect();
+        return el.contains(document.elementFromPoint(left + width / 2, top + height / 2));
+      }),
+    ).toBe(true);
+  } else {
+    expect(derecha.y).toBeGreaterThan(izquierda.y + izquierda.height);
+    expect(Math.abs(derecha.x - izquierda.x)).toBeLessThanOrEqual(1);
+    await expect(flecha).toBeHidden();
+  }
+  // Abajo, discretas, las tres palabras: el termino en chico y con la luz de la marca.
+  await expect(seccion.locator('dt')).toHaveText(['Cita garantizada', 'Anticipo', 'Agente']);
+  await expect(seccion.locator('dd').first()).toHaveText(
+    'Una cita que entra a tu calendario con su anticipo ya pagado. Garantizada quiere decir pagada.',
+  );
+  const termino = seccion.locator('dt').first();
+  await expect(termino).toHaveCSS('color', 'rgb(132, 151, 255)');
+  await expect(termino).toHaveCSS('text-transform', 'uppercase');
+  expect(Number.parseFloat(await termino.evaluate((dt) => getComputedStyle(dt).fontSize))).toBeLessThan(13);
+  const definiciones = await seccion.locator('.frase__definiciones').boundingBox();
+  expect(definiciones?.y ?? 0).toBeGreaterThan(Math.max(izquierda.y + izquierda.height, derecha.y + derecha.height));
   await sinFaltasDeAccesibilidad(page, '#en-una-frase');
 });
 
@@ -242,8 +661,10 @@ test('en celular el boton principal baja a la mano y nunca hay dos a la vez ni e
   await page.locator('#demo').scrollIntoViewIfNeeded();
   await expect(abajo).toBeHidden();
   await expect(arriba).toBeVisible();
-  // Y en el cierre y el pie, que ya traen su boton.
-  await page.locator('#preguntas').scrollIntoViewIfNeeded();
+  // Y en el cierre y el pie, que ya traen su boton. Las preguntas ahora son pocas de entrada y el cierre asoma
+  // debajo de ellas: se mira su titulo, donde el cierre todavia no se ve.
+  await page.locator('#titulo-preguntas').scrollIntoViewIfNeeded();
+  await expect(page.locator('#empieza')).not.toBeInViewport();
   await expect(abajo).toBeVisible();
   await page.locator('#empieza').scrollIntoViewIfNeeded();
   await expect(abajo).toBeHidden();

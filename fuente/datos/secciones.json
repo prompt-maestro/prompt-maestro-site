@@ -11,33 +11,88 @@
     "tituloFuerte": "casi sin tocar el celular.",
     "lista": [
       {
-        "texto": "Le escriben al WhatsApp de tu negocio."
+        "rotulo": "Te escriben por WhatsApp",
+        "quien": "Tu clientela",
+        "papel": "clientela",
+        "abre": true,
+        "escribe": {
+          "texto": "Hola, ¿tienes lugar el jueves?",
+          "hora": "10:12 a. m."
+        }
       },
       {
-        "texto": "Tu agente contesta con tus precios y ofrece horarios reales de tu Google Calendar."
+        "rotulo": "Contesta y ofrece tus horarios libres",
+        "quien": "Tu agente",
+        "papel": "agente",
+        "abre": true,
+        "ofrece": {
+          "texto": "Te puedo ofrecer el jueves:",
+          "horas": [
+            {
+              "hora": "10:00 am"
+            },
+            {
+              "hora": "12:30 pm"
+            },
+            {
+              "hora": "5:00 pm",
+              "elegida": true
+            }
+          ]
+        }
       },
       {
-        "texto": "Aparta el lugar unos minutos y manda el enlace para pagar el anticipo."
+        "rotulo": "Aparta el lugar y cobra el anticipo",
+        "quien": "Tu agente",
+        "papel": "agente",
+        "cobra": {
+          "titulo": "Anticipo Gelish",
+          "monto": "$150"
+        }
       },
       {
-        "texto": "Pagan, y la cita entra sola a tu calendario, ya garantizada."
+        "rotulo": "La cita entra a tu calendario, garantizada",
+        "quien": "Tu agente",
+        "papel": "agente",
+        "agenda": {
+          "dia": "JUE",
+          "fecha": "19",
+          "hora": "5:00 pm",
+          "detalle": "Ana · Gelish"
+        }
       },
       {
-        "texto": "Les recuerda la cita un día antes y una hora antes."
+        "rotulo": "Recuerda la cita, un día y una hora antes",
+        "quien": "Tu agente",
+        "papel": "agente",
+        "recuerda": {
+          "titulo": "Te recordamos tu cita",
+          "detalle": "Mañana, 5:00 pm"
+        }
       },
       {
-        "texto": "Al terminar, tú tocas sí o no: ¿asistió?"
+        "rotulo": "Tocas sí o no: ¿asistió?",
+        "quien": "Tú",
+        "papel": "tu",
+        "abre": true,
+        "toca": {
+          "si": "Sí",
+          "no": "No"
+        }
       }
     ],
     "tuTitulo": "Lo que haces tú",
     "tu": [
       {
+        "icono": "toque",
         "texto": "Tocar sí o no al final de cada cita."
       },
       {
+        "icono": "aviso",
         "texto": "Contestar tú cuando tu agente te avise que no sabe algo."
       },
       {
+        "icono": "perillas",
         "texto": "Pedirle cambios por WhatsApp: nada se aplica sin tu sí."
       }
     ]
@@ -72,12 +127,75 @@
     "sobre": "Para quién",
     "titulo": "Hoy, para uñas, dentistas y médicos.",
     "tituloFuerte": "Pronto, más oficios.",
-    "otro": "¿El tuyo no está? Escríbenos y te avisamos."
+    "otro": "¿El tuyo no está?",
+    "otroAccion": "Escríbenos y te avisamos."
   },
   "enUnaFrase": {
     "sobre": "En una frase",
     "titulo": "Citas Garantizadas es un agente de WhatsApp",
     "tituloFuerte": "que agenda solo con el anticipo pagado.",
+    "hora": "4:12 pm",
+    "mensajes": [
+      {
+        "inicial": "A",
+        "texto": "Hola, ¿tienes lugar el jueves?",
+        "hace": "hace 2 h"
+      },
+      {
+        "inicial": "R",
+        "texto": "Nota de voz · 0:14",
+        "hace": "hace 1 h"
+      },
+      {
+        "inicial": "L",
+        "texto": "¿Cuánto por este diseño?",
+        "hace": "hace 40 min"
+      }
+    ],
+    "cita": {
+      "dia": "JUE",
+      "fecha": "19",
+      "titulo": "5:00 pm · Ana"
+    },
+    "lados": [
+      {
+        "rotulo": "Antes",
+        "frase": "Tú trabajas y tu celular no para de sonar.",
+        "cuenta": "7 sin contestar",
+        "anticipo": "Sin anticipo",
+        "marca": "¿Llegará?",
+        "renglones": [
+          {
+            "texto": "Contestas cuando puedes."
+          },
+          {
+            "texto": "Apartas la hora sin anticipo."
+          },
+          {
+            "texto": "Si no llega, pierdes la hora."
+          }
+        ]
+      },
+      {
+        "encendido": true,
+        "rotulo": "Con Citas Garantizadas",
+        "frase": "Te siguen escribiendo, y tu agente contesta por ti.",
+        "cuenta": "0 sin contestar",
+        "contestado": "Contestado",
+        "anticipo": "Anticipo $150",
+        "renglones": [
+          {
+            "texto": "Contesta en menos de un minuto, a cualquier hora."
+          },
+          {
+            "texto": "Agenda solo con el anticipo pagado."
+          },
+          {
+            "texto": "Si no llega, el anticipo se queda contigo, según tu política."
+          }
+        ]
+      }
+    ],
     "definiciones": [
       {
         "termino": "Cita garantizada",
@@ -90,34 +208,6 @@
       {
         "termino": "Agente",
         "texto": "Un asistente virtual con inteligencia artificial que atiende el WhatsApp de tu negocio con tus precios, tus horarios y tus reglas."
-      }
-    ],
-    "comparaTitulo": "En qué se distingue de otras opciones",
-    "comparaColumnas": ["Opción", "Dónde conversa tu clientela", "Cómo queda la cita"],
-    "compara": [
-      {
-        "opcion": "Agenda en línea",
-        "donde": "En una página o aplicación aparte.",
-        "cita": "Se reserva ahí; el anticipo depende de cada plataforma.",
-        "propia": false
-      },
-      {
-        "opcion": "Recordatorios automáticos",
-        "donde": "Mandan avisos; la conversación va por otro lado.",
-        "cita": "Recuerdan una cita que alguien ya agendó.",
-        "propia": false
-      },
-      {
-        "opcion": "Bot de WhatsApp",
-        "donde": "En WhatsApp.",
-        "cita": "Agenda; cobrar antes depende de cada proveedor.",
-        "propia": false
-      },
-      {
-        "opcion": "Citas Garantizadas",
-        "donde": "En el WhatsApp de tu negocio.",
-        "cita": "Entra a tu calendario solo con el anticipo pagado.",
-        "propia": true
       }
     ]
   },
@@ -163,12 +253,15 @@
     ],
     "recomendado": "Recomendado",
     "notaInstalacion": "Instalación única de",
-    "notaResto": "La mensualidad empieza el día que tu agente queda activo. Pago con tarjeta. No cobramos comisión por cita."
+    "notaResto": "La mensualidad empieza el día que tu agente queda activo. Pago con tarjeta. No cobramos comisión por cita.",
+    "notaMercadoPago": "Mercado Pago cobra su comisión por cada anticipo que recibes. La fija Mercado Pago, no nosotros."
   },
   "preguntas": {
     "sobre": "Preguntas",
     "titulo": "Lo que nos preguntan",
-    "tituloFuerte": "antes de empezar."
+    "tituloFuerte": "antes de empezar.",
+    "verMas": "Ver más preguntas",
+    "verMenos": "Ver menos preguntas"
   },
   "cierre": {
     "titulo": "Tu próxima cita",

@@ -339,6 +339,39 @@ test('abrir una pregunta avisa su posicion; cerrarla no avisa nada', async ({ pa
   expect(Object.keys((await de(page, 'pregunta_abre'))[0] ?? {})).toEqual(['id']);
 });
 
+test('desplegar "Ver más preguntas" no avisa nada, y las de adentro avisan su posicion entre las trece', async ({
+  page,
+}) => {
+  await conUmami(page);
+  await abrir(page);
+  const mas = page.locator('details.preguntas__mas');
+  const boton = mas.locator('summary.preguntas__ver');
+  const preguntas = page.locator('details.pregunta');
+  await expect(preguntas).toHaveCount(13);
+  await boton.click();
+  await expect(mas).toHaveAttribute('open', '');
+  // La sexta es la primera de las que estaban guardadas. Su aviso es el primero que llega: el del boton no existe.
+  const sexta = preguntas.nth(5);
+  await sexta.locator('summary').click();
+  await expect(sexta).toHaveAttribute('open', '');
+  await expect.poll(() => de(page, 'pregunta_abre')).toEqual([{ id: 6 }]);
+  // Guardarlas y volver a desplegarlas tampoco avisa: ni por el boton ni por la sexta, que sigue abierta adentro.
+  await boton.click();
+  await expect(mas).not.toHaveAttribute('open', /.*/);
+  await boton.click();
+  await expect(mas).toHaveAttribute('open', '');
+  await expect(sexta).toHaveAttribute('open', '');
+  await preguntas.last().locator('summary').click();
+  await expect.poll(() => de(page, 'pregunta_abre')).toEqual([{ id: 6 }, { id: 13 }]);
+  // Una de las cinco de la vista sigue contando igual que siempre.
+  await preguntas.nth(4).locator('summary').click();
+  await expect.poll(() => de(page, 'pregunta_abre')).toEqual([{ id: 6 }, { id: 13 }, { id: 5 }]);
+  // No hay ningun evento nuevo: de las preguntas solo sale el de siempre, con su numero y nada mas.
+  const nombres = (await anotados(page)).map(([nombre]) => nombre);
+  expect(nombres.filter((nombre) => /pregunta|mas|ver/.test(nombre))).toEqual(Array(3).fill('pregunta_abre'));
+  expect(JSON.stringify(await anotados(page))).not.toMatch(/Ver m|pasa por ustedes|instalar/);
+});
+
 test('un error de JavaScript avisa el archivo y la linea: nunca el mensaje ni la direccion completa', async ({
   page,
 }) => {

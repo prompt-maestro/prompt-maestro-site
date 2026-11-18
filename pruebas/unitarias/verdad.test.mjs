@@ -99,6 +99,10 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'no te trae clientela nueva',
     'no diagnostica ni recomienda medicamentos',
     'hoy, para uñas, dentistas y médicos',
+    // Los mensajes son buenos: con el agente siguen llegando, y la comision de cada anticipo la fija Mercado Pago.
+    'te siguen escribiendo, y tu agente contesta por ti',
+    'la fija mercado pago, no nosotros',
+    'médicos generales y especialistas',
   ]) {
     assert.ok(visible.includes(frase), frase);
   }

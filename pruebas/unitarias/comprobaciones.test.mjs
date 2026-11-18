@@ -50,3 +50,23 @@ test('revisarEnlacesInternos no toca enlaces de afuera, correos ni anclas', () =
     [],
   );
 });
+
+test('revisarEnlacesInternos tambien revisa cada foto de un juego de tamanos (srcset)', () => {
+  const existe = (/** @type {string} */ ruta) =>
+    ['r/1/foto-480.avif', 'r/1/foto-960.avif', 'r/1/foto-480.webp'].includes(ruta);
+  const completo =
+    '<link rel="preload" as="image" imagesrcset="/r/1/foto-480.avif 480w, /r/1/foto-960.avif 960w">' +
+    '<source srcset="/r/1/foto-480.avif 480w, /r/1/foto-960.avif 960w"><img src="/r/1/foto-480.webp" srcset="/r/1/foto-480.webp">';
+  assert.deepEqual(revisarEnlacesInternos('index.html', completo, '/', existe), []);
+  // Una sola que falte, sea cual sea la que el navegador elija, detiene la armada.
+  const roto = '<source srcset="/r/1/foto-480.avif 480w, /r/1/foto-720.avif 720w,\n /otra/foto-960.avif 2x">';
+  const problemas = revisarEnlacesInternos('index.html', roto, '/', existe);
+  assert.equal(problemas.length, 2);
+  assert.match(problemas[0] ?? '', /"\/r\/1\/foto-720\.avif" no existe/);
+  assert.match(problemas[1] ?? '', /"\/otra\/foto-960\.avif" no existe/);
+  // En la previa cada foto del juego vive dentro de su carpeta.
+  assert.match(
+    revisarEnlacesInternos('index.html', '<img srcset="/r/1/foto-480.avif 480w">', '/pagina-previa/', existe)[0] ?? '',
+    /no empieza con/,
+  );
+});

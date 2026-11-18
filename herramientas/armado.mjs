@@ -8,6 +8,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { conversacionDeEjemplo, fichaDe, historiaDe, presentacionDe, reposoDe } from '../fuente/js/demo.js';
 import { pesos } from '../fuente/js/redaccion.js';
+import { achicarCss } from './achicar.mjs';
 import { datosEstructurados, jsonParaScript, llmsTxt, robots, sitemap, TOPES } from './buscadores.mjs';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
 import { medicionDe } from './medicion.mjs';
@@ -24,6 +25,8 @@ export const DESTINOS = /** @type {const} */ ({
 });
 
 const DOMINIO = 'prompt-maestro.com';
+/** La hoja en que se unen los estilos de la pagina. Es la unica que viaja achicada. */
+const HOJA_UNIDA = 'estilos/pagina.css';
 /**
  * A donde llevan los botones de empezar: ahi se paga. Es una constante del codigo y no solo un dato: si alguien
  * cambia sitio.json a otra direccion (un dominio parecido, http), la armada se detiene.
@@ -105,7 +108,8 @@ async function leerDatos(fuente, problemas) {
 
 /**
  * Los estilos. Los que nombra estilos/orden.json se unen, en ese orden, en una sola hoja (pagina.css): un solo viaje
- * para el telefono. Cualquier otra hoja se copia aparte, y las de estilos/previa/ solo viajan a la previa.
+ * para el telefono. Cualquier otra hoja se copia aparte, y las de estilos/previa/ solo viajan a la previa. Aqui se
+ * leen tal cual estan escritas; la hoja unida se achica despues, ya con las rutas de sus recursos.
  * @param {string} fuente
  * @param {Destino} destino
  * @param {string[]} problemas
@@ -119,7 +123,7 @@ async function leerEstilos(fuente, destino, problemas) {
   const unidas = [];
   for (const nombre of orden) unidas.push(await readFile(path.join(carpeta, nombre)));
   /** @type {[string, Buffer][]} */
-  const salida = [['estilos/pagina.css', Buffer.concat(unidas)]];
+  const salida = [[HOJA_UNIDA, Buffer.concat(unidas)]];
   for (const ruta of await listar(fuente, 'estilos', problemas)) {
     if (ruta === 'orden.json' || orden.includes(ruta)) continue;
     if (ruta.startsWith('previa/') && destino !== 'previa') continue;
@@ -198,7 +202,11 @@ function textosDe(ejemplo) {
  * @param {string[]} problemas
  */
 function prepararDemo(datos, problemas) {
-  const giros = /** @type {import('../fuente/js/demo.js').Giro[]} */ (datos.giros);
+  // La tarjeta de "Para quien" de cada giro la pinta la plantilla: a la demostracion no le hace falta y no viaja en
+  // sus datos.
+  const giros = /** @type {(import('../fuente/js/demo.js').Giro & { tarjeta?: unknown })[]} */ (datos.giros).map(
+    ({ tarjeta: _tarjeta, ...giro }) => giro,
+  );
   const guiones = /** @type {Record<string, import('../fuente/js/demo.js').Guion>} */ (datos.guiones);
   const { fijos, momentos, finales, rotulos } = /** @type {Omit<Ejemplo, 'giro' | 'guion'>} */ (datos.demo);
   const ejemplos = giros.map((giro) => {
@@ -266,7 +274,8 @@ export async function armarSitio({ raiz, destino }) {
   for (const [ruta, contenido] of await leerEstilos(fuente, destino, problemas)) {
     // Las hojas piden sus recursos con "../recursos/"; al armar, esa ruta se vuelve la carpeta con huella.
     const hoja = contenido.toString('utf8').replaceAll('../recursos/', carpetaRecursos);
-    codigo.push([ruta, Buffer.from(hoja, 'utf8')]);
+    // La hoja unida viaja sin comentarios ni espacios de sobra: pesa menos y significa lo mismo.
+    codigo.push([ruta, Buffer.from(ruta === HOJA_UNIDA ? achicarCss(hoja) : hoja, 'utf8')]);
   }
   for (const ruta of await listar(fuente, 'js', problemas)) {
     codigo.push([`js/${ruta}`, await readFile(path.join(fuente, 'js', ruta))]);
@@ -386,7 +395,10 @@ export async function armarSitio({ raiz, destino }) {
       Buffer.from(
         llmsTxt({
           ...paraBuscar,
-          pasos: textos(secciones.pasos.lista),
+          // Cada paso, con quien lo hace: "Tu agente: Contesta y ofrece tus horarios libres".
+          pasos: secciones.pasos.lista.map(
+            (/** @type {{ quien: string, rotulo: string }} */ paso) => `${paso.quien}: ${paso.rotulo}`,
+          ),
           hace: agentes.hace,
           noHace: textos([...agentes.noHace, ...secciones.confianza.noHaceMas]),
           requisitos: textos(secciones.planes.requisitos),

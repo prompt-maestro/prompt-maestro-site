@@ -12,7 +12,12 @@
     "servicioCorto": "Gelish",
     "precio": 350,
     "anticipo": 150,
-    "direccion": "Av. del Esmalte 234, colonia Bella Vista"
+    "direccion": "Av. del Esmalte 234, colonia Bella Vista",
+    "tarjeta": {
+      "nombre": "Uñas",
+      "texto": "Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta.",
+      "alt": "Manicurista pintando las uñas de una clienta"
+    }
   },
   {
     "clave": "dentista",
@@ -27,7 +32,12 @@
     "servicioCorto": "Limpieza",
     "precio": 650,
     "anticipo": 200,
-    "direccion": "Av. de la Sonrisa 100, colonia Providencia"
+    "direccion": "Av. de la Sonrisa 100, colonia Providencia",
+    "tarjeta": {
+      "nombre": "Dentistas",
+      "texto": "Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.",
+      "alt": "Dentista atendiendo a un paciente"
+    }
   },
   {
     "clave": "medico",
@@ -42,6 +52,11 @@
     "servicioCorto": "Consulta",
     "precio": 900,
     "anticipo": 300,
-    "direccion": "Av. del Bienestar 200, colonia Chapalita"
+    "direccion": "Av. del Bienestar 200, colonia Chapalita",
+    "tarjeta": {
+      "nombre": "Médicos generales y especialistas",
+      "texto": "Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.",
+      "alt": "Médico auscultando a un paciente"
+    }
   }
 ]

@@ -95,6 +95,10 @@ async function arrancar() {
         if (calculadora instanceof HTMLElement) montarCalculadora(calculadora);
       },
     ),
+    pieza(
+      () => import('./encendido.js'),
+      ({ montarEncendido }) => montarEncendido(),
+    ),
   ]);
 }
 
