@@ -262,7 +262,10 @@ test('el boton con luz: dos vueltas al llegar y se detiene antes de cinco segund
   const alLlegar = await vueltas();
   expect(alLlegar).toEqual([{ nombre: 'boton-vuelta', veces: 2, total: 4800 }]);
   expect(alLlegar[0]?.total).toBeLessThan(5000);
-  await quieta(page);
+  // Se espera solo a la luz del boton: en computadora el corto del inicio sigue corriendo por su cuenta.
+  await boton.evaluate((el) =>
+    Promise.all(el.getAnimations({ subtree: true }).map((animacion) => animacion.finished.catch(() => undefined))),
+  );
   expect(await vueltas()).toEqual([]);
   expect(await boton.evaluate((el) => getComputedStyle(el, '::before').opacity)).toBe('0');
   // Con menos movimiento la luz no corre nunca; el halo se queda.
