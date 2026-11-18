@@ -216,7 +216,8 @@
   top: 50%;
   right: -10px;
   width: 104px;
-  color: #2f46c8;
+  /* El sello es verde en toda la pagina: sobre el papel claro, su verde oscuro. */
+  color: var(--wa-verde-texto);
   transform: translateY(-50%) rotate(-7deg);
 }
 
@@ -1359,14 +1360,14 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   color: #2f46c8;
 }
 
-/* El sello de la cita, con su candado: tinta azul sobre el papel, un poco salido por la orilla. */
+/* El sello de la cita, con su candado: tinta verde sobre el papel, un poco salido por la orilla. */
 .hizo .sello--cita {
   --giro: -6deg;
   position: absolute;
   top: 50%;
   right: -0.7em;
   width: 11.2em;
-  color: #2f46c8;
+  color: var(--wa-verde-texto);
   transform: translateY(-50%) rotate(var(--giro));
 }
 
