@@ -1,10 +1,11 @@
-/* El sello de Garantizada: luz azul sobre la noche. Es el gesto de la marca, por eso es lo unico que cae con peso,
-   y por eso el azul no se gasta en nada mas. */
+/* El sello de Garantizada: verde, el color de lo que ya se pago (lo pidio Jose el 18-nov-2026; antes era la luz azul
+   de la marca). Es el gesto de la marca, por eso es lo unico que cae con peso. Sobre fondo claro va en un verde mas
+   oscuro, para que se lea. */
 .sello {
   width: 176px;
   height: auto;
   overflow: visible;
-  color: var(--luz);
+  color: var(--bien);
   transform: rotate(-7deg);
 }
 
@@ -30,7 +31,7 @@
   right: -12px;
   z-index: 1;
   width: 112px;
-  filter: drop-shadow(0 0 14px rgb(88 115 255 / 0.55));
+  filter: drop-shadow(0 0 14px rgb(88 214 141 / 0.45));
   pointer-events: none;
   transform: translateY(-50%) rotate(var(--giro, -7deg));
 }

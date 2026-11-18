@@ -376,7 +376,7 @@
   right: -2.2em;
   bottom: -2em;
   width: 7em;
-  filter: drop-shadow(0 0 0.7em rgb(88 115 255 / 0.7));
+  filter: drop-shadow(0 0 0.7em rgb(88 214 141 / 0.5));
 }
 
 /* Lo que le toca a ella: tres renglones, cada uno con su icono. */
@@ -758,7 +758,7 @@
   top: 50%;
   right: var(--e-2);
   width: 84px;
-  color: #2f46c8;
+  color: var(--wa-verde-texto);
   transform: translateY(-50%) rotate(var(--giro, -7deg));
 }
 

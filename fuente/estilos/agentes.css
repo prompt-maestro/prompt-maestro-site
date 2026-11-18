@@ -417,7 +417,7 @@ button.beneficio__boton {
   top: 50%;
   right: -38px;
   width: 112px;
-  filter: drop-shadow(0 0 10px rgb(88 115 255 / 0.7));
+  filter: drop-shadow(0 0 10px rgb(88 214 141 / 0.5));
   pointer-events: none;
   translate: 0 -50%;
 }

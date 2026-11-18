@@ -13,9 +13,9 @@ import { expect, test } from './base.mjs';
 /** @typedef {import('../../fuente/js/demo.js').Ejemplo} Ejemplo */
 
 const ALTA = 'https://alta.prompt-maestro.com/';
-// El azul de la marca tiene dos tonos: el del boton que cierra (relleno) y la luz de lo ya pagado (el sello).
+// El azul de la marca es el del boton que cierra (relleno). El sello de lo ya pagado va en verde.
 const AZUL_DEL_BOTON = 'rgb(63, 92, 245)';
-const LUZ_DE_LO_PAGADO = 'rgb(132, 151, 255)';
+const VERDE_DE_LO_GARANTIZADO = 'rgb(88, 214, 141)';
 /** Desde este ancho se ven las tres tarjetas de lo que le llega a la profesional; antes, solo la del momento. */
 const TRES_TARJETAS = '(min-width: 1240px)';
 
@@ -1121,7 +1121,7 @@ test('el aspecto es el de WhatsApp de dia, con la letra del sistema, y el azul d
   const fuentes = pedidos.filter((nombre) => /\.(woff2?|ttf|otf)(\?|$)/.test(nombre));
   expect(fuentes.filter((nombre) => !nombre.endsWith('/fuentes/outfit.woff2'))).toEqual([]);
   // El sello lleva la luz de lo ya pagado; el boton de la seccion no es azul.
-  await expect(tarjeta(demo, 'cita').locator('.sello')).toHaveCSS('color', LUZ_DE_LO_PAGADO);
+  await expect(tarjeta(demo, 'cita').locator('.sello')).toHaveCSS('color', VERDE_DE_LO_GARANTIZADO);
   await expect(page.locator('.garantia__acciones .boton')).not.toHaveCSS('background-color', AZUL_DEL_BOTON);
   // Sin logotipos ni nombres de marcas ajenas dentro del celular: solo el aspecto.
   await expect(demo.locator('.tel img, .tel image')).toHaveCount(0);
