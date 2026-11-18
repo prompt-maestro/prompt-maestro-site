@@ -102,8 +102,11 @@ function ponerFantasmas(franja) {
 export function montarCorto(raiz) {
   const guion = leerGuion(raiz.dataset.guion);
   const [primero] = guion;
-  // Sin guion, en una ventana muy bajita o en un navegador que no sabe medir las franjas, queda el cartel.
-  if (!primero || matchMedia(MUY_BAJITA).matches || !CSS.supports('width', '1cqw')) return;
+  // Sin guion, en una ventana muy bajita o en un navegador que no sabe medir las franjas, queda el cartel. Y si la
+  // pagina ya dio al corto por perdido (esta pieza llego demasiado tarde), tambien: sus capas ya no se pintan.
+  const bajita = matchMedia(MUY_BAJITA);
+  if (!primero || bajita.matches || !CSS.supports('width', '1cqw')) return;
+  if (!document.documentElement.classList.contains('con-corto')) return;
   const inicio = primero.clave;
 
   const cine = pieza(raiz, '[data-corto-cine]');
@@ -134,6 +137,9 @@ export function montarCorto(raiz) {
   const relevos = new Map();
   const calidoDesde = guion.findIndex((momento) => momento.clave === BARRIDO);
   const ancha = matchMedia(ANCHA);
+  const quieta = matchMedia(QUIETA);
+  /** Si el corto cabe en esta pantalla: ancha y no muy bajita. La misma pregunta que hacen los estilos. */
+  const cabe = () => ancha.matches && !bajita.matches;
 
   // El tiempo que el corto lleva corriendo de verdad: en pausa o con la pestana escondida no avanza.
   let reloj = nuevoReloj();
@@ -278,12 +284,15 @@ export function montarCorto(raiz) {
     preparar();
     corre = true;
     pausada = false;
-    reloj = andar(nuevoReloj(), performance.now());
-    raiz.removeAttribute('data-pausada');
+    // Una pestana que se abrio escondida todavia no ha visto nada: el reloj espera, detenido, a que la miren.
+    reloj = document.hidden ? nuevoReloj() : andar(nuevoReloj(), performance.now());
+    raiz.toggleAttribute('data-pausada', document.hidden);
     pausa.setAttribute('aria-pressed', 'false');
     avance.style.transform = 'scaleX(0)';
     for (const { video } of videos) if (video.readyState > 0) video.currentTime = 0;
-    // El momento se quita y se vuelve a poner: asi las entradas de la primera toma corren otra vez desde su principio.
+    // El momento y su letrero se quitan y se vuelven a poner: asi las entradas de la primera toma corren otra vez
+    // desde su principio, tambien si el corto se corto en ella.
+    for (const letrero of letreros) letrero.removeAttribute('data-activo');
     cine.removeAttribute('data-momento');
     void cine.offsetWidth;
     ponerMomento(inicio);
@@ -303,8 +312,12 @@ export function montarCorto(raiz) {
     pausa.setAttribute('aria-pressed', 'false');
     rotular();
     videosAlDia();
-    // El foco no se queda en un control que ya no se ve.
-    if (control.contains(document.activeElement)) ver.focus({ preventScroll: true });
+    // El foco no se queda en un control que ya no se ve: pasa al boton que corre el corto o, donde ese boton no
+    // existe (la ventana dejo de ser ancha), al primer enlace del cartel.
+    if (control.contains(document.activeElement)) {
+      const destino = ver.offsetParent ? ver : cartel.querySelector('a');
+      if (destino instanceof HTMLElement) destino.focus({ preventScroll: true });
+    }
   }
 
   saltar.addEventListener('click', terminar);
@@ -322,7 +335,7 @@ export function montarCorto(raiz) {
 
   // Ella pidio verlo: corre aunque haya pedido menos movimiento. El foco pasa a la pausa, que es lo que sigue a la mano.
   ver.addEventListener('click', () => {
-    if (!ancha.matches) return;
+    if (!cabe()) return;
     raiz.setAttribute('data-pedido', '');
     arrancar();
     pausa.focus({ preventScroll: true });
@@ -336,6 +349,9 @@ export function montarCorto(raiz) {
     if (!corre || pausada) return;
     reloj = document.hidden ? parar(reloj, performance.now()) : andar(reloj, performance.now());
     raiz.toggleAttribute('data-pausada', document.hidden);
+    // Escondida, la pagina deja de pintarse: se le pide una medida para que la pausa de las animaciones quede puesta
+    // antes de eso. Si no, al volver brincarian todo el tiempo que estuvo escondida y el reloj no.
+    if (document.hidden) void raiz.offsetWidth;
     videosAlDia();
     ciclo();
   });
@@ -345,10 +361,17 @@ export function montarCorto(raiz) {
     if (entradas.some((entrada) => !entrada.isIntersecting)) terminar();
   }).observe(raiz);
 
-  // Si la ventana deja de ser ancha a media pelicula, tambien: ahi el corto no existe. Al volver a ser ancha no
-  // arranca solo; queda el cartel con su boton para verlo.
-  ancha.addEventListener('change', () => {
-    if (!ancha.matches) terminar();
+  // Si la ventana deja de dar para el corto a media pelicula (se angosta, o se queda muy bajita como un celular que
+  // se acuesta), tambien: ahi el corto no existe. Al volver a caber no arranca solo; queda el cartel con su boton.
+  for (const consulta of [ancha, bajita]) {
+    consulta.addEventListener('change', () => {
+      if (!cabe()) terminar();
+    });
+  }
+
+  // Y si ella pide menos movimiento a media pelicula, se le respeta en el acto, salvo que el corto lo haya pedido.
+  quieta.addEventListener('change', () => {
+    if (quieta.matches && !raiz.hasAttribute('data-pedido')) terminar();
   });
 
   for (const { video } of videos) {
@@ -372,7 +395,7 @@ export function montarCorto(raiz) {
   raiz.setAttribute('data-viva', '');
   // Solo corre solo en una pantalla ancha, sin movimiento reducido y con la seccion enfrente (quien llega por un
   // ancla, o recarga mas abajo, no lo tiene): en cualquier otro caso se ve el cartel.
-  const corresolo = ancha.matches && !matchMedia(QUIETA).matches && raiz.getBoundingClientRect().bottom > 0;
+  const corresolo = cabe() && !quieta.matches && raiz.getBoundingClientRect().bottom > 0;
   if (corresolo) arrancar();
   else raiz.dataset.cuadro = CARTEL;
 }

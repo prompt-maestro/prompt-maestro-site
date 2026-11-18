@@ -704,6 +704,118 @@ test.describe('el corto, en pantallas anchas', () => {
     expect(await desborde(page)).toBeLessThanOrEqual(0);
   });
 
+  test('en una ventana angosta el sello baja a la orilla del papel y la frase de lo que hizo el agente se lee completa', async ({
+    page,
+  }) => {
+    // Con el corto corriendo dos veces el navegador de pruebas va despacio: se le da su tiempo.
+    test.slow();
+    for (const tamano of [
+      { width: 1000, height: 640 },
+      { width: 900, height: 480 },
+    ]) {
+      await page.setViewportSize(tamano);
+      const corto = await abrirCortoDetenido(page);
+      await hastaElCuadro(page, corto, 'agente');
+      const tratos = corto.locator('[data-tri="calida"] .trato');
+      const control = await caja(corto.locator('.control__linea'));
+      const barra = await caja(page.locator('.barra'));
+      for (const [lugar] of CORTO.oficios.entries()) {
+        const trato = tratos.nth(lugar);
+        await expect(trato.locator('.sello')).toHaveCSS('opacity', '1', { timeout: 20_000 });
+        // La frase tiene ancho para leerse: el sello no la arrincona.
+        const frase = await caja(trato.locator('.hizo__frase'));
+        expect(frase.derecha - frase.izquierda).toBeGreaterThanOrEqual(150);
+        // Y nada de la conversacion se sale de su franja, ni se mete debajo de la barra o de los controles.
+        const franja = await caja(trato.locator('xpath=ancestor::*[@data-franja]'));
+        for (const pieza of await trato.locator('.dice, .hizo').all()) {
+          const suCaja = await caja(pieza);
+          expect(suCaja.izquierda).toBeGreaterThanOrEqual(franja.izquierda);
+          expect(suCaja.derecha).toBeLessThanOrEqual(franja.derecha);
+          expect(suCaja.arriba).toBeGreaterThanOrEqual(barra.abajo);
+          expect(suCaja.abajo).toBeLessThanOrEqual(control.arriba);
+        }
+      }
+      expect(await desborde(page)).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test('si la pestaña se abre escondida, el corto espera a que la miren y entonces corre desde el principio', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+    });
+    const corto = await abrirCortoDetenido(page);
+    // Pasa de sobra lo que dura el corto entero: nadie lo ha visto, asi que no ha corrido.
+    await page.clock.runFor(60_000);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
+    await expect(corto).toHaveAttribute('data-pausada', '');
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(corto).not.toHaveAttribute('data-pausada', /.*/);
+    // Apenas va empezando: sigue en su primera toma, con su letrero, y de ahi camina.
+    await page.clock.runFor(1000);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
+    await expect(corto.locator('.letrero[data-activo]')).toHaveText(CORTO.guion[0]?.letrero ?? '');
+    await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
+  });
+
+  test('si la ventana se queda muy bajita a media pelicula, el corto termina: queda el cartel, sin controles ni boton', async ({
+    page,
+  }) => {
+    const corto = await abrirCortoDetenido(page);
+    await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
+    const tamano = page.viewportSize() ?? { width: 1280, height: 720 };
+    await page.setViewportSize({ width: tamano.width, height: 440 });
+    await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+    await expect(corto.locator('[data-corto-control]')).toBeHidden();
+    await expect(corto.locator('[data-corto-ver]')).toBeHidden();
+    // Al volver a caber no arranca solo: queda el cartel, con su boton para verlo.
+    await page.setViewportSize(tamano);
+    await page.clock.runFor(2000);
+    await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+    await expect(corto.getByRole('button', { name: 'Ver de nuevo' })).toBeVisible();
+  });
+
+  test('un celular que se acuesta despues de cargar sigue sin corto: ni su boton, ni sus controles, ni un solo video', async ({
+    page,
+  }) => {
+    const videos = videosPedidos(page);
+    await page.setViewportSize({ width: 430, height: 932 });
+    const corto = await abrirCortoDetenido(page);
+    await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+    // Acostado es ancho, pero muy bajito: ahi el corto no existe.
+    await page.setViewportSize({ width: 932, height: 430 });
+    await expect(corto.locator('[data-corto-ver]')).toBeHidden();
+    await expect(corto.locator('[data-corto-control]')).toBeHidden();
+    await page.clock.runFor(5000);
+    await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+    expect(videos).toEqual([]);
+  });
+
+  test('al verlo de nuevo, el primer letrero vuelve a entrar aunque el corto se haya cortado en la primera toma', async ({
+    page,
+  }) => {
+    const corto = await abrirCortoDetenido(page);
+    const letrero = corto.locator('.letrero[data-activo]');
+    /** Como va la entrada del letrero (su animacion, no sus fundidos): corriendo, o ya terminada. */
+    const entrada = () =>
+      letrero.evaluate((el) =>
+        el
+          .getAnimations()
+          .filter((una) => una instanceof CSSAnimation)
+          .map((una) => una.playState)
+          .join(' '),
+      );
+    await expect.poll(entrada, { timeout: 10_000 }).toBe('finished');
+    await corto.getByRole('button', { name: 'Saltar' }).click();
+    await corto.getByRole('button', { name: 'Ver de nuevo' }).click();
+    await expect(letrero).toHaveText(CORTO.guion[0]?.letrero ?? '');
+    expect(await entrada()).toBe('running');
+  });
+
   test('"Saltar" lleva directo al cartel, y el foco pasa a "Ver de nuevo"', async ({ page }) => {
     const corto = await abrirCortoDetenido(page);
     const saltar = corto.getByRole('button', { name: 'Saltar' });

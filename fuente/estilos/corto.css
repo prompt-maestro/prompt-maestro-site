@@ -1083,13 +1083,10 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 .aviso__dice {
   display: block;
   overflow: hidden;
+  color: rgb(245 244 240 / 0.84);
   font-weight: 300;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.aviso__dice {
-  color: rgb(245 244 240 / 0.84);
 }
 
 .aviso__dice > * {
@@ -1239,6 +1236,20 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   transform: translateY(-50%) rotate(var(--giro));
 }
 
+/* En una franja angosta el sello no cabe a un lado de la frase: baja a la orilla del papel y la frase toma todo el
+   ancho. */
+@container (max-width: 420px) {
+  .hizo {
+    padding: 0.7em 1em 4.2em;
+  }
+
+  .hizo .sello--cita {
+    top: calc(100% - 1.9em);
+    right: -0.5em;
+    width: 12em;
+  }
+}
+
 .sello--cita .sello__palabra {
   font-size: 19px;
   letter-spacing: 1.2px;
@@ -1321,13 +1332,11 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
   place-items: center;
-  opacity: 0;
   visibility: hidden;
-  transition:
-    opacity 900ms var(--seda),
-    visibility 900ms var(--seda);
 }
 
+/* El velo de noche que desenfoca lo de atras. Se funde el solo, no con su capa: un desenfoque de fondo no ve nada
+   mientras lo que lo contiene se esta fundiendo, y apareceria de golpe al final. */
 .telefonos::before {
   position: absolute;
   inset: 0;
@@ -1335,6 +1344,8 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   content: "";
+  opacity: 0;
+  transition: opacity 900ms var(--seda);
 }
 
 /* Cada celular mide lo que le deja el alto de la pantalla, y todo lo de adentro (en "em") se achica con el. */
@@ -1406,11 +1417,9 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   justify-items: center;
   padding: 0 28px;
   text-align: center;
-  opacity: 0;
   visibility: hidden;
-  transition:
-    opacity 900ms var(--seda),
-    visibility 900ms var(--seda);
+  /* Al irse, la capa se guarda cuando sus piezas ya se fundieron. */
+  transition: visibility 0s 900ms;
 }
 
 .corto__marca::before {
@@ -1421,6 +1430,17 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   content: "";
+}
+
+/* Cada pieza de la marca se funde por su cuenta, no con la capa: asi el desenfoque de atras (el del fondo y el del
+   disco) entra y se va con ella, sin brincos. */
+.corto__marca::before,
+.halo > *,
+.corto__logo,
+.corto__nombre,
+.corto__frase {
+  opacity: 0;
+  transition: opacity 900ms var(--seda);
 }
 
 .halo {
@@ -1581,6 +1601,29 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   visibility: inherit;
 }
 
+.corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .telefonos::before,
+.corto__cine[data-momento="marca"] .corto__marca::before,
+.corto__cine[data-momento="marca"] :is(.halo > *, .corto__logo, .corto__nombre, .corto__frase) {
+  opacity: 1;
+}
+
+/* Lo que flota sobre las franjas y la marca entran pieza por pieza (cada una trae su entrada): su capa se enciende
+   de una vez, y solo al irse se funde. */
+.corto__cine[data-momento="vibra"] .franja__sobre--llega,
+.corto__cine[data-momento="agente"] .franja__sobre--hecho,
+.corto__cine[data-momento="marca"] .corto__marca {
+  transition: none;
+}
+
+/* La corona y los rayos del halo se encienden despues que el disco. */
+.corto__cine[data-momento="marca"] .halo__aura {
+  transition: opacity 1600ms var(--seda) 500ms;
+}
+
+.corto__cine[data-momento="marca"] .halo__rayos {
+  transition: opacity 2000ms var(--seda) 700ms;
+}
+
 /* Las franjas calidas esperan debajo desde la avalancha: cuando llega el barrido ya estan pintadas. */
 .corto__cine:is([data-momento="avalancha"], [data-momento="barrido"], [data-momento="marca"], [data-momento="agente"])
   .tri--calida,
@@ -1659,20 +1702,14 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   animation: llega 560ms var(--seda) calc(var(--i, 0) * 330ms + var(--n, 0) * 160ms + 700ms) both var(--marcha);
 }
 
-/* La marca: primero se enciende el halo (el disco, su corona y sus rayos, que ya no dejan de girar) y luego entran
-   el logotipo, el nombre y la frase. */
+/* La marca: primero se enciende el halo (el disco y, con sus fundidos, su corona y sus rayos) y luego entran el
+   logotipo, el nombre y la frase. Los rayos giran mientras el corto corre: asi, al irse, no brincan a su lugar. */
 .corto[data-viva] .corto__cine[data-momento="marca"] :is(.halo__disco, .halo__orbita) {
   animation: asoma 1200ms var(--seda) 200ms both var(--marcha);
 }
 
-.corto[data-viva] .corto__cine[data-momento="marca"] .halo__aura {
-  animation: aparece 1600ms var(--seda) 500ms both var(--marcha);
-}
-
-.corto[data-viva] .corto__cine[data-momento="marca"] .halo__rayos {
-  animation:
-    aparece 2000ms var(--seda) 700ms both var(--marcha),
-    gira 120s linear infinite var(--marcha);
+.corto[data-viva]:not([data-cuadro="cartel"]) .halo__rayos {
+  animation: gira 120s linear infinite var(--marcha);
 }
 
 .corto[data-viva] .corto__cine[data-momento="marca"] .corto__logo {
@@ -1956,6 +1993,12 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 
 @media (max-height: 479px) {
   html.con-corto .corto .corto__cine {
+    display: none;
+  }
+
+  /* Ni sus controles ni el boton que lo corre: aqui el corto no existe (tampoco en un celular que se acuesta). */
+  .control,
+  .otra {
     display: none;
   }
 }
