@@ -811,9 +811,16 @@ test.describe('el corto, en pantallas anchas', () => {
       );
     await expect.poll(entrada, { timeout: 10_000 }).toBe('finished');
     await corto.getByRole('button', { name: 'Saltar' }).click();
+    // Desde aqui se anota si la entrada del letrero vuelve a empezar: el navegador avisa cada vez que arranca una
+    // animacion suya (no la de su cursor). Asi la prueba no depende de lo rapido que vaya la maquina.
+    await letrero.evaluate((el) => {
+      el.addEventListener('animationstart', (aviso) => {
+        if (aviso.target === el) el.setAttribute('data-entro-otra-vez', '');
+      });
+    });
     await corto.getByRole('button', { name: 'Ver de nuevo' }).click();
     await expect(letrero).toHaveText(CORTO.guion[0]?.letrero ?? '');
-    expect(await entrada()).toBe('running');
+    await expect(letrero).toHaveAttribute('data-entro-otra-vez', '', { timeout: 10_000 });
   });
 
   test('"Saltar" lleva directo al cartel, y el foco pasa a "Ver de nuevo"', async ({ page }) => {
