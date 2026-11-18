@@ -178,6 +178,8 @@ function pasosALaVista(menu) {
 test('el menu llega con sus nueve beneficios, cada uno un boton de verdad, y solo el primero abierto', async ({
   page,
 }) => {
+  // Mide los nueve renglones y al final pasa el revisor de accesibilidad: con cinco navegadores a la vez, tarda.
+  test.slow();
   const fallas = vigilar(page);
   const menu = await abrir(page);
   const seccion = page.locator('#agente');
@@ -825,6 +827,50 @@ test('si la pieza del menu no llega, la seccion se lee como lista y lo demas sig
   await expect(page.locator('[data-calculadora]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('html')).toHaveClass(/con-js/);
   await sinFaltasDeAccesibilidad(page, '#agente');
+});
+
+test('si la pieza del menu llega cuando la seccion ya quedo como lista, asi se queda: nada brinca a media lectura', async ({
+  page,
+}) => {
+  // La red va tan lenta que la pagina se canso de esperar la pieza (ocho segundos) y dejo la seccion como lista.
+  /** @type {(valor?: unknown) => void} */
+  let soltar = () => undefined;
+  const espera = new Promise((listo) => {
+    soltar = listo;
+  });
+  await page.route('**/js/agente-vista.js', async (ruta) => {
+    await espera;
+    await ruta.continue();
+  });
+  await page.clock.install();
+  await page.goto('./');
+  const menu = page.locator('[data-agente]');
+  await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
+  await page.clock.fastForward(9000);
+  await expect(menu).toHaveAttribute('data-lista', '');
+  await llegarA(menu);
+  const lugares = () =>
+    page.evaluate(() =>
+      ['.beneficios', '.agentes__confianza', '#para-quien'].map((que) =>
+        Math.round(/** @type {Element} */ (document.querySelector(que)).getBoundingClientRect().top + scrollY),
+      ),
+    );
+  // Ya como lista, con todo en su lugar (las oraciones terminaron de abrirse y la letra ya es la de la pagina).
+  await page.evaluate(() => document.fonts.ready);
+  await asentado(page);
+  const antes = await lugares();
+  // Por fin llega la pieza. Ya no despierta el menu: la visitante esta leyendo la lista y nada se mueve de lugar.
+  const llego = page.waitForResponse('**/js/agente-vista.js');
+  soltar();
+  await llego;
+  // Se le da un momento a la pieza para correr: lo que se comprueba es que, ya llegada, no hace nada.
+  await page.waitForTimeout(500);
+  await expect(menu).toHaveAttribute('data-lista', '');
+  await expect(menu).not.toHaveAttribute('data-viva', /.*/);
+  await expect(menu.getByRole('button')).toHaveCount(0);
+  await expect(menu.locator('.beneficio__texto').filter({ visible: true })).toHaveText(ORACIONES);
+  await asentado(page);
+  expect(await lugares()).toEqual(antes);
 });
 
 test('en una pantalla muy bajita (mucho zoom) el primer mini video tambien arranca: le basta con asomar', async ({

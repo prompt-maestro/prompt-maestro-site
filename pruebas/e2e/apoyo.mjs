@@ -36,15 +36,22 @@ export function vigilar(pagina) {
  */
 export async function sinFaltasDeAccesibilidad(pagina, ...partes) {
   // A media entrada un texto todavia es translucido y su contraste no es el de verdad: se mide ya asentado.
-  // Las animaciones que nunca terminan (la pista que late) no cambian el color del texto y no se esperan.
-  await pagina.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
+  // Las animaciones que nunca terminan (la pista que late) no cambian el color del texto y no se esperan. Con
+  // selectores solo se esperan las de esas partes: una animacion larga, o en pausa, de otra seccion (el corto del
+  // inicio) no cambia el contraste de lo que aqui se revisa, y esperarla agotaba el tiempo de la prueba.
+  await pagina.evaluate((selectores) => {
+    const animaciones =
+      selectores.length === 0
+        ? document.getAnimations()
+        : selectores.flatMap((selector) =>
+            [...document.querySelectorAll(selector)].flatMap((parte) => parte.getAnimations({ subtree: true })),
+          );
+    return Promise.all(
+      animaciones
         .filter((animacion) => animacion.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY)
         .map((animacion) => animacion.finished.catch(() => undefined)),
-    ),
-  );
+    );
+  }, partes);
   const axe = new AxeBuilder({ page: pagina }).withTags([
     'wcag2a',
     'wcag2aa',

@@ -34,10 +34,13 @@ const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
   // El agente ya no ofrece hablar con la duena ni invita a escribir PERSONA: ningun texto se salta al agente.
   [/prefieres hablar con|escribe persona/, 'el agente no ofrece la salida PERSONA'],
   // Ni ofrece pasarle a la clienta con la profesional: lo que hace es tomar el recado y avisarle a ella.
-  [/te la pasa|si tu clienta lo pide/, 'el agente no ofrece pasarle a la clienta con la profesional'],
+  [
+    /\bte l[ao]s? pasa\b|si tu (clienta|paciente) lo pide|te comunica con|te transfiere/,
+    'el agente no ofrece pasarle a la clienta con la profesional',
+  ],
   // El agente trabaja con la informacion que la profesional le da: no se entrena un modelo ni aprende por su cuenta.
   [
-    /se entrena|entrenado con|aprende solo|aprende de tus conversaciones/,
+    /se entrena|entrenad[oa]s? con|entrenamos|entrenamiento|aprende sol[oa]|aprende (de|con) (tus|las) conversaciones|aprende por su cuenta/,
     'el agente no se entrena ni aprende solo: usa la base de conocimiento del negocio',
   ],
   [/—/, 'sin guiones largos'],

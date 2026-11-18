@@ -432,9 +432,8 @@ test('el trato de la profesional de ejemplo concuerda con su foto y con su guion
   for (const giro of giros) {
     const guion = JSON.stringify(await leer(`guiones/${giro.clave}.json`));
     const femenino = !/^Dr\. /.test(giro.profesional);
-    assert.ok(
-      !guion.includes(`con ${femenino ? 'el' : 'la'} {profesional}`),
-      `${giro.clave}: el articulo no concuerda`,
-    );
+    // "el" atrapa tambien "del"; "al" va aparte. En femenino se dice "la", "de la" y "a la".
+    const ajenos = femenino ? ['el {profesional}', 'al {profesional}'] : ['la {profesional}'];
+    for (const ajeno of ajenos) assert.ok(!guion.includes(ajeno), `${giro.clave}: "${ajeno}" no concuerda`);
   }
 });

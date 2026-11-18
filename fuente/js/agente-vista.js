@@ -29,6 +29,9 @@ function pieza(raiz, selector) {
  * @param {HTMLElement} raiz
  */
 export function montarAgente(raiz) {
+  // Si esta pieza llego tan tarde que la pagina ya dejo la seccion escrita como lista, asi se queda: despertarla ahora
+  // moveria de lugar, con la pagina ya en uso, todo lo que hay debajo.
+  if (raiz.hasAttribute('data-lista')) return;
   const menu = pieza(raiz, '.beneficios');
   const beneficios = /** @type {HTMLElement[]} */ ([...raiz.querySelectorAll('[data-beneficio]')]);
   const videos = beneficios.map((beneficio) => pieza(beneficio, '[data-mv]'));
@@ -209,6 +212,5 @@ export function montarAgente(raiz) {
   addEventListener('resize', medir);
   document.fonts?.ready.then(medir);
   // Hasta aqui todo salio bien: el menu queda vivo.
-  raiz.removeAttribute('data-lista');
   raiz.dataset.viva = '';
 }
