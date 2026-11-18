@@ -69,6 +69,20 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
   const preguntas = [];
   /** @type {Record<string, string>} */
   const atributos = {};
+  /** La etiqueta del archivo: dice los oficios y, con "data-escena", las fotos que se adelantan. No es una escena. */
+  const etiqueta = {
+    dataset: { oficios, escena: FOTOS, escenaMide: MIDE },
+    guardada: false,
+    /** @param {string} nombre */
+    getAttribute: (nombre) => (nombre === 'data-escena' ? FOTOS : null),
+    /**
+     * @param {string} nombre
+     * @param {boolean} valor
+     */
+    toggleAttribute(nombre, valor) {
+      if (nombre === 'hidden') this.guardada = valor;
+    },
+  };
   const raiz = {
     classList: {
       add: (/** @type {string[]} */ ...nombres) => {
@@ -119,8 +133,13 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
   const contexto = vm.createContext({
     document: {
       documentElement: raiz,
-      currentScript: oficios === null ? null : { dataset: { oficios, escena: FOTOS, escenaMide: MIDE } },
-      querySelectorAll: (/** @type {string} */ selector) => (selector === '[data-duo], [data-escena]' ? escenas : []),
+      currentScript: oficios === null ? null : etiqueta,
+      // Contesta como el navegador las dos maneras de preguntar por las escenas: si la pregunta no descarta las
+      // etiquetas <script>, la del archivo tambien sale, porque dice "data-escena".
+      querySelectorAll: (/** @type {string} */ selector) => {
+        if (selector === '[data-duo], [data-escena]:not(script)') return escenas;
+        return selector === '[data-duo], [data-escena]' ? [etiqueta, ...escenas] : [];
+      },
       querySelector: () => null,
       addEventListener: escuchar,
       createElement: (/** @type {string} */ etiqueta) => {
@@ -157,6 +176,7 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
     clases,
     datos,
     atributos,
+    etiqueta,
     escenas,
     vigias,
     cabeza,
@@ -265,6 +285,15 @@ test('las escenas del corto se guardan igual que la del cartel: a la vista queda
   }
   pagina.terminarDeLeer();
   assert.deepEqual(aLaVista(pagina.escenas), ['medico', 'medico', 'medico']);
+});
+
+test('la etiqueta del archivo tambien dice "data-escena" (las fotos que se adelantan) y no es una escena: nadie la guarda', () => {
+  const pagina = correr({ azar: 0.5 });
+  pagina.escenas.push(escena('unas', false, 'data-escena'), escena('dentista', true, 'data-escena'));
+  pagina.vigias[0]?.aviso();
+  pagina.terminarDeLeer();
+  assert.equal(pagina.etiqueta.guardada, false, 'la etiqueta quedo con "hidden"');
+  assert.deepEqual(aLaVista(pagina.escenas), ['dentista']);
 });
 
 test('donde el corto corre solo adelanta la foto del oficio elegido, y solo esa', () => {

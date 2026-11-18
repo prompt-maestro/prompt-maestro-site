@@ -927,6 +927,12 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   visibility: hidden;
 }
 
+/* Y si la pieza que mueve el corto tarda en llegar, sus capas (que sin ella no pintan nada) se guardan pronto y se
+   ve el cartel, que ya viene escrito. Cuando la pieza llega, el corto arranca como siempre, encima del cartel. */
+html.con-corto .corto:not([data-viva]) .corto__cine {
+  animation: guarda 1ms 700ms forwards;
+}
+
 /* El acercamiento lento de cada toma, hacia la persona. */
 .foto__vivo {
   position: absolute;
@@ -1760,11 +1766,13 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   left: min(var(--margen), 9vw);
 }
 
-/* Los letreros del corto: pocas palabras, grandes. */
+/* Los letreros del corto: pocas palabras, grandes. Arrancan en la misma linea que el logotipo (en pantallas mas
+   anchas que la pagina, un poco antes, como la conversacion del agente: asi no se arriman a lo que llevan a su
+   derecha). */
 .letrero {
   position: absolute;
   bottom: max(112px, 16.7 * var(--svh));
-  left: var(--margen);
+  left: min(var(--margen), 9vw);
   z-index: 8;
   max-width: 12em;
   font-size: clamp(2.5rem, min(5.1vw, 10 * var(--svh)), 6rem);
@@ -1792,6 +1800,16 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 /* Mientras vibra el celular, el letrero le deja libre la derecha de la pantalla: va en renglones cortos. */
 .letrero[data-letrero="vibra"] {
   max-width: 26vw;
+}
+
+/* En una ventana casi cuadrada el celular acercado ocupa casi todo lo ancho y a su izquierda no cabe nada: ahi el
+   letrero sube, debajo de la barra, y va en renglones largos. */
+@media (max-aspect-ratio: 3 / 2) {
+  .letrero[data-letrero="vibra"] {
+    top: calc(var(--barra-alto) + 4 * var(--svh));
+    bottom: auto;
+    max-width: 60vw;
+  }
 }
 
 /* El del final es el cierre: va en un renglon, encima del nombre de las franjas, y debajo lleva un renglon chico
@@ -1831,6 +1849,16 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 
 .corto__cine:is([data-momento="vibra"], [data-momento="avalancha"], [data-momento="barrido"]) .fantasma {
   opacity: 0.6;
+}
+
+/* agente: en una ventana menos ancha que 16:9 la foto se recorta a lo ancho y, con la camara en medio, la
+   conversacion taparia las manos de quien trabaja. Ahi la camara se corre y lo deja a la derecha: la conversacion cae
+   sobre el fondo fuera de foco. Asi se queda debajo del cierre, que se funde encima. La escena fria y la que destapa
+   el barrido no se corren. */
+@media not all and (min-aspect-ratio: 16 / 9) {
+  .corto__cine:is([data-momento="agente"], [data-momento="todos"]) .escenas--calida .escena {
+    --px: 0.7;
+  }
 }
 
 /* Lo que se enciende hereda si se ve o no: cuando las capas del corto se esconden, nada de adentro queda encima
@@ -1913,9 +1941,14 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
    opacity.
    --------------------------------------------------------------------------------------------------------------- */
 
-/* La camara solo se mueve al bajar al celular: al volver a empezar regresa de golpe, sin que nadie la vea. */
+/* La camara solo se mueve al bajar al celular (al volver a empezar regresa de golpe, sin que nadie la vea) y,
+   despacio, al dejar a quien trabaja a la derecha de la conversacion del agente. */
 .corto__cine[data-momento="vibra"] .escenas--fria .foto {
   transition: transform 1700ms var(--camara);
+}
+
+.corto__cine[data-momento="agente"] .escenas--calida .foto {
+  transition: transform 2000ms var(--camara);
 }
 
 .corto[data-viva]
@@ -2067,6 +2100,12 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 @keyframes aparece {
   from {
     opacity: 0;
+  }
+}
+
+@keyframes guarda {
+  to {
+    visibility: hidden;
   }
 }
 

@@ -22,25 +22,67 @@ async function abrirQuieta(page) {
   return corto;
 }
 
-test('en pausa lo que el agente ya hizo se queda a la vista, quieto: la pausa no lo borra', async ({ page }, info) => {
+test('en pausa lo que el agente ya hizo se queda a la vista, quieto, y lo que falta por entrar se espera: la pausa no borra ni adelanta nada', async ({
+  page,
+}, info) => {
   test.skip(!esAncho(info), 'el corto solo corre en pantallas anchas');
   // Con el corto corriendo el navegador de pruebas va despacio: se le da su tiempo.
   test.slow();
   const corto = await abrirCortoDetenido(page);
   await hastaElCuadro(page, corto, 'agente');
-  // La conversacion del oficio que toco: la unica a la vista.
-  const renglones = corto.locator('[data-escena]:not([hidden]) .escena__sobre--hecho .trato > *');
+  // La conversacion del oficio que toco: la unica a la vista. Sus renglones y, sobre el papel, el sello.
+  const hecho = corto.locator('[data-escena]:not([hidden]) .escena__sobre--hecho');
+  const renglones = hecho.locator('.trato > *');
+  const sello = hecho.locator('.sello');
   expect(await renglones.count()).toBeGreaterThan(4);
-  // Entran uno tras otro: se espera a que esten todos.
-  for (const renglon of await renglones.all()) await expect(renglon).toHaveCSS('opacity', '1', { timeout: 20_000 });
-  await corto.getByRole('button', { name: 'Pausar el video' }).click();
+  const pausa = corto.getByRole('button', { name: 'Pausar el video' });
+  /**
+   * Como va cada pieza de la conversacion (sus renglones y, al final, el sello): si ya termino de entrar, si lo que
+   * le falta esta detenido, por donde va su entrada y cuanto se ve. Las entradas corren con el reloj de verdad del
+   * navegador, no con el de la prueba: por eso aqui no se adivina cuando cae cada una, se le pregunta.
+   */
+  const piezas = () =>
+    hecho.evaluate(async (el) => {
+      const todas = [...el.querySelectorAll('.trato > *, .sello')];
+      // Una pausa (o una reanudacion) no queda firme sino hasta el cuadro que sigue: se espera a que cada entrada
+      // este al dia antes de preguntarle por donde va.
+      const alDia = todas.flatMap((pieza) => pieza.getAnimations().map((una) => una.ready.catch(() => undefined)));
+      await Promise.all(alDia);
+      return todas.map((pieza) => {
+        const entradas = pieza.getAnimations();
+        return {
+          entro: entradas.every((una) => una.playState === 'finished'),
+          quieta: entradas.every((una) => ['finished', 'paused'].includes(una.playState)),
+          va: entradas.map((una) => Number(una.currentTime)),
+          seVe: getComputedStyle(pieza).opacity,
+        };
+      });
+    });
+
+  // Primera pausa, en cuanto empieza el momento: al sello, que es lo ultimo, le faltan casi cinco segundos para caer.
+  await pausa.click();
   await expect(corto).toHaveAttribute('data-pausada', '');
-  // Cada renglon sigue puesto y a la vista: en pausa nada se queda a medio entrar ni se borra.
+  const alPausar = await piezas();
+  expect(alPausar.at(-1)).toMatchObject({ entro: false, seVe: '0' });
+  for (const pieza of alPausar) expect(pieza.quieta).toBe(true);
+  // Pasa el tiempo y nada avanzo: lo que faltaba por entrar sigue esperando justo donde iba.
+  await page.waitForTimeout(1500);
+  expect(await piezas()).toEqual(alPausar);
+  await expect(sello).toHaveCSS('opacity', '0');
+
+  // Al reanudar entran todas, una tras otra: se espera a que termine la ultima, que es el sello. (Antes la prueba
+  // pausaba en cuanto veia los renglones, y si la pausa caia antes que el sello, lo dejaba, con razon, sin caer.)
+  await pausa.click();
+  await expect(corto).not.toHaveAttribute('data-pausada', /.*/);
+  await expect.poll(async () => (await piezas()).every((pieza) => pieza.entro), { timeout: 20_000 }).toBe(true);
+
+  // Segunda pausa, con todo ya puesto: cada renglon y el sello siguen a la vista, completos. La pausa no los borra.
+  await pausa.click();
+  await expect(corto).toHaveAttribute('data-pausada', '');
   for (const renglon of await renglones.all()) {
     await expect(renglon).toBeVisible();
     await expect(renglon).toHaveCSS('opacity', '1');
   }
-  const sello = corto.locator('[data-escena]:not([hidden]) .escena__sobre--hecho .sello');
   await expect(sello).toBeVisible();
   await expect(sello).toHaveCSS('opacity', '1');
 });

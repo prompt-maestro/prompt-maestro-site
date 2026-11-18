@@ -22,8 +22,8 @@ const MEDIDAS = /** @type {const} */ ({
 });
 /** Peso maximo de lo que viaja, en KB. */
 // Se mide como celular, y en celular el corto no corre: del inicio viaja el cartel con los retratos de sus oficios
-// (chicos: se ve uno, al azar). Los videos del corto (unos 255 KB entre los tres) solo se piden en pantallas anchas,
-// cuando la pagina ya se ve.
+// (chicos: se ve uno, al azar). Del corto se pide un solo video por visita (de 307 a 384 KB, segun el oficio), solo en
+// pantallas anchas y despues del primer pintado.
 const PESOS = /** @type {const} */ ({ script: 60, stylesheet: 30, font: 120, total: 650 });
 
 const servidor = spawn(process.execPath, ['herramientas/servir.mjs', '--puerto', String(PUERTO)], {

@@ -157,7 +157,7 @@ export function montarCorto(raiz) {
   /** Los videos que ya terminaron su pasada y esperan, fundiendose con su foto, para volver a empezar. */
   /** @type {Map<HTMLVideoElement, ReturnType<typeof setTimeout>>} */
   const relevos = new Map();
-  /** Los oficios cuya foto ya se pidio por adelantado, para verlos de nuevo sin esperarla. */
+  /** Los oficios cuya foto ya se pidio (por adelantado, o porque su escena ya corrio): ninguna se pide dos veces. */
   /** @type {Set<string>} */
   const adelantados = new Set();
   const calidoDesde = guion.findIndex((momento) => momento.clave === BARRIDO);
@@ -180,6 +180,8 @@ export function montarCorto(raiz) {
   let preparado = false;
   /** Si ya se puede ir por el video: despues de lo que se ve al abrir, y nunca con ahorro de datos. */
   let conVideos = false;
+  /** Si el foco lo esta poniendo el codigo (al terminar): ese no cuenta como acercarse a un boton. */
+  let porCodigo = false;
 
   function preparar() {
     if (preparado) return;
@@ -198,6 +200,8 @@ export function montarCorto(raiz) {
   /** Deja a la vista las escenas del oficio que toca y guarda las demas: ni se pintan ni se piden sus fotos. */
   function ponerOficio() {
     cine.dataset.oficio = oficio;
+    // Su foto ya viene en camino (la adelanto arranque.js, o se pide ahora, al pintarla): no se adelanta despues.
+    adelantados.add(oficio);
     for (const escena of [...frias, ...calidas]) escena.hidden = escena.dataset.escena !== oficio;
   }
 
@@ -208,7 +212,7 @@ export function montarCorto(raiz) {
    */
   function adelantar(clave) {
     const fuente = frias.find((escena) => escena.dataset.escena === clave)?.querySelector('source[srcset]');
-    if (!fuente || clave === oficio || adelantados.has(clave)) return;
+    if (!fuente || adelantados.has(clave)) return;
     adelantados.add(clave);
     const adelanto = document.createElement('link');
     adelanto.setAttribute('rel', 'preload');
@@ -396,7 +400,11 @@ export function montarCorto(raiz) {
     // existe (la ventana dejo de ser ancha), al primer enlace del cartel.
     if (control.contains(document.activeElement)) {
       const destino = ver.offsetParent ? ver : cartel.querySelector('a');
-      if (destino instanceof HTMLElement) destino.focus({ preventScroll: true });
+      if (destino instanceof HTMLElement) {
+        porCodigo = true;
+        destino.focus({ preventScroll: true });
+        porCodigo = false;
+      }
     }
   }
 
@@ -424,9 +432,10 @@ export function montarCorto(raiz) {
   });
 
   // En cuanto se acerca a ese boton (con el puntero o con el teclado), la foto del oficio que sigue se va pidiendo.
+  // El foco que le pasa el codigo al terminar no cuenta: nadie se acerco.
   for (const aviso of ['pointerenter', 'focus']) {
     ver.addEventListener(aviso, () => {
-      if (yaCorrio && cabe()) adelantar(siguienteOficio(oficios, oficio));
+      if (yaCorrio && !porCodigo && cabe()) adelantar(siguienteOficio(oficios, oficio));
     });
   }
 

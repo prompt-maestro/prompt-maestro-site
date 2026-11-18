@@ -50,6 +50,11 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   cerrar, todos los oficios en pantalla dividida, cada uno con el negocio de su agente. El oficio es el mismo que
   eligió el azar para el cartel; «Ver de nuevo» corre el que sigue en la lista. La página trae escrita una escena por
   oficio y solo se pinta la que toca: de las demás no se pide ni la foto.
+- El corto se acomoda a la ventana, solo con estilos. En una menos ancha que 16:9 la foto de la escena se recorta a
+  lo ancho: cuando llega lo que hizo su agente, la cámara se corre despacio y deja a quien trabaja a la derecha, así
+  la conversación cae sobre el fondo y no sobre sus manos. En una casi cuadrada (3 por 2 o menos) el celular acercado
+  ocupa casi todo lo ancho, y el letrero de ese momento sube, debajo de la barra. Y si la pieza que mueve el corto
+  tarda en llegar, sus capas se guardan solas a los 700 ms y se ve el cartel; cuando llega, el corto arranca encima.
 - En pantallas anchas lo más grande es la foto de esa escena: `arranque.js` la adelanta (solo la del oficio elegido)
   y el video, uno solo, se pide cuando la página ya se pintó. Con ahorro de datos o con una conexión lenta el corto
   no corre solo ni se pide nada suyo: queda el cartel con su botón «Ver el video».
@@ -86,8 +91,10 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   (ancho y alto); `celular`, el celular de la mesa (desde dónde empieza y cuánto mide: x, y, ancho y alto): a él baja
   la cámara, de él salen el aviso y el celular de la avalancha; y `viva`, la zona donde va la toma viva (x, y, ancho
   y alto): el video se recorta a esa zona, que es donde algo se mueve, y la página lo funde con la foto en sus
-  orillas, así que debe terminar arriba del celular. `dePie` es el punto al que mira la cámara en la foto de pie, la
-  de la pantalla dividida del cierre. Si se cambia una foto, estos puntos se vuelven a medir mirándola.
+  orillas, así que debe terminar arriba del celular. `manos` es el punto de sus manos, la que queda más cerca de la
+  conversación de su agente: la página no lo usa, lo usan las pruebas para cuidar que esa conversación nunca las
+  tape. `dePie` es el punto al que mira la cámara en la foto de pie, la de la pantalla dividida del cierre. Si se
+  cambia una foto, estos puntos se vuelven a medir mirándola.
 - Las tarjetas de «Para quién» salen de `fuente/datos/giros.json` (`tarjeta`: el nombre, su renglón y el texto que
   describe la foto), una por oficio. Su retrato es `originales/retratos/<oficio>-retrato.png` (cuatro de ancho por
   cinco de alto); `node herramientas/optimizar.mjs retratos` lo publica entero, sin recorte, en tres anchos y dos

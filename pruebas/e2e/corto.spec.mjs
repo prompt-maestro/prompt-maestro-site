@@ -13,6 +13,7 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  * @typedef {object} Oficio
  * @property {string} clave
  * @property {string} nombre
+ * @property {{ persona: string, manos: string, celular: string }} mira
  * @property {{ base: number, tope: number }} cuenta
  * @property {{ quien: string }[]} llegan
  * @property {{ quien: string, texto: string, responde: string, fuente: string, pago: string, hizo: string, agenda: string, foto: boolean }} trato
@@ -135,6 +136,68 @@ async function asentado(elemento) {
     .toBe(true);
 }
 
+/**
+ * Donde cae en la pantalla algo de la foto de una escena, ya con su camara y su acercamiento: un punto ("64 44") o
+ * una zona ("52 81 31 14"), en por ciento de la foto, como viajan en los datos. De un punto sale una caja sin medida.
+ * @param {import('@playwright/test').Locator} escena
+ * @param {string} donde
+ */
+function enPantalla(escena, donde) {
+  return escena.evaluate((el, texto) => {
+    const foto = el.querySelector('.foto__vivo')?.getBoundingClientRect();
+    if (!foto) throw new Error('la escena no trae su foto');
+    const [x = 0, y = 0, ancho = 0, alto = 0] = texto.split(' ').map((uno) => Number(uno) / 100);
+    return {
+      izquierda: foto.left + x * foto.width,
+      arriba: foto.top + y * foto.height,
+      derecha: foto.left + (x + ancho) * foto.width,
+      abajo: foto.top + (y + alto) * foto.height,
+    };
+  }, donde);
+}
+
+/**
+ * Espera a que la camara de una escena termine de moverse: su foto se corre con una transicion.
+ * @param {import('@playwright/test').Locator} escena
+ */
+async function camaraQuieta(escena) {
+  await expect
+    .poll(
+      () =>
+        escena.locator('.foto').evaluate((foto) => {
+          // Leer su lugar obliga al navegador a ponerse al dia: si la camara tiene que moverse, aqui ya empezo.
+          void getComputedStyle(foto).transform;
+          return foto.getAnimations().every((una) => una.playState === 'finished');
+        }),
+      { timeout: 20_000 },
+    )
+    .toBe(true);
+}
+
+/**
+ * El aire entre dos cajas: lo que las separa a lo ancho o a lo alto (lo que sea mas). Negativo si se enciman.
+ * @param {{ izquierda: number, arriba: number, derecha: number, abajo: number }} una
+ * @param {{ izquierda: number, arriba: number, derecha: number, abajo: number }} otra
+ */
+const aire = (una, otra) =>
+  Math.max(
+    otra.izquierda - una.derecha,
+    una.izquierda - otra.derecha,
+    otra.arriba - una.abajo,
+    una.arriba - otra.abajo,
+  );
+
+/**
+ * Los oficios cuya foto de escena la pagina pidio por adelantado (cada uno, un <link rel="preload"> en su <head>).
+ * @param {import('@playwright/test').Page} page
+ */
+const adelantadas = (page) =>
+  page.evaluate(() =>
+    [...document.head.querySelectorAll('link[rel="preload"][as="image"]')].map(
+      (adelanto) => /([a-z]+)-escena-/.exec(adelanto.getAttribute('imagesrcset') ?? '')?.[1] ?? '',
+    ),
+  );
+
 // ---------------------------------------------------------------------------------------------------------------
 // El cartel: en todos los tamanos.
 // ---------------------------------------------------------------------------------------------------------------
@@ -147,6 +210,11 @@ test('el cartel trae el titulo, la frase, el boton al alta, el enlace a la demos
   // Con menos movimiento el cartel se ve de entrada en cualquier pantalla.
   const corto = await abrirCortoDetenido(page, { quieta: true });
   await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+  // La etiqueta de arranque.js dice sus fotos con el mismo dato que las escenas ("data-escena"), y no es una: al
+  // guardar las escenas de los demas oficios, a ella nadie la toca.
+  const etiqueta = page.locator('script[data-oficios]');
+  await expect(etiqueta).toHaveAttribute('data-escena', /-escena-/);
+  await expect(etiqueta).not.toHaveAttribute('hidden', /.*/);
   const titulo = corto.getByRole('heading', { level: 1 });
   await expect(titulo).toHaveText('Despreocúpate');
   await expect(titulo).toBeInViewport({ ratio: 1 });
@@ -808,6 +876,10 @@ test.describe('el corto, en pantallas anchas', () => {
       await queLeToque(page, lugar);
       await page.setViewportSize({ width: ancho, height: alto });
       const corto = await abrirCortoDetenido(page);
+      // Debajo de la marca la camara ya mira a quien trabaja: se anota donde lo deja, para compararlo despues.
+      await hastaElCuadro(page, corto, 'marca');
+      const calida = corto.locator('[data-escenas="calida"] [data-escena]').filter({ visible: true });
+      const enLaMarca = (await enPantalla(calida, oficio.mira.persona)).izquierda;
       await hastaElCuadro(page, corto, 'agente');
       // Una sola conversacion a la vista: la de ese oficio.
       const trato = corto.locator('.trato').filter({ visible: true });
@@ -862,6 +934,7 @@ test.describe('el corto, en pantallas anchas', () => {
         expect(suSello.izquierda >= suCaja.derecha - 8 || suSello.arriba >= suCaja.abajo - 8).toBe(true);
       }
       // La conversacion va a la izquierda de quien trabaja: no le tapa la cara.
+      await camaraQuieta(calida);
       const persona = await corto
         .locator('[data-escenas="calida"] [data-escena]')
         .filter({ visible: true })
@@ -872,6 +945,10 @@ test.describe('el corto, en pantallas anchas', () => {
         });
       expect(persona).toBeGreaterThan(0);
       expect((await caja(trato)).derecha).toBeLessThan(persona);
+      // En una ventana de 16:9 o mas ancha la camara se queda donde estaba debajo de la marca. En una menos ancha la
+      // foto se recorta a lo ancho, y la camara se corrio para dejarlo mas a la derecha, lejos de la conversacion.
+      if (ancho * 9 >= alto * 16) expect(Math.abs(persona - enLaMarca)).toBeLessThanOrEqual(1);
+      else expect(persona).toBeGreaterThan(enLaMarca + 20);
       // De donde salio la respuesta: en una ventana comoda se lee, pegado debajo de ella; en una bajita se guarda.
       const fuente = trato.locator('.trato__fuente');
       await expect(fuente).toHaveText(oficio.trato.fuente);
@@ -957,6 +1034,141 @@ test.describe('el corto, en pantallas anchas', () => {
       expect(await desborde(page)).toBeLessThanOrEqual(0);
     });
   }
+
+  // En una ventana menos ancha que 16:9 la foto se recorta a lo ancho: un iPad acostado y una ventana comun de
+  // computadora, con cada oficio.
+  const RECORTADAS = /** @type {[number, number][]} */ ([
+    [1024, 704],
+    [1280, 900],
+  ]);
+
+  for (const [lugar, oficio] of CORTO.oficios.entries()) {
+    test(`en una ventana menos ancha que 16:9, la camara deja a quien trabaja a la derecha y la conversacion del agente de ${oficio.nombre} no le tapa las manos ni la cara`, async ({
+      page,
+    }) => {
+      // Con el corto corriendo el navegador de pruebas va despacio: se le da su tiempo.
+      test.slow();
+      await queLeToque(page, lugar);
+      const [primera = [1024, 704]] = RECORTADAS;
+      await page.setViewportSize({ width: primera[0], height: primera[1] });
+      const corto = await abrirCortoDetenido(page);
+      await hastaElCuadro(page, corto, 'agente');
+      const escena = corto.locator('[data-escenas="calida"] [data-escena]').filter({ visible: true });
+      await expect(escena).toHaveAttribute('data-escena', oficio.clave);
+      // Las piezas de la conversacion: el mensaje, lo que contesto (y de donde lo saco), el pago, el papel y su sello.
+      const trato = escena.locator('.trato');
+      const piezas = trato.locator('.dice, .trato__fuente, .pago, .hizo, .sello').filter({ visible: true });
+      for (const pieza of await piezas.all()) await expect(pieza).toHaveCSS('opacity', '1', { timeout: 20_000 });
+      for (const [ancho, alto] of RECORTADAS) {
+        const dice = `a ${ancho} por ${alto}`;
+        await page.setViewportSize({ width: ancho, height: alto });
+        await camaraQuieta(escena);
+        await asentado(trato);
+        // La camara lo dejo a la derecha: su punto cae por ahi del 70 % de lo ancho.
+        const persona = (await enPantalla(escena, oficio.mira.persona)).izquierda;
+        expect(persona / ancho, dice).toBeGreaterThan(0.68);
+        expect(persona / ancho, dice).toBeLessThan(0.72);
+        // Y la conversacion entera queda a su izquierda, sobre el fondo: ninguna pieza llega a sus manos ni a su cara.
+        const manos = (await enPantalla(escena, oficio.mira.manos)).izquierda;
+        expect(await piezas.count(), dice).toBeGreaterThanOrEqual(5);
+        for (const pieza of await piezas.all()) {
+          expect((await caja(pieza)).derecha + 16, dice).toBeLessThan(Math.min(manos, persona));
+        }
+        expect(await desborde(page), dice).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+
+  // De una ventana cuadrada a una mas ancha que la pagina, pasando por la laptop del dueño y la pantalla mas comun.
+  const AL_VIBRAR = /** @type {[number, number][]} */ ([
+    [900, 900],
+    [1024, 768],
+    [1536, 695],
+    [1920, 1080],
+    [2560, 1440],
+  ]);
+
+  for (const [lugar, oficio] of CORTO.oficios.entries()) {
+    test(`mientras vibra el celular de ${oficio.nombre}, el letrero no se encima con el ni con el aviso que llega, de una ventana cuadrada a una muy ancha`, async ({
+      page,
+    }) => {
+      // Con el corto corriendo el navegador de pruebas va despacio, y aqui la ventana llega a ser muy grande.
+      test.slow();
+      await queLeToque(page, lugar);
+      const [primera = [900, 900]] = AL_VIBRAR;
+      await page.setViewportSize({ width: primera[0], height: primera[1] });
+      const corto = await abrirCortoDetenido(page);
+      await hastaElCuadro(page, corto, 'vibra');
+      const escena = corto.locator('[data-escenas="fria"] [data-escena]').filter({ visible: true });
+      await expect(escena).toHaveAttribute('data-escena', oficio.clave);
+      const letrero = corto.locator('.letrero[data-activo]');
+      await expect(letrero).toHaveText(CORTO.guion.find((momento) => momento.clave === 'vibra')?.letrero ?? '');
+      const aviso = escena.locator('.escena__sobre--llega .aviso');
+      await expect(aviso).toHaveCSS('opacity', '1', { timeout: 20_000 });
+      for (const [ancho, alto] of AL_VIBRAR) {
+        const dice = `a ${ancho} por ${alto}`;
+        await page.setViewportSize({ width: ancho, height: alto });
+        await camaraQuieta(escena);
+        await asentado(letrero);
+        await asentado(aviso);
+        const suLetrero = await caja(letrero);
+        // El celular de la mesa, donde quedo en la pantalla con la camara ya acercada.
+        const celular = await enPantalla(escena, oficio.mira.celular);
+        expect(celular.derecha - celular.izquierda, dice).toBeGreaterThan(ancho / 4);
+        // Entre el letrero y el celular queda aire, y entre el letrero y el aviso tambien.
+        expect(aire(suLetrero, celular), dice).toBeGreaterThanOrEqual(16);
+        expect(aire(suLetrero, await caja(aviso)), dice).toBeGreaterThanOrEqual(16);
+        // Y el letrero cabe entero: debajo de la barra, encima de los controles y sin salirse a lo ancho.
+        expect(suLetrero.arriba, dice).toBeGreaterThanOrEqual((await caja(page.locator('.barra'))).abajo);
+        expect(suLetrero.abajo, dice).toBeLessThanOrEqual((await caja(corto.locator('.control__linea'))).arriba);
+        expect(suLetrero.izquierda, dice).toBeGreaterThanOrEqual(0);
+        expect(suLetrero.derecha, dice).toBeLessThanOrEqual(ancho);
+        expect(await desborde(page), dice).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+
+  test('si la pieza del corto tarda en llegar, a poco se ve el cartel; cuando llega, el corto corre desde su primer momento', async ({
+    page,
+  }) => {
+    // Sin el reloj de Playwright: aqui importan los tiempos de verdad del navegador. La pieza se detiene hasta que la
+    // prueba ya vio el cartel (y no un tiempo fijo): asi no depende de lo rapido que vaya la maquina.
+    let soltar = () => {};
+    /** @type {Promise<void>} */
+    const detenida = new Promise((listo) => {
+      soltar = listo;
+    });
+    await page.route('**/js/corto-vista.js', async (ruta) => {
+      await detenida;
+      await ruta.continue();
+    });
+    await page.goto('./', { waitUntil: 'domcontentloaded' });
+    const corto = page.locator('[data-corto]');
+    const cine = corto.locator('[data-corto-cine]');
+    const titulo = corto.getByRole('heading', { level: 1 });
+    // Sin la pieza, las capas del corto no pintan nada: a los 700 ms se guardan solas (lo dicen los estilos)...
+    const guarda = await cine.evaluate((el) => {
+      const { animationName, animationDelay, animationFillMode } = getComputedStyle(el);
+      return { animationName, animationDelay, animationFillMode };
+    });
+    expect(guarda).toEqual({ animationName: 'guarda', animationDelay: '0.7s', animationFillMode: 'forwards' });
+    // ...y se ve el cartel, que ya viene escrito y ya se puede tocar.
+    await expect(cine).toBeHidden();
+    await expect(corto).not.toHaveAttribute('data-viva', /.*/);
+    await expect(titulo).toBeInViewport({ ratio: 1 });
+    expect(await encimaDe(titulo)).toBe('cartel');
+    await corto.getByRole('link', { name: 'Empieza ahora' }).click({ trial: true });
+    // Llega la pieza: el corto arranca como siempre, encima del cartel y desde su primer momento.
+    soltar();
+    await expect(corto).toHaveAttribute('data-viva', '');
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
+    await expect(cine).toBeVisible();
+    expect(await encimaDe(titulo)).toBe('corto');
+    await expect(corto.locator('.letrero[data-activo]')).toHaveText(CORTO.guion[0]?.letrero ?? '');
+    await expect(corto.getByRole('button', { name: 'Saltar' })).toBeVisible();
+    // Y de ahi camina solo.
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[1] ?? '', { timeout: 15_000 });
+  });
 
   for (const [nombre, conexion, conVideo] of /** @type {[string, object, boolean][]} */ ([
     ['con ahorro de datos', { saveData: true }, false],
@@ -1097,10 +1309,25 @@ test.describe('el corto, en pantallas anchas', () => {
     const verDeNuevo = corto.getByRole('button', { name: 'Ver de nuevo' });
     await expect(verDeNuevo).toBeFocused();
     await expect(verDeNuevo).toBeInViewport({ ratio: 1 });
+    // Ese foco lo puso el codigo y nadie se acerco al boton: la foto del oficio que sigue no se adelanta. La unica
+    // adelantada es la del oficio de la visita, que pidio arranque.js.
+    const actual = (await page.locator('html').getAttribute('data-oficio')) ?? '';
+    const lugar = CORTO.oficios.findIndex((oficio) => oficio.clave === actual);
+    const sigue = CORTO.oficios[(lugar + 1) % CORTO.oficios.length]?.clave ?? '';
+    expect(lugar).toBeGreaterThanOrEqual(0);
+    expect(await adelantadas(page)).toEqual([actual]);
     // Y el cartel ya se puede tocar, sin esperar a que el corto termine de fundirse.
     const empieza = corto.getByRole('link', { name: 'Empieza ahora' });
     await expect(empieza).toBeVisible();
     await empieza.click({ trial: true });
+    // El foco que llega por el teclado si cuenta como acercarse: sale del boton, regresa, y la foto del que sigue se
+    // va pidiendo.
+    await page.keyboard.press('Shift+Tab');
+    await expect(verDeNuevo).not.toBeFocused();
+    expect(await adelantadas(page)).toEqual([actual]);
+    await page.keyboard.press('Tab');
+    await expect(verDeNuevo).toBeFocused();
+    expect(await adelantadas(page)).toEqual([actual, sigue]);
     // Con el reloj andando, el cartel se queda: el corto no vuelve solo.
     await page.clock.runFor(20_000);
     await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
@@ -1155,14 +1382,31 @@ test.describe('el corto, en pantallas anchas', () => {
     const aLaVista = corto.locator('[data-escena]').filter({ visible: true });
     await expect(aLaVista).toHaveAttribute('data-escena', CORTO.oficios[empieza]?.clave ?? '');
     await hastaElCuadro(page, corto, MOMENTOS[2] ?? '');
+    const saltar = corto.getByRole('button', { name: 'Saltar' });
     const verDeNuevo = corto.getByRole('button', { name: 'Ver de nuevo' });
+    // De entrada la unica foto adelantada es la del oficio de la visita: la pidio arranque.js.
+    const vistos = [CORTO.oficios[empieza]?.clave ?? ''];
+    expect(await adelantadas(page)).toEqual(vistos);
     // Quien lo repite ve otra profesion cada vez; despues de verlas todas, vuelve la primera.
     for (let vez = 1; vez <= CORTO.oficios.length; vez++) {
       const toca = CORTO.oficios[(empieza + vez) % CORTO.oficios.length]?.clave ?? '';
-      await corto.getByRole('button', { name: 'Saltar' }).click();
-      // En cuanto se acerca al boton, la foto del que sigue se va pidiendo: al correr, ya viene en camino.
+      // "Saltar", con un clic y con el foco en el (un clic no siempre lo deja ahi). Va en una orilla del boton: asi
+      // el puntero no queda donde enseguida aparece "Ver de nuevo", que ocupa casi el mismo lugar.
+      await saltar.focus();
+      await saltar.click({ position: { x: 6, y: 6 } });
+      await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+      // El codigo le paso el foco a "Ver de nuevo", y ese foco no adelanta nada: nadie se ha acercado al boton.
+      await expect(verDeNuevo).toBeFocused();
+      expect(await adelantadas(page)).toEqual(vistos);
+      const pedidas = fotos.filter((foto) => foto.startsWith(`${toca}-escena-`)).length;
+      expect(pedidas > 0).toBe(vistos.includes(toca));
+      // En cuanto el puntero se acerca al boton, la foto del que sigue se va pidiendo: al correr, ya viene en camino.
+      // La del que ya corrio no se pide otra vez: al dar la vuelta no hay un segundo adelanto de la misma foto.
       await verDeNuevo.hover();
+      if (!vistos.includes(toca)) vistos.push(toca);
+      expect(await adelantadas(page)).toEqual(vistos);
       await expect.poll(() => fotos.some((foto) => foto.startsWith(`${toca}-escena-`))).toBe(true);
+      if (pedidas > 0) expect(fotos.filter((foto) => foto.startsWith(`${toca}-escena-`))).toHaveLength(pedidas);
       await verDeNuevo.click();
       await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
       await expect(cine).toBeVisible();

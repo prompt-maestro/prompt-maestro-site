@@ -84,9 +84,9 @@
       "clave": "unas",
       "nombre": "Uñas",
       "video": true,
-      "tarjeta": "Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta.",
       "mira": {
         "persona": "64 44",
+        "manos": "65 61",
         "celular": "52 81 31 14",
         "viva": "41 6 47 74",
         "dePie": "50 30"
@@ -161,11 +161,11 @@
         "texto": "¿Cuánto por este diseño?",
         "voz": "",
         "foto": true,
-        "responde": "Ese diseño cuesta $420. ¿Te lo aparto el sábado a las 11:00 am?",
+        "responde": "Ese diseño cuesta $420. ¿Te lo aparto el viernes a las 5:00 pm?",
         "fuente": "Precio de tu catálogo",
         "pago": "$150 · Mercado Pago",
         "hizo": "Vio la foto, cotizó y cobró $150 de anticipo.",
-        "agenda": "En tu calendario: sábado, 11:00 am"
+        "agenda": "En tu calendario: viernes, 5:00 pm"
       },
       "cartel": {
         "tarjeta": "cartel/unas-vida-tarjeta",
@@ -195,9 +195,9 @@
       "clave": "dentista",
       "nombre": "Dentista",
       "video": true,
-      "tarjeta": "Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.",
       "mira": {
         "persona": "58 45",
+        "manos": "48 63",
         "celular": "44 79.5 43 15",
         "viva": "35 0 60 81",
         "dePie": "50 41"
@@ -322,12 +322,12 @@
       "clave": "medico",
       "nombre": "Médico",
       "video": true,
-      "tarjeta": "Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.",
       "mira": {
         "persona": "66 36",
+        "manos": "55 57",
         "celular": "49 82 33 14",
         "viva": "42 0 58 82",
-        "dePie": "50 43"
+        "dePie": "72 33"
       },
       "cuenta": {
         "base": 9,

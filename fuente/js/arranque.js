@@ -25,7 +25,8 @@ const elegido = oficios[Math.floor(Math.random() * oficios.length)];
 if (elegido) {
   raiz.dataset.oficio = elegido;
   const acomodar = () => {
-    for (const escena of document.querySelectorAll('[data-duo], [data-escena]')) {
+    // La etiqueta de este archivo tambien dice "data-escena" (las fotos que se adelantan): esa no es una escena.
+    for (const escena of document.querySelectorAll('[data-duo], [data-escena]:not(script)')) {
       const suyo = escena.getAttribute('data-duo') ?? escena.getAttribute('data-escena');
       escena.toggleAttribute('hidden', suyo !== elegido);
     }

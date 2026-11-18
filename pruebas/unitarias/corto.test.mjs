@@ -317,6 +317,13 @@ test('cada oficio trae lo suyo completo: a donde mira la camara, su cuenta, sus 
       persona.x > viva.x && persona.x < viva.x + viva.ancho && persona.y > viva.y && persona.y < viva.y + viva.alto,
       `${oficio.clave}: quien trabaja queda fuera de la toma viva`,
     );
+    // Sus manos tambien: son lo que se mueve en la toma viva, y lo que la conversacion del agente nunca debe tapar
+    // (lo cuidan las pruebas de navegador).
+    const manos = punto(oficio.mira.manos) ?? { x: -1, y: -1 };
+    assert.ok(
+      manos.x > viva.x && manos.x < viva.x + viva.ancho && manos.y > viva.y && manos.y < viva.y + viva.alto,
+      `${oficio.clave}: sus manos quedan fuera de la toma viva`,
+    );
     // Y su foto de pie, la de la pantalla dividida del cierre.
     assert.ok(punto(oficio.mira.dePie), `${oficio.clave}: a donde mira la camara en su foto de pie`);
     assert.ok(oficio.llegan.length >= 1, `${oficio.clave}: el aviso que llega`);
@@ -363,7 +370,42 @@ test('cada oficio trae lo suyo completo: a donde mira la camara, su cuenta, sus 
     assert.ok(cartel.tarjeta, `${oficio.clave}: la foto de su tarjeta`);
     assert.ok(cartel.alt && cartel.cuando && cartel.quien, `${oficio.clave}: el cartel`);
     assert.ok(cartel.encuadre >= 0 && cartel.encuadre <= 100, `${oficio.clave}: encuadre`);
-    assert.ok(oficio.tarjeta, `${oficio.clave}: el texto de "para quien"`);
+  }
+});
+
+test('la cita que agenda el agente en el corto no es la de su cartel: nunca dos citas el mismo dia y a la misma hora', () => {
+  const SEMANA = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+  // Que dia es hoy lo dice la pantalla del celular del corto: con eso se entienden "hoy" y "mañana".
+  const hoy = SEMANA.indexOf(corto.pantalla.dia.split(',')[0]);
+  assert.ok(hoy >= 0, 'la pantalla del celular dice que dia es');
+  const relativos = new Map([
+    ['hoy', hoy],
+    ['mañana', (hoy + 1) % SEMANA.length],
+  ]);
+  /**
+   * El dia (su lugar en la semana) y la hora de una cita, como la dice el corto ("viernes, 5:00 pm", "hoy, 5:30 pm")
+   * o el cartel ("Sábado · 11:00 am").
+   * @param {string} texto
+   */
+  const cita = (texto) => {
+    const [, dia = '', hora = ''] = /^(\p{L}+) ?[,·] (\d{1,2}:\d{2} [ap]m)$/u.exec(texto.toLowerCase()) ?? [];
+    return { dia: relativos.get(dia) ?? SEMANA.indexOf(dia), hora };
+  };
+  // La cuenta distingue dos citas que no chocan y reconoce la misma dicha de dos maneras.
+  assert.notDeepEqual(cita('viernes, 5:00 pm'), cita('Sábado · 11:00 am'));
+  assert.deepEqual(cita('sábado, 11:00 am'), cita('Sábado · 11:00 am'));
+  assert.deepEqual(cita('mañana, 10:00 am'), cita(`${SEMANA[(hoy + 1) % SEMANA.length]} · 10:00 am`));
+  for (const oficio of corto.oficios) {
+    const delCorto = cita(oficio.trato.agenda.replace('En tu calendario: ', ''));
+    const delCartel = cita(oficio.cartel.cuando);
+    for (const una of [delCorto, delCartel]) {
+      assert.ok(una.dia >= 0 && una.hora, `${oficio.clave}: a una de sus citas no se le entiende el dia o la hora`);
+    }
+    assert.notDeepEqual(
+      delCorto,
+      delCartel,
+      `${oficio.clave}: el corto agenda "${oficio.trato.agenda}" y su cartel ya tiene una cita el "${oficio.cartel.cuando}"`,
+    );
   }
 });
 
@@ -431,6 +473,54 @@ function pistasDe(archivo) {
   }
   return { tipos, ancho, alto };
 }
+
+/**
+ * Lo que dura un video MP4, en milisegundos. Lo dice su caja "mvhd": la escala del tiempo y, en esa escala, cuanto
+ * dura. Cero si no se le encuentra.
+ * @param {Buffer} archivo
+ */
+function duraElVideo(archivo) {
+  const i = archivo.indexOf('mvhd', 0, 'latin1');
+  if (i < 0) return 0;
+  // La version 1 de la caja guarda sus fechas y su duracion en 64 bits; la 0, en 32.
+  const larga = archivo.readUInt8(i + 4) === 1;
+  const escala = archivo.readUInt32BE(i + (larga ? 24 : 16));
+  const dura = larga ? Number(archivo.readBigUInt64BE(i + 28)) : archivo.readUInt32BE(i + 20);
+  return escala > 0 ? (dura / escala) * 1000 : 0;
+}
+
+test('con lo que de verdad dura cada toma viva, su unico relevo con luz calida cae mientras la marca la tapa: nunca a media conversacion del agente', async () => {
+  const vista = await readFile(path.join(FUENTE, 'js', 'corto-vista.js'), 'utf8');
+  const estilos = await readFile(path.join(FUENTE, 'estilos', 'corto.css'), 'utf8');
+  // Lo que tarda la toma en fundirse con su foto y el aire que deja antes de la conversacion lo dice el codigo de la
+  // pagina; lo que tarda el cierre en tapar la escena (su fundido), los estilos.
+  const fundido = Number(/const FUNDIDO_DEL_VIDEO = (\d+);/.exec(vista)?.[1]);
+  const aire = Number(/const AIRE_DEL_RELEVO = (\d+);/.exec(vista)?.[1]);
+  const cierre = Number(/\[data-momento="todos"\] \.todos \{\s*transition: opacity (\d+)ms/.exec(estilos)?.[1]);
+  for (const medida of [fundido, aire, cierre]) assert.ok(medida > 0, 'el codigo y los estilos dicen sus tiempos');
+  const [barre = 0, marca = 0, agente = 0, todos = 0] = ['barrido', 'marca', 'agente', 'todos'].map((clave) =>
+    empiezaEn(GUION, clave),
+  );
+  assert.ok(barre < marca && marca < agente && agente < todos && todos < duracion(GUION));
+  const conVideo = corto.oficios.filter((/** @type {{ video: boolean }} */ oficio) => oficio.video);
+  assert.ok(conVideo.length >= 1, 'al menos un oficio trae toma viva');
+  for (const oficio of conVideo) {
+    const dura = duraElVideo(await readFile(path.join(FUENTE, 'recursos', 'comercial', `${oficio.clave}-escena.mp4`)));
+    assert.ok(dura >= 1000, `${oficio.clave}: no se pudo leer lo que dura su video`);
+    // Como en corto-vista.js: al empezar el barrido la toma se muda a la luz calida y entra a media pasada; cada vez
+    // que termina una pasada se funde con su foto y, pasado el fundido, vuelve a empezar.
+    const entra = entradaDeLaToma(dura, agente - fundido - aire - barre);
+    // Cuando empieza cada relevo, hasta que el cierre ya tapo la escena: de ahi en adelante nadie lo ve.
+    /** @type {number[]} */
+    const relevos = [];
+    for (let termina = barre + dura - entra; termina < todos + cierre; termina += fundido + dura) relevos.push(termina);
+    const dice = `${oficio.clave}: su toma dura ${dura} ms y se releva a los ${relevos.join(' y a los ')} ms`;
+    assert.equal(relevos.length, 1, `${dice}: debe ser una sola vez`);
+    const [relevo = 0] = relevos;
+    assert.ok(relevo >= marca, `${dice}: antes de que la marca la tape (${marca} ms)`);
+    assert.ok(relevo + fundido <= agente, `${dice}: la conversacion del agente empieza a los ${agente} ms`);
+  }
+});
 
 test('cada oficio tiene en el repo sus fotos, y su toma viva si dice tenerla: sin sonido, de la forma de su zona y de poco peso', async () => {
   const comercial = path.join(FUENTE, 'recursos', 'comercial');
