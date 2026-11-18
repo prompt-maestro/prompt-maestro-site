@@ -27,6 +27,8 @@ const MUY_BAJITA = '(max-height: 479px)';
 const QUIETA = '(prefers-reduced-motion: reduce)';
 /** Lo que espera, ya cargada la pagina, para ir por los videos: primero llega lo que se ve. */
 const ESPERA_DE_LOS_VIDEOS = 300;
+/** Lo que tarda un video en fundirse con su foto antes de volver a empezar: el mismo fundido de los estilos. */
+const FUNDIDO_DEL_VIDEO = 900;
 /** Los dos momentos que el codigo mueve cuadro por cuadro; los demas son cosa de los estilos. */
 const AVALANCHA = 'avalancha';
 const BARRIDO = 'barrido';
@@ -116,14 +118,20 @@ export function montarCorto(raiz) {
   const antesDentro = pieza(raiz, '[data-corto-antes-dentro]');
   const carro = pieza(raiz, '[data-corto-carro]');
   const letreros = piezas(raiz, '[data-letrero]');
-  const cuentas = piezas(raiz, '[data-corto-cuenta]');
+  // Cada celular lleva su propia cuenta de mensajes sin contestar: ningun oficio recibe los mismos que otro.
+  const cuentas = piezas(raiz, '[data-corto-cuenta]').map((cuenta) => ({
+    cuenta,
+    limites: { base: Number(cuenta.dataset.base) || 0, tope: Number(cuenta.dataset.tope) || 0 },
+  }));
   const frias = piezas(raiz, '[data-tri="fria"] [data-franja]');
   const calidas = piezas(raiz, '[data-tri="calida"] [data-franja]');
   const videos = /** @type {HTMLVideoElement[]} */ ([...raiz.querySelectorAll('video[data-src]')]).map((video) => ({
     video,
     oficio: video.closest('[data-franja]')?.getAttribute('data-franja') ?? '',
   }));
-  const limites = { base: Number(raiz.dataset.cuentaBase) || 0, tope: Number(raiz.dataset.cuentaTope) || 0 };
+  /** Los videos que ya terminaron su pasada y esperan, fundiendose con su foto, para volver a empezar. */
+  /** @type {Map<HTMLVideoElement, ReturnType<typeof setTimeout>>} */
+  const relevos = new Map();
   const calidoDesde = guion.findIndex((momento) => momento.clave === BARRIDO);
   const ancha = matchMedia(ANCHA);
 
@@ -151,10 +159,12 @@ export function montarCorto(raiz) {
     }
   }
 
-  /** @param {number} van  los mensajes sin contestar que marcan las pantallas de los celulares */
-  function contar(van) {
-    const texto = String(van);
-    for (const cuenta of cuentas) if (cuenta.textContent !== texto) cuenta.textContent = texto;
+  /** @param {number} parte  de 0 a 1, cuanto lleva la avalancha: con eso sube la cuenta de cada celular */
+  function contar(parte) {
+    for (const { cuenta, limites } of cuentas) {
+      const texto = String(sinContestar(parte, limites));
+      if (cuenta.textContent !== texto) cuenta.textContent = texto;
+    }
   }
 
   /**
@@ -177,9 +187,27 @@ export function montarCorto(raiz) {
   }
 
   /**
-   * Los videos solo corren mientras el corto corre y se ve, una pasada por aparicion: primero con la luz fria y,
-   * desde el barrido, con la calida. Es el mismo video: se muda de una franja a la otra cuando nadie lo ve. Mientras
-   * el corto no corre no se piden: en celular, nunca.
+   * Un video que termino su pasada se funde con su foto (que es su primer cuadro) y vuelve a empezar: detras de la
+   * marca y de lo que hizo el agente, el trabajo nunca se queda quieto.
+   * @param {HTMLVideoElement} video
+   */
+  function relevar(video) {
+    if (relevos.has(video)) return;
+    video.closest('[data-franja]')?.removeAttribute('data-con-video');
+    relevos.set(
+      video,
+      setTimeout(() => {
+        relevos.delete(video);
+        if (video.readyState > 0) video.currentTime = 0;
+        videosAlDia();
+      }, FUNDIDO_DEL_VIDEO),
+    );
+  }
+
+  /**
+   * Los videos solo corren mientras el corto corre y se ve: primero con la luz fria y, desde el barrido, con la
+   * calida. Es el mismo video: se muda de una franja a la otra cuando nadie lo ve, y al terminar su pasada vuelve a
+   * empezar. Mientras el corto no corre no se piden: en celular, nunca.
    */
   function videosAlDia() {
     const andan = conVideos && corre && !pausada && !document.hidden;
@@ -190,11 +218,17 @@ export function montarCorto(raiz) {
       if (corre && destino && video.parentElement !== destino) {
         video.pause();
         video.closest('[data-franja]')?.removeAttribute('data-con-video');
+        clearTimeout(relevos.get(video));
+        relevos.delete(video);
         destino.append(video);
         if (video.readyState > 0) video.currentTime = 0;
       }
-      if (!andan || video.ended) {
+      if (!andan) {
         video.pause();
+        continue;
+      }
+      if (video.ended) {
+        relevar(video);
         continue;
       }
       if (!video.src && video.dataset.src) video.src = video.dataset.src;
@@ -209,7 +243,7 @@ export function montarCorto(raiz) {
     cine.dataset.momento = clave;
     for (const letrero of letreros) letrero.toggleAttribute('data-activo', letrero.dataset.letrero === clave);
     if (clave !== BARRIDO) barrer(null);
-    if (clave === BARRIDO) contar(limites.tope);
+    if (clave === BARRIDO) contar(1);
     videosAlDia();
   }
 
@@ -222,7 +256,7 @@ export function montarCorto(raiz) {
     }
     if (instante.clave !== momento) ponerMomento(instante.clave);
     avance.style.transform = `scaleX(${instante.avance.toFixed(4)})`;
-    if (momento === AVALANCHA) contar(sinContestar(instante.parte, limites));
+    if (momento === AVALANCHA) contar(instante.parte);
     if (momento === BARRIDO) barrer(barrido(instante.parte));
   }
 
@@ -319,6 +353,7 @@ export function montarCorto(raiz) {
 
   for (const { video } of videos) {
     video.addEventListener('playing', () => video.closest('[data-franja]')?.setAttribute('data-con-video', ''));
+    video.addEventListener('ended', videosAlDia);
   }
 
   // Lo pesado llega despues de lo que se ve. Con ahorro de datos los videos no se piden: el corto corre con sus fotos.

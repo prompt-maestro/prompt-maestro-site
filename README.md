@@ -39,7 +39,7 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   armada. `--previa` arma la versión de revisión y `--comprobar` falla si la carpeta en disco no coincide con la fuente.
 - Los precios no se editan aquí: se copian con `herramientas/sincronizar-planes.mjs`.
 - La primera pantalla es el cartel (título, frase, botones y una imagen) y, solo en pantallas anchas (900 o más, y
-  más anchas que altas), el corto: una película de unos 16 segundos que corre sola al abrir y, al terminar, deja a la
+  más anchas que altas), el corto: una película de unos 33 segundos que corre sola al abrir y, al terminar, deja a la
   vista el cartel, que siempre estuvo debajo. En celular y en tableta de pie el corto no existe: se ve el cartel,
   quieto, y no se pide ni un video. El cartel también es lo que se ve sin JavaScript y con movimiento reducido. El
   guion del corto (sus momentos y lo que dura cada uno) y los textos viven en `fuente/datos/corto.json`; qué momento
@@ -65,7 +65,8 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   audio.
 - Sumar un oficio no toca el diseño ni el código: sus originales en `originales/comercial/` (`<oficio>-trabajo.png`
   y, si tiene toma viva, `<oficio>-trabajo-viva.mp4`) y en `originales/cartel/` (`<oficio>-vida.png`), su entrada en
-  `fuente/datos/corto.json` (avisos, lo que hizo el agente, su cita, a dónde mira la cámara en cada foto y, para el
+  `fuente/datos/corto.json` (su cuenta de mensajes sin contestar, sus avisos, lo que hizo el agente en `trato`: el
+  mensaje, lo que contestó y la frase con el anticipo que cobró; su cita, a dónde mira la cámara en cada foto y, para el
   cartel, sus fotos, el recorte de su retrato y su conversación) y correr `node herramientas/optimizar.mjs <oficio>`,
   que toma los oficios de ese mismo archivo. El retrato del cartel de celular se recorta de la foto de trabajo
   (`cartel.tu.recorte`: desde dónde y cuánto de lo ancho, en por ciento; mide tres por cuatro). De esa lista salen

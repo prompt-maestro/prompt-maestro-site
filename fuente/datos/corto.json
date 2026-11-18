@@ -2,37 +2,37 @@
   "guion": [
     {
       "clave": "presion",
-      "dura": 2600,
+      "dura": 3400,
       "letrero": "Trabajas.",
       "cursor": false
     },
     {
       "clave": "vibra",
-      "dura": 2800,
+      "dura": 3800,
       "letrero": "Y tu celular no para de sonar.",
       "cursor": false
     },
     {
       "clave": "avalancha",
-      "dura": 3000,
+      "dura": 4400,
       "letrero": "",
       "cursor": false
     },
     {
       "clave": "barrido",
-      "dura": 1400,
+      "dura": 3000,
       "letrero": "Despreocúpate",
       "cursor": true
     },
     {
       "clave": "marca",
-      "dura": 2600,
+      "dura": 4400,
       "letrero": "",
       "cursor": false
     },
     {
       "clave": "agente",
-      "dura": 3600,
+      "dura": 13700,
       "letrero": "",
       "cursor": false
     }
@@ -44,9 +44,7 @@
   "pantalla": {
     "hora": "7:42",
     "dia": "jueves, en plena cita",
-    "sinContestar": "sin contestar",
-    "base": 7,
-    "tope": 23
+    "sinContestar": "sin contestar"
   },
   "cartel": {
     "sobre": "Uñas, dentistas, médicos y pronto más oficios",
@@ -80,6 +78,10 @@
       "mira": {
         "persona": "50 30",
         "celular": "46 78"
+      },
+      "cuenta": {
+        "base": 7,
+        "tope": 23
       },
       "llegan": [
         {
@@ -133,22 +135,6 @@
           "hace": "3 min"
         },
         {
-          "quien": "Mariana",
-          "inicial": "M",
-          "texto": "¿Cuánto cuesta el gelish?",
-          "voz": "",
-          "foto": false,
-          "hace": "2 min"
-        },
-        {
-          "quien": "Paola",
-          "inicial": "P",
-          "texto": "¿Sigues ahí?",
-          "voz": "",
-          "foto": false,
-          "hace": "1 min"
-        },
-        {
           "quien": "Renata",
           "inicial": "R",
           "texto": "¿Hola?",
@@ -157,16 +143,14 @@
           "hace": "ahora"
         }
       ],
-      "hecho": {
+      "trato": {
         "quien": "Renata",
         "inicial": "R",
         "texto": "¿Cuánto por este diseño?",
         "voz": "",
         "foto": true,
-        "hizo": "Vio la foto y cotizó: $420.",
-        "pago": "",
-        "cuando": "",
-        "cita": ""
+        "responde": "Ese diseño cuesta $420. ¿Te lo aparto el sábado a las 11:00 am?",
+        "hizo": "Vio la foto, cotizó y cobró $150 de anticipo."
       },
       "cartel": {
         "tarjeta": "cartel/unas-vida-tarjeta",
@@ -200,6 +184,10 @@
       "mira": {
         "persona": "50 41",
         "celular": "46 80.5"
+      },
+      "cuenta": {
+        "base": 5,
+        "tope": 17
       },
       "llegan": [
         {
@@ -277,16 +265,14 @@
           "hace": "ahora"
         }
       ],
-      "hecho": {
+      "trato": {
         "quien": "Sr. Medina",
         "inicial": "M",
         "texto": "",
         "voz": "0:21",
         "foto": false,
-        "hizo": "Escuchó su audio y le ofreció hoy 5:30 pm.",
-        "pago": "",
-        "cuando": "",
-        "cita": ""
+        "responde": "Claro, Sr. Medina. Hoy tengo lugar a las 5:30 pm. ¿Se la aparto?",
+        "hizo": "Escuchó el audio, dio horario y cobró $200 de anticipo."
       },
       "cartel": {
         "tarjeta": "cartel/dentista-vida-tarjeta",
@@ -320,6 +306,10 @@
       "mira": {
         "persona": "50 43",
         "celular": "50 84"
+      },
+      "cuenta": {
+        "base": 9,
+        "tope": 31
       },
       "llegan": [
         {
@@ -397,16 +387,14 @@
           "hace": "ahora"
         }
       ],
-      "hecho": {
-        "quien": "",
-        "inicial": "",
-        "texto": "",
+      "trato": {
+        "quien": "Doña Elvira",
+        "inicial": "E",
+        "texto": "¿Tiene cita para mañana?",
         "voz": "",
         "foto": false,
-        "hizo": "",
-        "pago": "$300 · Mercado Pago",
-        "cuando": "Jueves · 10:00 am",
-        "cita": "Doña Elvira · Consulta"
+        "responde": "Sí, mañana a las 10:00 am. ¿Se la aparto?",
+        "hizo": "Agendó la consulta y cobró $300 de anticipo."
       },
       "cartel": {
         "tarjeta": "cartel/medico-vida-tarjeta",

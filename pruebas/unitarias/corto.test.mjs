@@ -9,6 +9,7 @@ import {
   arrastre,
   barrido,
   CARTEL,
+  CRUZA_EN,
   corridos,
   duracion,
   leerGuion,
@@ -128,9 +129,13 @@ test('los mensajes sin contestar suben de la base al tope y ahi se quedan', () =
   }
 });
 
-test('la raya del barrido va de un lado al otro sin regresar, y a medio momento va a media pantalla', () => {
+test('la raya del barrido va de un lado al otro sin regresar, y termina de cruzar antes de que acabe su momento', () => {
   assert.equal(barrido(0), 0);
-  assert.equal(barrido(0.5), 0.5);
+  // A media cruzada va a media pantalla.
+  assert.equal(barrido(CRUZA_EN / 2), 0.5);
+  // Ya cruzo: lo que queda del momento deja ver lo que destapo, con su letrero.
+  assert.ok(CRUZA_EN > 0.5 && CRUZA_EN < 0.9);
+  assert.equal(barrido(CRUZA_EN), 1);
   assert.equal(barrido(1), 1);
   assert.equal(barrido(-3), 0);
   assert.equal(barrido(3), 1);
@@ -157,14 +162,14 @@ test('un punto de la foto se lee en fracciones, y lo que no es un punto no pasa'
   }
 });
 
-test('el guion de la pagina: seis momentos en su orden, unos 16 segundos y los letreros de siempre', () => {
+test('el guion de la pagina: seis momentos en su orden, unos 33 segundos y los letreros de siempre', () => {
   assert.deepEqual(
     GUION.map((momento) => momento.clave),
     MOMENTOS,
   );
   for (const momento of GUION) assert.ok(momento.dura >= 1000, momento.clave);
   const total = duracion(GUION);
-  assert.ok(total >= 15_000 && total <= 17_000, `dura ${total} ms`);
+  assert.ok(total >= 30_000 && total <= 36_000, `dura ${total} ms`);
   const letreros = Object.fromEntries(
     corto.guion.map((/** @type {{ clave: string, letrero: string }} */ m) => [m.clave, m.letrero]),
   );
@@ -177,10 +182,28 @@ test('el guion de la pagina: seis momentos en su orden, unos 16 segundos y los l
     agente: '',
   });
   assert.equal(corto.marca.frase, 'Deja que uno de nuestros agentes virtuales conteste por ti.');
-  assert.ok(corto.pantalla.base < corto.pantalla.tope);
 });
 
-test('cada oficio trae lo suyo completo: a donde mira la camara, sus avisos, lo que hizo el agente y su cita', () => {
+test('el momento del agente dura lo que tardan los oficios en contar lo suyo, uno tras otro, y deja ver el ultimo sello', async () => {
+  const estilos = await readFile(path.join(FUENTE, 'estilos', 'corto.css'), 'utf8');
+  // Lo que tarda cada oficio, lo que espera el primero y cuando cae el sello: los tres los dicen los estilos.
+  const cada = Number(/--cada-trato: (\d+)ms;/.exec(estilos)?.[1]);
+  const espera = Number(/--va: calc\(var\(--n, 0\) \* var\(--cada-trato\) \+ (\d+)ms\);/.exec(estilos)?.[1]);
+  const sello = Number(
+    /sello-cae (\d+)ms [^;]*calc\(var\(--va\) \+ (\d+)ms\)/
+      .exec(estilos)
+      ?.slice(1, 3)
+      .reduce((a, b) => a + Number(b), 0),
+  );
+  assert.ok(cada >= 3000 && espera >= 300 && sello > 0, 'los estilos dicen el paso de lo que hizo el agente');
+  // El sello de un oficio cae antes de que empiece el siguiente.
+  assert.ok(sello <= cada, `el sello cae a los ${sello} ms y el siguiente oficio empieza a los ${cada}`);
+  const agente = GUION.find((momento) => momento.clave === 'agente')?.dura ?? 0;
+  const ultimoSello = (corto.oficios.length - 1) * cada + espera + sello;
+  assert.ok(agente >= ultimoSello + 1000, `el ultimo sello cae a los ${ultimoSello} ms y el momento dura ${agente}`);
+});
+
+test('cada oficio trae lo suyo completo: a donde mira la camara, su cuenta, sus avisos, lo que hizo el agente y su cita', () => {
   assert.ok(corto.oficios.length >= 3);
   const claves = corto.oficios.map((/** @type {{ clave: string }} */ oficio) => oficio.clave);
   assert.equal(new Set(claves).size, claves.length, 'sin oficios repetidos');
@@ -188,18 +211,30 @@ test('cada oficio trae lo suyo completo: a donde mira la camara, sus avisos, lo 
     assert.ok(punto(oficio.mira.persona), `${oficio.clave}: a donde mira la camara al trabajar`);
     assert.ok(punto(oficio.mira.celular), `${oficio.clave}: donde esta el celular`);
     assert.ok(oficio.llegan.length >= 1, `${oficio.clave}: el aviso que llega`);
-    // La pantalla del celular acomoda hasta diez avisos.
-    assert.ok(oficio.avisos.length >= 4 && oficio.avisos.length <= 10, `${oficio.clave}: avisos de la avalancha`);
+    // Los mensajes sin contestar de su celular: suben de una base a su tope.
+    assert.ok(
+      Number.isInteger(oficio.cuenta.base) && Number.isInteger(oficio.cuenta.tope),
+      `${oficio.clave}: su cuenta`,
+    );
+    assert.ok(oficio.cuenta.base > 0 && oficio.cuenta.base < oficio.cuenta.tope, `${oficio.clave}: su cuenta`);
+    // La pantalla del celular acomoda ocho avisos; uno con foto ocupa el lugar de tres.
+    const conFoto = oficio.avisos.filter((/** @type {{ foto: boolean }} */ aviso) => aviso.foto).length;
+    assert.ok(
+      oficio.avisos.length >= 4 && oficio.avisos.length + conFoto * 2 <= 8,
+      `${oficio.clave}: avisos de la avalancha`,
+    );
     for (const aviso of [...oficio.llegan, ...oficio.avisos]) {
       assert.ok(aviso.quien && aviso.inicial && aviso.hace, `${oficio.clave}: aviso incompleto`);
       assert.ok(aviso.texto || aviso.voz, `${oficio.clave}: el aviso de ${aviso.quien} no dice nada`);
     }
-    // Lo que hizo el agente: o resolvio un mensaje, o cobro y agendo. Y una cita solo aparece con su pago.
-    const { hecho } = oficio;
-    assert.ok(hecho.hizo || hecho.pago, `${oficio.clave}: falta lo que hizo el agente`);
-    if (hecho.hizo) assert.ok(hecho.quien && hecho.inicial, `${oficio.clave}: a quien le contesto`);
-    assert.equal(Boolean(hecho.cita), Boolean(hecho.pago), `${oficio.clave}: la cita va con su pago`);
-    assert.equal(Boolean(hecho.cita), Boolean(hecho.cuando), `${oficio.clave}: la cita va con su hora`);
+    // Lo que hizo el agente: el mensaje que entro, lo que contesto y, en una frase, lo que resolvio. La frase dice
+    // el anticipo que cobro, porque encima le cae el sello de anticipo pagado; y la pagina dice "agente".
+    const { trato } = oficio;
+    assert.ok(trato.quien && trato.inicial, `${oficio.clave}: a quien le contesto`);
+    assert.ok(trato.texto || trato.voz, `${oficio.clave}: el mensaje que entro no dice nada`);
+    assert.ok(trato.responde && trato.hizo, `${oficio.clave}: falta lo que contesto o lo que hizo el agente`);
+    assert.match(trato.hizo, /cobró \$\d+ de anticipo\.$/, `${oficio.clave}: la frase dice el anticipo que cobro`);
+    assert.doesNotMatch(`${trato.responde} ${trato.hizo}`, /asistente/i, `${oficio.clave}: la pagina dice "agente"`);
     const { cartel } = oficio;
     assert.ok(cartel.tarjeta, `${oficio.clave}: la foto de su tarjeta`);
     assert.ok(cartel.alt && cartel.cuando && cartel.quien, `${oficio.clave}: el cartel`);
@@ -244,7 +279,7 @@ test('"Tu y tu agente": cada oficio trae su retrato y su conversacion, y cuenta 
 test('en salud nadie manda una foto: ahi una foto es imagen clinica, no referencia', () => {
   for (const oficio of corto.oficios) {
     if (oficio.clave === 'unas') continue;
-    for (const aviso of [...oficio.llegan, ...oficio.avisos, oficio.hecho]) {
+    for (const aviso of [...oficio.llegan, ...oficio.avisos, oficio.trato]) {
       assert.equal(aviso.foto, false, `${oficio.clave}: ${aviso.quien}`);
     }
   }
@@ -384,6 +419,65 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
     assert.ok(adelanto.includes(` media="${ANCHA}" `), adelanto);
     assert.match(adelanto, /-trabajo-720\.avif/);
   }
+});
+
+test('el corto viaja escrito en la pagina: la marca en su halo, la cuenta de cada celular y lo que hizo el agente con su sello', async () => {
+  const { archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
+  const html = archivos.get('index.html')?.toString('utf8') ?? '';
+  const cine = /class="corto__cine"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+  assert.ok(cine, 'las capas del corto');
+  // La marca: su halo va antes que el logotipo, el nombre y la frase, que quedan encima.
+  const marca = /<div class="corto__marca">[\s\S]*?<p class="corto__frase">[^<]*<\/p>/.exec(cine)?.[0] ?? '';
+  assert.match(marca, /^<div class="corto__marca">\s*<div class="halo">/);
+  for (const parte of ['halo__rayos', 'halo__aura', 'halo__orbita', 'halo__disco'])
+    assert.ok(marca.includes(parte), parte);
+  assert.ok(marca.includes(`<p class="corto__frase">${corto.marca.frase}</p>`));
+  // Cada celular lleva la cuenta de su oficio, y ninguna se repite.
+  const cuentas = cine.match(/<b data-corto-cuenta[^>]*>\d+<\/b>/g) ?? [];
+  assert.equal(cuentas.length, corto.oficios.length);
+  for (const [lugar, cuenta] of cuentas.entries()) {
+    const { base, tope } = corto.oficios[lugar].cuenta;
+    assert.equal(cuenta, `<b data-corto-cuenta data-base="${base}" data-tope="${tope}">${tope}</b>`);
+  }
+  const topes = corto.oficios.map((/** @type {{ cuenta: { tope: number } }} */ oficio) => oficio.cuenta.tope);
+  assert.equal(new Set(topes).size, topes.length, 'ningun celular marca lo mismo que otro');
+  // Lo que hizo el agente: una conversacion por oficio, en su orden, cada una con su frase y su sello.
+  const tratos = cine.match(/<div class="trato">[\s\S]*?<\/div>/g) ?? [];
+  assert.equal(tratos.length, corto.oficios.length);
+  for (const [lugar, trato] of tratos.entries()) {
+    const oficio = corto.oficios[lugar];
+    const texto = trato.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    for (const dice of [oficio.trato.quien, oficio.trato.responde, corto.cartel.tuAgente, oficio.trato.hizo]) {
+      assert.ok(texto.includes(dice), `${oficio.clave}: falta "${dice}"`);
+    }
+    if (oficio.trato.texto) assert.ok(texto.includes(oficio.trato.texto), `${oficio.clave}: el mensaje que entro`);
+    assert.equal(trato.includes('class="dice__foto"'), oficio.trato.foto, `${oficio.clave}: la foto`);
+    // El orden de lo que entra: el mensaje, lo que contesto el agente y la frase con su sello.
+    const orden = ['class="dice"', 'class="dice dice--agente"', 'class="hizo"', 'class="sello sello--cita"'];
+    const lugares = orden.map((pieza) => trato.indexOf(pieza));
+    assert.deepEqual(
+      [...lugares].sort((a, b) => a - b),
+      lugares,
+      `${oficio.clave}: el orden de la conversacion`,
+    );
+    assert.ok(
+      lugares.every((uno) => uno >= 0),
+      `${oficio.clave}: le falta una pieza`,
+    );
+    assert.match(
+      trato,
+      /<svg class="sello sello--cita"[^>]* role="img" aria-label="Cita garantizada: anticipo pagado"/,
+    );
+    assert.match(trato, />CITA GARANTIZADA<\/text>/);
+    assert.match(trato, />ANTICIPO PAGADO<\/text>/);
+  }
+  // La foto que manda una clienta se ve en su aviso, y solo va donde el dato dice que hay foto.
+  const fotos = cine.match(/class="aviso__mira"/g) ?? [];
+  const conFoto = corto.oficios.flatMap((/** @type {{ llegan: object[], avisos: object[] }} */ oficio) =>
+    [...oficio.llegan, ...oficio.avisos].filter((/** @type {any} */ aviso) => aviso.foto),
+  );
+  assert.equal(fotos.length, conFoto.length);
+  assert.ok(conFoto.length >= 1, 'al menos una clienta manda una foto');
 });
 
 test('"Tu y tu agente" viaja escrito en la pagina: una escena por oficio, la primera a la vista y las demas guardadas', async () => {

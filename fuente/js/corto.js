@@ -34,6 +34,11 @@ export const CARTEL = 'cartel';
 const LLENA_EN = 0.8;
 /** Desde que punto de su recorrido la raya del barrido ya se ve en la pantalla (arranca fuera, a la izquierda). */
 const ENTRA_EN = 0.18;
+/**
+ * En que parte del momento del barrido la raya ya termino de cruzar: lo que queda del momento deja ver lo que
+ * destapo, con su letrero, antes de que entre la marca.
+ */
+export const CRUZA_EN = 0.72;
 
 /**
  * El guion, como viaja escrito en la pagina: "presion:2600 vibra:2800". Lo que no se entiende, o no dura nada, se
@@ -133,12 +138,13 @@ export function sinContestar(parte, { base, tope }) {
 
 /**
  * Por donde va la raya de luz del barrido: arranca suave, cruza casi parejo y frena suave. De 0 (todavia no entra) a
- * 1 (ya salio). Va fuera de la pantalla en las dos puntas, asi que casi todo el momento se le ve cruzar.
+ * 1 (ya salio). Va fuera de la pantalla en las dos puntas, asi que se le ve cruzar casi todo el tiempo que cruza; y
+ * termina de cruzar antes de que el momento acabe (CRUZA_EN).
  * @param {number} parte  de 0 a 1, cuanto lleva el momento del barrido
  * @returns {number}
  */
 export function barrido(parte) {
-  const t = Math.min(1, Math.max(0, parte));
+  const t = Math.min(1, Math.max(0, parte) / CRUZA_EN);
   return 0.5 * t + 0.25 * (1 - Math.cos(Math.PI * t));
 }
 

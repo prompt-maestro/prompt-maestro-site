@@ -47,7 +47,7 @@
   </div>
 </header>
 <main id="contenido">
-  <section class="corto" id="inicio" data-corto data-cuadro="{{corto.guion.0.clave}}" data-guion="{{#cada corto.guion}}{{clave}}:{{dura}} {{/cada}}" data-cuenta-base="{{corto.pantalla.base}}" data-cuenta-tope="{{corto.pantalla.tope}}" aria-labelledby="titulo-inicio">
+  <section class="corto" id="inicio" data-corto data-cuadro="{{corto.guion.0.clave}}" data-guion="{{#cada corto.guion}}{{clave}}:{{dura}} {{/cada}}" aria-labelledby="titulo-inicio">
     <div class="control" role="group" aria-label="{{corto.controles.titulo}}" data-corto-control hidden>
       <span class="control__linea" aria-hidden="true"><i data-corto-avance></i></span>
       <button class="control__boton" type="button" data-corto-saltar><span class="control__pastilla">{{corto.controles.saltar}}</span></button>
@@ -112,7 +112,7 @@
           <div class="foto"><div class="foto__vivo"><div class="foto__luz" data-corto-luz>{{> foto-trabajo}}</div></div></div>
           <p class="franja__nombre">{{nombre}}</p>
           <div class="franja__sobre franja__sobre--hecho">
-            {{> hecho}}
+            {{> trato}}
           </div>
         </div>
 {{/cada}}      </div>
@@ -132,7 +132,7 @@
 {{#cada corto.oficios}}              <div class="pantalla">
                 <p class="pantalla__hora">{{corto.pantalla.hora}}</p>
                 <p class="pantalla__dia">{{corto.pantalla.dia}}</p>
-                <p class="cuenta"><span class="cuenta__punto"></span><span><b data-corto-cuenta>{{corto.pantalla.tope}}</b> {{corto.pantalla.sinContestar}}</span></p>
+                <p class="cuenta"><span class="cuenta__punto"></span><span><b data-corto-cuenta data-base="{{cuenta.base}}" data-tope="{{cuenta.tope}}">{{cuenta.tope}}</b> {{corto.pantalla.sinContestar}}</span></p>
                 <div class="pantalla__avisos">
 {{#cada avisos}}                  {{> aviso}}
 {{/cada}}                </div>
@@ -143,6 +143,7 @@
       </div>
       <div class="corto__carro" data-corto-carro><span class="corto__estela"></span><span class="corto__rayo"></span></div>
       <div class="corto__marca">
+        <div class="halo"><span class="halo__rayos"></span><span class="halo__aura"></span><span class="halo__orbita"></span><span class="halo__disco"></span></div>
         <p class="corto__logo">{{> marca}}</p>
         <p class="corto__nombre">{{corto.marca.nombre}}</p>
         <p class="corto__frase">{{corto.marca.frase}}</p>

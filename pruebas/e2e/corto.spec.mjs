@@ -2,7 +2,7 @@
 // El inicio: el cartel y, solo en pantallas anchas, el corto. En celular y en tableta de pie (los perfiles celular,
 // previa e iphone) se comprueba que el corto NO corre y que el cartel esta completo, con "Tu y tu agente" y un oficio
 // al azar; el corto se prueba en escritorio y en firefox. El tiempo de la pagina lo lleva el reloj de Playwright: las
-// pruebas lo detienen y lo adelantan, sin esperar los 16 segundos de verdad.
+// pruebas lo detienen y lo adelantan, sin esperar el medio minuto de verdad.
 import { readFileSync } from 'node:fs';
 import { abrirCortoDetenido, hastaElCuadro, sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
@@ -13,6 +13,8 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  * @typedef {object} Oficio
  * @property {string} clave
  * @property {string} nombre
+ * @property {{ base: number, tope: number }} cuenta
+ * @property {{ quien: string, texto: string, responde: string, hizo: string, foto: boolean }} trato
  * @property {object} cartel
  * @property {string} cartel.cuando
  * @property {string} cartel.quien
@@ -24,7 +26,7 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  * @type {{
  *   guion: { clave: string, dura: number, letrero: string }[],
  *   cartel: Record<string, string>,
- *   pantalla: { tope: number },
+ *   marca: { nombre: string, frase: string },
  *   pagoAprobado: string,
  *   oficios: Oficio[],
  * }}
@@ -602,17 +604,104 @@ test.describe('el corto, en pantallas anchas', () => {
     expect(alPrincipio).toBeGreaterThan(0);
     await hastaElCuadro(page, corto, 'avalancha');
     expect(await avance()).toBeGreaterThan(alPrincipio);
-    // Un celular por oficio, cada uno con su contador.
+    // Un celular por oficio, cada uno con su contador, que sube hasta el tope de ese oficio: ninguno marca lo
+    // mismo que otro.
     const cuentas = corto.locator('[data-corto-cuenta]');
-    await expect(cuentas).toHaveCount(3);
-    expect(Number(await cuentas.first().textContent())).toBeLessThan(CORTO.pantalla.tope);
+    await expect(cuentas).toHaveCount(CORTO.oficios.length);
+    expect(Number(await cuentas.first().textContent())).toBeLessThan(CORTO.oficios[0]?.cuenta.tope ?? 0);
+    // En el celular de uñas se ve la foto que mando una clienta.
+    await expect(corto.locator('.pantalla').first().locator('.aviso__mira')).toBeVisible();
     await hastaElCuadro(page, corto, 'barrido');
-    for (const cuenta of await cuentas.all()) await expect(cuenta).toHaveText(String(CORTO.pantalla.tope));
+    for (const [lugar, oficio] of CORTO.oficios.entries()) {
+      await expect(cuentas.nth(lugar)).toHaveText(String(oficio.cuenta.tope));
+    }
+    expect(new Set(await cuentas.allTextContents()).size).toBe(CORTO.oficios.length);
     // En el barrido el codigo corre la caja de lo viejo; al pasar, la deja en su lugar.
     await page.clock.runFor(300);
     await expect(corto.locator('[data-corto-antes]')).toHaveAttribute('style', /translateX/);
     await hastaElCuadro(page, corto, 'marca');
     await expect(corto.locator('[data-corto-antes]')).not.toHaveAttribute('style', /translateX/);
+  });
+
+  test('la marca entra dentro de su halo: el logotipo, el nombre y la frase caben enteros en el disco', async ({
+    page,
+  }) => {
+    const corto = await abrirCortoDetenido(page);
+    await hastaElCuadro(page, corto, 'marca');
+    const frase = corto.locator('.corto__frase');
+    await expect(frase).toHaveText(CORTO.marca.frase);
+    // Entran uno tras otro: se espera a que la frase, que es la ultima, este puesta.
+    await expect(frase).toHaveCSS('opacity', '1', { timeout: 15_000 });
+    await expect(corto.locator('.halo__disco')).toHaveCSS('opacity', '1', { timeout: 15_000 });
+    // Cada esquina de lo que va dentro cae dentro del circulo.
+    const fuera = await corto.evaluate((seccion) => {
+      const disco = seccion.querySelector('.halo__disco')?.getBoundingClientRect();
+      if (!disco) return ['sin disco'];
+      const centro = { x: disco.left + disco.width / 2, y: disco.top + disco.height / 2 };
+      const radio = disco.width / 2;
+      /** @type {string[]} */
+      const salen = [];
+      for (const selector of ['.corto__logo .marca__pm', '.corto__nombre', '.corto__frase']) {
+        const caja = seccion.querySelector(selector)?.getBoundingClientRect();
+        if (!caja) {
+          salen.push(`falta ${selector}`);
+          continue;
+        }
+        for (const x of [caja.left, caja.right]) {
+          for (const y of [caja.top, caja.bottom]) {
+            if (Math.hypot(x - centro.x, y - centro.y) > radio) salen.push(selector);
+          }
+        }
+      }
+      return salen;
+    });
+    expect(fuera).toEqual([]);
+    // Y el disco cabe en la pantalla, sin tapar los controles.
+    const disco = await caja(corto.locator('.halo__disco'));
+    const control = await caja(corto.locator('.control__linea'));
+    expect(disco.arriba).toBeGreaterThanOrEqual(0);
+    expect(disco.abajo).toBeLessThanOrEqual(control.arriba);
+    expect(await desborde(page)).toBeLessThanOrEqual(0);
+  });
+
+  test('lo que hizo el agente se cuenta un oficio tras otro, y cada conversacion termina con su sello', async ({
+    page,
+  }) => {
+    const corto = await abrirCortoDetenido(page);
+    await hastaElCuadro(page, corto, 'agente');
+    const tratos = corto.locator('[data-tri="calida"] .trato');
+    await expect(tratos).toHaveCount(CORTO.oficios.length);
+    // Primero el oficio de la izquierda: ya tiene su sello cuando el ultimo todavia no empieza.
+    const vaEnOrden = () =>
+      corto.evaluate((seccion) => {
+        const todos = [...seccion.querySelectorAll('[data-tri="calida"] .trato')];
+        const selloDelPrimero = todos[0]?.querySelector('.sello');
+        const mensajeDelUltimo = todos.at(-1)?.firstElementChild;
+        if (!selloDelPrimero || !mensajeDelUltimo) return false;
+        return getComputedStyle(selloDelPrimero).opacity === '1' && getComputedStyle(mensajeDelUltimo).opacity === '0';
+      });
+    await expect.poll(vaEnOrden, { timeout: 15_000, intervals: [100] }).toBe(true);
+    // Y al final estan las tres, completas: el mensaje, lo que contesto el agente, la frase de lo que hizo y su sello.
+    for (const [lugar, oficio] of CORTO.oficios.entries()) {
+      const trato = tratos.nth(lugar);
+      const sello = trato.locator('.sello');
+      await expect(sello).toHaveCSS('opacity', '1', { timeout: 20_000 });
+      await expect(sello).toHaveAttribute('aria-label', 'Cita garantizada: anticipo pagado');
+      await expect(trato.locator('.dice').first()).toContainText(oficio.trato.quien);
+      await expect(trato.locator('.dice--agente')).toHaveText(oficio.trato.responde);
+      await expect(trato.locator('.hizo')).toContainText(oficio.trato.hizo);
+      await expect(trato.locator('.dice__foto')).toHaveCount(oficio.trato.foto ? 1 : 0);
+      // Nada de la conversacion se sale de su franja ni se mete debajo de los controles.
+      const franja = await caja(trato.locator('xpath=ancestor::*[@data-franja]'));
+      const control = await caja(corto.locator('.control__linea'));
+      for (const pieza of await trato.locator('.dice, .hizo').all()) {
+        const suCaja = await caja(pieza);
+        expect(suCaja.izquierda).toBeGreaterThanOrEqual(franja.izquierda);
+        expect(suCaja.derecha).toBeLessThanOrEqual(franja.derecha);
+        expect(suCaja.abajo).toBeLessThanOrEqual(control.arriba);
+      }
+    }
+    expect(await desborde(page)).toBeLessThanOrEqual(0);
   });
 
   test('"Saltar" lleva directo al cartel, y el foco pasa a "Ver de nuevo"', async ({ page }) => {

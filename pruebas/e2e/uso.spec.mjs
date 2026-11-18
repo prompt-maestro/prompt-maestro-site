@@ -28,10 +28,10 @@ test('en pausa lo que el agente ya hizo se queda a la vista, quieto: la pausa no
   test.slow();
   const corto = await abrirCortoDetenido(page);
   await hastaElCuadro(page, corto, 'agente');
-  const renglones = corto.locator('.franja__sobre--hecho > *');
+  const renglones = corto.locator('.franja__sobre--hecho .trato > *');
   expect(await renglones.count()).toBeGreaterThan(2);
-  // Entran uno tras otro: se espera a que esten todos.
-  for (const renglon of await renglones.all()) await expect(renglon).toHaveCSS('opacity', '1');
+  // Entran uno tras otro, un oficio despues de otro: se espera a que esten todos.
+  for (const renglon of await renglones.all()) await expect(renglon).toHaveCSS('opacity', '1', { timeout: 20_000 });
   await corto.getByRole('button', { name: 'Pausar el video' }).click();
   await expect(corto).toHaveAttribute('data-pausada', '');
   // Cada renglon sigue puesto y a la vista: en pausa nada se queda a medio entrar ni se borra.
@@ -39,7 +39,7 @@ test('en pausa lo que el agente ya hizo se queda a la vista, quieto: la pausa no
     await expect(renglon).toBeVisible();
     await expect(renglon).toHaveCSS('opacity', '1');
   }
-  await expect(corto.locator('.franja__sobre--hecho .sello')).toBeVisible();
+  for (const sello of await corto.locator('.franja__sobre--hecho .sello').all()) await expect(sello).toBeVisible();
 });
 
 test('en pausa el contador de mensajes sin contestar tampoco avanza, y al reanudar sigue', async ({ page }, info) => {

@@ -5,7 +5,7 @@
    agente contesta, cobra el anticipo y agenda. En pantallas anchas su imagen son las tres fotos de "su tiempo".
    Tambien es lo que se lee sin JavaScript, con movimiento reducido y en pantallas muy bajitas.
 
-   El corto es una pelicula de unos 16 segundos que corre sola al abrir la pagina en una pantalla ancha (900 o mas, y
+   El corto es una pelicula de unos 33 segundos que corre sola al abrir la pagina en una pantalla ancha (900 o mas, y
    mas ancha que alta) y, al terminar, deja a la vista el cartel, que ya estaba debajo. Son capas opacas encima: las
    tres franjas de trabajo con luz fria, los celulares que vibran, las pantallas que se llenan de avisos, el barrido
    de luz, la marca y lo que hizo el agente con luz calida.
@@ -26,6 +26,11 @@
   --letra-de-franja: clamp(0.8125rem, 1.04vw, 1.0625rem);
   /* Cada animacion del corto lleva esta marcha: con la pausa, todas se detienen donde iban. */
   --marcha: running;
+  /* El paso del corto: sus fundidos son largos y de seda, y la camara arranca y frena suave. */
+  --seda: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --camara: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Lo que tarda cada oficio en contar lo que hizo su agente, uno tras otro. */
+  --cada-trato: 3900ms;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -794,7 +799,7 @@ html.con-corto .corto[data-cuadro="cartel"] .control {
   display: none;
   overflow: hidden;
   background: #000;
-  transition: opacity 700ms var(--suave);
+  transition: opacity 1100ms var(--seda);
 }
 
 /* Al volver a correr, el corto entra un poco mas rapido de lo que se fue. */
@@ -808,8 +813,8 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   visibility: hidden;
   pointer-events: none;
   transition:
-    opacity 700ms var(--suave),
-    visibility 0s 700ms;
+    opacity 1100ms var(--seda),
+    visibility 0s 1100ms;
 }
 
 /* Arriba y abajo, un poco de noche: la barra y los controles se leen sobre cualquier toma. */
@@ -859,6 +864,8 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   --cy: 0.78;
   /* El turno de cada franja: lo suyo entra un poco despues que lo de la anterior. */
   --turno: calc(var(--n, 0) * 450ms + 350ms);
+  /* Y cuando le toca contar lo que hizo su agente: un oficio termina y sigue el otro. */
+  --va: calc(var(--n, 0) * var(--cada-trato) + 900ms);
   position: relative;
   flex: 1 1 0;
   min-width: 0;
@@ -931,7 +938,8 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 
 /* La toma viva va encima de su foto, de arriba hasta donde empieza la mesa (el 68.36 % del cuadro: el mismo corte
    de herramientas/optimizar.mjs) y se funde con ella en su orilla: el celular, abajo, es siempre el de la foto. Entra
-   con un fundido en cuanto empieza a correr. */
+   con un fundido en cuanto empieza a correr y, al terminar su pasada, se funde otra vez con la foto (que es su primer
+   cuadro) para volver a empezar sin que se note. */
 .foto__video {
   position: absolute;
   top: 0;
@@ -942,7 +950,7 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   opacity: 0;
   -webkit-mask-image: linear-gradient(#000 95.4%, transparent);
   mask-image: linear-gradient(#000 95.4%, transparent);
-  transition: opacity 600ms var(--suave);
+  transition: opacity 900ms var(--seda);
 }
 
 .franja[data-con-video] .foto__video {
@@ -1006,8 +1014,8 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   opacity: 0;
   visibility: hidden;
   transition:
-    opacity 520ms var(--suave),
-    visibility 520ms var(--suave);
+    opacity 900ms var(--seda),
+    visibility 900ms var(--seda);
 }
 
 /* En la primera franja, el nombre y lo que hizo el agente arrancan en la misma linea que el logotipo. */
@@ -1041,12 +1049,12 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 }
 
 .franja__sobre .aviso,
-.hecho {
+.trato {
   font-size: var(--letra-de-franja);
 }
 
 .franja__sobre .aviso,
-.hecho {
+.dice {
   -webkit-backdrop-filter: blur(16px) saturate(1.3);
   backdrop-filter: blur(16px) saturate(1.3);
 }
@@ -1072,8 +1080,7 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 }
 
 /* Como en el celular de verdad: si el mensaje no cabe, se corta con puntos. */
-.aviso__dice,
-.hecho__entra {
+.aviso__dice {
   display: block;
   overflow: hidden;
   font-weight: 300;
@@ -1085,8 +1092,7 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   color: rgb(245 244 240 / 0.84);
 }
 
-.aviso__dice > *,
-.hecho__entra > * {
+.aviso__dice > * {
   display: inline-block;
   margin-right: 0.54em;
   vertical-align: middle;
@@ -1106,54 +1112,148 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   height: 1.08em;
 }
 
-/* La foto de referencia que manda una clienta. */
-.fotito {
-  width: 1.69em;
-  height: 1.69em;
-  border-radius: 0.38em;
-  background: #8d4a63 url("../recursos/comercial/referencia-unas.webp") 50% 50% / cover no-repeat;
+/* La foto de referencia que manda una clienta: el aviso la ensena, como en el celular de verdad, y en la
+   conversacion va dentro de su mensaje. */
+.aviso__mira,
+.dice__foto {
+  background: #8d4a63 url("../recursos/comercial/referencia-unas.webp") 50% 38% / cover no-repeat;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
 }
 
-/* Lo que hizo el agente con un mensaje: lo que entro y, debajo, lo que resolvio. */
-.hecho {
+.aviso__mira {
+  grid-column: 2 / -1;
+  height: 5.4em;
+  margin-top: 0.15em;
+  border-radius: 0.7em;
+}
+
+.camarita {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/* Lo que hizo el agente, contado paso a paso: el mensaje que entro, lo que contesto y, sobre papel, en una frase,
+   lo que resolvio; ahi cae el sello. */
+.trato {
   display: grid;
-  grid-template-columns: 2em minmax(0, 1fr);
+  justify-items: start;
+  gap: 0.6em;
+  width: min(100%, 28.5em);
+  line-height: 1.3;
+}
+
+.dice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.69em;
-  max-width: 100%;
-  padding: 0.54em 0.92em 0.62em 0.62em;
-  border: 1px solid rgb(132 151 255 / 0.4);
-  border-radius: 1.08em;
-  background: rgb(13 17 40 / 0.82);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
-  line-height: 1.25;
+  max-width: 88%;
+  padding: 0.6em 0.95em 0.6em 0.62em;
+  border: 1px solid var(--raya);
+  border-radius: 1.15em 1.15em 1.15em 0.35em;
+  background: var(--vidrio);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
 }
 
-.hecho__cuerpo {
-  display: grid;
-  gap: 0.23em;
-  min-width: 0;
-}
-
-.hecho__entra {
-  color: rgb(245 244 240 / 0.78);
-}
-
-.hecho__entra b {
-  color: #fff;
+.dice b {
+  display: block;
   font-weight: 600;
 }
 
-.hecho__hizo {
+.dice__texto {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  color: rgb(245 244 240 / 0.9);
+  font-weight: 300;
+}
+
+.dice__foto {
+  flex: none;
+  width: 4.1em;
+  height: 4.1em;
+  border-radius: 0.6em;
+}
+
+.dice__texto .onda {
+  width: 5.4em;
+  height: 1.3em;
+}
+
+/* Lo que contesta el agente: a la derecha, con la luz de la marca y sus dos palomitas. */
+.dice--agente {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  justify-self: end;
+  padding: 0.6em 0.75em 0.6em 0.95em;
+  border-color: rgb(132 151 255 / 0.5);
+  border-radius: 1.15em 1.15em 0.35em 1.15em;
+  background: rgb(30 42 122 / 0.86);
+  font-weight: 400;
+}
+
+.dice--agente .palomitas {
+  width: 1.35em;
+  height: 0.86em;
+  color: #9fb0ff;
+}
+
+.hizo {
+  position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-  gap: 0.54em;
-  color: #e3e8ff;
-  font-weight: 500;
-  /* Si no cabe en un renglon, se parte parejo. */
+  align-content: center;
+  gap: 0.15em;
+  width: 100%;
+  min-height: 5.6em;
+  margin-top: 0.25em;
+  padding: 0.7em 12.6em 0.75em 1em;
+  border-radius: 0.95em;
+  background: rgb(245 244 240 / 0.97);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.4);
+  color: #16193a;
+}
+
+.hizo__quien {
+  color: #2f46c8;
+  font-size: 0.68em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hizo__frase {
+  font-size: 1.04em;
+  font-weight: 600;
+  line-height: 1.24;
   text-wrap: balance;
+}
+
+/* El sello de la cita, con su candado: tinta azul sobre el papel, un poco salido por la orilla. */
+.hizo .sello--cita {
+  --giro: -6deg;
+  position: absolute;
+  top: 50%;
+  right: -0.8em;
+  width: 13.6em;
+  color: #2f46c8;
+  transform: translateY(-50%) rotate(var(--giro));
+}
+
+.sello--cita .sello__palabra {
+  font-size: 19px;
+  letter-spacing: 1.2px;
+}
+
+.sello--cita .sello__linea {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.sello__peso {
+  font-family: var(--f-texto);
+  font-size: 25px;
+  font-weight: 700;
 }
 
 /* Lo de antes del barrido: las franjas frias y las pantallas de los celulares. Va en una caja mas ancha que la
@@ -1224,8 +1324,8 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   opacity: 0;
   visibility: hidden;
   transition:
-    opacity 520ms var(--suave),
-    visibility 520ms var(--suave);
+    opacity 900ms var(--seda),
+    visibility 900ms var(--seda);
 }
 
 .telefonos::before {
@@ -1293,8 +1393,11 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   gap: 0.375em;
 }
 
-/* La marca entra: el logotipo grande, el nombre y la frase, con las franjas un poco fuera de foco detras. */
+/* La marca entra dentro de su halo: un disco de noche con una corona de luz, y dentro el logotipo, el nombre y la
+   frase. Detras, las franjas siguen moviendose un poco fuera de foco. */
 .corto__marca {
+  /* Lo que mide el disco: de ahi sale la medida de todo lo que lleva dentro, y asi siempre le cabe. */
+  --d: min(69 * var(--svh), 40vw, 720px);
   position: absolute;
   inset: 0;
   z-index: 6;
@@ -1306,8 +1409,8 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   opacity: 0;
   visibility: hidden;
   transition:
-    opacity 520ms var(--suave),
-    visibility 520ms var(--suave);
+    opacity 900ms var(--seda),
+    visibility 900ms var(--seda);
 }
 
 .corto__marca::before {
@@ -1320,30 +1423,104 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   content: "";
 }
 
+.halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: var(--d);
+  height: var(--d);
+  margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2);
+  pointer-events: none;
+}
+
+.halo > * {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* Los rayos: finos, apenas se ven, y giran muy despacio. */
+.halo__rayos {
+  inset: -60%;
+  background: repeating-conic-gradient(
+    from 4deg,
+    rgb(190 202 255 / 0.2) 0deg 1.2deg,
+    rgb(190 202 255 / 0) 1.2deg 9deg,
+    rgb(190 202 255 / 0.1) 9deg 9.8deg,
+    rgb(190 202 255 / 0) 9.8deg 20deg
+  );
+  -webkit-mask-image: radial-gradient(closest-side, transparent 44%, #000 47%, rgb(0 0 0 / 0.5) 62%, transparent 92%);
+  mask-image: radial-gradient(closest-side, transparent 44%, #000 47%, rgb(0 0 0 / 0.5) 62%, transparent 92%);
+}
+
+/* La corona: la luz que sale de atras del disco, mas viva en su orilla. */
+.halo__aura {
+  inset: -38%;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 255 255 / 0) 55.6%,
+    rgb(226 232 255 / 0.95) 57%,
+    rgb(132 151 255 / 0.5) 60.5%,
+    rgb(88 115 255 / 0.2) 72%,
+    rgb(63 92 245 / 0) 100%
+  );
+  filter: blur(5px);
+}
+
+.halo__orbita {
+  inset: -8.5%;
+  border: 1px solid rgb(214 222 255 / 0.3);
+}
+
+/* El disco: noche con un poco de luz que le cae de arriba. Lo de atras se alcanza a mover a traves de el. */
+.halo__disco {
+  inset: 0;
+  background:
+    radial-gradient(84% 62% at 50% -4%, rgb(104 128 255 / 0.6), rgb(70 92 220 / 0) 72%),
+    radial-gradient(closest-side, rgb(12 16 46 / 0.84), rgb(5 7 22 / 0.92));
+  -webkit-backdrop-filter: blur(22px) saturate(1.15);
+  backdrop-filter: blur(22px) saturate(1.15);
+  box-shadow:
+    0 0 0 1px rgb(226 232 255 / 0.6),
+    0 0 38px 4px rgb(132 151 255 / 0.42),
+    0 0 120px 28px rgb(63 92 245 / 0.24),
+    inset 0 2px 0 rgb(255 255 255 / 0.6),
+    inset 0 30px 70px rgb(132 151 255 / 0.18);
+}
+
 .corto__logo .marca__pm {
   width: auto;
-  height: min(132px, 14.7 * var(--svh));
-  filter: drop-shadow(0 4px 30px rgb(0 0 0 / 0.5));
+  height: calc(var(--d) * 0.213);
+  filter: drop-shadow(0 0 26px rgb(132 151 255 / 0.55));
 }
 
 .corto__nombre {
-  margin-top: clamp(16px, 3.3 * var(--svh), 30px);
-  font-size: clamp(2.2rem, min(3.8vw, 6 * var(--svh)), 3.4rem);
+  margin-top: calc(var(--d) * 0.045);
+  font-size: calc(var(--d) * 0.083);
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  text-shadow: 0 2px 24px rgb(0 0 0 / 0.6);
 }
 
 .corto__frase {
-  max-width: 20em;
-  margin-top: 12px;
-  color: rgb(245 244 240 / 0.95);
-  font-size: clamp(1.125rem, min(1.67vw, 2.7 * var(--svh)), 1.5rem);
-  font-weight: 300;
+  max-width: calc(var(--d) * 0.72);
+  margin-top: calc(var(--d) * 0.026);
+  color: #fff;
+  font-size: max(0.9375rem, calc(var(--d) * 0.04));
+  font-weight: 400;
   line-height: 1.35;
-  text-shadow: 0 1px 16px rgb(0 0 0 / 0.7);
   text-wrap: balance;
+}
+
+/* Una rayita de luz entre el nombre y la frase. */
+.corto__frase::before {
+  display: block;
+  width: calc(var(--d) * 0.09);
+  height: 2px;
+  margin: 0 auto calc(var(--d) * 0.03);
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgb(132 151 255 / 0), #b9c5ff, rgb(132 151 255 / 0));
+  content: "";
 }
 
 /* Los letreros del corto: pocas palabras, grandes. */
@@ -1363,9 +1540,16 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   text-wrap: balance;
   opacity: 0;
   visibility: hidden;
+  /* Al irse sube un poco mientras se funde: nunca se corta de golpe. */
+  transform: translateY(-12px);
   transition:
-    opacity 520ms var(--suave),
-    visibility 520ms var(--suave);
+    opacity 700ms var(--seda),
+    transform 700ms var(--seda),
+    visibility 700ms var(--seda);
+}
+
+.corto[data-viva] .letrero[data-activo] {
+  transform: none;
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
@@ -1408,17 +1592,24 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   visibility: hidden;
 }
 
+/* Lo que la raya ya barrio se quita de una vez: si se fundiera, volveria a verse un momento en su lugar de antes,
+   encima de lo que la raya destapo. */
+.corto__cine:is([data-momento="marca"], [data-momento="agente"]) .corto__antes :is(.telefonos, .franja__sobre) {
+  transition: none;
+}
+
 .corto__cine[data-momento="barrido"] :is(.corto__antes, .corto__antes-dentro, .corto__carro) {
   will-change: transform;
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
-   El movimiento. Las transiciones son suaves y cortas; nada rebota. Solo se animan transform y opacity.
+   El movimiento. Todo entra despacio y se va antes de que llegue lo que sigue; nada rebota. Solo se animan
+   transform y opacity.
    --------------------------------------------------------------------------------------------------------------- */
 
 /* La camara solo se mueve al bajar al celular: al volver a empezar regresa de golpe, sin que nadie la vea. */
 .corto__cine[data-momento="vibra"] .tri--fria .foto {
-  transition: transform 1200ms var(--suave);
+  transition: transform 2200ms var(--camara);
 }
 
 .corto[data-viva]
@@ -1430,18 +1621,18 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   )
   .tri--fria
   .foto__vivo {
-  animation: acerca 6500ms linear both var(--marcha);
+  animation: acerca 15000ms linear both var(--marcha);
 }
 
 .corto[data-viva]
   .corto__cine:is([data-momento="barrido"], [data-momento="marca"], [data-momento="agente"])
   .tri--calida
   .foto__vivo {
-  animation: acerca 9000ms linear both var(--marcha);
+  animation: acerca 22000ms linear both var(--marcha);
 }
 
 .corto[data-viva] .letrero[data-activo] {
-  animation: sube 620ms var(--suave) both var(--marcha);
+  animation: sube 1100ms var(--seda) 500ms both var(--marcha);
 }
 
 /* El cursor del letrero parpadea solo mientras su letrero esta puesto. */
@@ -1456,41 +1647,64 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
 }
 
 .corto[data-viva] .corto__cine[data-momento="vibra"] .franja__sobre--llega .aviso {
-  animation: llega 480ms var(--suave) calc(var(--turno) + 150ms) both var(--marcha);
+  animation: llega 800ms var(--seda) calc(var(--turno) + 900ms) both var(--marcha);
 }
 
 /* Cada celular de la avalancha entra un poco despues que el anterior, y sus avisos caen uno tras otro. */
 .corto[data-viva] .corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .pantalla {
-  animation: sube 700ms var(--suave) calc(var(--n, 0) * 110ms) both var(--marcha);
+  animation: sube 1000ms var(--seda) calc(var(--n, 0) * 160ms + 200ms) both var(--marcha);
 }
 
 .corto[data-viva] .corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .pantalla .aviso {
-  animation: llega 420ms var(--suave) calc(var(--i, 0) * 240ms + var(--n, 0) * 110ms + 260ms) both var(--marcha);
+  animation: llega 560ms var(--seda) calc(var(--i, 0) * 330ms + var(--n, 0) * 160ms + 700ms) both var(--marcha);
+}
+
+/* La marca: primero se enciende el halo (el disco, su corona y sus rayos, que ya no dejan de girar) y luego entran
+   el logotipo, el nombre y la frase. */
+.corto[data-viva] .corto__cine[data-momento="marca"] :is(.halo__disco, .halo__orbita) {
+  animation: asoma 1200ms var(--seda) 200ms both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="marca"] .halo__aura {
+  animation: aparece 1600ms var(--seda) 500ms both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="marca"] .halo__rayos {
+  animation:
+    aparece 2000ms var(--seda) 700ms both var(--marcha),
+    gira 120s linear infinite var(--marcha);
 }
 
 .corto[data-viva] .corto__cine[data-momento="marca"] .corto__logo {
-  animation: asoma 700ms var(--suave) 120ms both var(--marcha);
+  animation: asoma 1000ms var(--seda) 550ms both var(--marcha);
 }
 
 .corto[data-viva] .corto__cine[data-momento="marca"] .corto__nombre {
-  animation: sube 620ms var(--suave) 300ms both var(--marcha);
+  animation: sube 900ms var(--seda) 900ms both var(--marcha);
 }
 
 .corto[data-viva] .corto__cine[data-momento="marca"] .corto__frase {
-  animation: sube 620ms var(--suave) 460ms both var(--marcha);
+  animation: sube 900ms var(--seda) 1200ms both var(--marcha);
 }
 
-/* Lo que hizo el agente entra en orden, y el sello de la cita cae al final, con peso. */
-.corto[data-viva] .corto__cine[data-momento="agente"] .franja__sobre--hecho > * {
-  animation: sube 520ms var(--suave) var(--turno) both var(--marcha);
+/* Lo que hizo el agente se cuenta un oficio tras otro (--va): entra el mensaje, luego lo que contesto, luego la
+   frase de lo que resolvio y, al final, cae el sello con peso y el papel recibe el golpe. */
+.corto[data-viva] .corto__cine[data-momento="agente"] .trato > * {
+  animation: sube 760ms var(--seda) var(--va) both var(--marcha);
 }
 
-.corto[data-viva] .corto__cine[data-momento="agente"] .franja__sobre--hecho > :nth-child(2) {
-  animation-delay: calc(var(--turno) + 420ms);
+.corto[data-viva] .corto__cine[data-momento="agente"] .trato > :nth-child(2) {
+  animation-delay: calc(var(--va) + 1000ms);
 }
 
-.corto[data-viva] .corto__cine[data-momento="agente"] .cita .sello {
-  animation: sello-cae 240ms cubic-bezier(0.55, 0, 0.9, 0.35) calc(var(--turno) + 1050ms) both var(--marcha);
+.corto[data-viva] .corto__cine[data-momento="agente"] .trato > .hizo {
+  animation:
+    sube 760ms var(--seda) calc(var(--va) + 2100ms) both var(--marcha),
+    golpe 180ms var(--suave) calc(var(--va) + 3120ms) var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="agente"] .hizo .sello {
+  animation: sello-cae 260ms cubic-bezier(0.55, 0, 0.9, 0.35) calc(var(--va) + 2900ms) both var(--marcha);
   will-change: transform, opacity;
 }
 
@@ -1532,6 +1746,12 @@ html.con-corto .corto[data-cuadro="cartel"] .corto__cine {
   from {
     opacity: 0;
     transform: translateY(-10px) scale(0.97);
+  }
+}
+
+@keyframes gira {
+  to {
+    transform: rotate(360deg);
   }
 }
 
