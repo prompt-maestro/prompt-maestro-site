@@ -102,14 +102,17 @@
     "tituloFuerte": "tus reglas.",
     "lista": [
       {
+        "icono": "celular",
         "titulo": "Tu número sigue en tu celular",
         "texto": "Puedes entrar a cualquier conversación cuando quieras; tu agente se hace a un lado."
       },
       {
+        "icono": "moneda",
         "titulo": "Tu dinero no pasa por nosotros",
         "texto": "Cada anticipo cae directo en tu Mercado Pago. No cobramos comisión por cita."
       },
       {
+        "icono": "perillas",
         "titulo": "Tus reglas",
         "texto": "Tú pones los precios, los horarios, el anticipo y lo que no haces."
       }

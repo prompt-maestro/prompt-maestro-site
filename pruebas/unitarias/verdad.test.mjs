@@ -14,6 +14,7 @@ const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
   [/al instante/, 'el agente contesta en menos de un minuto, nunca "al instante"'],
   [/\d+\s?segundos?/, 'no se promete un numero de segundos'],
   [/sin intervenci[oó]n humana/, 'la profesional siempre puede entrar'],
+  // Ni siquiera en un ejemplo: la politica del salon de muestra (su retoque de garantia) se dice "sin costo".
   [/prueba(lo)? antes de pagar|prueba gratis|gratis/, 'no hay prueba antes de pagar ni nada gratis'],
   [/\d\s?%|por ciento/, 'ningun porcentaje de plantones o de mejora como hecho'],
   [/testimoni|nuestr[oa]s client[ea]s dicen|casos? de [eé]xito/, 'no hay testimonios de clientes que no existen'],
@@ -32,6 +33,13 @@ const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
   [/tu cuenta personal/, 'el anticipo cae en "tu Mercado Pago", no en "tu cuenta personal"'],
   // El agente ya no ofrece hablar con la duena ni invita a escribir PERSONA: ningun texto se salta al agente.
   [/prefieres hablar con|escribe persona/, 'el agente no ofrece la salida PERSONA'],
+  // Ni ofrece pasarle a la clienta con la profesional: lo que hace es tomar el recado y avisarle a ella.
+  [/te la pasa|si tu clienta lo pide/, 'el agente no ofrece pasarle a la clienta con la profesional'],
+  // El agente trabaja con la informacion que la profesional le da: no se entrena un modelo ni aprende por su cuenta.
+  [
+    /se entrena|entrenado con|aprende solo|aprende de tus conversaciones/,
+    'el agente no se entrena ni aprende solo: usa la base de conocimiento del negocio',
+  ],
   [/—/, 'sin guiones largos'],
 ]);
 
@@ -98,6 +106,11 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'asistente virtual',
     'no te trae clientela nueva',
     'no diagnostica ni recomienda medicamentos',
+    // "Tu agente": cada uno trabaja con la base de conocimiento de su negocio, y contesta en menos de un minuto
+    // (nunca "al instante").
+    'hecho solo para tu negocio',
+    'base de conocimiento',
+    'menos de un minuto',
     'hoy, para uñas, dentistas y médicos',
     // Los mensajes son buenos: con el agente siguen llegando, y la comision de cada anticipo la fija Mercado Pago.
     'te siguen escribiendo, y tu agente contesta por ti',

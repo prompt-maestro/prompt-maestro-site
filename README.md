@@ -109,6 +109,19 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   es una ilustración hecha con las piezas del WhatsApp de día. En celular la ruta va de pie y desde 900 de ancho,
   acostada. «En una frase» conserva la frase que define el producto y sus tres palabras (de ahí leen los buscadores
   y los asistentes con IA) y, en medio, un antes y un después (`secciones.enUnaFrase.lados`).
+- «Tu agente» es un menú de beneficios (hoy, nueve) y cada uno abre su mini video: una escena de unos segundos hecha con las
+  piezas del WhatsApp de día, no un archivo de video. En celular el menú es un acordeón y desde 900 de ancho lleva un
+  solo escenario a la derecha. Todo sale de `fuente/datos/agentes.json` (`hace`): el título, la oración, lo que dura
+  el mini video (`dura`, de 6 a 8 segundos) y sus pasos. Cada paso dice cuándo aparece (`en`, en segundos), si después
+  se va (`hasta`) y trae UNA pieza de las que sabe dibujar `fuente/plantillas/parciales/mini-video.html` (un globo,
+  la nota de voz, la base de conocimiento, la agenda, el pago, la cita, una insignia...). Sumar o quitar un beneficio es tocar esos datos, no
+  el código; la armada se detiene si a uno le falta algo o si su mini video no dura lo que debe. El movimiento es de
+  los estilos (`fuente/estilos/agentes.css`: lo que ahí está escrito es el último cuadro, y las animaciones llevan el
+  retraso de los datos). `fuente/js/agente.js` decide sin tocar la pantalla cuál está abierto y si corre (se prueba
+  sin navegador) y `fuente/js/agente-vista.js` abre, cierra, pausa y repite: el primero corre solo una vez al llegar
+  a la vista, solo corre uno y solo mientras se ve. La escena del beneficio que llega abierto viene en la página; las
+  demás viajan guardadas en un `<template>` y se sacan al abrirlas: así la página no carga con lo que nadie ha visto. La página llega con el menú ya armado; sin JavaScript, si su
+  pieza no arranca o al imprimir se lee como lista, y con movimiento reducido cada beneficio es su último cuadro.
 - En `preguntas.json`, `principal` marca las cinco preguntas que se ven de entrada; las demás van dentro de un
   `<details>` («Ver más preguntas»), sin JavaScript. Los datos estructurados y `llms.txt` llevan todas.
 - Las estaciones de la ruta, los retratos de «Para quién» y el antes y después se encienden al entrar a la vista,

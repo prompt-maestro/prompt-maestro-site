@@ -9,6 +9,7 @@ import path from 'node:path';
 import { conversacionDeEjemplo, fichaDe, historiaDe, presentacionDe, reposoDe } from '../fuente/js/demo.js';
 import { pesos } from '../fuente/js/redaccion.js';
 import { achicarCss } from './achicar.mjs';
+import { problemasDeBeneficios } from './beneficios.mjs';
 import { datosEstructurados, jsonParaScript, llmsTxt, robots, sitemap, TOPES } from './buscadores.mjs';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
 import { medicionDe } from './medicion.mjs';
@@ -292,6 +293,8 @@ export async function armarSitio({ raiz, destino }) {
   const planes = planesPublicos(datos.planes);
   const sitio = /** @type {Record<string, unknown>} */ (datos.sitio);
   const demo = prepararDemo(datos, problemas);
+  // Los beneficios de "Tu agente" y sus mini videos: que la plantilla sepa dibujar cada paso y que duren lo que deben.
+  problemas.push(...problemasDeBeneficios(/** @type {any} */ (datos.agentes)?.hace));
   if (planes.dePrueba) {
     avisos.push('Los planes traen PRECIOS DE PRUEBA: esta armada no se puede publicar en el dominio.');
   }

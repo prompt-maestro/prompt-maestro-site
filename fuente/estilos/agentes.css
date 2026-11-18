@@ -1,11 +1,15 @@
-/* El tercer movimiento: sus agentes. Lo que el asistente sabe hacer, dicho en corto, y lo que no hace (que tambien
-   es parte de por que se le puede confiar el WhatsApp). */
+/* "Tu agente": un menu de beneficios y, al elegir uno, su mini video: una escena hecha con las piezas del
+   WhatsApp de dia que corre sola unos segundos, como un video. En celular el menu es un acordeon (lo elegido se abre
+   ahi mismo); desde 900 de ancho, el menu va a la izquierda y un solo escenario a la derecha. Debajo, lo que cuidamos
+   (su numero, su dinero y sus reglas) y lo que el agente no hace.
+
+   La pagina llega con el menu armado y el primero abierto. Sin JavaScript, si su pieza no arranca o al imprimir, se
+   lee como lista: cada beneficio con su oracion. */
 .agentes {
   display: grid;
-  gap: var(--e-12);
   max-width: 1440px;
   margin: 0 auto;
-  padding: var(--e-16) clamp(20px, 5.5vw, 88px) var(--e-24);
+  padding: var(--e-16) var(--canal) var(--e-24);
   border-top: 1px solid var(--linea);
 }
 
@@ -40,120 +44,890 @@
   display: block;
 }
 
-/* Cada cosa que hace lleva su numero, como los renglones de una lista de trabajo. */
-.agentes__lista {
-  display: grid;
-  gap: var(--e-8) var(--e-12);
-  counter-reset: punto;
+/* ---------------------------------------------------------------------------------------------------------------
+   El menu. Cada renglon es un boton: su circulo de reproducir y el nombre del beneficio. Solo el abierto ensena su
+   oracion y lleva el circulo encendido, con el azul de la marca.
+   --------------------------------------------------------------------------------------------------------------- */
+.agentes__duo {
+  margin-top: 36px;
 }
 
-.agentes__punto {
+.beneficios {
   display: grid;
-  gap: var(--e-2);
   align-content: start;
-  padding-top: var(--e-4);
-  border-top: 1px solid var(--linea);
-  counter-increment: punto;
 }
 
-.agentes__punto::before {
-  color: var(--luz);
-  content: counter(punto, decimal-leading-zero);
-  font-size: var(--t-nota);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-}
-
-.agentes__nombre {
-  font-family: var(--f-titulo);
-  font-size: 1.5rem;
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-}
-
-.agentes__punto p {
-  max-width: 30rem;
-  color: var(--tinta-2);
-}
-
-.agentes__limites {
-  display: grid;
-  gap: var(--e-4);
-  padding: var(--e-8) clamp(20px, 4vw, 48px);
-  border-radius: var(--r-tarjeta);
-  background: var(--papel-2);
-}
-
-.agentes__subtitulo {
-  font-family: var(--f-titulo);
-  font-size: 1.5rem;
-  font-weight: 500;
-  line-height: 1.15;
-}
-
-/* Lo que cuidamos: su numero, su dinero y sus reglas. */
-.agentes__confianza {
-  display: grid;
-  gap: var(--e-8);
-}
-
-.agentes__subtitulo--grande {
-  font-size: clamp(1.75rem, 1.2rem + 2.6vw, 3rem);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-}
-
-.agentes__subtitulo--grande em {
-  display: block;
-}
-
-.agentes__cuidamos {
-  display: grid;
-  gap: var(--e-6) var(--e-12);
-}
-
-.agentes__cuidamos li {
-  display: grid;
-  gap: var(--e-2);
-  align-content: start;
-  padding-top: var(--e-4);
+.beneficio {
   border-top: 1px solid var(--linea);
 }
 
-.agentes__cuidamos h4 {
-  font-size: 1.25rem;
+.beneficio:last-child {
+  border-bottom: 1px solid var(--linea);
+}
+
+.beneficio__nombre {
+  font-family: var(--f-titulo);
+  font-size: clamp(1.0625rem, 0.94rem + 0.62vw, 1.1875rem);
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
-.agentes__cuidamos p {
-  max-width: 30rem;
+.beneficio__boton {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 62px;
+  padding: 12px 0;
+  border: 0;
+  background: none;
   color: var(--tinta-2);
+  letter-spacing: inherit;
+  text-align: left;
+  text-wrap: balance;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.beneficio__boton {
+  cursor: pointer;
+}
+
+.beneficio__boton:focus-visible {
+  outline-offset: -3px;
+  border-radius: 12px;
+}
+
+.beneficio__play {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+}
+
+/* El triangulo se ve centrado un pelo a la derecha de su centro de verdad. */
+.beneficio__play svg {
+  width: 11px;
+  height: 12px;
+  margin-left: 2px;
+}
+
+.beneficio[data-abierto] .beneficio__boton {
+  color: var(--tinta);
+}
+
+.beneficio[data-abierto] .beneficio__play {
+  background: var(--sello);
+  box-shadow: 0 0 24px rgb(63 92 245 / 0.7);
+  color: #fff;
+}
+
+@media (hover: hover) {
+  button.beneficio__boton:hover {
+    color: var(--tinta);
+  }
+
+  .beneficio:not([data-abierto]) button:hover .beneficio__play {
+    box-shadow: inset 0 0 0 1px var(--luz);
+    color: var(--luz);
+  }
+}
+
+/* Lo que se abre: la oracion y el mini video. En celular lo cerrado no ocupa lugar. */
+.beneficio__panel {
+  display: none;
+}
+
+.beneficio[data-abierto] > .beneficio__panel {
+  display: block;
+}
+
+.beneficio__texto {
+  padding-left: 48px;
+  color: var(--tinta-2);
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+/* El aire de abajo va dentro de la oracion: asi se guarda con ella cuando el renglon se cierra. */
+.beneficio__texto::after {
+  content: "";
+  display: block;
+  height: 16px;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El mini video: una pantalla de esquinas redondas con el fondo del WhatsApp de dia y el brillo de la marca. Lo que
+   aqui se escribe es su ULTIMO cuadro, con todo ya puesto: es lo que se ve con movimiento reducido y al terminar. El
+   movimiento va al final de la hoja.
+   --------------------------------------------------------------------------------------------------------------- */
+.mv {
+  /* Si lo que se mueve dentro corre o espera: lo decide el menu (data-anda). */
+  --mv-marcha: paused;
+
+  position: relative;
+  height: 340px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  /* Lo que se mueve dentro de la escena no le sirve de ancla al navegador: si no, con la pantalla a medio ver, la
+     pagina se iria recorriendo sola para seguir a un globo que cambia de lugar. */
+  overflow-anchor: none;
+  border-radius: 24px;
+  background-color: var(--wa-fondo);
+  background-image:
+    radial-gradient(var(--wa-trama) 1.2px, transparent 1.6px), radial-gradient(var(--wa-trama) 1.2px, transparent 1.6px);
+  background-position:
+    0 0,
+    13px 13px;
+  background-size: 26px 26px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.2),
+    0 30px 80px rgb(0 0 0 / 0.6),
+    0 0 110px rgb(63 92 245 / 0.34);
+  color: var(--wa-texto);
+  font-family: var(--f-sistema);
+  font-size: 14.2px;
+  line-height: 19px;
+}
+
+/* La escena que trae una ficha grande (la base de conocimiento) necesita una pantalla mas alta en el acordeon. Su
+   alto viene escrito en la pagina: es la que llega abierta, y nada se mueve cuando el menu despierta. */
+.mv--alta {
+  height: 452px;
+}
+
+/* La escena va centrada. Si alguna vez no cabe, lo que se pierde es lo de arriba, lo mas viejo, como en un chat. */
+.mv__escena {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  padding: 12px 18px 52px;
+}
+
+.mv__hilo {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 26rem;
+  margin: auto;
+  /* Las fichas se acomodan a lo ancho que la escena tenga, no a lo ancho de la pantalla. */
+  container-type: inline-size;
+}
+
+/* Cada paso de la escena. Va en una rejilla de un renglon para poder abrirse y cerrarse con suavidad: lo que se
+   anima es lo alto de ese renglon. */
+.mv__paso {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+/* Lo que entra y despues se va no esta en el ultimo cuadro. */
+.mv__paso[data-hasta] {
+  display: none;
+}
+
+.mv__cabe {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.mv__cabe > * {
+  flex: none;
+  margin: 4px 0;
+}
+
+/* La pastilla de la hora: de noche, con su luna. */
+.mv__hora {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 7px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: #1c2233;
+  color: #fff;
+  font-family: var(--f-texto);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.mv__hora svg {
+  width: 13px;
+  height: 13px;
+  color: #ffd98a;
+}
+
+/* El rotulo de una charla: como le hablan a su agente. */
+.mv__etiqueta {
+  align-self: center;
+  padding: 3px 11px;
+  border-radius: 8px;
+  background: var(--wa-barra);
+  box-shadow: var(--wa-sombra);
+  color: var(--wa-2-fuerte);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 17px;
+}
+
+.mv__paso + .mv__paso .mv__etiqueta {
+  margin-top: 12px;
+}
+
+/* La foto que manda la clienta, arriba de su mensaje. */
+.mv__foto {
+  display: block;
+  width: 148px;
+  height: 96px;
+  margin: -2px -4px 6px -5px;
+  border-radius: 6px;
+  background: #d9cbc2;
+  object-fit: cover;
+}
+
+.mv .wa__voz-toca {
+  color: var(--wa-2-fuerte);
+}
+
+/* Los globos, un poco mas anchos que en el celular de la demostracion: aqui la pantalla es mas baja. */
+.mv .wa__m {
+  max-width: 88%;
+}
+
+/* La insignia: lo que HIZO el agente, en la letra de la pagina. */
+.mv__hizo {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 7px 14px 7px 9px;
+  border-radius: 20px;
+  background: #0d1230;
+  box-shadow:
+    inset 0 0 0 1px rgb(132 151 255 / 0.8),
+    0 10px 26px rgb(7 9 22 / 0.35);
+  color: #fff;
+  font-family: var(--f-texto);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.mv__hizo i,
+.mv__aprobado i,
+.mv__bien {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--sello);
+  color: #fff;
+}
+
+.mv__hizo svg,
+.mv__aprobado svg,
+.mv__bien svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* La insignia grande: la que cierra el examen. */
+.mv__hizo--grande {
+  gap: 10px;
+  padding: 9px 20px 9px 10px;
+  border-radius: 24px;
+  box-shadow:
+    inset 0 0 0 1.5px var(--luz),
+    0 10px 26px rgb(7 9 22 / 0.35),
+    0 0 34px rgb(63 92 245 / 0.6);
+  font-size: 1.0625rem;
+}
+
+.mv__hizo--grande i {
+  width: 28px;
+  height: 28px;
+}
+
+.mv__hizo--grande svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* El pago aprobado. */
+.mv__aprobado {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 7px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgb(11 20 26 / 0.18);
+  font-weight: 600;
+}
+
+.mv__aprobado i,
+.mv__bien {
+  background: #00a650;
+}
+
+/* La cita ya agendada y la agenda del dia: fichas de noche, con el sello de la marca asomado a la derecha. */
+.mv .minicita,
+.mv__agenda {
+  align-self: center;
+  background: #14183a;
+  box-shadow: 0 14px 34px rgb(7 9 22 / 0.4);
+  color: var(--tinta);
+  font-family: var(--f-texto);
+}
+
+.mv .minicita {
+  --dia: var(--tinta);
+  --detalle: var(--tinta-3);
+  /* Cuando cae su sello: un instante despues de que la ficha entra. */
+  --mv-sello: calc(var(--mv-en, 0s) + 520ms);
+
+  margin-right: 30px;
+  padding-right: 86px;
+  font-size: 13.5px;
+}
+
+.mv .minicita__dia {
+  color: #14183a;
+}
+
+.mv .minicita__dia small {
+  color: #c0321d;
+}
+
+.mv .sello {
+  position: absolute;
+  top: 50%;
+  right: -38px;
+  width: 112px;
+  filter: drop-shadow(0 0 10px rgb(88 115 255 / 0.7));
+  pointer-events: none;
+  translate: 0 -50%;
+}
+
+/* El rotulo chico de las fichas de noche: de quien es lo que ensenan. */
+.mv__rotulo {
+  color: var(--luz);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mv__agenda {
+  --mv-sello: calc(var(--mv-cambia, 0s) + 260ms);
+
+  width: min(100% - 44px, 18rem);
+  margin-right: 30px;
+  padding: 11px 8px 8px;
+  border-radius: 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.mv__agenda .mv__rotulo {
+  padding: 0 8px 6px;
+}
+
+.mv__agenda ul {
+  display: grid;
+  gap: 2px;
+}
+
+.mv__agenda li {
+  position: relative;
+  padding: 0 8px;
+  border-radius: 8px;
+  line-height: 30px;
+}
+
+/* El estado del horario. En el que se agenda, su estado de antes y el nombre de quien lo aparto ocupan el mismo
+   lugar. */
+.mv__estado {
+  display: inline-grid;
+  vertical-align: top;
+}
+
+.mv__estado > * {
+  grid-area: 1 / 1;
+}
+
+.mv__antes {
+  color: var(--bien);
+}
+
+.mv__agenda [data-ocupado] {
+  color: var(--tinta-3);
+}
+
+.mv__agenda [data-ocupado] .mv__antes {
+  color: inherit;
+}
+
+.mv__agenda [data-nueva] {
+  background: rgb(63 92 245 / 0.16);
+  box-shadow: inset 0 0 0 1px rgb(132 151 255 / 0.7);
+}
+
+.mv__agenda [data-nueva] .mv__antes {
+  opacity: 0;
+}
+
+.mv__agenda .sello {
+  right: -30px;
+  width: 98px;
+}
+
+/* La base de conocimiento del negocio: una ficha de noche con su libreta, de quien es y sus renglones. */
+.mv__base {
+  display: grid;
+  gap: 10px;
+  padding: 13px 14px 12px;
+  border-radius: 14px;
+  background: #0d1230;
+  box-shadow:
+    inset 0 0 0 1px rgb(132 151 255 / 0.7),
+    0 14px 34px rgb(7 9 22 / 0.35);
+  color: var(--tinta);
+  font-family: var(--f-texto);
+}
+
+.mv__base-titulo {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  line-height: 1.2;
+}
+
+.mv__base-titulo svg {
+  width: 34px;
+  height: 34px;
+  padding: 7.5px;
+  border-radius: 10px;
+  background: var(--sello);
+  color: #fff;
+}
+
+.mv__base-nombre {
+  display: grid;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* De quien es: solo de ese negocio. */
+.mv__base-de {
+  color: var(--luz);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.mv__base ul {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 0.1);
+}
+
+.mv__base li {
+  display: grid;
+  gap: 1px;
+  padding: 7px 10px 8px;
+  background: #141a44;
+  line-height: 1.25;
+}
+
+.mv__base li span {
+  color: var(--tinta-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mv__base li b {
+  font-size: 0.8438rem;
+  font-weight: 500;
+}
+
+/* Donde la escena es ancha (el escenario de computadora, una tableta), cada renglon de la ficha lleva su rotulo a
+   la izquierda y lo que dice, a la derecha. */
+@container (min-width: 29rem) {
+  .mv__base {
+    padding: 16px 18px 15px;
+  }
+
+  .mv__base li {
+    grid-template-columns: 9.6em minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 14px;
+    padding: 9px 12px;
+  }
+}
+
+/* El recado, como le llega a ella a su WhatsApp personal. */
+.mv__recado {
+  align-self: center;
+  max-width: 94%;
+  padding: 10px 14px 12px;
+  border-radius: 14px;
+  background: #14183a;
+  box-shadow:
+    inset 0 0 0 1px rgb(132 151 255 / 0.5),
+    0 14px 34px rgb(7 9 22 / 0.4);
+  color: var(--tinta);
+  font-family: var(--f-texto);
+}
+
+.mv__recado-texto {
+  margin-top: 4px;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+/* Un examen: su nombre, la barra que se llena y su palomita. */
+.mv__examen {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 22px;
+  align-items: center;
+  align-self: center;
+  gap: 12px;
+  width: min(100%, 19rem);
+  padding: 8px 10px 8px 14px;
+  border-radius: 12px;
+  background: var(--wa-barra);
+  box-shadow: var(--wa-sombra);
+  font-family: var(--f-texto);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.mv__raya {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #e2e6ea;
+}
+
+.mv__raya i,
+.mv__avance {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sello);
+  transform-origin: 0 50%;
+}
+
+/* La barra del mini video: pausar o reproducir, la linea de avance y lo que dura. Solo existe donde algo se mueve. */
+.mv__barra {
+  position: absolute;
+  inset: auto 0 0;
+  display: none;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 12px 16px 0 4px;
+  background: linear-gradient(180deg, rgb(7 9 22 / 0), rgb(7 9 22 / 0.8) 58%);
+  color: #fff;
+  font-family: var(--f-texto);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.mv__pausa {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mv__pausa:focus-visible {
+  outline-color: #fff;
+  outline-offset: -6px;
+  border-radius: 50%;
+}
+
+/* De sus tres dibujos se ve el de lo que el boton hace en este momento. */
+.mv__icono {
+  grid-area: 1 / 1;
+  width: 12px;
+  height: 14px;
+  visibility: hidden;
+}
+
+.mv__icono[data-de="verDeNuevo"] {
+  width: 15px;
+  height: 15px;
+}
+
+.mv__pausa[data-estado="pausar"] [data-de="pausar"],
+.mv__pausa[data-estado="reproducir"] [data-de="reproducir"],
+.mv__pausa[data-estado="verDeNuevo"] [data-de="verDeNuevo"] {
+  visibility: visible;
+}
+
+.mv__linea {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.35);
+}
+
+.mv__avance {
+  background: #fff;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Lo que cuidamos: su numero, su dinero y sus reglas, en tres tarjetas con su icono. Y lo que el agente no hace.
+   --------------------------------------------------------------------------------------------------------------- */
+.agentes__confianza {
+  display: grid;
+  gap: var(--e-6);
+  margin-top: 72px;
+}
+
+.agentes__subtitulo {
+  font-family: var(--f-titulo);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.agentes__subtitulo--grande {
+  font-size: clamp(1.5rem, 1.1rem + 2vw, 2.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.agentes__cuidamos {
+  display: grid;
+  gap: var(--e-3);
+}
+
+.agentes__cuidamos li {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-content: start;
+  align-items: start;
+  gap: var(--e-4);
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgb(26 33 80 / 0.5), rgb(12 16 40 / 0.5));
+  box-shadow: inset 0 0 0 1px var(--linea);
+}
+
+.agentes__icono {
+  width: 46px;
+  height: 46px;
+  padding: 11.5px;
+  border-radius: 13px;
+  background: rgb(132 151 255 / 0.14);
+  color: var(--luz);
+}
+
+.agentes__cuidamos h4 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.agentes__cuidamos p,
+.agentes__no li {
+  color: var(--tinta-2);
+  font-size: 0.9688rem;
+  font-weight: 300;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.agentes__cuidamos p {
+  margin-top: var(--e-1);
+}
+
+.agentes__limites {
+  display: grid;
+  gap: var(--e-4);
+  margin-top: 36px;
 }
 
 .agentes__no {
   display: grid;
-  gap: var(--e-3) var(--e-12);
+  gap: 10px;
 }
 
 .agentes__no li {
-  padding-left: var(--e-6);
-  background: linear-gradient(var(--tinta), var(--tinta)) 0 0.78em / 12px 1.5px no-repeat;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: var(--e-3);
 }
 
-/* Tres columnas solo cuando caben: en tableta de pie cada una quedaba de siete renglones. */
-@media (min-width: 900px) {
-  .agentes__cuidamos {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+/* La tacha, chica y en rojo suave. */
+.agentes__tacha {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  padding: 5.5px;
+  border-radius: 50%;
+  background: rgb(255 143 128 / 0.14);
+  color: var(--error);
+}
+
+/* En el acordeon la escena se achica un poco, toda junta, como un video en una pantalla mas chica: asi sus globos
+   ocupan los mismos renglones en un celular angosto que en uno ancho, y todas caben, con aire, en el mismo alto. */
+@media (max-width: 899.98px) {
+  .mv__hilo {
+    zoom: 0.95;
   }
 }
 
-@media (min-width: 720px) {
-  .agentes__lista,
+@media (max-width: 389.98px) {
+  .mv__hilo {
+    zoom: 0.9;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .mv__hilo {
+    zoom: 0.82;
+  }
+}
+
+/* Tableta de pie: el mini video no se estira de orilla a orilla; se alinea con su oracion. */
+@media (min-width: 600px) and (max-width: 899.98px) {
+  .mv {
+    max-width: 30rem;
+    margin-left: 48px;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Desde 900: el menu a la izquierda y un solo escenario a la derecha, siempre en el mismo lugar y del mismo alto. El
+   mini video de cada beneficio vive en su renglon; aqui se saca de el y se pone en el escenario.
+   --------------------------------------------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+  .agentes__duo {
+    --hueco: clamp(36px, 5vw, 72px);
+    --menu: calc((100% - var(--hueco)) * 0.5);
+
+    position: relative;
+    margin-top: var(--e-12);
+  }
+
+  /* El menu aparta lo alto de su oracion mas larga (lo mide agente-vista.js): al cambiar de beneficio lo de abajo
+     no se mueve. */
+  .beneficios {
+    width: var(--menu);
+    min-height: max(612px, var(--menu-alto, 0px));
+  }
+
+  .beneficio__nombre {
+    font-size: clamp(1.125rem, 0.5rem + 1.15vw, 1.3125rem);
+  }
+
+  .beneficio__boton {
+    min-height: 60px;
+  }
+
+  /* La oracion se abre y se cierra con suavidad, y cerrada no la lee nadie. */
+  .beneficio__panel {
+    display: block;
+  }
+
+  .beneficio__dice {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+  }
+
+  .beneficio[data-abierto] .beneficio__dice {
+    grid-template-rows: 1fr;
+    visibility: visible;
+  }
+
+  .beneficio__texto {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* El escenario queda a media altura del menu, pero cuelga de su orilla de arriba, no de su centro: lo alto del menu
+     puede cambiar (lo mide el codigo al llegar) y el escenario no se mueve con el. */
+  .mv {
+    position: absolute;
+    top: 56px;
+    right: 0;
+    width: calc(100% - var(--menu) - var(--hueco));
+    height: 500px;
+    margin: 0;
+  }
+
+  .beneficio:not([data-abierto]) .mv {
+    display: none;
+  }
+
+  .mv__escena {
+    padding: 28px 28px 64px;
+  }
+
+  .agentes__confianza {
+    gap: var(--e-8);
+  }
+
+  .agentes__cuidamos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .agentes__cuidamos li {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 26px;
+  }
+
+  .agentes__limites {
+    margin-top: var(--e-12);
+    padding: 30px 34px;
+    border-radius: 20px;
+    box-shadow: inset 0 0 0 1px var(--linea);
+  }
+
   .agentes__no {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--e-4) 36px;
   }
 }
 
@@ -162,7 +936,294 @@
     padding-block: var(--e-24) var(--e-40);
   }
 
-  .agentes__lista {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .agentes__duo {
+    --menu: calc((100% - var(--hueco)) * 5 / 11);
+  }
+
+  /* En el escenario grande la escena crece un poco, toda junta, y se le da mas ancho. */
+  .mv__hilo {
+    max-width: 30rem;
+    zoom: 1.1;
+  }
+}
+
+@media (min-width: 1360px) {
+  .mv__hilo {
+    zoom: 1.18;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Como lista: sin JavaScript, si la pieza del menu no arranco (pagina.js lo anota con data-lista) y al imprimir. Los
+   beneficios con su titulo y su oracion, sin circulos de reproducir ni escenarios.
+   --------------------------------------------------------------------------------------------------------------- */
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficios {
+  width: auto;
+  min-height: 0;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficio__boton {
+  display: block;
+  min-height: 0;
+  padding: 18px 0 6px;
+  color: var(--tinta);
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficio__panel {
+  display: block;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficio__dice {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficio__texto {
+  padding-left: 0;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) :is(.beneficio__play, .mv) {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  :is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficios {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--e-12);
+  }
+
+  /* En dos columnas, el ultimo renglon de cada una cierra con su raya. */
+  :is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficio:nth-last-child(2) {
+    border-bottom: 1px solid var(--linea);
+  }
+}
+
+@media print {
+  .agentes__duo .beneficios {
+    width: auto;
+    min-height: 0;
+  }
+
+  .agentes__duo .beneficio__boton {
+    display: block;
+    min-height: 0;
+    padding: 18px 0 6px;
+    color: var(--tinta);
+  }
+
+  .agentes__duo .beneficio__panel {
+    display: block;
+  }
+
+  .agentes__duo .beneficio__dice {
+    grid-template-rows: 1fr;
+    visibility: visible;
+  }
+
+  .agentes__duo .beneficio__texto {
+    padding-left: 0;
+  }
+
+  .agentes__duo :is(.beneficio__play, .mv) {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   El movimiento, solo en pantalla y solo para quien no pidio reducirlo. El beneficio abierto dice como va su mini
+   video (data-fase): "espera" antes de empezar; "sigue" mientras corre o esta en pausa, y entonces cada pieza aguarda
+   su turno (el retraso que dicen los datos, --mv-en) y entra. Todo queda detenido (--mv-marcha) hasta que el menu
+   dice que anda: mientras se ve y nadie lo ha pausado. Al terminar se quita la marca y queda el ultimo cuadro, que
+   es lo que esta escrito arriba.
+   --------------------------------------------------------------------------------------------------------------- */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .beneficio__boton,
+  .beneficio__play {
+    transition:
+      color var(--d-toque) var(--suave),
+      background-color var(--d-entrada) var(--suave),
+      box-shadow var(--d-entrada) var(--suave);
+  }
+
+  /* Lo que la visitante abre entra con suavidad: no mueve nada, solo aparece. (El que llega abierto, no: ya esta.) */
+  .agentes__duo[data-tocada] .beneficio[data-abierto] > .beneficio__panel {
+    animation: mv-abre var(--d-entrada) var(--suave);
+  }
+
+  .agentes__duo[data-anda] .mv {
+    --mv-marcha: running;
+  }
+
+  .mv__barra {
+    display: grid;
+  }
+
+  /* Antes de empezar (el primero, mientras nadie lo ve) la escena espera vacia y la linea de avance, en cero. Sin
+     animaciones: nada queda detenido a medias en una pagina que nadie esta mirando. */
+  [data-fase="espera"] .mv__paso {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  [data-fase="espera"] .mv__avance {
+    transform: scaleX(0);
+  }
+
+  [data-fase="sigue"] .mv__paso {
+    animation: mv-entra 480ms var(--suave) var(--mv-en, 0s) both var(--mv-marcha);
+  }
+
+  /* El paso que despues se va: entra igual y, a su hora, se cierra. */
+  [data-fase="sigue"] .mv__paso[data-hasta] {
+    display: grid;
+    animation:
+      mv-entra 480ms var(--suave) var(--mv-en, 0s) both var(--mv-marcha),
+      mv-sale 420ms var(--suave) var(--mv-hasta, 0s) forwards var(--mv-marcha);
+  }
+
+  [data-fase="sigue"] .mv__avance {
+    animation: mv-llena var(--mv-dura, 7s) linear both var(--mv-marcha);
+  }
+
+  /* Los renglones de la base de conocimiento se escriben uno tras otro, ya con la ficha a la vista. */
+  [data-fase="sigue"] .mv__base li {
+    animation: mv-llega 360ms var(--suave) calc(var(--mv-en, 0s) + 420ms + var(--orden, 0) * 320ms) both
+      var(--mv-marcha);
+  }
+
+  .mv__base li:nth-child(2) {
+    --orden: 1;
+  }
+
+  .mv__base li:nth-child(3) {
+    --orden: 2;
+  }
+
+  .mv__base li:nth-child(n + 4) {
+    --orden: 3;
+  }
+
+  /* La nota de voz se escucha: el azul la recorre. */
+  [data-fase="sigue"] .wa__onda-oida {
+    animation: mv-escucha 1700ms linear calc(var(--mv-en, 0s) + 500ms) both var(--mv-marcha);
+  }
+
+  /* El sello cae con peso, como en el resto de la pagina. */
+  [data-fase="sigue"] .sello {
+    animation: mv-sella 220ms cubic-bezier(0.55, 0, 0.9, 0.35) var(--mv-sello) both var(--mv-marcha);
+  }
+
+  /* El horario que se agenda: se enciende, su estado de antes se va y llega el nombre. */
+  [data-fase="sigue"] [data-nueva] {
+    animation: mv-enciende 420ms var(--suave) var(--mv-cambia, 0s) both var(--mv-marcha);
+  }
+
+  [data-fase="sigue"] [data-nueva] .mv__antes {
+    animation: mv-estaba 260ms var(--suave) var(--mv-cambia, 0s) both var(--mv-marcha);
+  }
+
+  [data-fase="sigue"] .mv__luego {
+    animation: mv-llega 320ms var(--suave) calc(var(--mv-cambia, 0s) + 160ms) both var(--mv-marcha);
+  }
+
+  /* El examen: su barra se llena y, al llenarse, gana su palomita. */
+  [data-fase="sigue"] .mv__raya i {
+    animation: mv-llena 800ms var(--suave) calc(var(--mv-en, 0s) + 300ms) both var(--mv-marcha);
+  }
+
+  [data-fase="sigue"] .mv__bien {
+    animation: mv-brota 380ms cubic-bezier(0.2, 1.4, 0.4, 1) calc(var(--mv-en, 0s) + 1000ms) both var(--mv-marcha);
+  }
+}
+
+/* En computadora la oracion se despliega y se guarda: los renglones de abajo se deslizan a su lugar. */
+@media screen and (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+  .agentes__duo[data-tocada] .beneficio[data-abierto] > .beneficio__panel {
+    animation: none;
+  }
+
+  .beneficio__dice {
+    transition:
+      grid-template-rows var(--d-entrada) var(--suave),
+      visibility 0s var(--d-entrada);
+  }
+
+  .beneficio[data-abierto] .beneficio__dice {
+    transition:
+      grid-template-rows var(--d-entrada) var(--suave),
+      visibility 0s;
+  }
+}
+
+@keyframes mv-abre {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+
+@keyframes mv-entra {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@keyframes mv-sale {
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+@keyframes mv-llena {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes mv-escucha {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes mv-sella {
+  from {
+    opacity: 0;
+    rotate: -8deg;
+    scale: 1.9;
+  }
+}
+
+@keyframes mv-enciende {
+  from {
+    background-color: rgb(63 92 245 / 0);
+    box-shadow: inset 0 0 0 1px rgb(132 151 255 / 0);
+  }
+}
+
+@keyframes mv-estaba {
+  from {
+    opacity: 1;
+  }
+}
+
+@keyframes mv-llega {
+  from {
+    opacity: 0;
+    translate: 6px 0;
+  }
+}
+
+@keyframes mv-brota {
+  from {
+    opacity: 0;
+    scale: 0.4;
   }
 }

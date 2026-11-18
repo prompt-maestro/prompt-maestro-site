@@ -99,6 +99,13 @@ async function arrancar() {
       () => import('./encendido.js'),
       ({ montarEncendido }) => montarEncendido(),
     ),
+    pieza(
+      () => import('./agente-vista.js'),
+      ({ montarAgente }) => {
+        const agente = document.querySelector('[data-agente]');
+        if (agente instanceof HTMLElement) montarAgente(agente);
+      },
+    ),
   ]);
 }
 
@@ -180,5 +187,8 @@ try {
 trasElCartel()
   .then(() => Promise.race([arrancar(), new Promise((listo) => setTimeout(listo, ESPERA_MAXIMA))]))
   .finally(() => {
+    // El menu de "Tu agente" llega con su aspecto de menu. Si su pieza no arranco, se queda escrito como lista: cada
+    // beneficio con su oracion.
+    document.querySelector('[data-agente]:not([data-viva])')?.setAttribute('data-lista', '');
     document.dispatchEvent(new Event('pagina:montada'));
   });

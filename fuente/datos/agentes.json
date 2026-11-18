@@ -1,28 +1,199 @@
 {
+  "rotulos": {
+    "pausar": "Pausar",
+    "reproducir": "Reproducir",
+    "verDeNuevo": "Ver de nuevo"
+  },
   "hace": [
     {
+      "titulo": "Hecho solo para tu negocio",
+      "texto": "Trabaja con su propia base de conocimiento: tus servicios, tus precios, tus horarios y tus políticas. Por eso es un agente dedicado a ti, distinto al de cualquier otro profesional.",
+      "dura": 8,
+      "alta": true,
+      "pasos": [
+        {
+          "en": 0.4,
+          "base": {
+            "titulo": "Base de conocimiento",
+            "detalle": "Studio Bella · solo de este negocio",
+            "renglones": [
+              { "nombre": "Servicios y precios", "valor": "Gelish $350 · Acrílicas $480" },
+              { "nombre": "Horarios", "valor": "Martes a sábado, 10 am a 7 pm" },
+              { "nombre": "Políticas", "valor": "Anticipo $150 · Retoque sin costo 3 días" }
+            ]
+          }
+        },
+        { "en": 3.2, "sale": { "texto": "¿Y si se me levanta el gelish?", "hora": "10:12 a. m." } },
+        {
+          "en": 4.4,
+          "entra": {
+            "texto": "Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándame una foto y te agendo.",
+            "hora": "10:12 a. m."
+          }
+        },
+        { "en": 6.4, "hizo": { "texto": "Lo sabe porque es la política de tu negocio" } }
+      ]
+    },
+    {
+      "titulo": "Contesta en menos de un minuto",
+      "texto": "Precios, horarios y dudas, a cualquier hora y con el tono de tu negocio.",
+      "dura": 7,
+      "pasos": [
+        { "en": 0.3, "pastilla": { "texto": "Jueves · 11:48 p. m." } },
+        { "en": 1.1, "sale": { "texto": "Hola, ¿tienes lugar el sábado?", "hora": "11:48 p. m." } },
+        {
+          "en": 2.9,
+          "entra": {
+            "texto": "¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?",
+            "hora": "11:48 p. m."
+          }
+        },
+        { "en": 4.9, "hizo": { "texto": "Contestó en menos de un minuto" } }
+      ]
+    },
+    {
+      "titulo": "Maneja tu agenda solo",
+      "texto": "Ofrece solo los horarios libres de tu Google Calendar, agenda la cita y manda los recordatorios.",
+      "dura": 8,
+      "pasos": [
+        {
+          "en": 0.3,
+          "agenda": {
+            "rotulo": "Tu Google Calendar · Sábado",
+            "cambia": 5.6,
+            "renglones": [
+              { "hora": "11:00 am", "estado": "Libre" },
+              { "hora": "1:00 pm", "estado": "Ocupado", "ocupado": true },
+              { "hora": "4:30 pm", "estado": "Libre", "luego": "Ana" }
+            ]
+          }
+        },
+        {
+          "en": 1.2,
+          "hasta": 4.5,
+          "entra": {
+            "texto": "Te puedo ofrecer el sábado a las 11:00 am o 4:30 pm. ¿Cuál te acomoda?",
+            "hora": "10:14 a. m."
+          }
+        },
+        { "en": 2.8, "hasta": 4.5, "sale": { "texto": "A las 4:30 pm, por favor.", "hora": "10:15 a. m." } },
+        { "en": 4.7, "aprobado": { "texto": "Pago aprobado · $150" } },
+        { "en": 6.4, "hizo": { "texto": "Recordatorios: un día y una hora antes" } }
+      ]
+    },
+    {
+      "titulo": "Asegura el pago antes de agendar",
+      "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo en tu Mercado Pago.",
+      "dura": 8,
+      "pasos": [
+        {
+          "en": 0.3,
+          "hasta": 4.4,
+          "sale": { "texto": "Sí, aparte el jueves a las 10, por favor.", "hora": "9:41 a. m." }
+        },
+        {
+          "en": 1.6,
+          "entra": {
+            "liga": { "titulo": "Anticipo Consulta", "monto": "$300", "sitio": "mercadopago.com.mx" },
+            "texto": "Con gusto. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.",
+            "hora": "9:41 a. m."
+          }
+        },
+        { "en": 4.6, "aprobado": { "texto": "Pago aprobado · $300" } },
+        {
+          "en": 5.9,
+          "cita": { "dia": "JUE", "fecha": "19", "hora": "10:00 am · Elvira", "detalle": "Consulta" }
+        }
+      ]
+    },
+    {
       "titulo": "Entiende notas de voz",
-      "texto": "Si tu clienta manda un audio, lo escucha y le contesta por escrito."
+      "texto": "Si tu clienta manda un audio, lo escucha y le contesta por escrito.",
+      "dura": 7,
+      "pasos": [
+        { "en": 0.3, "voz": { "inicial": "M", "dura": "0:09", "hora": "4:12 p. m." } },
+        {
+          "en": 2.6,
+          "hizo": { "texto": "Escuchó: «Doctor, se me cayó una amalgama. ¿Me podría atender hoy?»" }
+        },
+        {
+          "en": 4.6,
+          "entra": {
+            "texto": "Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?",
+            "hora": "4:12 p. m."
+          }
+        }
+      ]
     },
     {
       "titulo": "Lee la foto de referencia",
-      "texto": "En uñas, revisa el diseño que quiere tu clienta. Si el precio no está en tu catálogo, te pregunta a ti antes de cotizar."
+      "texto": "En uñas, revisa el diseño que quiere tu clienta. Si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.",
+      "dura": 7,
+      "pasos": [
+        {
+          "en": 0.3,
+          "sale": {
+            "foto": { "archivo": "comercial/referencia-unas.webp", "ancho": 336, "alto": 336 },
+            "texto": "¿Cuánto por este diseño?",
+            "hora": "1:07 p. m."
+          }
+        },
+        { "en": 2.4, "hizo": { "texto": "Vio la foto: francesas con decorado" } },
+        {
+          "en": 4.3,
+          "entra": {
+            "texto": "Ya vi tu diseño: francesas con decorado. Queda en $420. ¿Te aparto lugar?",
+            "hora": "1:07 p. m."
+          }
+        }
+      ]
     },
     {
       "titulo": "Habla de tú o de usted",
-      "texto": "Si tu clienta escribe de usted, le contesta de usted. Con el tono de tu negocio."
+      "texto": "Si tu clienta escribe de usted, le contesta de usted. Con el tono de tu negocio.",
+      "dura": 8,
+      "pasos": [
+        { "en": 0.3, "etiqueta": { "texto": "De tú" } },
+        { "en": 0.7, "sale": { "texto": "Hola, ¿tienes lugar el sábado?" } },
+        {
+          "en": 1.9,
+          "entra": { "texto": "¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?" }
+        },
+        { "en": 3.8, "etiqueta": { "texto": "De usted" } },
+        { "en": 4.2, "sale": { "texto": "Buenas tardes, ¿me podría dar una cita?" } },
+        {
+          "en": 5.4,
+          "entra": { "texto": "Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?" }
+        }
+      ]
     },
     {
       "titulo": "Te pasa los recados",
-      "texto": "Cuando alguien necesita hablar contigo, toma el recado y te avisa a tu WhatsApp personal."
-    },
-    {
-      "titulo": "Recuerda la cita",
-      "texto": "Manda los recordatorios y después te pregunta si la persona asistió."
+      "texto": "Cuando alguien necesita hablar contigo, toma el recado y te avisa a tu WhatsApp personal.",
+      "dura": 7,
+      "pasos": [
+        { "en": 0.3, "sale": { "texto": "¿Me haces un descuento si voy con mi hermana?", "hora": "6:30 p. m." } },
+        { "en": 2.1, "entra": { "texto": "Eso lo decide Bella. Ya le dejé tu recado.", "hora": "6:30 p. m." } },
+        {
+          "en": 4.3,
+          "recado": {
+            "rotulo": "Tu WhatsApp personal",
+            "texto": "📩 Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas."
+          }
+        }
+      ]
     },
     {
       "titulo": "Pasa un examen antes de atender",
-      "texto": "Antes de su primera conversación real, lo examinamos tres veces seguidas. Si falla algo grave, no sale."
+      "texto": "Antes de su primera conversación real, lo examinamos tres veces seguidas. Si falla algo grave, no sale.",
+      "dura": 7,
+      "pasos": [
+        { "en": 0.3, "examen": { "nombre": "Examen 1" } },
+        { "en": 1.5, "examen": { "nombre": "Examen 2" } },
+        { "en": 2.7, "examen": { "nombre": "Examen 3" } },
+        { "en": 4.3, "hizo": { "texto": "Cero errores graves" } },
+        { "en": 5.3, "hizo": { "texto": "Listo para atender", "grande": true } }
+      ]
     }
   ],
   "limitesTitulo": "Lo que tu agente no hace",
@@ -34,7 +205,7 @@
       "texto": "No inventa precios: los toma de tu catálogo."
     },
     {
-      "texto": "No se hace pasar por una persona. Avisa que es un asistente virtual y, si tu clienta lo pide, te la pasa."
+      "texto": "No se hace pasar por una persona: avisa que es un asistente virtual."
     },
     {
       "texto": "No cobra el resto del servicio. Solo el anticipo que garantiza la cita."

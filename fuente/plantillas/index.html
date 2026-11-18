@@ -13,6 +13,8 @@
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/medicion-vista.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/medicion.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/encendido.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/agente-vista.js">
+<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/agente.js">
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
 <link rel="stylesheet" href="{{armado.activos}}estilos/pagina.css">
 {{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true"></script>
@@ -207,20 +209,28 @@
       <p class="sobre">Tu agente</p>
       <h2 class="agentes__titulo" id="titulo-agentes">Atiende como tú lo harías. <em>A cualquier hora.</em></h2>
     </div>
-    <ol class="agentes__lista" role="list">
-{{#cada agentes.hace}}      <li class="agentes__punto"><h3 class="agentes__nombre">{{titulo}}</h3><p>{{texto}}</p></li>
-{{/cada}}    </ol>
+    <div class="agentes__duo" data-agente data-pausar="{{agentes.rotulos.pausar}}" data-reproducir="{{agentes.rotulos.reproducir}}" data-ver-de-nuevo="{{agentes.rotulos.verDeNuevo}}">
+      <ol class="beneficios" role="list">
+{{#cada agentes.hace}}        <li class="beneficio" data-beneficio{{#si @primero}} data-abierto data-fase="espera"{{/si}}>
+          <h3 class="beneficio__nombre"><span class="beneficio__boton" data-beneficio-boton><span class="beneficio__play" aria-hidden="true"><svg focusable="false"><use href="#i-reproducir"/></svg></span>{{titulo}}</span></h3>
+          <div class="beneficio__panel" id="beneficio-{{@numero}}">
+            <div class="beneficio__dice"><p class="beneficio__texto">{{texto}}</p></div>
+{{> mini-video}}          </div>
+        </li>
+{{/cada}}      </ol>
+      <template data-mv-barra><div class="mv__barra"><button class="mv__pausa" type="button" data-mv-pausa data-estado="pausar" aria-label="{{agentes.rotulos.pausar}}"><svg class="mv__icono" data-de="pausar" aria-hidden="true" focusable="false"><use href="#i-pausa"/></svg><svg class="mv__icono" data-de="reproducir" aria-hidden="true" focusable="false"><use href="#i-reproducir"/></svg><svg class="mv__icono" data-de="verDeNuevo" aria-hidden="true" focusable="false"><use href="#i-repite"/></svg></button><span class="mv__linea" aria-hidden="true"><i class="mv__avance" data-mv-avance></i></span><span class="mv__dura" aria-hidden="true" data-mv-dura></span></div></template>
+    </div>
     <div class="agentes__confianza">
       <h3 class="agentes__subtitulo agentes__subtitulo--grande">{{secciones.confianza.titulo}} <em>{{secciones.confianza.tituloFuerte}}</em></h3>
       <ul class="agentes__cuidamos" role="list">
-{{#cada secciones.confianza.lista}}        <li><h4>{{titulo}}</h4><p>{{texto}}</p></li>
+{{#cada secciones.confianza.lista}}        <li><svg class="agentes__icono" aria-hidden="true" focusable="false"><use href="#i-{{icono}}"/></svg><div><h4>{{titulo}}</h4><p>{{texto}}</p></div></li>
 {{/cada}}      </ul>
     </div>
     <div class="agentes__limites">
       <h3 class="agentes__subtitulo">{{agentes.limitesTitulo}}</h3>
       <ul class="agentes__no" role="list">
-{{#cada agentes.noHace}}        <li>{{texto}}</li>
-{{/cada}}{{#cada secciones.confianza.noHaceMas}}        <li>{{texto}}</li>
+{{#cada agentes.noHace}}        <li><svg class="agentes__tacha" aria-hidden="true" focusable="false"><use href="#i-tacha"/></svg>{{texto}}</li>
+{{/cada}}{{#cada secciones.confianza.noHaceMas}}        <li><svg class="agentes__tacha" aria-hidden="true" focusable="false"><use href="#i-tacha"/></svg>{{texto}}</li>
 {{/cada}}      </ul>
     </div>
   </section>
