@@ -10,7 +10,8 @@
 //   - el espacio antes de dos puntos ("a :hover" no es "a:hover") y el de un valor vacio ("--x: ;");
 //   - un escape con diagonal invertida, con el espacio que lo cierra.
 
-const ESPACIO = /\s/;
+/** Los espacios de CSS, y solo esos: un espacio duro o una marca de orden de bytes son letras, no separadores. */
+const ESPACIO = /[ \t\n\r\f]/;
 /** Junto a estos signos un espacio nunca significa nada: se quita el de antes y el de despues. */
 const SIN_ESPACIOS = new Set(['{', '}', ';', ',']);
 
@@ -36,20 +37,27 @@ export function achicarCss(css) {
   let salida = '';
   // Si entre lo ultimo que se escribio y lo que sigue habia espacios.
   let hueco = false;
+  // Si lo ultimo que se escribio fue un escape ("\:" o "\,"): ese signo es una letra del nombre, no un separador.
+  let trasEscape = false;
+
+  /** La ultima letra escrita, para decidir si un espacio significa algo. Un signo escapado cuenta como letra. */
+  const ultima = () => (trasEscape ? 'x' : (salida.at(-1) ?? ''));
 
   /**
    * Escribe un trozo. Si antes habia espacios deja uno solo, salvo donde no significa nada: al principio, junto a una
    * llave, un punto y coma o una coma, y despues de los dos puntos.
    * @param {string} trozo
+   * @param {boolean} [esEscape]  si el trozo es un escape completo
    */
-  const escribir = (trozo) => {
-    const antes = salida.at(-1) ?? '';
+  const escribir = (trozo, esEscape = false) => {
+    const antes = ultima();
     const primero = trozo[0] ?? '';
     // Un valor vacio a proposito ("--x: ;") conserva su espacio; fuera de el, despues de dos puntos el espacio sobra.
     const vacio = antes === ':' && (primero === ';' || primero === '}');
     const significa = antes !== '' && antes !== ':' && !SIN_ESPACIOS.has(antes) && !SIN_ESPACIOS.has(primero);
     if (hueco && (vacio || significa)) salida += ' ';
     hueco = false;
+    trasEscape = esEscape;
     salida += trozo;
   };
 
@@ -63,7 +71,7 @@ export function achicarCss(css) {
       // Un comentario: se va entero. Solo si es lo unico que separa dos piezas ("0/**/auto") se deja uno vacio.
       const cierre = css.indexOf('*/', i + 2);
       const sigue = cierre < 0 ? largo : cierre + 2;
-      const antes = salida.at(-1) ?? '';
+      const antes = ultima();
       const despues = css[sigue] ?? '';
       const separa =
         !hueco &&
@@ -80,9 +88,11 @@ export function achicarCss(css) {
       escribir(css.slice(i, fin + 1));
       i = fin + 1;
     } else if (letra === '\\') {
-      // Un escape: la diagonal y lo que escapa. Si es un codigo (hasta seis digitos), tambien el espacio que lo cierra.
-      const trozo = /^\\[0-9a-fA-F]{1,6}\s?/.exec(css.slice(i, i + 8))?.[0] ?? css.slice(i, i + 2);
-      escribir(trozo);
+      // Un escape: la diagonal y lo que escapa. Si es un codigo (hasta seis digitos), tambien el espacio que lo cierra
+      // (un retorno con su salto de renglon cuentan como uno solo), que se escribe siempre como un espacio.
+      const codigo = /^\\[0-9a-fA-F]{1,6}(?:\r\n|[ \t\n\r\f])?/.exec(css.slice(i, i + 9))?.[0];
+      const trozo = codigo ?? css.slice(i, i + 2);
+      escribir(codigo ? codigo.replace(/[ \t\n\r\f]+$/, ' ') : trozo, true);
       i += trozo.length;
     } else if (esUrlSinComillas(css, i)) {
       let fin = i + 4;

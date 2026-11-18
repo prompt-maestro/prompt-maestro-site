@@ -212,11 +212,16 @@ test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de 
     giros.map((giro) => giro.tarjeta.nombre),
     ['Uñas', 'Dentistas', 'Médicos generales y especialistas'],
   );
-  // El renglon de cada tarjeta es el mismo de antes, que sigue en corto.json (ese archivo no se toco).
-  const corto = await leer('corto.json');
+  // El renglon de cada tarjeta es el aprobado. Vive aqui, en giros.json: esta seccion ya no lee corto.json.
+  assert.deepEqual(
+    giros.map((giro) => giro.tarjeta.texto),
+    [
+      'Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta.',
+      'Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.',
+      'Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.',
+    ],
+  );
   for (const giro of giros) {
-    const oficio = corto.oficios.find((/** @type {any} */ uno) => uno.clave === giro.clave);
-    assert.equal(giro.tarjeta.texto, oficio?.tarjeta, giro.clave);
     assert.ok(
       giro.tarjeta.alt.length > 15 && !/^foto|^imagen/i.test(giro.tarjeta.alt),
       `${giro.clave}: el alt describe la foto`,

@@ -1648,9 +1648,10 @@ html:not(.con-cuenta) .calculadora {
 
 /* ---------------------------------------------------------------------------------------------------------------
    El movimiento, solo para quien no pidio reducirlo. La pagina llega con todo encendido; encendido.js apaga lo que
-   todavia no esta a la vista ("espera") y lo enciende, una sola vez, cuando la visitante llega ("ya").
+   todavia no esta a la vista ("espera") y lo enciende, una sola vez, cuando la visitante llega ("ya"). Solo en
+   pantalla: al imprimir o guardar en PDF todo sale encendido, aunque no se haya recorrido.
    --------------------------------------------------------------------------------------------------------------- */
-@media (prefers-reduced-motion: no-preference) {
+@media screen and (prefers-reduced-motion: no-preference) {
   .barra-movil {
     transition:
       translate var(--d-entrada) var(--suave),

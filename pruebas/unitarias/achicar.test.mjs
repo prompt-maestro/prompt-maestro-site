@@ -187,3 +187,97 @@ test('las hojas de la pagina: sin comentarios, mas ligeras y con las mismas regl
     assert.equal(sumas(chica), sumas(sinComentarios.replace(/\s+/g, ' ')), `${nombre}: cambio una suma o una resta`);
   }
 });
+
+test('un signo escapado es una letra del nombre: el espacio que lo sigue se conserva', () => {
+  // ".a\: .b" es "un .b dentro de la clase a:"; pegados serian otra clase.
+  assert.equal(achicarCss('.a\\: .b { top: 0 }'), '.a\\: .b{top:0}');
+  assert.equal(achicarCss('.a\\,  .b { top: 0 }'), '.a\\, .b{top:0}');
+  assert.equal(achicarCss('.a\\; .b { top: 0 }'), '.a\\; .b{top:0}');
+  assert.equal(achicarCss('.a\\{ .b { top: 0 }'), '.a\\{ .b{top:0}');
+  assert.equal(achicarCss('.a\\} .b { top: 0 }'), '.a\\} .b{top:0}');
+  // Y un comentario pegado a un signo escapado sigue separando dos piezas.
+  assert.equal(achicarCss('.a\\,/* x */b { top: 0 }'), '.a\\,/**/b{top:0}');
+  // Antes de una llave el espacio sobra igual, con escape o sin el.
+  assert.equal(achicarCss('.a\\: { top: 0 }'), '.a\\:{top:0}');
+});
+
+test('el cierre de un codigo escapado es uno solo, aunque sea un retorno con su salto de renglon', () => {
+  assert.equal(achicarCss('.\\31\r\n0 .b { top: 0 }'), '.\\31 0 .b{top:0}');
+  assert.equal(achicarCss('.\\31\n0 { top: 0 }'), '.\\31 0{top:0}');
+  assert.equal(achicarCss('.\\31\t0 { top: 0 }'), '.\\31 0{top:0}');
+  // Seis digitos y su cierre; el segundo espacio ya es un descendiente.
+  assert.equal(achicarCss('.\\000031  .b { top: 0 }'), '.\\000031  .b{top:0}');
+});
+
+test('solo los espacios de CSS son espacios: un espacio duro o una marca de orden de bytes se quedan', () => {
+  const duro = String.fromCharCode(0xa0);
+  const renglon = String.fromCharCode(0x2028);
+  const marca = String.fromCharCode(0xfeff);
+  assert.equal(achicarCss(`.a${duro}b { top: 0 }`), `.a${duro}b{top:0}`);
+  assert.equal(achicarCss(`.a${renglon}b { top: 0 }`), `.a${renglon}b{top:0}`);
+  assert.equal(achicarCss(`${marca}.a { top: 0 }`), `${marca}.a{top:0}`);
+  assert.equal(achicarCss('.a\f\t\r\n.b { top: 0 }'), '.a .b{top:0}');
+});
+
+/**
+ * Parte una hoja en piezas, sin ayuda del achicador: cadenas, url() sin comillas, escapes y letras sueltas. Entre
+ * pieza y pieza anota si habia espacios ("e"), solo un comentario ("c") o nada ("").
+ * @param {string} css
+ * @returns {{ pieza: string, antes: string }[]}
+ */
+function piezasDe(css) {
+  /** @type {{ pieza: string, antes: string }[]} */
+  const piezas = [];
+  const patron =
+    /([ \t\n\r\f]+)|(\/\*[\s\S]*?\*\/)|("(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*')|(url\(\s*[^"'\s)][^)]*\))|(\\[0-9a-fA-F]{1,6}[ \t\n\r\f]?|\\[\s\S])|([\s\S])/giy;
+  let antes = '';
+  for (const [, espacio, comentario, cadena, direccion, escapada, letra] of css.matchAll(patron)) {
+    if (espacio) antes = 'e';
+    else if (comentario) antes ||= 'c';
+    else {
+      piezas.push({ pieza: cadena ?? direccion ?? escapada ?? letra ?? '', antes });
+      antes = '';
+    }
+  }
+  return piezas;
+}
+
+test('las hojas de la pagina, pieza por pieza: las mismas, sin un espacio inventado y sin quitar uno que signifique', async () => {
+  /** @type {string[]} */
+  const orden = JSON.parse(await readFile(path.join(ESTILOS, 'orden.json'), 'utf8'));
+  const hojas = (await readdir(ESTILOS)).filter((nombre) => nombre.endsWith('.css'));
+  const unida = (await Promise.all(orden.map((nombre) => readFile(path.join(ESTILOS, nombre), 'utf8')))).join('');
+  /** Junto a estos signos un espacio no significa nada; tras dos puntos, tampoco (en un selector nunca lo hay). */
+  const sobraAntesDe = new Set(['{', '}', ';', ',']);
+  const sobraDespuesDe = new Set(['{', '}', ';', ',', ':']);
+  /** @type {[string, string][]} */
+  const casos = [['la hoja unida', unida]];
+  for (const nombre of hojas) casos.push([nombre, await readFile(path.join(ESTILOS, nombre), 'utf8')]);
+  let quitados = 0;
+  for (const [nombre, fuente] of casos) {
+    const antes = piezasDe(fuente);
+    const despues = piezasDe(achicarCss(fuente));
+    assert.deepEqual(
+      despues.map(({ pieza }) => pieza),
+      antes.map(({ pieza }) => pieza),
+      `${nombre}: cambio una pieza`,
+    );
+    for (const [lugar, { pieza, antes: habia }] of antes.entries()) {
+      const queda = despues[lugar]?.antes ?? '';
+      const previa = antes[lugar - 1]?.pieza ?? '';
+      const donde = `${nombre}: entre "${previa}" y "${pieza}" (pieza ${lugar})`;
+      // Nunca aparece un espacio (ni un comentario vacio) donde no habia nada.
+      if (habia === '') assert.equal(queda, '', `${donde} aparecio un separador`);
+      if (habia === 'e' && queda !== 'e') {
+        // Un espacio solo se va al principio o junto a un signo donde no significa nada.
+        assert.ok(lugar === 0 || sobraAntesDe.has(pieza) || sobraDespuesDe.has(previa), `${donde} se fue un espacio`);
+        quitados++;
+      }
+      // Un comentario que era lo unico entre dos piezas las sigue separando, salvo junto a esos mismos signos.
+      if (habia === 'c' && queda === '')
+        assert.ok(sobraAntesDe.has(pieza) || sobraDespuesDe.has(previa), `${donde} se pegaron dos piezas`);
+    }
+  }
+  // La prueba si esta mirando algo: en estas hojas se van miles de espacios.
+  assert.ok(quitados > 5000, `solo se quitaron ${quitados} espacios`);
+});

@@ -666,10 +666,19 @@ test('en celular el boton principal baja a la mano y nunca hay dos a la vez ni e
   await page.locator('#titulo-preguntas').scrollIntoViewIfNeeded();
   await expect(page.locator('#empieza')).not.toBeInViewport();
   await expect(abajo).toBeVisible();
+  await expect(arriba).toBeHidden();
+  // Bajo las cinco preguntas ya asoma el cierre: con la ultima a la vista y el cierre debajo, la barra de abajo se
+  // guarda y vuelve el boton de arriba. Uno solo, siempre.
+  await page.locator('#preguntas .preguntas__ver').evaluate((boton) => boton.scrollIntoView({ block: 'start' }));
+  await expect(page.locator('#empieza')).toBeInViewport();
+  await expect(abajo).toBeHidden();
+  await expect(arriba).toBeVisible();
   await page.locator('#empieza').scrollIntoViewIfNeeded();
   await expect(abajo).toBeHidden();
+  await expect(arriba).toBeVisible();
   await page.locator('.pie').scrollIntoViewIfNeeded();
   await expect(abajo).toBeHidden();
+  await expect(arriba).toBeVisible();
 });
 
 test('en celular, lo que recibe el foco no se queda escondido detras de la barra de abajo', async ({ page }) => {

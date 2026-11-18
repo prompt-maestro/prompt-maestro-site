@@ -197,6 +197,40 @@ test('quien llega directo a una seccion la encuentra encendida: no se le apaga p
   await expect(page.locator('#en-una-frase .frase__lado').last()).toHaveAttribute('data-enciende', 'espera');
 });
 
+test('en una pantalla muy bajita (mucho zoom) nada se queda apagado: a la pieza alta le basta con asomar', async ({
+  page,
+}) => {
+  // Como una laptop con zoom de 400 % o mas: la quinta parte de una tarjeta ya no cabe en lo que se ve.
+  await page.setViewportSize({ width: 320, height: 120 });
+  await avisarAlMontar(page);
+  await page.goto('./');
+  await yaMonto(page);
+  expect((await aspecto(page)).estados).toEqual(Array(PIEZAS).fill('espera'));
+  for (const pieza of await page.locator('[data-enciende]').all()) {
+    await llegarA(pieza);
+    await expect(pieza).toHaveAttribute('data-enciende', 'ya');
+  }
+  expect((await aspecto(page)).estados).toEqual(Array(PIEZAS).fill('ya'));
+});
+
+test('al imprimir o guardar en PDF todo sale encendido, aunque no se haya recorrido la pagina', async ({ page }) => {
+  await avisarAlMontar(page);
+  await page.goto('./');
+  await yaMonto(page);
+  // En pantalla, lo que falta por ver espera apagado.
+  const enPantalla = await aspecto(page);
+  expect(enPantalla.estados).toEqual(Array(PIEZAS).fill('espera'));
+  expect(enPantalla).toMatchObject({ escena: '0', luz: '0', sello: '0' });
+  // En papel no hay a donde llegar: las mismas piezas, sin tocarlas, se ven encendidas.
+  await page.emulateMedia({ media: 'print' });
+  const enPapel = await aspecto(page);
+  expect(enPapel.estados).toEqual(Array(PIEZAS).fill('espera'));
+  expect(enPapel).toMatchObject({
+    ...ENCENDIDO,
+    linea: expect.stringMatching(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/),
+  });
+});
+
 test('con movimiento reducido nada espera apagado ni se mueve: todo esta encendido y quieto', async ({ page }) => {
   await avisarAlMontar(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });

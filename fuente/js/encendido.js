@@ -5,8 +5,32 @@
 // llegue, una sola vez. Como se ve apagado y como se enciende lo dicen los estilos (data-enciende="espera" y "ya",
 // y --orden: el lugar de cada pieza entre las que se encienden juntas).
 
-/** Cuanto de la pieza tiene que asomar, y que tan arriba del fondo de la pantalla, para encenderla. */
-const ASOMA = { rootMargin: '0px 0px -12% 0px', threshold: 0.2 };
+/** Cuanto de la pieza tiene que asomar para encenderla: una quinta parte. */
+const PARTE = 0.2;
+/** Que tan arriba del fondo de la pantalla cuenta. El vigia avisa cuando la pieza empieza a asomar y cuando ya asomo su parte. */
+const ASOMA = { rootMargin: '0px 0px -12% 0px', threshold: [0, PARTE] };
+
+/**
+ * Si a una pieza le basta con empezar a asomar: cuando es tan alta que su quinta parte no cabe en media pantalla (con
+ * mucho zoom, o en una pantalla bajita), no se le pide mas. Asi nada se queda apagado para siempre.
+ * @param {number} altoDeLaPieza
+ * @param {number} altoDeLaPantalla  lo alto de la parte de la pantalla que cuenta
+ * @returns {boolean}
+ */
+export function bastaConAsomar(altoDeLaPieza, altoDeLaPantalla) {
+  return altoDeLaPieza * PARTE > altoDeLaPantalla / 2;
+}
+
+/**
+ * Si una pieza que esta entrando a la vista ya se enciende: asomo su parte, o es tan alta que le basta con asomar.
+ * @param {{ parte: number, alto: number, pantalla: number }} entrada  cuanto de la pieza se ve (de 0 a 1), lo alto de
+ *   la pieza y lo alto de la parte de la pantalla que cuenta
+ * @returns {boolean}
+ */
+export function yaLlego({ parte, alto, pantalla }) {
+  // El navegador avisa justo al cruzar la quinta parte y a veces la reporta un pelo por debajo.
+  return parte >= PARTE - 0.005 || (parte > 0 && bastaConAsomar(alto, pantalla));
+}
 
 /**
  * Lo que falta por ver: las piezas que empiezan debajo de la pantalla. A la que ya esta a la vista, o quedo arriba, no
@@ -43,7 +67,17 @@ export function turnosDe(grupos) {
 export function montarEncendido() {
   if (typeof IntersectionObserver !== 'function' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const vigia = new IntersectionObserver((entradas) => {
-    const llegan = entradas.filter((entrada) => entrada.isIntersecting).map((entrada) => entrada.target);
+    const llegan = entradas
+      .filter(
+        (entrada) =>
+          entrada.isIntersecting &&
+          yaLlego({
+            parte: entrada.intersectionRatio,
+            alto: entrada.boundingClientRect.height,
+            pantalla: entrada.rootBounds?.height ?? innerHeight,
+          }),
+      )
+      .map((entrada) => entrada.target);
     // Las piezas hermanas que llegan juntas se encienden escalonadas.
     const turnos = turnosDe(llegan.map((pieza) => pieza.parentElement));
     for (const [lugar, pieza] of llegan.entries()) {
