@@ -1,26 +1,14 @@
 {
+  "charla": "10:12 am",
   "pregunta": "Hola, ¿cuánto cuesta la limpieza dental?",
   "saludo": [
     "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. Con gusto te ayudo. La limpieza dental cuesta {precio} y la cita dura unos 45 minutos. Si quieres, te busco un horario."
   ],
-  "cuando": [
-    {
-      "id": "miercoles",
-      "ficha": "El miércoles",
-      "dice": "Sí, ¿tienes lugar el miércoles?",
-      "dia": "miércoles",
-      "horas": ["9:00 am", "11:30 am", "4:00 pm", "6:00 pm"]
-    },
-    {
-      "id": "sabado",
-      "ficha": "El sábado",
-      "dice": "Sí, ¿tienes lugar el sábado?",
-      "dia": "sábado",
-      "horas": ["9:00 am", "10:30 am", "12:00 pm", "1:00 pm"]
-    }
-  ],
+  "pideDia": "Sí, ¿tienes lugar el miércoles?",
+  "dia": "miércoles",
+  "fecha": 18,
+  "horas": ["9:00 am", "11:30 am", "4:00 pm", "6:00 pm"],
   "horaSugerida": "4:00 pm",
   "eligeHora": "{ALaHora}, por favor.",
-  "apartado": "Listo, te aparté el lugar para el {dia} {aLaHora}. Para confirmar tu cita se paga el anticipo de {anticipo} con este link. Te guardo el lugar unos minutos y, en cuanto pagues, te confirmo por aquí mismo.",
-  "otras": ["Valoración · Iván", "Resina · Laura", "Limpieza · Mariana"]
+  "apartado": "Listo, te aparté el lugar para el {dia} {aLaHora}. Para confirmar tu cita se paga el anticipo de {anticipo} con este link. Te guardo el lugar unos minutos y, en cuanto pagues, te confirmo por aquí mismo."
 }

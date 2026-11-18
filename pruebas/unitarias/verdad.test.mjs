@@ -30,10 +30,14 @@ const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
   [/lista en \d+ minutos|en \d+ minutos (queda|est[aá])/, 'no se prometen tiempos exactos de alta'],
   [/abogad|veterinari|psic[oó]log|barber|est[eé]tica|spa\b/, 'no se nombran oficios que todavia no existen'],
   [/tu cuenta personal/, 'el anticipo cae en "tu Mercado Pago", no en "tu cuenta personal"'],
+  // El agente ya no ofrece hablar con la duena ni invita a escribir PERSONA: ningun texto se salta al agente.
+  [/prefieres hablar con|escribe persona/, 'el agente no ofrece la salida PERSONA'],
   [/—/, 'sin guiones largos'],
 ]);
 
 let visible = '';
+/** Lo mismo, con sus mayusculas: para lo que solo esta prohibido como palabra clave. */
+let leido = '';
 let html = '';
 
 before(async () => {
@@ -54,7 +58,8 @@ before(async () => {
     .replace(/<[^>]+>/g, ' ');
   // Y la pagina contada para los modelos de lenguaje: tampoco ahi se promete de mas.
   const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
-  visible = [texto, ...atributos, ...datos, llms].join(' ').replace(/\s+/g, ' ').toLowerCase();
+  leido = [texto, ...atributos, ...datos, llms].join(' ').replace(/\s+/g, ' ');
+  visible = leido.toLowerCase();
 });
 
 test('la pagina armada trae sus secciones (si no, esta prueba no estaria leyendo nada)', () => {
@@ -78,12 +83,19 @@ for (const [patron, porque] of PROHIBIDO) {
   });
 }
 
+test('nunca dice PERSONA: la palabra clave con que se pedia hablar con alguien mas ya no existe', () => {
+  // En minusculas "persona" es una palabra cualquiera ("si la persona asistio"); en mayusculas era la salida.
+  assert.ok(leido.includes('Despreocúpate') && visible.includes('persona'), 'la prueba esta leyendo la pagina');
+  const hallado = /PERSONA/.exec(leido);
+  const donde = hallado ? leido.slice(Math.max(0, hallado.index - 60), hallado.index + 80) : '';
+  assert.equal(hallado, null, `aparece en: ...${donde}...`);
+});
+
 test('lo que la pagina si tiene que decir, con las palabras de la tabla de la verdad', () => {
   for (const frase of [
     'tu mercado pago',
     'según la política que tú pones',
     'asistente virtual',
-    'escribe persona',
     'no te trae clientela nueva',
     'no diagnostica ni recomienda medicamentos',
     'hoy, para uñas, dentistas y médicos',

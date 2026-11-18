@@ -6,15 +6,8 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import {
-  avanzar,
-  conversacionDeEjemplo,
-  escenaDe,
-  estadoInicial,
-  presentacionDe,
-  rotulosDeEjemplo,
-} from '../fuente/js/demo.js';
-import { pesos, rellenar } from '../fuente/js/redaccion.js';
+import { conversacionDeEjemplo, fichaDe, historiaDe, presentacionDe, reposoDe } from '../fuente/js/demo.js';
+import { pesos } from '../fuente/js/redaccion.js';
 import { datosEstructurados, jsonParaScript, llmsTxt, robots, sitemap, TOPES } from './buscadores.mjs';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
 import { medicionDe } from './medicion.mjs';
@@ -23,7 +16,6 @@ import { pintar } from './plantilla.mjs';
 
 /** @typedef {'publica' | 'previa'} Destino */
 /** @typedef {import('../fuente/js/demo.js').Ejemplo} Ejemplo */
-/** @typedef {import('../fuente/js/demo.js').Evento} Evento */
 
 /** Donde se sirve cada armada. La previa vive en una carpeta de github.io, por eso todo enlace interno lleva la base. */
 export const DESTINOS = /** @type {const} */ ({
@@ -148,43 +140,51 @@ function huellaDe(activos) {
 }
 
 /**
- * Todo lo que la demostracion puede llegar a decir con un ejemplo: cada dia, cada hora y las dos respuestas, y lo que
- * la pagina dice de el fuera del telefono (su nombre para elegirlo, la leyenda y el aviso del cambio). Si algun texto
- * deja un hueco sin llenar, truena aqui, al armar, y no en el telefono de una visitante.
+ * Todo lo que la demostracion puede llegar a decir con un ejemplo: su historia entera, toma por toma y con sus dos
+ * finales (lo que se dice en la conversacion, el letrero, las tarjetas de lo que le llega a la profesional y la hora
+ * de cada cosa), y lo que la pagina dice de el fuera del celular. Si algun texto deja un hueco sin llenar, truena
+ * aqui, al armar, y no en el telefono de una visitante.
  * @param {Ejemplo} ejemplo
  * @returns {string[]}
  */
 function textosDe(ejemplo) {
-  const { giro, guion, rotulos } = ejemplo;
+  const { giro, rotulos } = ejemplo;
   const textos = new Set(Object.values(rotulos).filter((texto) => !/[{}]/.test(texto)));
   textos.add(giro.nombre);
-  for (const texto of Object.values(rotulosDeEjemplo(giro, rotulos))) textos.add(texto);
+  for (const texto of Object.values(fichaDe(ejemplo))) textos.add(texto);
   for (const telefono of /** @type {const} */ (['cliente', 'profesional'])) {
-    for (const texto of Object.values(presentacionDe(giro, rotulos, telefono))) textos.add(texto);
+    for (const texto of Object.values(presentacionDe(ejemplo, telefono))) textos.add(texto);
   }
-  for (const opcion of guion.cuando) {
-    for (const hora of opcion.horas) {
-      for (const valor of [true, false]) {
-        /** @type {Evento[]} */
-        const ruta = [
-          { tipo: 'enviar' },
-          { tipo: 'cuando', id: opcion.id },
-          { tipo: 'hora', hora },
-          { tipo: 'pagar' },
-          { tipo: 'seguir' },
-          { tipo: 'seguir' },
-          { tipo: 'asistio', valor },
-          { tipo: 'seguir' },
-        ];
-        let estado = estadoInicial();
-        for (const evento of [null, ...ruta]) {
-          if (evento) estado = avanzar(estado, evento, guion);
-          const escena = escenaDe(estado, ejemplo);
-          for (const algo of [...escena.chat, ...escena.tu.filas]) textos.add(algo.texto);
-          textos.add(escena.tu.resumen);
-        }
-        if (estado.paso !== 'cierre') throw new Error(`Demostracion: el ejemplo "${giro.clave}" no llega al cierre`);
-      }
+  for (const asistio of [true, false]) {
+    const tomas = historiaDe(ejemplo, asistio);
+    if (tomas.at(-1)?.cuadro.paso !== 'cierre') {
+      throw new Error(`Demostracion: el ejemplo "${giro.clave}" no llega al cierre`);
+    }
+    for (const toma of tomas) {
+      // El agente redactando y el cierre no dicen nada: lo suyo va en el letrero.
+      if (toma.tipo !== 'escribe' && toma.tipo !== 'cierre') textos.add(toma.texto);
+      const { cuadro, liga } = toma;
+      const dichos = [
+        toma.hora,
+        toma.lector,
+        toma.detalle,
+        toma.monto,
+        toma.boton,
+        liga?.titulo,
+        liga?.monto,
+        liga?.sitio,
+      ];
+      const vistos = [
+        cuadro.rotulo,
+        cuadro.letrero,
+        cuadro.reloj,
+        cuadro.cita.titulo,
+        cuadro.cita.detalle,
+        cuadro.pago.titulo,
+        cuadro.pago.detalle,
+        cuadro.asistencia.titulo,
+      ];
+      for (const texto of [...dichos, ...vistos]) if (texto !== undefined) textos.add(texto);
     }
   }
   return [...textos];
@@ -195,13 +195,12 @@ function textosDe(ejemplo) {
  * falta el guion, si dos llevan la misma clave o si alguna frase de CUALQUIERA de ellos queda vacia o con un hueco sin
  * llenar, y anota como problema cualquier guion largo en lo que el JavaScript va a pintar.
  * @param {Record<string, unknown>} datos
- * @param {string} alta  a donde lleva "Empieza ahora"
  * @param {string[]} problemas
  */
-function prepararDemo(datos, alta, problemas) {
+function prepararDemo(datos, problemas) {
   const giros = /** @type {import('../fuente/js/demo.js').Giro[]} */ (datos.giros);
   const guiones = /** @type {Record<string, import('../fuente/js/demo.js').Guion>} */ (datos.guiones);
-  const { fijos, tu, rotulos } = /** @type {Omit<Ejemplo, 'giro' | 'guion'>} */ (datos.demo);
+  const { fijos, momentos, finales, rotulos } = /** @type {Omit<Ejemplo, 'giro' | 'guion'>} */ (datos.demo);
   const ejemplos = giros.map((giro) => {
     const guion = guiones[giro.clave];
     if (!guion) throw new Error(`Demostracion: al ejemplo "${giro.clave}" le falta su guion`);
@@ -212,28 +211,26 @@ function prepararDemo(datos, alta, problemas) {
     throw new Error('Demostracion: dos ejemplos llevan la misma clave');
   }
   for (const ejemplo of ejemplos) {
-    for (const texto of textosDe({ ...ejemplo, fijos, tu, rotulos })) {
+    for (const texto of textosDe({ ...ejemplo, fijos, momentos, finales, rotulos })) {
       if (!texto) throw new Error(`Demostracion: al ejemplo "${ejemplo.giro.clave}" le falta un texto`);
       for (const hallazgo of guionesEn(texto)) problemas.push(`demostracion (${ejemplo.giro.clave}): ${hallazgo}`);
     }
   }
   const primero = ejemplos[0];
   if (!primero) throw new Error('Demostracion: no hay ningun ejemplo');
-  const completo = { ...primero, fijos, tu, rotulos };
-  const reposo = escenaDe(estadoInicial(), completo).tu;
+  const completo = { ...primero, fijos, momentos, finales, rotulos };
+  const pago = historiaDe(completo).find((toma) => toma.tipo === 'hoja');
   return {
     // Los datos viajan dentro de la pagina como JSON (no es un script que se ejecute). El "<" se escribe por su
     // codigo para que ningun texto pueda cerrar la etiqueta.
-    json: jsonParaScript({ ejemplos, fijos, tu, rotulos, alta }),
+    json: jsonParaScript({ ejemplos, fijos, momentos, finales, rotulos }),
     // Lo que la pagina trae ya escrito antes de que cargue el JavaScript: el primer ejemplo, en reposo.
     ejemplo: {
-      ...primero.giro,
-      pregunta: primero.guion.pregunta,
-      ...presentacionDe(primero.giro, rotulos, 'cliente'),
-      // Escrita en la pagina va la leyenda corta: sin JavaScript no hay nada que tocar. La vista pone la completa.
-      leyenda: rellenar(String(rotulos.leyendaEscrita ?? ''), { lugar: primero.giro.lugar }),
-      dia: reposo.dia.charAt(0).toUpperCase() + reposo.dia.slice(1),
-      filas: reposo.filas,
+      clave: primero.giro.clave,
+      ...presentacionDe(completo, 'cliente'),
+      ...fichaDe(completo),
+      reposo: reposoDe(completo),
+      pago: { monto: pago?.monto ?? '', detalle: pago?.detalle ?? '' },
     },
     conversacion: conversacionDeEjemplo(completo),
   };
@@ -285,7 +282,7 @@ export async function armarSitio({ raiz, destino }) {
   const datos = await leerDatos(fuente, problemas);
   const planes = planesPublicos(datos.planes);
   const sitio = /** @type {Record<string, unknown>} */ (datos.sitio);
-  const demo = prepararDemo(datos, String(sitio.alta), problemas);
+  const demo = prepararDemo(datos, problemas);
   if (planes.dePrueba) {
     avisos.push('Los planes traen PRECIOS DE PRUEBA: esta armada no se puede publicar en el dominio.');
   }

@@ -70,6 +70,13 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   que toma los oficios de ese mismo archivo. El retrato del cartel de celular se recorta de la foto de trabajo
   (`cartel.tu.recorte`: desde dónde y cuánto de lo ancho, en por ciento; mide tres por cuatro). La lista de oficios
   es una sola: de ahí salen también las tarjetas de «Para quién» y los oficios entre los que elige el azar.
+- La demostración de «Tu dinero» es un celular con el aspecto de WhatsApp de día que cuenta sola, como un video, una
+  cita en seis momentos; debajo va el letrero del momento y, después, lo que mientras tanto le llega a la profesional
+  (su calendario, su Mercado Pago y la pregunta de asistencia). Los momentos, sus letreros y los rótulos viven en
+  `fuente/datos/demo.json`. La historia, toma por toma y con lo que dura cada una, la arma `fuente/js/demo.js` sin
+  tocar la pantalla (se prueba sin navegador); `fuente/js/demo-vista.js` la pinta y lleva el reloj: corre mientras el
+  celular está a la vista, se pausa con su botón, cada rayita brinca a su momento y, con movimiento reducido, no corre
+  sola: avanza a toques. Dentro del celular la letra es la del sistema: no se descarga ninguna fuente nueva.
 - Sumar un oficio a la demostración casi no toca el código: su entrada en `fuente/datos/giros.json`, su guion en
   `fuente/datos/guiones/<oficio>.json` y su clave en la lista `GIROS` de `fuente/js/medicion.js` (la medición solo
   acepta valores de una lista cerrada; una prueba avisa si falta). La armada se detiene si a un ejemplo le falta un texto.

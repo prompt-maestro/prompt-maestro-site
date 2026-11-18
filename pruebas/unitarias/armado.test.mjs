@@ -112,14 +112,37 @@ test('la demostracion lleva un boton por ejemplo, con el primero puesto, y los d
     giros.map((giro, indice) => [giro.clave, String(indice === 0), giro.nombre]),
   );
   assert.match(inicio, /<div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">/);
-  // Lo que la pagina trae escrito es el primer ejemplo; los demas viajan en los datos, cada uno con su guion.
-  assert.ok(inicio.includes(`data-demo-leyenda>Demostración con ${giros[0]?.lugar} de ejemplo.`));
+  // Lo que la pagina trae escrito es el primer ejemplo, en reposo. Que es un ejemplo lo dice el nombre de la
+  // demostracion, para quien no la ve; los demas ejemplos viajan en los datos, cada uno con su guion.
+  assert.ok(inicio.includes(` role="group" aria-label="Demostración con ${giros[0]?.lugar} de ejemplo.">`));
+  assert.match(inicio, / data-demo data-ejemplo="unas" data-paso="reposo" data-momento="0" data-telefono="cliente" /);
   const datos = JSON.parse(/<script type="application\/json" data-demo-datos>(.*?)<\/script>/s.exec(inicio)?.[1] ?? '');
   assert.deepEqual(
     datos.ejemplos.map((/** @type {{ giro: { clave: string } }} */ ejemplo) => ejemplo.giro.clave),
     giros.map((giro) => giro.clave),
   );
-  for (const ejemplo of datos.ejemplos) assert.equal(ejemplo.guion.cuando.length, 2, ejemplo.giro.clave);
+  for (const ejemplo of datos.ejemplos) {
+    assert.ok(ejemplo.guion.horas.includes(ejemplo.guion.horaSugerida), ejemplo.giro.clave);
+  }
+  assert.equal(datos.momentos.length, 6);
+  // Una rayita por momento, con su nombre para quien no la ve; el letrero del primero ya viene escrito y se anuncia.
+  const rayitas = [
+    ...inicio.matchAll(/<button class="guia__tramo"[^>]* data-demo-tramo="(\d)"[^>]* aria-label="([^"]+)"/g),
+  ].map(([, numero, nombre]) => [numero, nombre]);
+  assert.deepEqual(
+    rayitas,
+    datos.momentos.map((/** @type {{ rotulo: string }} */ momento, /** @type {number} */ indice) => [
+      String(indice + 1),
+      `0${indice + 1} ${momento.rotulo}`,
+    ]),
+  );
+  assert.match(
+    inicio,
+    /<div class="guia__letrero" data-demo-letrero aria-live="polite" aria-atomic="true">\s*<p class="guia__rotulo">01 · Contesta<\/p>\s*<p class="guia__texto">Escucha la nota de voz y contesta por escrito\.<\/p>/,
+  );
+  // Y la conversacion escrita, para quien no tiene JavaScript: empieza con la nota de voz y no ofrece otra salida.
+  assert.match(inicio, /<p><b>Ana \(nota de voz\):<\/b> Hola, ¿cuánto cuesta el gelish\?<\/p>/);
+  assert.doesNotMatch(inicio, /PERSONA|prefieres hablar/);
 });
 
 test('la armada avisa que no se puede publicar justo mientras los precios sean de prueba', async () => {

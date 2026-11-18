@@ -1,6 +1,5 @@
 {
   "fijos": {
-    "salida": "Si en algún momento prefieres hablar con {humano}, escribe PERSONA y le aviso.",
     "horarios": "Te puedo ofrecer el {dia} {horas}. ¿Cuál te acomoda?",
     "cobro": "Anticipo {servicio}",
     "confirmacion": "¡Listo, {cliente}! Recibimos tu anticipo de {anticipo} y tu cita de {servicio} quedó confirmada para el {dia} {aLaHora}. Te esperamos en {direccion}. Si necesitas mover tu cita, escríbenos con gusto.",
@@ -10,51 +9,78 @@
     "registroSi": "Listo, registré que {cliente} sí asistió a su cita de {servicio} hoy {aLaHora}. Le mandé las gracias y la invité a agendar su siguiente cita.",
     "registroNo": "Listo, registré que {cliente} no asistió a su cita de {servicio} hoy {aLaHora}. Su anticipo de {anticipo} queda retenido y le ofrecí reagendar."
   },
+  "momentos": [
+    {
+      "rotulo": "Contesta",
+      "letrero": "Escucha la nota de voz y contesta por escrito."
+    },
+    {
+      "rotulo": "Ofrece horarios",
+      "letrero": "Solo los horarios libres de tu Google Calendar."
+    },
+    {
+      "rotulo": "Cobra el anticipo",
+      "letrero": "Lugar apartado unos minutos, mientras paga.",
+      "letreroPagado": "{anticipo} de anticipo, directo en tu Mercado Pago."
+    },
+    {
+      "rotulo": "Agenda",
+      "letrero": "La cita entra sola a tu calendario, ya garantizada."
+    },
+    {
+      "rotulo": "Recuerda",
+      "letrero": "Los recordatorios salen solos. Tú no haces nada."
+    },
+    {
+      "rotulo": "Pregunta si asistió",
+      "letrero": "Tu única tarea: tocar sí o no."
+    }
+  ],
+  "finales": {
+    "si": "Cita completada.",
+    "no": "El anticipo se queda contigo, según tu política.",
+    "cierre": "Así llega una cita garantizada."
+  },
   "rotulos": {
     "ejemplo": "Ejemplo",
-    "ejemploElegido": "Ejemplo: {nombre}.",
-    "leyenda": "Demostración con {lugar} de ejemplo. Tócala y vívela como si fueras quien pide la cita.",
     "leyendaEscrita": "Demostración con {lugar} de ejemplo.",
-    "papel": "Eres {cliente} y le escribes {aNegocio}.",
-    "atiende": "{asistente}, asistente virtual",
-    "papelTu": "Ahora eres tú. Al terminar la cita, tu agente te escribe.",
-    "atiendeTu": "Tu agente, en tu WhatsApp",
-    "registro": "Conversación de ejemplo",
     "sinJs": "Así se ve una conversación:",
-    "enviar": "Enviar",
-    "pagar": "Pagar anticipo (simulado)",
-    "pagoPendiente": "Pago con Mercado Pago",
-    "pagoAprobado": "Pago aprobado",
-    "cambiarCita": "Cambiar cita",
-    "seguir": "Ver qué pasa después",
-    "seguirAlFinal": "Ir al final de la cita",
-    "si": "Sí",
-    "no": "No",
+    "momentos": "Momentos de la cita",
+    "pausar": "Pausar",
+    "continuar": "Continuar",
+    "reproducir": "Reproducir",
+    "otraVez": "Ver otra vez",
+    "enLinea": "en línea",
+    "escribiendo": "escribiendo…",
+    "mensaje": "Mensaje",
+    "hoy": "Hoy",
     "unDiaAntes": "Un día antes",
     "unaHoraAntes": "Una hora antes",
-    "tuTitulo": "Lo que ves tú",
+    "notaDeVoz": "Nota de voz de {cliente}: «{pregunta}»",
+    "notaDeVozEscrita": "{cliente} (nota de voz)",
+    "duracionDeVoz": "0:06",
+    "ligaSitio": "mercadopago.com.mx",
+    "pagoAprobado": "Pago aprobado",
+    "pagoDetalle": "Anticipo {servicio} · {negocio}",
+    "cambiarCita": "Cambiar cita",
+    "papelTu": "Ahora eres tú. Al terminar la cita, tu agente te escribe.",
+    "tuAgente": "Tu agente",
+    "inicialesAgente": "PM",
+    "si": "Sí",
+    "no": "No",
+    "llega": "Mientras tanto, a ti te llega",
     "calendario": "Tu Google Calendar",
-    "libre": "Libre",
-    "apartado": "Apartado, esperando el anticipo",
+    "citaLibre": "{hora} · Libre",
+    "soloLibre": "Tu agente solo ofrece lo que tienes libre",
+    "citaApartada": "{hora} · Apartado",
+    "mientrasPaga": "Unos minutos, mientras paga",
+    "citaGarantizada": "{hora} · {cliente}",
+    "mercadoPago": "Tu Mercado Pago",
+    "recibiste": "Recibiste {anticipo}",
+    "anticipoDe": "Anticipo de {cliente} · {servicioCorto}",
+    "whatsapp": "Tu WhatsApp personal",
+    "asistioPregunta": "¿Asistió {cliente}?",
     "asistio": "Asistió",
-    "falto": "No asistió",
-    "cierreTitulo": "Así llega una cita garantizada.",
-    "cierreTexto": "Pagada antes de llegar, sin que tú tocaras el celular.",
-    "empieza": "Empieza ahora",
-    "otraVez": "Ver otra vez",
-    "verTodo": "Ver todo solo",
-    "reiniciar": "Reiniciar"
-  },
-  "tu": {
-    "reposo": "Tú, atendiendo. Tu agente, contestando.",
-    "precio": "Tú, atendiendo. Tu agente, contestando.",
-    "horarios": "Ofrece solo los horarios libres de tu Google Calendar.",
-    "apartado": "Lugar apartado unos minutos, mientras paga.",
-    "pagado": "{anticipo} de anticipo, directo en tu Mercado Pago.",
-    "recordatorios": "Los recordatorios salen solos. Tú no haces nada.",
-    "asistencia": "Tu única tarea: tocar sí o no.",
-    "finSi": "Cita completada.",
-    "finNo": "El anticipo se queda contigo, según tu política.",
-    "cierre": "Así, con cada cita."
+    "falto": "No asistió"
   }
 }

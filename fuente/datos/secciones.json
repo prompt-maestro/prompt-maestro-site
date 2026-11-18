@@ -1,4 +1,10 @@
 {
+  "citas": {
+    "sobre": "Tu dinero",
+    "titulo": "No pierdas ingresos por citas",
+    "tituloFuerte": "no concretadas.",
+    "texto": "Tu agente agenda solo con el anticipo pagado, y el dinero cae directo en tu Mercado Pago."
+  },
   "pasos": {
     "sobre": "Cómo funciona",
     "titulo": "De «hola» a «asistió»,",

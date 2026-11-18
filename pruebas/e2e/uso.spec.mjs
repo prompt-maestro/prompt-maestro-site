@@ -193,13 +193,23 @@ test.describe('en una pantalla diminuta (zoom de 400 %, o un celular acostado)',
 test.describe('sin JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('la leyenda de la demostracion no invita a tocar lo que no se puede tocar', async ({ page }) => {
+  test('la demostracion dice que es un ejemplo y no ensena nada que no se pueda tocar', async ({ page }) => {
     await page.goto('./');
-    const leyenda = page.locator('.demo__leyenda');
-    await expect(leyenda).toHaveText('Demostración con un salón de uñas de ejemplo.');
-    // Y la conversacion escrita se lee entera, sin una caja con su propio scroll.
-    const telefono = page.locator('.telefono');
-    const recortada = await telefono.evaluate((el) => el.scrollHeight - el.clientHeight);
-    expect(recortada).toBeLessThanOrEqual(1);
+    const demo = page.locator('[data-demo]');
+    // Que es un ejemplo lo dice su nombre; a la vista no queda ninguna invitacion a tocarla.
+    await expect(demo).toHaveAttribute('aria-label', 'Demostración con un salón de uñas de ejemplo.');
+    await expect(page.locator('#citas')).not.toContainText(/Tócala|vívela/i);
+    await expect(demo.getByRole('button')).toHaveCount(0);
+    await expect(demo.locator('button').filter({ visible: true })).toHaveCount(0);
+    // Y la conversacion escrita se lee entera, sin una caja con su propio scroll ni un celular que la recorte.
+    for (const caja of ['.wa', '.wa__chat']) {
+      const recortada = await page.locator(caja).evaluate((el) => el.scrollHeight - el.clientHeight);
+      expect(recortada, caja).toBeLessThanOrEqual(1);
+    }
+    const escrita = await page.locator('.transcripcion').boundingBox();
+    const pantalla = await page.locator('.wa').boundingBox();
+    if (!escrita || !pantalla) throw new Error('no encontre la conversacion escrita');
+    expect(escrita.y + escrita.height).toBeLessThanOrEqual(pantalla.y + pantalla.height);
+    expect(escrita.height).toBeGreaterThan(400);
   });
 });

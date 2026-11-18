@@ -1,44 +1,39 @@
 // @ts-check
-// La vista de la demostracion: pinta lo que demo.js decide. Aqui viven los tiempos, el foco y el movimiento; ninguna
-// regla de la historia. Si el visitante pidio menos movimiento, cada paso aparece completo y sin animacion, pero
-// conserva el tiempo para leer entre un paso y el siguiente.
+// La vista de la demostracion: pinta lo que demo.js decide y lleva el tiempo. Aqui viven el reloj, el foco y el
+// movimiento; ninguna regla de la historia. La historia corre sola mientras el celular esta a la vista y nadie la ha
+// pausado. Si la visitante pidio menos movimiento no corre sola ni se anima: avanza de parada en parada, con el boton
+// o con las rayitas, y cada parada aparece completa.
 import {
-  accionesDe,
   avanzar,
+  avisoDe,
+  chatEn,
+  cuadroEn,
+  duraElMomento,
   elegirEjemplo,
-  escenaDe,
   estadoInicial,
+  fichaDe,
+  historiaDe,
   opcionesDeEjemplo,
-  porDefecto,
   presentacionDe,
-  rotulosDeEjemplo,
+  tramosDe,
 } from './demo.js';
-import { conMayuscula, pesos } from './redaccion.js';
 
 /** @typedef {import('./demo.js').Ejemplo} Ejemplo */
 /** @typedef {import('./demo.js').Evento} Evento */
-/** @typedef {import('./demo.js').Accion} Accion */
-/** @typedef {import('./demo.js').Entrada} Entrada */
-/** @typedef {import('./demo.js').LoQueVesTu} LoQueVesTu */
-/** @typedef {import('./demo.js').Telefono} Telefono */
+/** @typedef {import('./demo.js').Toma} Toma */
+/** @typedef {import('./demo.js').Cuadro} Cuadro */
 
-// Pausas de animacion: desaparecen con movimiento reducido.
-const PAUSA_ENTRE_BURBUJAS = 320;
-/** Lo que dura a la vista la acotacion que avisa el cambio de papel, antes de que el asistente escriba. */
-const PAUSA_DE_LA_ACOTACION = 1900;
-/** Tras "Pago aprobado": el dinero, despues la cita, despues el sello, y un silencio para que el sello se vea. */
-const PAUSA_DEL_DINERO_A_LA_CITA = 600;
-const PAUSA_DE_LA_CITA_AL_SELLO = 500;
-const SILENCIO_TRAS_EL_SELLO = 1100;
-/** En el cuadro final los sellos caen uno tras otro. */
-const PAUSA_ENTRE_SELLOS = 240;
-
-// Pausas para leer: se respetan siempre.
-const ESPERA_PARA_ARRANCAR_SOLA = 4000;
-const PAUSA_ENTRE_PASOS = 1300;
-const PAUSA_ANTES_DEL_CIERRE = 2200;
-/** Lo minimo entre un toque y los botones del paso siguiente: un segundo toque sin querer no elige nada. */
-const PASO_MINIMO = 350;
+/** Lo que espera, ya a la vista, antes de empezar sola. */
+const ESPERA_PARA_EMPEZAR = 1000;
+/** Lo que espera para volver a empezar cuando la visitante cambia de ejemplo o pide verla otra vez. */
+const ESPERA_PARA_REPETIR = 450;
+/** Si el plazo de la pregunta vence con el teclado en las respuestas, cada cuanto vuelve a mirar si ya las solto. */
+const ESPERA_CON_EL_FOCO = 1000;
+/** Cuanto del celular (o de la pantalla, si el celular no cabe en ella) tiene que verse para que la historia corra. */
+const A_LA_VISTA = 0.5;
+/** Lo que tarda la conversacion en subir para dejarle lugar a lo nuevo. */
+const SUBIDA = 320;
+const SUAVE = 'cubic-bezier(0.2, 0.7, 0.2, 1)';
 
 /**
  * @template {keyof HTMLElementTagNameMap} E
@@ -49,7 +44,7 @@ const PASO_MINIMO = 350;
  */
 function crear(etiqueta, clase, texto) {
   const elemento = document.createElement(etiqueta);
-  elemento.className = clase;
+  if (clase) elemento.className = clase;
   if (texto !== undefined) elemento.textContent = texto;
   return elemento;
 }
@@ -65,8 +60,14 @@ function pieza(raiz, selector) {
   return elemento;
 }
 
-/** @param {string | undefined} estado  si ese renglon de la agenda ya lleva sello */
-const llevaSello = (estado) => estado === 'garantizada' || estado === 'asistio' || estado === 'falto';
+/**
+ * Una copia de lo que trae una plantilla de la pagina.
+ * @param {HTMLElement} plantilla
+ * @returns {DocumentFragment}
+ */
+function copia(plantilla) {
+  return /** @type {DocumentFragment} */ (/** @type {HTMLTemplateElement} */ (plantilla).content.cloneNode(true));
+}
 
 /**
  * Da vida a la demostracion que ya viene escrita en la pagina.
@@ -78,52 +79,77 @@ export function montarDemo(raiz) {
   const ejemplos = datos.ejemplos.map((/** @type {Pick<Ejemplo, 'giro' | 'guion'>} */ ejemplo) => ({
     ...ejemplo,
     fijos: datos.fijos,
-    tu: datos.tu,
+    momentos: datos.momentos,
+    finales: datos.finales,
     rotulos: datos.rotulos,
   }));
   /** @type {Record<string, string>} */
   const rotulos = datos.rotulos;
   const rotulo = (/** @type {string} */ clave) => rotulos[clave] ?? clave;
 
-  const chat = pieza(raiz, '[data-demo-chat]');
-  const pie = pieza(raiz, '[data-demo-pie]');
-  const tu = pieza(raiz, '[data-demo-tu]');
-  const tuResumen = pieza(raiz, '[data-demo-tu-resumen]');
-  const agendaDia = pieza(raiz, '[data-demo-dia]');
-  const agendaFilas = pieza(raiz, '[data-demo-filas]');
-  const anuncio = pieza(raiz, '[data-demo-anuncio]');
+  const tel = pieza(raiz, '[data-demo-tel]');
+  const pantalla = pieza(raiz, '[data-demo-pantalla]');
+  const hilo = pieza(raiz, '[data-demo-hilo]');
+  const reloj = pieza(raiz, '[data-demo-reloj]');
   const iniciales = pieza(raiz, '[data-demo-iniciales]');
   const nombre = pieza(raiz, '[data-demo-nombre]');
-  const atiende = pieza(raiz, '[data-demo-atiende]');
-  const leyenda = pieza(raiz, '[data-demo-leyenda]');
+  const detalle = pieza(raiz, '[data-demo-detalle]');
+  const pie = pieza(raiz, '[data-demo-pie]');
+  const borrador = pieza(raiz, '[data-demo-borrador]');
+  const hojaMonto = pieza(raiz, '[data-demo-hoja-monto]');
+  const hojaDetalle = pieza(raiz, '[data-demo-hoja-detalle]');
+  const letrero = pieza(raiz, '[data-demo-letrero]');
+  const pausa = pieza(raiz, '[data-demo-pausa]');
+  const tramos = /** @type {HTMLElement[]} */ ([...raiz.querySelectorAll('[data-demo-tramo]')]);
+  const tarjetas = {
+    cita: pieza(raiz, '[data-demo-tarjeta="cita"]'),
+    pago: pieza(raiz, '[data-demo-tarjeta="pago"]'),
+    asistencia: pieza(raiz, '[data-demo-tarjeta="asistencia"]'),
+  };
+  const dia = pieza(raiz, '[data-demo-dia]');
+  const fecha = pieza(raiz, '[data-demo-fecha]');
+  const citaTitulo = pieza(raiz, '[data-demo-cita-titulo]');
+  const citaDetalle = pieza(raiz, '[data-demo-cita-detalle]');
+  const pagoTitulo = pieza(raiz, '[data-demo-pago-titulo]');
+  const pagoDetalle = pieza(raiz, '[data-demo-pago-detalle]');
+  const asistenciaTitulo = pieza(raiz, '[data-demo-asistencia-titulo]');
+  const asistenciaRespuesta = pieza(raiz, '[data-demo-asistencia-respuesta]');
   const botonesDeEjemplo = /** @type {NodeListOf<HTMLButtonElement>} */ (raiz.querySelectorAll('[data-demo-ejemplo]'));
-  const plantillaSello = /** @type {HTMLTemplateElement} */ (pieza(raiz, '[data-demo-sello]'));
-  const plantillaPalomita = /** @type {HTMLTemplateElement} */ (pieza(raiz, '[data-demo-palomita]'));
+  const plantillaSello = pieza(raiz, '[data-demo-sello]');
+  const plantillaTics = pieza(raiz, '[data-demo-tics]');
+  const plantillaVoz = pieza(raiz, '[data-demo-voz]');
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // La pagina llega con el primer ejemplo; la visitante puede elegir otro.
+  // La pagina llega con el primer ejemplo, en reposo; la visitante puede elegir otro.
   let ejemplo = /** @type {Ejemplo} */ (ejemplos[0]);
   let estado = estadoInicial();
-  /** @type {Telefono} */
-  let telefono = 'cliente';
-  /** @type {HTMLElement | null} */
-  let cobro = null;
-  let ocupada = false;
-  let sola = false;
+  let tomas = historiaDe(ejemplo);
+  /** La visitante la detuvo con el boton. */
+  let pausada = false;
+  let aLaVista = false;
+  /** La visitante ya toco algo de la demostracion: lo que arranque de aqui en adelante lo echo a andar ella. */
   let tocada = false;
-  // Cada paso y cada reinicio cambian el turno: lo que quedo esperando de un turno viejo ya no pinta ni avanza nada.
-  let turno = 0;
-  // Quien avanza con el teclado no pierde su lugar: el foco pasa a lo siguiente que se puede hacer.
-  let devolverFoco = false;
+  /** Esta historia ya salio del reposo, y los pasos por los que ya paso: cada aviso sale una vez por historia. */
+  let empezada = false;
+  /** @type {Set<string>} */
+  const avisados = new Set();
+  // El reloj de la historia: una sola espera a la vez, que se puede detener y retomar donde iba.
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let espera;
+  let pendiente = false;
+  let falta = 0;
+  let vence = 0;
+  /** La rayita del momento que va, llenandose. */
+  /** @type {Animation | null} */
+  let avance = null;
+  let momentoDelAvance = 0;
+  /** Lo ultimo que dijo el letrero: solo se vuelve a escribir (y a anunciar) cuando cambia. */
+  let dicho = cuadroEn(tomas, 0, ejemplo);
 
-  /** @param {number} ms */
-  const leer = (ms) => /** @type {Promise<void>} */ (new Promise((listo) => setTimeout(listo, ms)));
-  /** @param {number} ms */
-  const animar = (ms) => leer(sinMovimiento.matches ? 0 : ms);
-
-  function alFinal() {
-    chat.scrollTop = chat.scrollHeight;
-  }
+  /** Si la historia puede avanzar sola en este instante. */
+  const corre = () => !pausada && aLaVista && !document.hidden && !sinMovimiento.matches;
+  const terminada = () => estado.van >= tomas.length;
+  const respuestas = () => hilo.querySelector('.wa__respuestas');
 
   /**
    * Avisa lo que pasa en la historia, para quien quiera enterarse: un evento "demo:..." que sale de la raiz y sube por
@@ -137,368 +163,468 @@ export function montarDemo(raiz) {
     raiz.dispatchEvent(new CustomEvent(`demo:${que}`, { bubbles: true, detail }));
   }
 
+  // ---------- El reloj ----------
+  function armar() {
+    vence = performance.now() + falta;
+    espera = setTimeout(alVencer, falta);
+  }
+
+  /** Olvida lo que estaba esperando. */
+  function soltar() {
+    clearTimeout(espera);
+    espera = undefined;
+    pendiente = false;
+  }
+
   /**
-   * Cambia de quien es el telefono: su cabecera y, a escenario limpio, la acotacion que le dice a la visitante que
-   * papel le toca ahora.
-   * @param {Telefono} cual
-   * @returns {string} la acotacion
+   * Deja pendiente el siguiente avance. El plazo solo corre mientras la historia puede correr.
+   * @param {number} ms
    */
-  function presentar(cual) {
-    const presentacion = presentacionDe(ejemplo.giro, rotulos, cual);
-    telefono = cual;
-    cobro = null;
-    raiz.dataset.telefono = cual;
+  function programar(ms) {
+    soltar();
+    pendiente = true;
+    falta = ms;
+    if (corre()) armar();
+  }
+
+  function alVencer() {
+    espera = undefined;
+    pendiente = false;
+    // Con el teclado en las respuestas, la historia no contesta por ella: espera a que decida o las suelte.
+    if (respuestas()?.contains(document.activeElement)) programar(ESPERA_CON_EL_FOCO);
+    else seguir();
+  }
+
+  /** La historia se detuvo o se reanudo (la pausa, el scroll, la pestana, el movimiento): el reloj y la rayita la siguen. */
+  function alCambiarLaMarcha() {
+    if (corre()) {
+      if (pendiente && espera === undefined) armar();
+      if (avance?.playState === 'paused') avance.play();
+    } else {
+      if (espera !== undefined) {
+        clearTimeout(espera);
+        espera = undefined;
+        falta = Math.max(0, vence - performance.now());
+      }
+      if (avance?.playState === 'running') avance.pause();
+    }
+    pintarBoton();
+  }
+
+  // ---------- Pintar la conversacion ----------
+  /**
+   * La hora al pie de un globo; lo que manda quien tiene el celular lleva sus palomitas.
+   * @param {Toma} toma
+   * @param {boolean} conPalomitas
+   */
+  function horaDe(toma, conPalomitas) {
+    const hora = crear('span', 'wa__hora', toma.hora);
+    if (conPalomitas) hora.append(copia(plantillaTics));
+    return hora;
+  }
+
+  /**
+   * @param {Toma} toma
+   * @param {'entra' | 'sale'} lado
+   */
+  function globo(toma, lado) {
+    const elemento = crear('p', `wa__m wa__m--${lado}`);
+    elemento.append(crear('span', 'solo-lector', `${toma.quien}: `));
+    if (toma.liga) {
+      const liga = crear('span', 'wa__liga');
+      const signo = crear('span', 'wa__liga-signo', '$');
+      signo.setAttribute('aria-hidden', 'true');
+      const texto = crear('span', 'wa__liga-texto');
+      texto.append(crear('b', 'wa__liga-titulo', toma.liga.titulo), crear('span', 'wa__liga-monto', toma.liga.monto));
+      texto.append(crear('small', 'wa__liga-sitio', toma.liga.sitio));
+      liga.append(signo, texto);
+      elemento.append(liga);
+    }
+    elemento.append(toma.texto, horaDe(toma, lado === 'sale'));
+    if (toma.boton) elemento.append(crear('span', 'wa__boton', toma.boton));
+    return elemento;
+  }
+
+  /**
+   * La nota de voz: se ve como en WhatsApp, y a quien no la ve se le dice que es y que dice.
+   * @param {Toma} toma
+   */
+  function notaDeVoz(toma) {
+    const elemento = crear('p', 'wa__m wa__m--sale wa__m--voz');
+    const dibujo = copia(plantillaVoz);
+    pieza(dibujo, '[data-voz-inicial]').textContent = toma.quien.charAt(0);
+    pieza(dibujo, '[data-voz-dura]').textContent = toma.detalle ?? '';
+    pieza(dibujo, '[data-voz-hora]').append(toma.hora, copia(plantillaTics));
+    elemento.append(crear('span', 'solo-lector', toma.lector ?? toma.texto), dibujo);
+    return elemento;
+  }
+
+  /** Las dos respuestas de la profesional: lo unico de la conversacion que se toca. */
+  function botonesDeRespuesta() {
+    const grupo = crear('div', 'wa__respuestas');
+    for (const [clave, valor] of /** @type {const} */ ([
+      ['si', true],
+      ['no', false],
+    ])) {
+      const boton = crear('button', 'wa__respuesta', rotulo(clave));
+      boton.type = 'button';
+      boton.addEventListener('click', () => responder(valor));
+      grupo.append(boton);
+    }
+    return grupo;
+  }
+
+  /**
+   * Lo que una toma pone en la conversacion: nada, si es de las que solo duran un rato.
+   * @param {Toma} toma
+   * @returns {HTMLElement[]}
+   */
+  function nodosDe(toma) {
+    switch (toma.tipo) {
+      case 'aviso':
+        return [crear('p', 'wa__aviso', toma.texto)];
+      case 'cambio':
+        return [crear('p', 'wa__aviso wa__aviso--tu', toma.texto)];
+      case 'voz':
+        return [notaDeVoz(toma)];
+      case 'sale':
+      case 'respuesta':
+        return [globo(toma, 'sale')];
+      case 'entra':
+      case 'pregunta':
+        return [globo(toma, 'entra')];
+      default:
+        return [];
+    }
+  }
+
+  /** La conversacion completa hasta donde va la historia, de golpe y sin animar. */
+  function repintar() {
+    const nodos = chatEn(tomas, estado.van).flatMap(nodosDe);
+    if (tomas[estado.van - 1]?.tipo === 'pregunta') nodos.push(botonesDeRespuesta());
+    hilo.replaceChildren(...nodos);
+    pintarCuadro();
+  }
+
+  /** La toma que acaba de pasar: lo suyo entra por abajo y la conversacion sube a dejarle lugar. */
+  function pintarUna() {
+    const toma = tomas[estado.van - 1];
+    if (!toma) return;
+    // El celular cambia de manos: la conversacion empieza limpia.
+    if (toma.tipo === 'cambio') hilo.replaceChildren();
+    respuestas()?.remove();
+    const nodos = nodosDe(toma);
+    if (toma.tipo === 'pregunta') nodos.push(botonesDeRespuesta());
+    if (nodos.length > 0) {
+      const antes = hilo.offsetHeight;
+      for (const nodo of nodos) nodo.dataset.entra = '';
+      hilo.append(...nodos);
+      const sube = hilo.offsetHeight - antes;
+      if (sube > 0 && toma.tipo !== 'cambio' && !sinMovimiento.matches) {
+        hilo.animate?.([{ transform: `translateY(${sube}px)` }, { transform: 'none' }], {
+          duration: SUBIDA,
+          easing: SUAVE,
+        });
+      }
+    }
+    pintarCuadro();
+  }
+
+  // ---------- Pintar lo demas ----------
+  /**
+   * @param {HTMLElement} tarjeta
+   * @param {boolean} apagada  lo que ensena todavia no pasa: se ve tenue y no se le lee a nadie
+   */
+  function apagar(tarjeta, apagada) {
+    tarjeta.toggleAttribute('data-apagada', apagada);
+    if (apagada) tarjeta.setAttribute('aria-hidden', 'true');
+    else tarjeta.removeAttribute('aria-hidden');
+  }
+
+  /** @param {Cuadro} cuadro */
+  function pintarLetrero(cuadro) {
+    if (cuadro.rotulo === dicho.rotulo && cuadro.letrero === dicho.letrero) return;
+    const titulo = crear('p', 'guia__rotulo', cuadro.rotulo);
+    const texto = crear('p', 'guia__texto', cuadro.letrero);
+    if (cuadro.rotulo !== dicho.rotulo) titulo.dataset.entra = '';
+    texto.dataset.entra = '';
+    dicho = cuadro;
+    // El letrero es la region que se anuncia: una vez por cambio, con su rotulo.
+    letrero.replaceChildren(titulo, texto);
+  }
+
+  /** @param {Cuadro} cuadro */
+  function pintarTramos(cuadro) {
+    const estados = tramosDe(cuadro, tramos.length);
+    for (const [indice, tramo] of tramos.entries()) {
+      const como = estados[indice] ?? 'falta';
+      tramo.dataset.estado = como;
+      if (como === 'va') tramo.setAttribute('aria-current', 'step');
+      else tramo.removeAttribute('aria-current');
+    }
+    const va = estados.indexOf('va') + 1;
+    if (va === momentoDelAvance) return;
+    avance?.cancel();
+    avance = null;
+    momentoDelAvance = va;
+    const raya = tramos[va - 1]?.querySelector('.guia__lleno');
+    if (!raya || sinMovimiento.matches || typeof raya.animate !== 'function') return;
+    // La rayita del momento se llena en lo que el momento dura, y se detiene con la historia.
+    avance = raya.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], {
+      duration: duraElMomento(tomas, va),
+      easing: 'linear',
+      fill: 'both',
+    });
+    if (!corre()) avance.pause();
+  }
+
+  /** @param {Cuadro} cuadro */
+  function pintarTarjetas({ cita, pago, asistencia, turno }) {
+    for (const [clave, tarjeta] of Object.entries(tarjetas)) tarjeta.toggleAttribute('data-turno', clave === turno);
+    tarjetas.cita.dataset.estado = cita.estado;
+    citaTitulo.textContent = cita.titulo;
+    citaDetalle.textContent = cita.detalle;
+    // El sello cae cuando la cita queda garantizada y, una vez puesto, se queda.
+    const sellada = cita.estado === 'garantizada';
+    const sello = tarjetas.cita.querySelector('.sello');
+    if (sellada && !sello) tarjetas.cita.append(copia(plantillaSello));
+    else if (!sellada) sello?.remove();
+    tarjetas.cita.toggleAttribute('data-sellada', sellada);
+    apagar(tarjetas.pago, !pago.llego);
+    pagoTitulo.textContent = pago.titulo;
+    pagoDetalle.textContent = pago.detalle;
+    apagar(tarjetas.asistencia, asistencia.estado === 'espera');
+    tarjetas.asistencia.dataset.estado = asistencia.estado;
+    asistenciaTitulo.textContent = asistencia.titulo;
+    asistenciaRespuesta.textContent = asistencia.respuesta;
+  }
+
+  /** Todo lo que se ve fuera de la conversacion, y lo que solo dura mientras es lo ultimo que paso. */
+  function pintarCuadro() {
+    const cuadro = cuadroEn(tomas, estado.van, ejemplo);
+    const ultima = tomas[estado.van - 1];
+    raiz.dataset.paso = cuadro.paso;
+    raiz.dataset.momento = String(cuadro.momento);
+    raiz.dataset.telefono = cuadro.telefono;
+    // La cabecera: de quien es el celular, y si el agente esta redactando.
+    const presentacion = presentacionDe(ejemplo, cuadro.telefono);
+    const escribe = ultima?.tipo === 'escribe';
     iniciales.textContent = presentacion.iniciales;
     nombre.textContent = presentacion.nombre;
-    atiende.textContent = presentacion.atiende;
-    // La acotacion la anuncia la region de avisos; aqui va escondida para el lector, que si no la diria dos veces.
-    const acotacion = crear('p', 'chat__salto', presentacion.papel);
-    acotacion.setAttribute('aria-hidden', 'true');
-    chat.replaceChildren(acotacion);
-    chat.dataset.acotacion = '';
-    return presentacion.papel;
+    detalle.textContent = escribe ? rotulo('escribiendo') : presentacion.detalle;
+    pantalla.toggleAttribute('data-escribe', escribe);
+    reloj.textContent = cuadro.reloj;
+    // La caja de abajo: lo que quien tiene el celular va escribiendo antes de mandarlo.
+    const teclea = ultima?.tipo === 'teclea';
+    borrador.textContent = teclea ? ultima.texto : rotulo('mensaje');
+    pie.toggleAttribute('data-teclea', teclea);
+    pantalla.toggleAttribute('data-hoja', ultima?.tipo === 'hoja');
+    pintarLetrero(cuadro);
+    pintarTramos(cuadro);
+    pintarTarjetas(cuadro);
   }
 
-  /**
-   * @param {'cliente' | 'profesional' | 'asistente'} de
-   * @param {string} texto
-   * @param {boolean} [conBoton]
-   */
-  function burbuja(de, texto, conBoton) {
-    const globo = crear('p', `burbuja burbuja--${de === 'asistente' ? 'asistente' : 'mia'}`);
-    const { giro } = ejemplo;
-    const quien = de === 'asistente' ? giro.asistente : de === 'cliente' ? giro.cliente : giro.profesional;
-    globo.append(crear('span', 'solo-lector', `${quien}: `), texto);
-    if (conBoton) globo.append(crear('span', 'burbuja__boton', rotulo('cambiarCita')));
-    return globo;
+  /** El boton de la pausa dice lo que hace: pausar, continuar, reproducir (con menos movimiento) o verla otra vez. */
+  function pintarBoton() {
+    const fin = terminada();
+    const quieta = pausada || sinMovimiento.matches;
+    pausa.dataset.estado = fin ? 'fin' : quieta ? 'pausa' : 'corre';
+    const clave = fin ? 'otraVez' : sinMovimiento.matches ? 'reproducir' : pausada ? 'continuar' : 'pausar';
+    pausa.setAttribute('aria-label', rotulo(clave));
+    // La pagina sabe si la historia esta corriendo: lo que se mueve solo dentro del celular se detiene con ella.
+    raiz.toggleAttribute('data-corre', corre());
   }
 
-  /** @param {string} concepto */
-  function tarjetaDeCobro(concepto) {
-    cobro = crear('div', 'cobro');
-    cobro.append(
-      crear('span', 'cobro__concepto', concepto),
-      crear('strong', 'cobro__monto', pesos(ejemplo.giro.anticipo)),
-      crear('span', 'cobro__estado', rotulo('pagoPendiente')),
-    );
-    return cobro;
-  }
-
-  /** @param {string} texto */
-  function marcarCobroAprobado(texto) {
-    if (!cobro) return;
-    cobro.classList.add('cobro--aprobado');
-    cobro.querySelector('.cobro__estado')?.replaceChildren(plantillaPalomita.content.cloneNode(true), texto);
-  }
-
-  /**
-   * Pinta mensajes nuevos, uno por uno, con su pausa. Devuelve falso si a media pintada cambio el turno.
-   * @param {Entrada[]} entradas
-   * @param {number} miTurno
-   * @returns {Promise<boolean>}
-   */
-  async function pintarChat(entradas, miTurno) {
-    for (const entrada of entradas) {
-      delete chat.dataset.acotacion;
-      if (entrada.de === 'aprobado') {
-        marcarCobroAprobado(entrada.texto);
-      } else if (entrada.de === 'asistente') {
-        const puntos = crear('p', 'burbuja burbuja--asistente burbuja--escribe');
-        puntos.setAttribute('aria-hidden', 'true');
-        puntos.append(crear('i', ''), crear('i', ''), crear('i', ''));
-        chat.append(puntos);
-        alFinal();
-        await animar(600 + Math.min(300, entrada.texto.length * 2));
-        if (miTurno !== turno) return false;
-        puntos.replaceWith(burbuja('asistente', entrada.texto, entrada.boton));
-      } else if (entrada.de === 'cobro') {
-        chat.append(tarjetaDeCobro(entrada.texto));
-      } else if (entrada.de === 'salto') {
-        chat.append(crear('p', 'chat__salto', entrada.texto));
-      } else {
-        chat.append(burbuja(entrada.de, entrada.texto));
-      }
-      alFinal();
-      await animar(PAUSA_ENTRE_BURBUJAS);
-      if (miTurno !== turno) return false;
-    }
-    return true;
-  }
-
-  /**
-   * Pone al dia lo que ve la profesional: la linea que narra y su agenda. La agenda no se vuelve a dibujar: cada
-   * renglon cambia en su lugar y el sello, una vez puesto, se queda. Devuelve falso si cambio el turno.
-   * @param {LoQueVesTu} vista
-   * @param {number} miTurno
-   * @returns {Promise<boolean>}
-   */
-  async function pintarTu(vista, miTurno) {
-    tuResumen.textContent = vista.resumen;
-    anuncio.textContent = vista.resumen;
-    agendaDia.textContent = conMayuscula(vista.dia);
-    const horas = vista.filas.map((fila) => fila.hora).join('|');
-    if (agendaFilas.dataset.horas !== horas) {
-      agendaFilas.dataset.horas = horas;
-      agendaFilas.replaceChildren(
-        ...vista.filas.map((fila) => {
-          const renglon = crear('li', 'agenda__fila');
-          renglon.append(crear('span', 'agenda__hora', fila.hora), crear('span', 'agenda__estado'));
-          return renglon;
-        }),
-      );
-    }
-    tu.toggleAttribute(
-      'data-llena',
-      vista.filas.every((fila) => fila.estado !== 'libre'),
-    );
-    for (const [indice, fila] of vista.filas.entries()) {
-      const renglon = /** @type {HTMLElement} */ (agendaFilas.children[indice]);
-      const texto = /** @type {HTMLElement} */ (renglon.children[1]);
-      const antes = renglon.dataset.estado;
-      if (antes === fila.estado && texto.textContent === fila.texto) continue;
-      // Recien pagada: primero se ve llegar el dinero (la linea de arriba ya cambio) y despues la cita entra a la agenda.
-      const recienPagada = antes === 'apartado' && fila.estado === 'garantizada';
-      const sellar = llevaSello(fila.estado) && !renglon.querySelector('.sello');
-      if (recienPagada) await animar(PAUSA_DEL_DINERO_A_LA_CITA);
-      if (miTurno !== turno) return false;
-      renglon.dataset.estado = fila.estado;
-      texto.textContent = fila.texto;
-      if (!llevaSello(fila.estado)) {
-        renglon.querySelector('.sello')?.remove();
-        delete renglon.dataset.sellada;
-      } else if (sellar) {
-        // Y al final cae el sello.
-        await animar(recienPagada ? PAUSA_DE_LA_CITA_AL_SELLO : PAUSA_ENTRE_SELLOS);
-        if (miTurno !== turno) return false;
-        renglon.append(plantillaSello.content.cloneNode(true));
-        renglon.dataset.sellada = '';
-        if (recienPagada && !sinMovimiento.matches) navigator.vibrate?.(14);
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Lo que la visitante puede tocar en este paso. Lo que conviene tocar late un rato: esa es la pista.
-   * @param {Accion[]} acciones
-   */
-  function pintarPie(acciones) {
-    /** @type {HTMLElement[]} */
-    const piezas = [];
-    if (estado.paso === 'reposo') piezas.push(crear('p', 'chat__borrador', ejemplo.guion.pregunta));
-    for (const accion of acciones) {
-      const clase = {
-        enviar: 'boton boton--enviar',
-        ficha: 'ficha',
-        pagar: 'boton boton--ancho',
-        seguir: 'boton boton--ancho',
-        si: 'boton boton--mitad',
-        no: 'boton boton--mitad boton--contorno',
-      }[accion.clase];
-      const boton = crear('button', clase, accion.etiqueta);
-      boton.type = 'button';
-      // Entre si y no no se sugiere nada: esa respuesta es de ella.
-      if (accion.sugerida && accion.clase !== 'si') boton.classList.add('pista');
-      boton.addEventListener('click', () => tocar(accion.evento));
-      piezas.push(boton);
-    }
-    if (estado.paso === 'cierre') {
-      const empieza = crear('a', 'boton boton--ancho boton--sello', rotulo('empieza'));
-      empieza.href = datos.alta;
-      empieza.dataset.lugar = 'demo';
-      const otraVez = crear('button', 'enlace', rotulo('otraVez'));
-      otraVez.type = 'button';
-      otraVez.addEventListener('click', reiniciar);
-      piezas.push(empieza, otraVez);
-    }
-    pie.replaceChildren(...piezas);
-    alFinal();
-  }
-
-  /** Si la visitante venia con el teclado en el pie, el foco pasa a lo primero que ahora se puede hacer ahi. */
-  function regresarElFoco() {
-    if (!devolverFoco) return;
-    // Si ella movio el foco a otra parte mientras se pintaba, se respeta.
-    if (document.activeElement && document.activeElement !== document.body) {
-      devolverFoco = false;
-      return;
-    }
-    const siguiente = pie.querySelector('button, a');
-    if (!(siguiente instanceof HTMLElement)) return; // un paso sin nada que tocar: se intenta en el siguiente
-    siguiente.focus({ preventScroll: true });
-    devolverFoco = false;
-  }
-
-  /** Pinta el paso en que quedo el estado: mensajes, lo que ves tu y, al final, lo que se puede tocar. */
-  async function jugar() {
-    const miTurno = turno;
-    const inicio = performance.now();
-    ocupada = true;
-    pie.replaceChildren();
-    raiz.toggleAttribute('data-final', estado.paso === 'cierre');
-    const escena = escenaDe(estado, ejemplo);
-    if (escena.telefono !== telefono) {
-      // Cambio de acto: el escenario se limpia y una acotacion avisa el nuevo papel.
-      anuncio.textContent = presentar(escena.telefono);
-      await animar(PAUSA_DE_LA_ACOTACION);
-      if (miTurno !== turno) return;
-    }
-    // Lo que ves tu cambia en su momento: tras "Pago aprobado" si lo hay (y entonces lo que falte del chat espera a que
-    // el sello se vea); si no, cuando el chat de ese paso ya se pinto.
-    const corte = escena.chat.findIndex((entrada) => entrada.de === 'aprobado') + 1 || escena.chat.length;
-    if (!(await pintarChat(escena.chat.slice(0, corte), miTurno))) return;
-    if (!(await pintarTu(escena.tu, miTurno))) return;
-    if (corte < escena.chat.length) {
-      await animar(SILENCIO_TRAS_EL_SELLO);
-      if (miTurno !== turno || !(await pintarChat(escena.chat.slice(corte), miTurno))) return;
-    }
-    if (estado.paso === 'cierre') {
-      const tarjeta = crear('div', 'cierre');
-      tarjeta.append(
-        crear('p', 'cierre__titulo', rotulo('cierreTitulo')),
-        crear('p', 'cierre__texto', rotulo('cierreTexto')),
-      );
-      chat.append(tarjeta);
-    }
-    await leer(Math.max(0, PASO_MINIMO - (performance.now() - inicio)));
-    if (miTurno !== turno) return;
-    pintarPie(accionesDe(estado, ejemplo));
-    ocupada = false;
-    raiz.dataset.paso = estado.paso;
-    regresarElFoco();
-    // Los dos finales llevan solos al cuadro final; lo demas espera a la visitante, salvo que haya pedido verlo todo.
-    const fin = estado.paso === 'finSi' || estado.paso === 'finNo';
-    if (!fin && !sola) return;
-    await leer(fin ? PAUSA_ANTES_DEL_CIERRE : PAUSA_ENTRE_PASOS);
-    if (miTurno !== turno) return;
-    const evento = porDefecto(estado, ejemplo.guion);
-    if (evento) despachar(evento);
-    else sola = false;
-  }
-
-  /** @param {Evento} evento */
-  function despachar(evento) {
-    if (ocupada) return;
-    const siguiente = avanzar(estado, evento, ejemplo.guion);
-    if (siguiente === estado) return;
-    const saleDelReposo = estado.paso === 'reposo';
-    estado = siguiente;
-    turno += 1;
-    // Si un paso no se puede pintar, la demostracion vuelve a empezar en lugar de quedarse muda.
-    jugar().catch((error) => {
-      // Se reporta como cualquier otro error de la pagina, y la historia vuelve a empezar.
-      if (typeof reportError === 'function') reportError(error);
-      reiniciar();
-    });
-    // Los avisos salen de aqui, el unico lugar donde la historia avanza: uno por cada llegada, y ninguno al reiniciar
-    // o al cambiar de ejemplo, que regresan al reposo por otro camino. "tocada" dice si la visitante ya hizo algo
-    // (tocar Enviar o pedir verlo todo): sin eso, quien mando el primer mensaje fue el reloj de los 4 segundos.
-    if (saleDelReposo) avisar('inicio', { modo: tocada ? 'toque' : 'sola' });
-    if (estado.paso === 'finSi' || estado.paso === 'finNo') avisar('fin', { asistio: estado.paso === 'finSi' });
-    else if (estado.paso !== 'cierre') avisar('paso', { paso: estado.paso });
-  }
-
-  /**
-   * La visitante toco algo del pie: desde aqui manda ella.
-   * @param {Evento} evento
-   */
-  function tocar(evento) {
-    tocada = true;
-    sola = false;
-    vigia.disconnect();
-    devolverFoco = pie.contains(document.activeElement);
-    despachar(evento);
-  }
-
-  /**
-   * Pinta el reposo del ejemplo puesto, sin esperas. Corta lo que venia pintandose y lo que corria solo.
-   * @returns {string} la acotacion
-   */
-  function ponerEnReposo() {
-    turno += 1;
-    tocada = true;
-    sola = false;
-    ocupada = false;
-    vigia.disconnect();
-    const papel = presentar('cliente');
-    raiz.dataset.paso = estado.paso;
-    raiz.removeAttribute('data-final');
-    // Sin esperas: en reposo la agenda no tiene nada que sellar.
-    void pintarTu(escenaDe(estado, ejemplo).tu, turno);
-    pintarPie(accionesDe(estado, ejemplo));
-    return papel;
-  }
-
-  function reiniciar() {
-    const conFoco = pie.contains(document.activeElement);
-    estado = avanzar(estado, { tipo: 'reiniciar' }, ejemplo.guion);
-    anuncio.textContent = ponerEnReposo();
-    devolverFoco = conFoco;
-    regresarElFoco();
-  }
-
-  /**
-   * La visitante eligio un ejemplo. Si es otro, la historia vuelve al reposo con el: cambian la cabecera, la pregunta,
-   * la agenda y la leyenda, y el cambio se anuncia. El foco se queda en el boton que toco.
-   * @param {string} clave
-   */
-  function elegir(clave) {
-    const sesion = elegirEjemplo(ejemplos, { ejemplo, estado }, clave);
-    if (sesion.ejemplo === ejemplo) return;
-    ({ ejemplo, estado } = sesion);
-    devolverFoco = false;
-    ponerEnReposo();
+  /** Lo que es del ejemplo y no cambia con la historia: cual esta puesto, su nombre para quien no lo ve y sus fichas. */
+  function pintarEjemplo() {
+    const ficha = fichaDe(ejemplo);
     const opciones = opcionesDeEjemplo(ejemplos, ejemplo);
     for (const boton of botonesDeEjemplo) {
       const puesto = opciones.some((opcion) => opcion.elegido && opcion.clave === boton.dataset.demoEjemplo);
       boton.setAttribute('aria-pressed', String(puesto));
     }
-    const palabras = rotulosDeEjemplo(ejemplo.giro, rotulos);
     raiz.dataset.ejemplo = ejemplo.giro.clave;
-    leyenda.textContent = palabras.leyenda;
-    anuncio.textContent = palabras.anuncio;
-    avisar('ejemplo');
+    raiz.setAttribute('aria-label', ficha.leyenda);
+    dia.textContent = ficha.dia;
+    fecha.textContent = ficha.fecha;
+    const pago = tomas.find((toma) => toma.tipo === 'hoja');
+    hojaMonto.textContent = pago?.monto ?? '';
+    hojaDetalle.textContent = pago?.detalle ?? '';
   }
 
-  // Si nadie la toca, manda sola el primer mensaje a los 4 segundos de estar a la vista. De ahi en adelante espera.
-  // No arranca con la pestana oculta ni si alguien ya esta dentro con el teclado.
-  /** @type {ReturnType<typeof setTimeout> | undefined} */
-  let reloj;
-  const vigia = new IntersectionObserver(
-    (entradas) => {
-      clearTimeout(reloj);
-      if (!entradas.some((entrada) => entrada.isIntersecting)) return;
-      reloj = setTimeout(() => {
-        if (tocada || estado.paso !== 'reposo' || document.hidden || raiz.contains(document.activeElement)) return;
-        vigia.disconnect();
-        despachar({ tipo: 'enviar' });
-      }, ESPERA_PARA_ARRANCAR_SOLA);
-    },
-    { threshold: 0.4 },
-  );
+  // ---------- Mover la historia ----------
+  /**
+   * Lleva la historia a su estado siguiente. Dice si algo cambio.
+   * @param {Evento} evento
+   */
+  function mover(evento) {
+    const siguiente = avanzar(estado, evento, ejemplo);
+    if (siguiente === estado) return false;
+    // Los dos finales son historias distintas desde la respuesta.
+    if (siguiente.asistio !== estado.asistio) tomas = historiaDe(ejemplo, siguiente.asistio ?? true);
+    estado = siguiente;
+    return true;
+  }
+
+  /**
+   * La historia llego a donde esta: avisa lo que haya que avisar (cada cosa, una vez por historia) y deja pendiente
+   * la toma siguiente.
+   */
+  function alLlegar() {
+    const cuadro = cuadroEn(tomas, estado.van, ejemplo);
+    if (estado.van > 0 && !empezada) {
+      empezada = true;
+      avisar('inicio', { modo: tocada ? 'toque' : 'sola' });
+    }
+    // Una historia tiene un solo final: si la visitante regresa y contesta otra cosa, ya no se avisa.
+    const aviso = avisoDe(cuadro.paso);
+    const clave = aviso?.que === 'fin' ? 'fin' : cuadro.paso;
+    if (aviso && !avisados.has(clave)) {
+      avisados.add(clave);
+      if (aviso.que === 'fin') avisar('fin', aviso.detalle);
+      else avisar('paso', aviso.detalle);
+    }
+    pintarBoton();
+    const ultima = tomas[estado.van - 1];
+    if (ultima && !terminada()) programar(ultima.dura);
+  }
+
+  /** Pone la toma siguiente. */
+  function seguir() {
+    if (!mover({ tipo: 'sigue' })) return;
+    pintarUna();
+    alLlegar();
+  }
+
+  /** Empieza una historia nueva, en reposo, con el ejemplo puesto. */
+  function nuevaHistoria() {
+    soltar();
+    avance?.cancel();
+    avance = null;
+    momentoDelAvance = 0;
+    estado = estadoInicial();
+    tomas = historiaDe(ejemplo);
+    empezada = false;
+    avisados.clear();
+    pausada = false;
+  }
+
+  /** Vuelve a contar la historia desde el principio. Con menos movimiento, pinta de una vez su primera parada. */
+  function otraVez() {
+    nuevaHistoria();
+    if (sinMovimiento.matches) {
+      mover({ tipo: 'parada' });
+      repintar();
+      alLlegar();
+    } else {
+      repintar();
+      pintarBoton();
+      programar(ESPERA_PARA_REPETIR);
+    }
+  }
+
+  /**
+   * La visitante toco una rayita: la historia brinca al principio de ese momento, con lo anterior ya escrito, y de
+   * ahi sigue (o, con menos movimiento, pinta esa parada).
+   * @param {number} momento
+   */
+  function brincar(momento) {
+    tocada = true;
+    if (!mover({ tipo: 'brinca', momento })) return;
+    soltar();
+    pausada = false;
+    // La rayita de ese momento vuelve a llenarse desde cero, aunque sea la que ya iba.
+    avance?.cancel();
+    avance = null;
+    momentoDelAvance = 0;
+    mover({ tipo: sinMovimiento.matches ? 'parada' : 'sigue' });
+    repintar();
+    alLlegar();
+  }
+
+  /**
+   * La profesional contesta si la persona asistio.
+   * @param {boolean} valor
+   */
+  function responder(valor) {
+    tocada = true;
+    const conFoco = respuestas()?.contains(document.activeElement) ?? false;
+    if (!mover({ tipo: 'asistio', valor })) return;
+    soltar();
+    pausada = false;
+    if (sinMovimiento.matches) {
+      mover({ tipo: 'parada' });
+      repintar();
+    } else {
+      pintarUna();
+    }
+    // Los botones de la respuesta ya no estan: quien venia con el teclado sigue en el boton de la pausa.
+    if (conFoco) pausa.focus({ preventScroll: true });
+    alLlegar();
+  }
+
+  /** El boton de la pausa: verla otra vez si ya termino, la parada siguiente con menos movimiento, o pausar y seguir. */
+  function alTocarLaPausa() {
+    tocada = true;
+    if (terminada()) {
+      otraVez();
+    } else if (sinMovimiento.matches) {
+      if (!mover({ tipo: 'parada' })) return;
+      soltar();
+      repintar();
+      alLlegar();
+    } else {
+      pausada = !pausada;
+      alCambiarLaMarcha();
+    }
+  }
+
+  /**
+   * La visitante eligio un ejemplo. Si es otro, la historia vuelve al principio con el y corre de nuevo. El foco se
+   * queda en el boton que toco.
+   * @param {string} clave
+   */
+  function elegir(clave) {
+    const sesion = elegirEjemplo(ejemplos, { ejemplo, estado }, clave);
+    if (sesion.ejemplo === ejemplo) return;
+    tocada = true;
+    ejemplo = sesion.ejemplo;
+    nuevaHistoria();
+    pintarEjemplo();
+    repintar();
+    pintarBoton();
+    avisar('ejemplo');
+    programar(ESPERA_PARA_REPETIR);
+  }
 
   // ---------- Arranque ----------
-  // La pagina ya trae escrito el reposo del primer ejemplo; solo falta lo que se puede tocar.
-  agendaFilas.dataset.horas = escenaDe(estado, ejemplo)
-    .tu.filas.map((fila) => fila.hora)
-    .join('|');
-  pintarPie(accionesDe(estado, ejemplo));
-  // Ya viva, la leyenda invita a tocarla (sin JavaScript solo dice que es un ejemplo: no hay nada que tocar).
-  leyenda.textContent = rotulosDeEjemplo(ejemplo.giro, rotulos).leyenda;
-  pieza(raiz, '[data-demo-reiniciar]').addEventListener('click', reiniciar);
+  // La pagina ya trae escrito el reposo del primer ejemplo: aqui solo se pone al dia lo que depende de la visitante.
+  pintarEjemplo();
+  pintarCuadro();
+  pintarBoton();
+  pausa.addEventListener('click', alTocarLaPausa);
+  for (const tramo of tramos) tramo.addEventListener('click', () => brincar(Number(tramo.dataset.demoTramo)));
   for (const boton of botonesDeEjemplo) {
     boton.addEventListener('click', () => elegir(boton.dataset.demoEjemplo ?? ''));
   }
-  pieza(raiz, '[data-demo-sola]').addEventListener('click', () => {
-    if (estado.paso === 'cierre') reiniciar();
-    tocada = true;
-    sola = true;
-    vigia.disconnect();
-    const evento = porDefecto(estado, ejemplo.guion);
-    if (evento) despachar(evento);
-  });
-  vigia.observe(pieza(raiz, '.telefono'));
+  // La historia solo corre con el celular a la vista: por lo menos su mitad o, si no cabe, media pantalla de el.
+  new IntersectionObserver(
+    (entradas) => {
+      const ultima = entradas[entradas.length - 1];
+      if (!ultima) return;
+      const alto = ultima.rootBounds?.height ?? window.innerHeight;
+      aLaVista =
+        ultima.isIntersecting &&
+        (ultima.intersectionRatio >= A_LA_VISTA || ultima.intersectionRect.height >= alto * A_LA_VISTA);
+      alCambiarLaMarcha();
+    },
+    { threshold: [0, 0.25, 0.5, 0.75, 1] },
+  ).observe(tel);
+  document.addEventListener('visibilitychange', alCambiarLaMarcha);
+  sinMovimiento.addEventListener('change', alCambiarLaMarcha);
+  // Empieza sola al poco de estar a la vista.
+  programar(ESPERA_PARA_EMPEZAR);
   // Hasta aqui todo salio bien: la conversacion escrita ya no hace falta y la demostracion queda viva.
-  chat.querySelector('[data-demo-transcripcion]')?.remove();
+  hilo.querySelector('[data-demo-transcripcion]')?.remove();
   raiz.dataset.viva = '';
 }

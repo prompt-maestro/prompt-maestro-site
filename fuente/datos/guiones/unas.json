@@ -1,26 +1,14 @@
 {
+  "charla": "10:12 am",
   "pregunta": "Hola, ¿cuánto cuesta el gelish?",
   "saludo": [
     "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. El gelish semipermanente cuesta {precio} y dura de 2 a 3 semanas. Si te animas, te busco un horario."
   ],
-  "cuando": [
-    {
-      "id": "jueves",
-      "ficha": "El jueves",
-      "dice": "Sí, ¿tienes lugar el jueves?",
-      "dia": "jueves",
-      "horas": ["10:00 am", "12:30 pm", "4:00 pm", "5:00 pm"]
-    },
-    {
-      "id": "sabado",
-      "ficha": "El sábado",
-      "dice": "Sí, ¿tienes lugar el sábado?",
-      "dia": "sábado",
-      "horas": ["10:00 am", "12:00 pm", "3:00 pm", "5:00 pm"]
-    }
-  ],
+  "pideDia": "Sí, ¿tienes lugar el jueves?",
+  "dia": "jueves",
+  "fecha": 19,
+  "horas": ["10:00 am", "12:30 pm", "4:00 pm", "5:00 pm"],
   "horaSugerida": "5:00 pm",
   "eligeHora": "{ALaHora}, por favor.",
-  "apartado": "¡Listo! Te aparté el lugar para el {dia} {aLaHora}. Para confirmarla se paga el anticipo de {anticipo} con este link. Te lo guardo unos minutos; en cuanto pagues, te confirmo por aquí mismo.",
-  "otras": ["Manicure · Sofía", "Acrílicas · Renata", "Pedicure · Lupita"]
+  "apartado": "¡Listo! Te aparté el lugar para el {dia} {aLaHora}. Para confirmarla se paga el anticipo de {anticipo} con este link. Te lo guardo unos minutos; en cuanto pagues, te confirmo por aquí mismo."
 }

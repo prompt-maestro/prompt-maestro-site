@@ -1,7 +1,10 @@
-/* El segundo movimiento: su dinero. La promesa de la cita garantizada y, enseguida, la demostracion para vivirla. En
-   celular los botones van debajo del telefono; en pantallas anchas la promesa y sus botones van a la izquierda y el
-   telefono a la derecha. */
+/* El segundo movimiento: su dinero. La promesa de la cita garantizada y, enseguida, la demostracion que la cuenta
+   sola. En celular todo va en una columna y los botones quedan debajo de la demostracion; desde 768 la promesa y sus
+   botones van a la izquierda y la demostracion a la derecha, y desde 1240 la demostracion se abre en dos: el celular
+   al centro y, a su derecha, lo que le llega a la profesional. */
 .garantia {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-areas:
     "promesa"
@@ -10,7 +13,19 @@
   gap: var(--e-8);
   max-width: 1440px;
   margin: 0 auto;
-  padding: var(--e-16) clamp(20px, 5.5vw, 88px) var(--e-24);
+  padding: var(--e-16) var(--canal) var(--e-24);
+  /* El resplandor del celular y su sombra no ensanchan la pagina. */
+  overflow: hidden;
+}
+
+/* La luz de la marca, muy tenue, detras del celular. */
+.garantia::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(64% 40% at 50% 52%, rgb(63 92 245 / 0.2), rgb(63 92 245 / 0) 70%);
+  pointer-events: none;
 }
 
 .garantia__promesa {
@@ -47,6 +62,7 @@
   color: var(--tinta-2);
   font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.3125rem);
   line-height: 1.45;
+  text-wrap: pretty;
 }
 
 .demo {
@@ -54,6 +70,8 @@
 }
 
 .garantia__cierre {
+  /* Por encima de la sombra de la tarjeta que le queda arriba en celular. */
+  position: relative;
   grid-area: cierre;
   display: grid;
   gap: var(--e-3);
@@ -87,15 +105,19 @@
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 768px) {
   .garantia {
     grid-template-areas:
       "promesa demo"
       "cierre demo";
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) 360px;
     grid-template-rows: 1fr 1fr;
-    gap: var(--e-8) var(--e-16);
+    gap: var(--e-8) clamp(32px, 5vw, 72px);
     padding-block: var(--e-24) var(--e-40);
+  }
+
+  .garantia::before {
+    background: radial-gradient(44% 48% at 78% 48%, rgb(63 92 245 / 0.22), rgb(63 92 245 / 0) 70%);
   }
 
   .garantia__promesa {
@@ -130,5 +152,16 @@
 
   .garantia__nota {
     max-width: 28rem;
+  }
+}
+
+@media (min-width: 1240px) {
+  .garantia {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: clamp(32px, 4vw, 56px);
+  }
+
+  .garantia::before {
+    background: radial-gradient(40% 56% at 60% 50%, rgb(63 92 245 / 0.24), rgb(63 92 245 / 0) 70%);
   }
 }

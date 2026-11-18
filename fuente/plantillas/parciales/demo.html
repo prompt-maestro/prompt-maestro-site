@@ -1,44 +1,73 @@
-    <div class="demo" id="demo" data-demo data-ejemplo="{{ejemplo.clave}}" data-paso="reposo" data-telefono="cliente">
+    <div class="demo" id="demo" data-demo data-ejemplo="{{ejemplo.clave}}" data-paso="reposo" data-momento="0" data-telefono="cliente" role="group" aria-label="{{ejemplo.leyenda}}">
       <div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">
-        <span class="demo__ejemplos-rotulo" id="demo-ejemplos">{{demo.rotulos.ejemplo}}</span>
+        <span class="solo-lector" id="demo-ejemplos">{{demo.rotulos.ejemplo}}</span>
 {{#cada giros}}        <button class="demo__ejemplo" type="button" data-demo-ejemplo="{{clave}}" aria-pressed="{{#si @primero}}true{{/si}}{{#no @primero}}false{{/no}}">{{nombre}}</button>
 {{/cada}}      </div>
       <div class="demo__escena">
-        <div class="telefono">
-          <div class="chat__cabeza">
-            <span class="chat__avatar" aria-hidden="true" data-demo-iniciales>{{ejemplo.iniciales}}</span>
-            <p class="chat__quien"><strong data-demo-nombre>{{ejemplo.negocio}}</strong> <span data-demo-atiende>{{ejemplo.atiende}}</span></p>
-          </div>
-          <div class="chat__mensajes" data-demo-chat data-acotacion role="log" aria-label="{{demo.rotulos.registro}}" tabindex="0">
-            <p class="chat__salto">{{ejemplo.papel}}</p>
-            <div class="transcripcion" data-demo-transcripcion>
-              <p class="transcripcion__titulo">{{demo.rotulos.sinJs}}</p>
-{{#cada conversacion}}{{#si quien}}              <p><b>{{quien}}:</b> {{texto}}</p>
-{{/si}}{{#no quien}}              <p class="transcripcion__salto">{{texto}}</p>
-{{/no}}{{/cada}}            </div>
-          </div>
-          <section class="tu" data-demo-tu aria-label="{{demo.rotulos.tuTitulo}}">
-            <p class="tu__narra"><span class="tu__rotulo">{{demo.rotulos.tuTitulo}}</span> <span class="tu__resumen" data-demo-tu-resumen>{{demo.tu.reposo}}</span></p>
-            <div class="agenda">
-              <p class="agenda__cabeza"><span class="agenda__dia" data-demo-dia>{{ejemplo.dia}}</span> <span class="agenda__de">{{demo.rotulos.calendario}}</span></p>
-              <ol class="agenda__filas" role="list" data-demo-filas>
-{{#cada ejemplo.filas}}                <li class="agenda__fila" data-estado="{{estado}}"><span class="agenda__hora">{{hora}}</span><span class="agenda__estado">{{texto}}</span></li>
-{{/cada}}              </ol>
+        <div class="tel" data-demo-tel>
+          <div class="wa" data-demo-pantalla>
+            <p class="wa__estado" aria-hidden="true"><span data-demo-reloj>{{ejemplo.reposo.reloj}}</span><svg viewBox="0 0 58 12" fill="currentColor" focusable="false"><rect y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" width="3" height="12" rx="1"/><path d="M30 2.2c2.6 0 4.9 1 6.6 2.7l-1.3 1.4A7.4 7.4 0 0 0 30 4.1c-2 0-3.9.8-5.3 2.2l-1.3-1.4A9.3 9.3 0 0 1 30 2.2zm0 3.9c1.5 0 2.9.6 3.9 1.6l-1.4 1.4a3.6 3.6 0 0 0-5 0l-1.4-1.4A5.5 5.5 0 0 1 30 6.1zm0 3.7 1.5 1.5L30 12.8l-1.5-1.5z"/><rect x="42" y="1" width="14" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="43.8" y="2.8" width="9" height="6.4" rx="1.5"/></svg></p>
+            <div class="wa__cabeza">
+              <svg class="wa__regreso" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="wa__foto" aria-hidden="true" data-demo-iniciales>{{ejemplo.iniciales}}</span>
+              <p class="wa__quien"><strong data-demo-nombre>{{ejemplo.nombre}}</strong> <span class="wa__detalle" data-demo-detalle>{{ejemplo.detalle}}</span></p>
+              <svg class="wa__icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2 2A15 15 0 0 1 4.5 5.5a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg class="wa__icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
             </div>
-          </section>
-          <div class="chat__pie" data-demo-pie>
-            <p class="chat__borrador">{{ejemplo.pregunta}}</p>
-            <button class="boton boton--enviar" type="button">{{demo.rotulos.enviar}}</button>
+            <div class="wa__chat">
+              <div class="wa__hilo" data-demo-hilo>
+                <div class="transcripcion" data-demo-transcripcion>
+                  <p class="transcripcion__titulo">{{demo.rotulos.sinJs}}</p>
+{{#cada conversacion}}{{#si quien}}                  <p><b>{{quien}}:</b> {{texto}}</p>
+{{/si}}{{#no quien}}                  <p class="transcripcion__salto">{{texto}}</p>
+{{/no}}{{/cada}}                </div>
+              </div>
+            </div>
+            <p class="wa__pie" aria-hidden="true" data-demo-pie>
+              <span class="wa__caja"><svg viewBox="0 0 24 24" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0" stroke-linecap="round"/></g><circle cx="9" cy="10" r="1.1"/><circle cx="15" cy="10" r="1.1"/></svg><span class="wa__borrador"><bdi data-demo-borrador>{{demo.rotulos.mensaje}}</bdi></span><svg class="wa__clip" viewBox="0 0 24 24" focusable="false"><path d="M20 11.5l-7.8 7.8a4.6 4.6 0 0 1-6.5-6.5L14 4.5a3.1 3.1 0 0 1 4.4 4.4l-8.3 8.3a1.6 1.6 0 0 1-2.2-2.2l7.3-7.3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="wa__mic"><svg class="wa__mic-voz" viewBox="0 0 24 24" focusable="false"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11.5a6 6 0 0 0 5.2 6V21h1.6v-3.5a6 6 0 0 0 5.2-6h-1.7a4.3 4.3 0 0 1-8.6 0z"/></svg><svg class="wa__mic-envia" viewBox="0 0 24 24" focusable="false"><path d="M3.4 20.3 21 12 3.4 3.7l-.05 6.5L15 12 3.35 13.8z"/></svg></span>
+            </p>
+            <div class="wa__velo" aria-hidden="true"></div>
+            <div class="wa__hoja" data-demo-hoja>
+              <span class="wa__hoja-bien" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <b>{{demo.rotulos.pagoAprobado}}</b>
+              <strong data-demo-hoja-monto>{{ejemplo.pago.monto}}</strong>
+              <small data-demo-hoja-detalle>{{ejemplo.pago.detalle}}</small>
+            </div>
+          </div>
+        </div>
+        <div class="guia">
+          <div class="guia__tramos" role="group" aria-label="{{demo.rotulos.momentos}}">
+{{#cada demo.momentos}}            <button class="guia__tramo" type="button" data-demo-tramo="{{@numero}}" data-estado="falta" aria-label="0{{@numero}} {{rotulo}}"><span class="guia__raya"><i class="guia__lleno"></i></span></button>
+{{/cada}}          </div>
+          <div class="guia__fila">
+            <div class="guia__letrero" data-demo-letrero aria-live="polite" aria-atomic="true">
+              <p class="guia__rotulo">{{ejemplo.reposo.rotulo}}</p>
+              <p class="guia__texto">{{ejemplo.reposo.letrero}}</p>
+            </div>
+            <button class="guia__pausa" type="button" data-demo-pausa data-estado="corre" aria-label="{{demo.rotulos.pausar}}"><svg class="guia__icono guia__icono--pausa" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><rect x="2.5" y="1.5" width="3.2" height="11" rx="1"/><rect x="8.3" y="1.5" width="3.2" height="11" rx="1"/></svg><svg class="guia__icono guia__icono--sigue" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M3.5 1.9v10.2a.7.7 0 0 0 1.05.6l8.3-5.1a.7.7 0 0 0 0-1.2l-8.3-5.1a.7.7 0 0 0-1.05.6z"/></svg><svg class="guia__icono guia__icono--otra" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M13.5 8a5.5 5.5 0 1 1-1.7-4M12 1.5v2.9H9.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
         </div>
       </div>
-      <p class="demo__leyenda" data-demo-leyenda>{{ejemplo.leyenda}}</p>
-      <p class="demo__controles">
-        <button class="enlace" type="button" data-demo-sola>{{demo.rotulos.verTodo}}</button>
-        <button class="enlace" type="button" data-demo-reiniciar>{{demo.rotulos.reiniciar}}</button>
-      </p>
-      <p class="solo-lector" aria-live="polite" data-demo-anuncio></p>
+      <div class="llega">
+        <p class="llega__rotulo">{{demo.rotulos.llega}}</p>
+        <div class="llega__tarjetas">
+          <div class="llega__tarjeta llega__tarjeta--cita" data-demo-tarjeta="cita" data-estado="libre" data-turno>
+            <p class="llega__dia"><small data-demo-dia>{{ejemplo.dia}}</small> <b data-demo-fecha>{{ejemplo.fecha}}</b></p>
+            <p class="llega__texto"><small>{{demo.rotulos.calendario}}</small> <b data-demo-cita-titulo>{{ejemplo.reposo.cita.titulo}}</b> <span class="llega__detalle" data-demo-cita-detalle>{{ejemplo.reposo.cita.detalle}}</span></p>
+          </div>
+          <div class="llega__tarjeta" data-demo-tarjeta="pago" data-apagada aria-hidden="true">
+            <span class="llega__icono llega__icono--bien" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <p class="llega__texto"><small>{{demo.rotulos.mercadoPago}}</small> <b data-demo-pago-titulo>{{ejemplo.reposo.pago.titulo}}</b> <span class="llega__detalle" data-demo-pago-detalle>{{ejemplo.reposo.pago.detalle}}</span></p>
+          </div>
+          <div class="llega__tarjeta" data-demo-tarjeta="asistencia" data-estado="espera" data-apagada aria-hidden="true">
+            <span class="llega__icono" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></g></svg></span>
+            <p class="llega__texto"><small>{{demo.rotulos.whatsapp}}</small> <b data-demo-asistencia-titulo>{{ejemplo.reposo.asistencia.titulo}}</b> <span class="llega__sino" aria-hidden="true"><i>{{demo.rotulos.si}}</i><i>{{demo.rotulos.no}}</i></span><span class="llega__fue" data-demo-asistencia-respuesta></span></p>
+          </div>
+        </div>
+      </div>
       <template data-demo-sello>{{> sello}}</template>
-      <template data-demo-palomita><svg class="cobro__palomita" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></template>
+      <template data-demo-tics><svg class="wa__tics" viewBox="0 0 22 14" aria-hidden="true" focusable="false"><path d="M1.5 7.5l3.6 3.8L12 3M8.6 9.6l1.7 1.7L17.4 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></template>
+      <template data-demo-voz><span class="wa__voz" aria-hidden="true"><span class="wa__voz-foto"><b data-voz-inicial></b><svg viewBox="0 0 16 16" focusable="false"><path d="M8 1.5a2.2 2.2 0 0 0-2.2 2.2v4a2.2 2.2 0 0 0 4.4 0v-4A2.2 2.2 0 0 0 8 1.5zM4 7.5a4 4 0 0 0 3.4 4v2h1.2v-2a4 4 0 0 0 3.4-4h-1.2a2.8 2.8 0 0 1-5.6 0z"/></svg></span><svg class="wa__voz-toca" viewBox="0 0 14 16" focusable="false"><path d="M1 1.2v13.6a.8.8 0 0 0 1.2.7l11-6.8a.8.8 0 0 0 0-1.4l-11-6.8A.8.8 0 0 0 1 1.2z"/></svg><span class="wa__onda"><svg viewBox="0 0 117.6 26" preserveAspectRatio="none" focusable="false"><path d="M1.3 11.3v3.4M5.9 9.3v7.4M10.5 6.3v13.4M15.1 9.8v6.4M19.7 4.3v17.4M24.3 2.3v21.4M28.9 7.3v11.4M33.5 10.3v5.4M38.1 5.3v15.4M42.7 3.3v19.4M47.3 8.3v9.4M51.9 11.3v3.4M56.5 6.8v12.4M61.1 3.8v18.4M65.7 8.8v8.4M70.3 10.8v4.4M74.9 5.8v14.4M79.5 2.8v20.4M84.1 7.8v10.4M88.7 9.8v6.4M93.3 4.8v16.4M97.9 9.3v7.4M102.5 11.3v3.4M107.1 7.3v11.4M111.7 10.3v5.4M116.3 11.8v2.4"/></svg><svg class="wa__onda-oida" viewBox="0 0 117.6 26" preserveAspectRatio="none" focusable="false"><path d="M1.3 11.3v3.4M5.9 9.3v7.4M10.5 6.3v13.4M15.1 9.8v6.4M19.7 4.3v17.4M24.3 2.3v21.4M28.9 7.3v11.4M33.5 10.3v5.4M38.1 5.3v15.4M42.7 3.3v19.4M47.3 8.3v9.4M51.9 11.3v3.4M56.5 6.8v12.4M61.1 3.8v18.4M65.7 8.8v8.4M70.3 10.8v4.4M74.9 5.8v14.4M79.5 2.8v20.4M84.1 7.8v10.4M88.7 9.8v6.4M93.3 4.8v16.4M97.9 9.3v7.4M102.5 11.3v3.4M107.1 7.3v11.4M111.7 10.3v5.4M116.3 11.8v2.4"/></svg></span><span class="wa__voz-pie"><span data-voz-dura></span><span class="wa__hora" data-voz-hora></span></span></span></template>
       <script type="application/json" data-demo-datos>{{{armado.datosDemo}}}</script>
     </div>

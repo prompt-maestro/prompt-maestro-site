@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { avanzar, estadoInicial, porDefecto } from '../../fuente/js/demo.js';
+import { historiaDe } from '../../fuente/js/demo.js';
 import {
   ALTA,
   archivoDe,
@@ -344,16 +344,20 @@ test('cada data-lugar que usa la pagina esta en la lista: un lugar nuevo no se q
 });
 
 test('los pasos que se miden son los de la historia, en su orden', async () => {
-  const guion = await leerDatos('guiones/unas.json');
-  /** @type {string[]} */
-  const recorridos = [];
-  let estado = estadoInicial();
-  for (let evento = porDefecto(estado, guion); evento; evento = porDefecto(estado, guion)) {
-    estado = avanzar(estado, evento, guion);
-    recorridos.push(estado.paso);
-  }
-  // Por el camino feliz la historia pasa por los seis pasos, luego por un final y termina en el cuadro final.
-  assert.deepEqual(recorridos, [...PASOS, 'finSi', 'cierre']);
+  const demo = await leerDatos('demo.json');
+  const [giro] = await leerDatos('giros.json');
+  const ejemplo = { ...demo, giro, guion: await leerDatos(`guiones/${giro.clave}.json`) };
+  /** @param {boolean} asistio  los pasos por los que pasa la historia, cada uno una vez y en su orden */
+  const recorridos = (asistio) => [...new Set(historiaDe(ejemplo, asistio).map((toma) => toma.cuadro.paso))];
+  // La historia pasa por los seis pasos, luego por uno de sus dos finales y termina en el cierre.
+  assert.deepEqual(recorridos(true), [...PASOS, 'finSi', 'cierre']);
+  assert.deepEqual(recorridos(false), [...PASOS, 'finNo', 'cierre']);
+  // Y ningun paso regresa: una vez que la historia lo deja, no vuelve a el.
+  const pasos = historiaDe(ejemplo, true).map((toma) => toma.cuadro.paso);
+  assert.deepEqual(
+    pasos.filter((paso, lugar) => paso !== pasos[lugar - 1]),
+    [...PASOS, 'finSi', 'cierre'],
+  );
 });
 
 test('la demostracion avisa, pero no sabe quien mide', async () => {

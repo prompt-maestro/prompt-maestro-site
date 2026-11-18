@@ -23,6 +23,46 @@ export function listaDeHoras(horas) {
 }
 
 /**
+ * Una hora del guion, en minutos desde la medianoche. Una hora mal escrita detiene todo.
+ * @param {string} hora  por ejemplo "5:00 pm"
+ * @returns {number}  1020
+ */
+export function minutosDe(hora) {
+  const partes = /^(1[0-2]|[1-9]):([0-5]\d) (am|pm)$/.exec(hora);
+  if (!partes) throw new Error(`Guion: no entiendo la hora "${hora}"`);
+  return ((Number(partes[1]) % 12) + (partes[3] === 'pm' ? 12 : 0)) * 60 + Number(partes[2]);
+}
+
+/**
+ * La hora como la escribe WhatsApp al pie de cada mensaje. Los minutos dan la vuelta al dia.
+ * @param {number} minutos  desde la medianoche
+ * @returns {string}  "5:00 p. m.", "10:12 a. m."
+ */
+export function horaDeGlobo(minutos) {
+  const delDia = ((minutos % 1440) + 1440) % 1440;
+  return `${horaDeReloj(delDia)} ${delDia < 720 ? 'a. m.' : 'p. m.'}`;
+}
+
+/**
+ * La hora como la ensena la barra de arriba de un celular: sin manana ni tarde.
+ * @param {number} minutos  desde la medianoche
+ * @returns {string}  "5:00", "12:42"
+ */
+export function horaDeReloj(minutos) {
+  const delDia = ((minutos % 1440) + 1440) % 1440;
+  return `${Math.floor(delDia / 60) % 12 || 12}:${String(delDia % 60).padStart(2, '0')}`;
+}
+
+/**
+ * El dia como va en la ficha de un calendario: sus tres primeras letras, en mayusculas.
+ * @param {string} dia  "jueves", "miércoles"
+ * @returns {string}  "JUE", "MIÉ"
+ */
+export function diaCorto(dia) {
+  return dia.slice(0, 3).toUpperCase();
+}
+
+/**
  * @param {number} cantidad
  * @returns {string}  "$150", "$1,250"
  */

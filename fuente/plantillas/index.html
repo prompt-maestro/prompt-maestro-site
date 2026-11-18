@@ -152,14 +152,14 @@
 
   <section class="garantia" id="citas" aria-labelledby="titulo-citas">
     <div class="garantia__promesa">
-      <p class="sobre">Tu dinero</p>
-      <h2 class="garantia__titulo" id="titulo-citas">No pierdas ingresos por citas <em>no concretadas.</em></h2>
-      <p class="garantia__texto">Tu agente confirma la cita solo cuando el anticipo ya está pagado, y el dinero cae directo en tu Mercado Pago. Vívelo aquí mismo, como si fueras quien pide la cita.</p>
+      <p class="sobre">{{secciones.citas.sobre}}</p>
+      <h2 class="garantia__titulo" id="titulo-citas">{{secciones.citas.titulo}} <em>{{secciones.citas.tituloFuerte}}</em></h2>
+      <p class="garantia__texto">{{secciones.citas.texto}}</p>
     </div>
 {{> demo}}    <div class="garantia__cierre">
       <div class="garantia__acciones">
-        <a class="boton" href="{{sitio.alta}}" data-lugar="citas">Empieza ahora</a>
-        <a class="enlace" href="{{sitio.contacto}}" data-lugar="citas">Prefiero que me acompañen</a>
+        <a class="boton" href="{{sitio.alta}}" data-lugar="citas">{{secciones.cierre.accion}}</a>
+        <a class="enlace" href="{{sitio.contacto}}" data-lugar="citas">{{secciones.cierre.otra}}</a>
       </div>
       <p class="garantia__nota">{{secciones.cierre.nota}}</p>
     </div>

@@ -1,483 +1,1031 @@
-/* La demostracion: un telefono con un chat de estilo propio y, debajo de los mensajes, lo que ve la profesional. */
+/* La demostracion: un celular con el aspecto de WhatsApp de dia que cuenta sola, como un video, una cita completa en
+   seis momentos. Debajo va el letrero del momento y, despues, lo que mientras tanto le llega a la profesional. */
 .demo {
   display: grid;
-  gap: var(--e-3);
   justify-items: center;
+  gap: 20px;
   width: 100%;
 }
 
 .demo__escena {
-  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 20px;
   width: 100%;
-  max-width: 392px;
-}
-
-.demo__leyenda {
-  max-width: 24rem;
-  color: var(--tinta-3);
-  font-size: var(--t-nota);
-  text-align: center;
-  text-wrap: balance;
-}
-
-.demo__controles {
-  display: flex;
-  gap: var(--e-6);
-  font-size: var(--t-nota);
 }
 
 /* ---------- Los ejemplos para elegir: la misma historia con otro oficio ---------- */
 .demo__ejemplos {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: center;
-  /* Con este espacio los tres caben en un renglon tambien en el telefono mas angosto. */
-  gap: 0 var(--e-3);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.demo__ejemplos-rotulo {
-  color: var(--tinta-3);
+  gap: var(--e-2);
+  /* Las pastillas se ven bajitas, pero cada una se toca en 44 px: el sobrante no separa mas de la cuenta. */
+  margin-block: -6px;
 }
 
 .demo__ejemplo {
+  position: relative;
+  isolation: isolate;
   min-width: 44px;
   min-height: 44px;
-  padding: 0;
+  padding: 0 var(--e-4);
   border: 0;
+  border-radius: 999px;
   background: none;
-  color: var(--tinta-2);
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
+  color: var(--tinta-3);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* La pastilla que se ve. */
+.demo__ejemplo::before {
+  content: "";
+  position: absolute;
+  inset: 6px 0;
+  z-index: -1;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--linea);
 }
 
 .demo__ejemplo:hover {
   color: var(--tinta);
 }
 
-/* El que esta puesto: mas claro y con una raya de la luz de la marca debajo. */
+.demo__ejemplo:hover::before {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3);
+}
+
+/* El que esta puesto se enciende con la luz de la marca. */
 .demo__ejemplo[aria-pressed="true"] {
-  background: linear-gradient(var(--sello-2), var(--sello-2)) 0 calc(50% + 14px) / 100% 2px no-repeat;
   color: var(--tinta);
-  font-weight: 600;
 }
 
-/* ---------- El telefono ---------- */
-.telefono {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) minmax(0, auto) auto;
-  /* Cabe entero en la pantalla, debajo de la barra, en cualquier telefono. */
-  height: clamp(520px, calc(100svh - 96px), 620px);
-  overflow: hidden;
-  border: 1px solid var(--linea);
-  border-radius: var(--r-telefono);
-  background: var(--superficie);
-  box-shadow: var(--sombra-2);
+.demo__ejemplo[aria-pressed="true"]::before {
+  background: rgb(132 151 255 / 0.16);
+  box-shadow: inset 0 0 0 1px rgb(132 151 255 / 0.7);
 }
 
-.chat__cabeza {
-  display: flex;
-  align-items: center;
-  gap: var(--e-3);
-  padding: var(--e-4) var(--e-4) var(--e-3);
-  border-bottom: 1px solid var(--linea);
-}
-
-.chat__avatar {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--papel-2);
-  font-family: var(--f-titulo);
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.chat__quien {
-  display: grid;
-  line-height: 1.25;
-}
-
-.chat__quien strong {
-  font-weight: 600;
-}
-
-.chat__quien span {
-  color: var(--tinta-3);
-  font-size: var(--t-nota);
-}
-
-/* ---------- La conversacion ---------- */
-.chat__mensajes {
-  display: flex;
-  flex-direction: column;
-  gap: var(--e-2);
-  overflow-y: auto;
-  padding: var(--e-4) var(--e-3);
-  background: var(--papel-2);
-  font-size: 1rem;
-  line-height: 1.4;
-  scrollbar-width: thin;
-}
-
-.chat__mensajes:focus-visible {
+.demo__ejemplo:focus-visible {
   outline-offset: -3px;
 }
 
-.chat__salto {
-  align-self: center;
-  margin-block: var(--e-2);
-  color: var(--tinta-2);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-align: center;
+/* ---------- El celular ---------- */
+.tel {
+  /* Los colores de WhatsApp de dia. El gris de la hora y el azul de los enlaces van un tono mas oscuros que los de
+     verdad: asi se leen con contraste AA tambien sobre el globo verde y sobre la tarjeta del link. */
+  --wa-fondo: #efe9e0;
+  --wa-barra: #fff;
+  --wa-entra: #fff;
+  --wa-sale: #d9fdd3;
+  --wa-texto: #111b21;
+  --wa-2: #667781;
+  --wa-2-fuerte: #54656f;
+  --wa-tic: #34a7e0;
+  --wa-verde: #1daa61;
+  --wa-verde-texto: #0b7a43;
+  --wa-liga: #0270a3;
+  --wa-trama: rgb(60 40 10 / 0.05);
+  --wa-tarjeta: rgb(11 20 26 / 0.06);
+  --wa-sombra: 0 1px 0.5px rgb(11 20 26 / 0.13);
+  /* Lo alto de la pantalla del celular. Un navegador que no sabe medir la suya (svh) se queda con este. */
+  --wa-alto: 560px;
+
+  position: relative;
+  width: min(322px, 100%);
+  padding: 9px;
+  border-radius: 48px;
+  background: linear-gradient(155deg, #4a5286 0%, #151a3a 30%, #0a0d20 62%, #333b72 100%);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.22);
 }
 
-/* La acotacion: a escenario limpio, le dice a la visitante que papel le toca. Se lee como en un libreto de teatro. */
-.chat__mensajes[data-acotacion] .chat__salto {
-  max-width: 16rem;
-  margin-block: auto;
-  color: var(--tinta);
-  font-family: var(--f-titulo);
-  font-size: 1.375rem;
-  font-weight: 300;
-  letter-spacing: 0;
+/* Su sombra y su resplandor van detras de todo lo de la seccion: no oscurecen el letrero ni los botones de abajo. */
+.tel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow:
+    0 50px 100px rgb(0 0 0 / 0.7),
+    0 0 140px rgb(63 92 245 / 0.4);
+  pointer-events: none;
+}
+
+/* Donde el navegador sabe medir su pantalla, el celular cabe entero en ella, con su letrero, debajo de la barra. */
+@supports (height: 100svh) {
+  .tel {
+    --wa-alto: clamp(480px, calc(100svh - 204px), 628px);
+  }
+}
+
+/* La isla de arriba. */
+.tel::before {
+  content: "";
+  position: absolute;
+  top: 19px;
+  left: 50%;
+  z-index: 5;
+  width: 86px;
+  height: 24px;
+  border-radius: 20px;
+  background: #000;
+  transform: translateX(-50%);
+}
+
+/* La pantalla. Dentro, la letra es la del sistema, como en WhatsApp de verdad. */
+.wa {
+  position: relative;
+  /* Lo que se mueve dentro (la hoja, la conversacion) se recorta siempre con las esquinas de la pantalla. */
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: var(--wa-alto);
+  overflow: hidden;
+  border-radius: 40px;
+  background: var(--wa-fondo);
+  color: var(--wa-texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14.2px;
+  line-height: 19px;
+}
+
+.wa :focus-visible {
+  outline-color: var(--wa-texto);
+  outline-offset: 2px;
+}
+
+.wa__estado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 8px 26px 0;
+  background: var(--wa-barra);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wa__estado svg {
+  width: auto;
+  height: 11px;
+}
+
+.wa__cabeza {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 9px 8px;
+  background: var(--wa-barra);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.08);
+}
+
+.wa__regreso,
+.wa__icono {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  opacity: 0.86;
+}
+
+.wa__foto {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #f3c9d6, #d98aa6);
+  color: #5b1f36;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* En el celular de la profesional quien escribe es su agente: la foto lleva el azul de la marca. */
+.demo[data-telefono="profesional"] .wa__foto {
+  background: linear-gradient(140deg, #5873ff, #2f46c8);
+  color: #fff;
+}
+
+.wa__quien {
+  display: grid;
+  flex: 1;
+  min-width: 0;
   line-height: 1.25;
-  text-wrap: balance;
 }
 
-.burbuja {
+.wa__quien strong {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wa__detalle {
+  overflow: hidden;
+  color: var(--wa-2);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mientras el agente redacta. */
+.wa[data-escribe] .wa__detalle {
+  color: var(--wa-verde-texto);
+}
+
+/* ---------- La conversacion ---------- */
+/* Lo nuevo entra por abajo y lo viejo se va por arriba: no hay nada que desplazar, asi que el dedo que pasa por
+   encima sigue moviendo la pagina. La trama del fondo es propia: puntos muy tenues. */
+.wa__chat {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background-image:
+    radial-gradient(var(--wa-trama) 1.2px, transparent 1.6px), radial-gradient(var(--wa-trama) 1.2px, transparent 1.6px);
+  background-position:
+    0 0,
+    13px 13px;
+  background-size: 26px 26px;
+}
+
+/* El hilo va anclado abajo y crece hacia arriba: lo que ya no cabe queda fuera, por arriba, donde nada lo alcanza. */
+.wa__hilo {
+  position: absolute;
+  inset: auto 9px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Un globo, con su colita. Dos seguidos del mismo lado comparten la primera. */
+.wa__m {
+  position: relative;
+  display: flow-root;
+  flex: none;
   max-width: 84%;
-  padding: 10px 14px;
-  border-radius: var(--r-tarjeta);
+  margin: 6px 0 0;
+  padding: 6px 8px 7px 9px;
+  border-radius: 8px;
+  box-shadow: var(--wa-sombra);
   overflow-wrap: anywhere;
 }
 
-.burbuja--asistente {
-  align-self: flex-start;
-  border: 1px solid var(--linea);
-  border-bottom-left-radius: 6px;
-  background: var(--superficie);
+.wa__m::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 9px;
+  height: 12px;
 }
 
-/* Lo que escribe la visitante, sea quien pide la cita o la profesional. */
-.burbuja--mia {
+.wa__m--entra {
+  align-self: flex-start;
+  border-top-left-radius: 0;
+  background: var(--wa-entra);
+}
+
+.wa__m--entra::before {
+  left: -8px;
+  background: var(--wa-entra);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+.wa__m--sale {
   align-self: flex-end;
-  border-bottom-right-radius: 6px;
-  background: var(--tinta);
-  color: var(--papel);
+  border-top-right-radius: 0;
+  background: var(--wa-sale);
 }
 
-/* El boton que traen algunos mensajes del asistente: aqui solo se ensena, no hace nada. */
-/* Una muestra del boton que trae el recordatorio de verdad: aqui no se toca, y se ve que no. */
-.burbuja__boton {
-  display: block;
-  margin-top: var(--e-2);
-  padding-top: var(--e-2);
-  border-top: 1px dashed var(--linea);
-  color: var(--tinta-2);
-  font-weight: 500;
-  text-align: center;
-  cursor: default;
+.wa__m--sale::before {
+  right: -8px;
+  background: var(--wa-sale);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
-/* Los tres puntos de "escribiendo". */
-.burbuja--escribe {
-  display: flex;
-  gap: 5px;
-  padding: 15px 16px;
+.wa__m--entra + .wa__m--entra,
+.wa__m--sale + .wa__m--sale {
+  margin-top: 3px;
+  border-radius: 8px;
 }
 
-.burbuja--escribe i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--tinta-3);
+.wa__m--entra + .wa__m--entra::before,
+.wa__m--sale + .wa__m--sale::before {
+  content: none;
 }
 
-/* La tarjeta del cobro del anticipo. */
-.cobro {
-  align-self: flex-start;
-  display: grid;
-  gap: 2px;
-  width: 84%;
-  padding: var(--e-3) var(--e-4);
-  border: 1px solid var(--linea);
-  border-radius: var(--r-tarjeta);
-  border-bottom-left-radius: 6px;
-  background: var(--superficie);
-}
-
-.cobro__concepto {
-  color: var(--tinta-2);
-  font-size: var(--t-nota);
-}
-
-.cobro__monto {
-  font-size: 1.875rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.15;
-}
-
-.cobro__estado {
-  display: flex;
+/* La hora, al pie del globo: va a la derecha del ultimo renglon si cabe y, si no, abajo. */
+.wa__hora {
+  display: inline-flex;
+  float: right;
   align-items: center;
-  gap: 6px;
-  color: var(--tinta-3);
-  font-size: var(--t-nota);
+  gap: 3px;
+  margin: 7px 0 -4px 10px;
+  color: var(--wa-2);
+  font-size: 11px;
+  line-height: 15px;
+  white-space: nowrap;
 }
 
-/* La primera luz azul: el pago ya entro. */
-.cobro--aprobado .cobro__estado {
-  color: var(--luz);
-  font-weight: 600;
+.wa__m--sale .wa__hora {
+  color: var(--wa-2-fuerte);
 }
 
-.cobro__palomita {
-  width: 18px;
-  height: 18px;
+.wa__tics {
+  width: 16px;
+  height: 11px;
+  color: var(--wa-tic);
 }
 
-/* La frase con que cierra la historia. */
-.cierre {
+/* La nota de voz: la foto de quien la manda, el boton, la onda y lo que dura. */
+.wa__m--voz {
+  padding: 6px 8px 5px 7px;
+}
+
+.wa__voz {
   display: grid;
-  gap: var(--e-1);
-  margin-block: auto 0;
-  padding: var(--e-4);
-  border-radius: var(--r-tarjeta);
-  background: var(--tinta);
-  color: var(--papel);
+  grid-template-columns: 38px 14px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+  width: 214px;
+  max-width: 100%;
 }
 
-.cierre__titulo {
-  font-family: var(--f-titulo);
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.15;
-}
-
-.cierre__texto {
-  color: var(--papel-2);
-  font-size: var(--t-nota);
-}
-
-/* ---------- Lo que ves tu: una tira de papel entre los mensajes y el pie ---------- */
-.tu {
+.wa__voz-foto {
+  position: relative;
   display: grid;
-  align-content: start;
-  gap: var(--e-2);
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #ffd9a8, #f0a35e);
+  color: #6b3a0e;
+  font-size: 14px;
+}
+
+.wa__voz-foto svg {
+  position: absolute;
+  right: -4px;
+  bottom: -2px;
+  width: 15px;
+  height: 15px;
+  fill: var(--wa-tic);
+}
+
+.wa__voz-toca {
+  width: 14px;
+  height: 16px;
+  fill: var(--wa-2-fuerte);
+}
+
+.wa__onda {
+  position: relative;
+  display: block;
+  height: 26px;
+}
+
+.wa__onda svg {
+  width: 100%;
+  height: 26px;
+  fill: none;
+  stroke: var(--wa-2);
+  stroke-linecap: round;
+  stroke-width: 2.6;
+}
+
+.wa__onda path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Lo ya escuchado se pinta de azul, encima de la onda gris: quieta, la nota ya se escucho entera. */
+.wa__onda .wa__onda-oida {
+  position: absolute;
+  inset: 0;
+  stroke: var(--wa-tic);
+}
+
+.wa__voz-pie {
+  display: flex;
+  grid-column: 3;
+  justify-content: space-between;
+  margin-top: -1px;
+  color: var(--wa-2-fuerte);
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.wa__voz-pie .wa__hora {
+  float: none;
+  margin: 0;
+}
+
+/* La vista previa del link de pago, arriba del mensaje que lo trae. */
+.wa__liga {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  margin: -2px -4px 6px -5px;
   overflow: hidden;
-  padding: var(--e-2) var(--e-4) var(--e-3);
-  border-top: 1px solid var(--tinta);
-  background: var(--papel);
+  border-radius: 6px;
+  background: var(--wa-tarjeta);
 }
 
-.tu__narra {
+.wa__liga-signo {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(150deg, #33b6f2, #0a7fd6);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.wa__liga-texto {
   display: grid;
   gap: 1px;
+  padding: 7px 9px 8px;
   line-height: 1.3;
 }
 
-.tu__rotulo {
-  color: var(--tinta-2);
-  font-size: 0.6875rem;
+.wa__liga-titulo {
+  font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
-.tu__resumen {
-  font-size: 0.9375rem;
+.wa__liga-monto {
+  color: var(--wa-2-fuerte);
+  font-size: 12.5px;
+}
+
+.wa__liga-sitio {
+  color: var(--wa-2-fuerte);
+  font-size: 11.5px;
+}
+
+/* El boton que trae la plantilla del recordatorio: aqui solo se ensena. */
+.wa__boton {
+  display: block;
+  clear: both;
+  margin: 7px -8px -7px -9px;
+  padding: 9px 0;
+  border-top: 1px solid rgb(134 150 160 / 0.22);
+  color: var(--wa-liga);
   font-weight: 500;
+  text-align: center;
 }
 
-/* La agenda del dia: una hoja con sus renglones. En el telefono solo se ven los renglones que ya tienen cita. */
-.agenda__cabeza {
-  display: none;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--e-2);
-  padding-bottom: var(--e-1);
-  border-bottom: 1px solid var(--tinta);
+/* Un aviso al centro: el dia, o el cambio de celular. */
+.wa__aviso {
+  flex: none;
+  align-self: center;
+  margin: 8px 0 2px;
+  padding: 4px 11px;
+  border-radius: 8px;
+  background: var(--wa-barra);
+  box-shadow: var(--wa-sombra);
+  color: var(--wa-2-fuerte);
+  font-size: 12px;
+  line-height: 17px;
 }
 
-.agenda__dia {
-  font-family: var(--f-titulo);
-  font-size: 1.125rem;
-  font-weight: 600;
+.wa__aviso--tu {
+  max-width: 88%;
+  margin-bottom: 6px;
+  padding: 6px 12px;
+  text-align: center;
+  text-wrap: balance;
 }
 
-.agenda__de {
-  color: var(--tinta-3);
-  font-size: 0.75rem;
-}
-
-.agenda__filas {
+/* Las dos respuestas de la profesional: estas si se tocan. */
+.wa__respuestas {
   display: grid;
-  gap: var(--e-2);
+  flex: none;
+  grid-template-columns: 1fr 1fr;
+  align-self: flex-start;
+  gap: 3px;
+  width: 84%;
+  margin-top: 3px;
 }
 
-.agenda__fila {
-  position: relative;
-  display: none;
-  align-content: center;
-  min-height: 66px;
-  padding: var(--e-2) var(--e-3);
-  border: 1px solid var(--tinta);
-  border-radius: var(--r-control);
-  background: var(--superficie);
-  line-height: 1.3;
-}
-
-.agenda__fila:not([data-estado="libre"]) {
-  display: grid;
-}
-
-.agenda__hora {
-  color: var(--tinta-2);
-  font-size: 0.75rem;
-}
-
-.agenda__estado {
-  font-size: 0.9375rem;
-  font-weight: 600;
-}
-
-.agenda__fila[data-estado="apartado"] {
-  border-style: dashed;
-  border-color: var(--tinta-3);
-  background: none;
-}
-
-.agenda__fila[data-estado="apartado"] .agenda__estado {
-  color: var(--tinta-2);
+.wa__respuesta {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--wa-entra);
+  box-shadow: var(--wa-sombra);
+  color: var(--wa-liga);
   font-weight: 500;
-}
-
-/* El lugar del sello: el texto de la cita nunca queda debajo de la tinta. */
-.agenda__fila[data-sellada] {
-  padding-right: 176px;
-}
-
-/* El cuadro final: el dia completo, cada cita con su sello. */
-.tu[data-llena] .agenda__cabeza {
-  display: flex;
-}
-
-.tu[data-llena] .agenda__filas {
-  gap: 6px;
-}
-
-.tu[data-llena] .agenda__fila {
-  min-height: 50px;
-  padding-block: 6px;
-  padding-right: 116px;
-}
-
-.tu[data-llena] .agenda__estado {
-  font-size: 0.875rem;
-}
-
-/* En el telefono, el cuadro final ocupa el lugar de la conversacion: la frase y el dia entero, sellado. */
-@media (max-width: 1199.98px) {
-  .demo[data-final] .chat__mensajes {
-    display: none;
-  }
-
-  .demo[data-final] .tu {
-    padding-top: var(--e-4);
-    border-top: 0;
-  }
-
-  .demo[data-final] .tu__rotulo {
-    display: none;
-  }
-
-  .demo[data-final] .tu__resumen {
-    font-family: var(--f-titulo);
-    font-size: 1.625rem;
-    font-weight: 600;
-    line-height: 1.15;
-  }
-}
-
-/* ---------- El pie: lo que la visitante puede tocar ---------- */
-.chat__pie {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--e-2);
-  min-height: 76px;
-  padding: var(--e-3);
-  border-top: 1px solid var(--linea);
-}
-
-.chat__borrador {
-  flex: 1;
-  min-width: 0;
-  padding: 12px 16px;
-  border: 1px solid var(--linea);
-  border-radius: 999px;
-  background: var(--papel);
-  font-size: 1rem;
-  line-height: 1.3;
-}
-
-.boton--enviar {
-  min-height: 48px;
-  padding: 0 var(--e-4);
-  border-radius: 999px;
-}
-
-.chat__pie .boton--ancho {
-  flex: 1 1 100%;
-}
-
-.chat__pie .boton--mitad {
-  flex: 1 1 40%;
-}
-
-.chat__pie .enlace {
-  min-height: 36px;
-  font-size: var(--t-nota);
-}
-
-.ficha {
-  flex: 1 1 40%;
-  min-height: 46px;
-  padding: 0 var(--e-3);
-  border: 1.5px solid var(--tinta);
-  border-radius: 999px;
-  background: var(--superficie);
-  font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-.ficha:hover {
-  background: var(--papel-2);
+.wa__respuesta:hover {
+  background: #f4f6f6;
 }
 
-.ficha:active {
+.wa__respuesta:active {
+  background: #e7ebec;
+}
+
+/* ---------- La caja de abajo: se ve, no se toca ---------- */
+.wa__pie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 7px 12px;
+}
+
+.wa__caja {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 42px;
+  padding: 0 13px;
+  border-radius: 22px;
+  background: var(--wa-barra);
+  box-shadow: var(--wa-sombra);
+  color: var(--wa-2);
+  font-size: 15.5px;
+}
+
+.wa__caja svg {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
+}
+
+/* Lo que se va escribiendo. Si no cabe se ve el final, como en una caja de verdad. */
+.wa__borrador {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  direction: rtl;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.wa__pie[data-teclea] .wa__borrador {
+  color: var(--wa-texto);
+}
+
+.wa__pie[data-teclea] .wa__clip {
+  display: none;
+}
+
+.wa__mic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--wa-verde);
+  color: #fff;
+}
+
+.wa__mic svg {
+  grid-area: 1 / 1;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Con algo escrito, el microfono es la flecha de enviar. */
+.wa__mic-envia,
+.wa__pie[data-teclea] .wa__mic-voz {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.wa__pie[data-teclea] .wa__mic-envia {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- El pago aprobado: una hoja que sube sobre la conversacion ---------- */
+.wa__velo {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: rgb(0 0 0 / 0.42);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.wa__hoja {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 20px 18px 28px;
+  border-radius: 22px 22px 0 0;
+  background: #fff;
+  box-shadow: 0 -18px 50px rgb(0 0 0 / 0.5);
+  color: #1a1a1a;
+  text-align: center;
+  transform: translateY(104%);
+  visibility: hidden;
+}
+
+.wa__hoja::before {
+  content: "";
+  width: 38px;
+  height: 4px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: #d9dbe0;
+}
+
+/* Sin JavaScript no hay pago que ensenar: ni la hoja ni su velo ocupan lugar. */
+html:not(.con-js) .wa__velo,
+html:not(.con-js) .wa__hoja {
+  display: none;
+}
+
+.wa[data-hoja] .wa__velo {
+  opacity: 1;
+  visibility: visible;
+}
+
+.wa[data-hoja] .wa__hoja {
+  transform: none;
+  visibility: visible;
+}
+
+.wa__hoja-bien {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #00a650;
+  box-shadow: 0 0 0 8px rgb(0 166 80 / 0.14);
+  color: #fff;
+}
+
+.wa__hoja-bien svg {
+  width: 28px;
+  height: 28px;
+}
+
+.wa__hoja b {
+  margin-top: 10px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.wa__hoja strong {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.wa__hoja small {
+  color: #63666f;
+  font-size: 13px;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+/* ---------- La guia: seis rayitas de avance, el letrero del momento y la pausa ---------- */
+.guia {
+  display: grid;
+  width: min(100%, 360px);
+}
+
+/* Cada rayita es un boton de 44 px de alto con la raya, delgada, en medio. Lo que sobra arriba y abajo se monta sobre
+   el aire de alrededor: la raya queda cerca del celular y de su letrero. */
+.guia__tramos {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 5px;
+  margin-block: -14px -12px;
+}
+
+.guia__tramo {
+  display: grid;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guia__tramo:focus-visible {
+  outline-offset: -10px;
+}
+
+.guia__raya {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.16);
+}
+
+.guia__lleno {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--luz);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.guia__tramo[data-estado="hecho"] .guia__lleno,
+.guia__tramo[data-estado="va"] .guia__lleno {
+  transform: none;
+}
+
+.guia__tramo[data-estado="va"] .guia__raya {
+  box-shadow: 0 0 12px rgb(132 151 255 / 0.6);
+}
+
+.guia__tramo:hover .guia__raya {
+  background: rgb(255 255 255 / 0.34);
+  transform: scaleY(1.67);
+}
+
+.guia__fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+
+/* El letrero aparta su lugar para dos renglones (tres en los celulares mas angostos): nada de lo que sigue brinca
+   cuando cambia. */
+.guia__letrero {
+  --renglones: 2;
+
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-height: calc(1.03125rem + 3px + var(--renglones) * 1.484375rem);
+}
+
+@media (max-width: 359.98px) {
+  .guia__letrero {
+    --renglones: 3;
+  }
+}
+
+.guia__rotulo {
+  color: var(--luz);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.guia__texto {
+  font-size: 1.1875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.guia__pausa {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--linea);
+  color: var(--tinta-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guia__pausa:hover {
+  background: rgb(255 255 255 / 0.08);
+  color: var(--tinta);
+}
+
+/* Al terminar, el boton invita a verla otra vez. */
+.guia__pausa[data-estado="fin"] {
+  box-shadow: inset 0 0 0 1px rgb(132 151 255 / 0.7);
+  color: var(--tinta);
+}
+
+.guia__icono {
+  grid-area: 1 / 1;
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  visibility: hidden;
+}
+
+.guia__icono--otra {
+  width: 18px;
+  height: 18px;
+}
+
+.guia__pausa[data-estado="corre"] .guia__icono--pausa,
+.guia__pausa[data-estado="pausa"] .guia__icono--sigue,
+.guia__pausa[data-estado="fin"] .guia__icono--otra {
+  visibility: visible;
+}
+
+/* ---------- Lo que mientras tanto le llega a la profesional ---------- */
+.llega {
+  display: grid;
+  gap: var(--e-3);
+  width: min(100%, 360px);
+}
+
+.llega__rotulo {
+  color: var(--luz);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+/* En celular se ve una sola tarjeta, la del momento. Las tres ocupan el mismo hueco, que mide lo de la mas alta:
+   cambiar de una a otra no mueve nada. El sello de la cita se acomoda segun lo ancho de este hueco. */
+.llega__tarjetas {
+  display: grid;
+  container-type: inline-size;
+}
+
+.llega__tarjeta {
+  position: relative;
+  display: grid;
+  grid-area: 1 / 1;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  /* Todas miden lo mismo, con lugar para dos renglones de detalle: cambiar de texto no cambia su alto. */
+  min-height: 114px;
+  padding: var(--e-4) 18px;
+  border-radius: var(--r-tarjeta);
+  background: linear-gradient(180deg, rgb(24 30 74 / 0.9), rgb(14 18 46 / 0.9));
+  box-shadow:
+    inset 0 0 0 1px rgb(132 151 255 / 0.75),
+    0 18px 50px rgb(0 0 0 / 0.5),
+    0 0 50px rgb(63 92 245 / 0.35);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.llega__tarjeta[data-turno] {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* La ficha del dia, como en un calendario. */
+.llega__dia {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 46px;
+  height: 50px;
+  border-radius: 11px;
   background: var(--tinta);
-  color: var(--papel);
+  color: #14183a;
+  line-height: 1;
 }
 
-/* La conversacion escrita. Con JavaScript no se ve; sin JavaScript, o si algo falla al cargar, es lo que queda:
-   la misma historia, como texto. */
+.llega__dia small {
+  color: #b92d1a;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.llega__dia b {
+  margin-top: 2px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.llega__icono {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: rgb(132 151 255 / 0.14);
+  color: var(--luz);
+}
+
+.llega__icono svg {
+  width: 24px;
+  height: 24px;
+}
+
+.llega__icono--bien {
+  background: rgb(88 214 141 / 0.14);
+  color: var(--bien);
+}
+
+.llega__texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.llega__texto small {
+  color: var(--tinta-3);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+.llega__texto b {
+  font-size: 1.1875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.llega__detalle {
+  color: var(--tinta-2);
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.35;
+}
+
+/* El lugar del sello: el texto de la cita nunca queda debajo de la tinta. */
+.llega__tarjeta[data-sellada] {
+  padding-right: 104px;
+}
+
+/* En una tarjeta angosta el sello sube a la esquina y el texto conserva su renglon. */
+@container (max-width: 343px) {
+  .llega__tarjeta[data-sellada] {
+    padding-right: 18px;
+  }
+}
+
+/* La pregunta de asistencia: las dos respuestas y, ya contestada, la que quedo. */
+.llega__sino {
+  display: flex;
+  gap: var(--e-2);
+  margin-top: 6px;
+  color: var(--tinta);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.llega__sino i {
+  padding: 6px 18px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--linea);
+  font-style: normal;
+}
+
+.llega__fue {
+  display: none;
+  justify-self: start;
+  margin-top: 6px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--linea);
+  color: var(--tinta);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.llega__tarjeta[data-estado="asistio"] .llega__sino,
+.llega__tarjeta[data-estado="falto"] .llega__sino {
+  display: none;
+}
+
+.llega__tarjeta[data-estado="asistio"] .llega__fue,
+.llega__tarjeta[data-estado="falto"] .llega__fue {
+  display: block;
+}
+
+.llega__tarjeta[data-estado="asistio"] .llega__fue {
+  background: var(--sello);
+  box-shadow: 0 0 24px rgb(63 92 245 / 0.6);
+  color: #fff;
+}
+
+/* ---------- Sin JavaScript, o si el codigo no llega: queda la conversacion escrita ---------- */
 .transcripcion {
   display: none;
 }
@@ -485,17 +1033,24 @@
 html:not(.con-js) .transcripcion {
   display: grid;
   gap: var(--e-3);
+  padding: var(--e-2) 6px var(--e-3);
+  font-size: 15px;
+  line-height: 1.45;
 }
 
-html:not(.con-js) .telefono {
+html:not(.con-js) .wa {
   height: auto;
 }
 
-html:not(.con-js) .chat__pie,
-html:not(.con-js) .tu,
+html:not(.con-js) .wa__hilo {
+  position: static;
+  padding: 8px 9px;
+}
+
 html:not(.con-js) .demo__ejemplos,
-html:not(.con-js) .demo__controles,
-html:not(.con-js) .chat__mensajes .chat__salto {
+html:not(.con-js) .guia,
+html:not(.con-js) .llega,
+html:not(.con-js) .wa__pie {
   display: none;
 }
 
@@ -504,181 +1059,244 @@ html:not(.con-js) .chat__mensajes .chat__salto {
 }
 
 .transcripcion__salto {
-  color: var(--tinta-2);
-  font-size: 0.8125rem;
+  color: var(--wa-2-fuerte);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
   text-align: center;
 }
 
-/* En pantallas anchas, lo que ves tu sale del telefono y se queda a su lado: la hoja de la agenda, con el dia entero. */
-@media (min-width: 1200px) {
+/* ---------- Pantallas medianas: el celular crece un poco ---------- */
+@media (min-width: 768px) {
+  .tel {
+    --wa-alto: 600px;
+
+    width: 340px;
+  }
+
+  @supports (height: 100svh) {
+    .tel {
+      --wa-alto: clamp(500px, calc(100svh - 266px), 664px);
+    }
+  }
+}
+
+/* ---------- Pantallas anchas: el celular al centro y, a su derecha, las tres tarjetas ---------- */
+@media (min-width: 1240px) {
   .demo {
-    justify-items: start;
-  }
-
-  .demo__escena {
-    width: 656px;
-    max-width: none;
-  }
-
-  .telefono {
-    width: 348px;
-    height: clamp(520px, calc(100svh - 184px), 640px);
+    grid-template-columns: clamp(340px, 26vw, 380px) clamp(348px, 25vw, 360px);
+    align-items: center;
+    gap: 20px clamp(32px, 4vw, 56px);
   }
 
   .demo__ejemplos,
-  .demo__leyenda,
-  .demo__controles {
-    justify-content: center;
-    width: 348px;
-    max-width: none;
+  .demo__escena {
+    grid-column: 1;
   }
 
-  .tu {
-    position: absolute;
-    top: 88px;
-    left: 368px;
-    width: 288px;
+  .llega {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    width: 100%;
+  }
+
+  /* Se ven las tres: apagadas las que aun no pasan y, encendida con borde de luz, la del momento. */
+  .llega__tarjetas {
     gap: var(--e-3);
-    overflow: visible;
-    padding: var(--e-4);
-    border: 1px solid var(--linea);
-    border-top: 2px solid var(--tinta);
-    border-radius: var(--r-control);
-    background: var(--superficie);
-    box-shadow: var(--sombra-2);
   }
 
-  .agenda__cabeza {
-    display: flex;
+  .llega__tarjeta {
+    grid-area: auto;
+    box-shadow:
+      inset 0 0 0 1px var(--linea),
+      0 18px 40px rgb(0 0 0 / 0.4);
+    opacity: 1;
+    visibility: visible;
   }
 
-  .agenda__filas,
-  .tu[data-llena] .agenda__filas {
-    gap: 0;
+  .llega__tarjeta[data-apagada] {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+    opacity: 0.34;
   }
 
-  /* Un renglon libre es solo una linea de la hoja; uno con cita es un bloque. */
-  .agenda__fila[data-estado="libre"] {
-    display: grid;
-    grid-template-columns: 4.4rem minmax(0, 1fr);
-    align-items: center;
-    min-height: 36px;
-    padding: 0;
-    border: 0;
-    border-bottom: 1px solid var(--linea);
-    border-radius: 0;
-    background: none;
-  }
-
-  .agenda__fila[data-estado="libre"] .agenda__hora {
-    font-size: 0.875rem;
-  }
-
-  .agenda__fila[data-estado="libre"] .agenda__estado {
-    color: var(--tinta-3);
-    font-size: 0.875rem;
-    font-weight: 400;
-  }
-
-  .agenda__fila:not([data-estado="libre"]) {
-    margin-block: 6px;
-  }
-
-  .agenda__fila[data-sellada] {
-    padding-right: 150px;
-  }
-
-  .tu[data-llena] .agenda__fila {
-    padding-right: 118px;
+  .llega__tarjeta[data-turno] {
+    box-shadow:
+      inset 0 0 0 1px rgb(132 151 255 / 0.75),
+      0 18px 50px rgb(0 0 0 / 0.5),
+      0 0 50px rgb(63 92 245 / 0.35);
   }
 }
 
+/* ---------- El movimiento, solo para quien no pidio reducirlo ---------- */
 @media (prefers-reduced-motion: no-preference) {
-  .burbuja,
-  .cobro,
-  .chat__salto,
-  .cierre {
-    animation: burbuja var(--d-entrada) var(--suave) both;
+  .demo__ejemplo,
+  .demo__ejemplo::before,
+  .guia__pausa {
+    transition:
+      color var(--d-toque) var(--suave),
+      background-color var(--d-toque) var(--suave),
+      box-shadow var(--d-toque) var(--suave);
   }
 
-  .burbuja--mia {
-    transform-origin: 100% 100%;
+  /* Lo nuevo de la conversacion entra desde su esquina. */
+  .wa__hilo > [data-entra] {
+    animation: demo-entra var(--d-entrada) var(--suave) both;
   }
 
-  .burbuja--asistente,
-  .cobro {
+  .wa__m--entra[data-entra],
+  .wa__respuestas[data-entra] {
     transform-origin: 0 100%;
   }
 
-  .burbuja--escribe i {
-    animation: escribe 900ms ease-in-out infinite;
+  .wa__m--sale[data-entra] {
+    transform-origin: 100% 100%;
   }
 
-  .burbuja--escribe i:nth-child(2) {
-    animation-delay: 150ms;
+  /* La nota de voz se escucha: el azul la recorre, y se detiene si la historia se detiene. */
+  .wa__m[data-entra] .wa__onda-oida {
+    animation: demo-escucha 1500ms linear 300ms both paused;
   }
 
-  .burbuja--escribe i:nth-child(3) {
-    animation-delay: 300ms;
+  .demo[data-corre] .wa__m[data-entra] .wa__onda-oida {
+    animation-play-state: running;
   }
 
-  .ficha {
+  /* Lo que se escribe en la caja aparece de corrido. */
+  .wa__pie[data-teclea] .wa__borrador bdi {
+    display: inline-block;
+    animation: demo-teclea 620ms steps(14, end) both;
+  }
+
+  .wa__mic svg {
     transition:
-      background-color var(--d-toque) var(--suave),
-      color var(--d-toque) var(--suave);
+      opacity var(--d-toque) var(--suave),
+      transform var(--d-toque) var(--suave);
   }
 
-  .demo__ejemplo {
+  .wa__detalle {
     transition: color var(--d-toque) var(--suave);
   }
 
-  /* La pista: lo que toca tocar late despacio unas veces y se queda quieto (nada se mueve sin fin). */
-  .pista {
-    animation: late 1800ms var(--suave) 600ms 2;
+  /* La hoja sube con calma y baja mas aprisa. */
+  .wa__velo {
+    transition:
+      opacity 320ms var(--suave),
+      visibility 0s 320ms;
+  }
+
+  .wa__hoja {
+    transition:
+      transform 380ms cubic-bezier(0.5, 0, 0.9, 0.4),
+      visibility 0s 380ms;
+  }
+
+  .wa[data-hoja] .wa__velo {
+    transition:
+      opacity 320ms var(--suave),
+      visibility 0s;
+  }
+
+  .wa[data-hoja] .wa__hoja {
+    transition:
+      transform 560ms cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s;
+  }
+
+  .wa[data-hoja] .wa__hoja-bien {
+    animation: demo-palomita 520ms cubic-bezier(0.2, 1.4, 0.4, 1) 220ms both;
+  }
+
+  .wa[data-hoja] .wa__hoja-bien path {
+    stroke-dasharray: 18;
+    animation: demo-traza 360ms var(--suave) 480ms both;
+  }
+
+  /* El cambio de celular: la cabecera y la conversacion entran de lado, como al abrir otro chat. */
+  .demo[data-telefono="profesional"] .wa__cabeza > *,
+  .demo[data-telefono="profesional"] .wa__hilo {
+    animation: demo-cambio 520ms var(--suave) both;
+  }
+
+  /* El letrero nuevo sube a su lugar. */
+  .guia__letrero > [data-entra] {
+    animation: demo-letrero 360ms var(--suave) both;
+  }
+
+  .guia__raya {
+    transition:
+      background-color var(--d-toque) var(--suave),
+      transform var(--d-toque) var(--suave),
+      box-shadow var(--d-entrada) var(--suave);
+  }
+
+  .llega__tarjeta {
+    transition:
+      opacity var(--d-entrada) var(--suave),
+      box-shadow var(--d-escena) var(--suave),
+      visibility 0s var(--d-entrada);
+  }
+
+  .llega__tarjeta[data-turno] {
+    transition:
+      opacity var(--d-entrada) var(--suave),
+      box-shadow var(--d-escena) var(--suave),
+      visibility 0s;
+  }
+
+  .llega__fue {
+    animation: demo-entra var(--d-entrada) var(--suave) both;
   }
 }
 
-@keyframes burbuja {
+@keyframes demo-entra {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.96);
+    transform: translateY(6px) scale(0.96);
   }
 }
 
-@keyframes escribe {
-  0%,
-  60%,
-  100% {
-    opacity: 0.35;
-    transform: translateY(0);
+@keyframes demo-escucha {
+  from {
+    clip-path: inset(0 100% 0 0);
   }
 
-  30% {
-    opacity: 1;
-    transform: translateY(-3px);
+  to {
+    clip-path: inset(0);
   }
 }
 
-@keyframes late {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(22, 25, 58, 0.3);
+@keyframes demo-teclea {
+  from {
+    clip-path: inset(0 100% 0 0);
   }
 
-  50% {
-    box-shadow: 0 0 0 8px rgba(22, 25, 58, 0);
+  to {
+    clip-path: inset(0);
   }
 }
 
-/* En los celulares mas angostos el sello de la agenda deja lugar al nombre de la cita. */
-@media (max-width: 380px) {
-  .agenda__fila .sello {
-    width: 148px;
+@keyframes demo-palomita {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
   }
+}
 
-  .agenda__fila[data-sellada] {
-    padding-right: 148px;
+@keyframes demo-traza {
+  from {
+    stroke-dashoffset: 18;
+  }
+}
+
+@keyframes demo-cambio {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes demo-letrero {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
   }
 }

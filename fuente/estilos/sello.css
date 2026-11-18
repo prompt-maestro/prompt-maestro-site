@@ -22,53 +22,38 @@
   letter-spacing: 2.4px;
 }
 
-/* Sobre la cita de la agenda: cae a un lado del texto y se sale un poco de la hoja, como un sello de verdad. */
-.agenda__fila .sello {
+/* Sobre la cita del calendario, en la demostracion: cae a un lado del texto y se sale un poco de la tarjeta, como un
+   sello de verdad. */
+.llega__tarjeta .sello {
   position: absolute;
   top: 50%;
   right: -12px;
   z-index: 1;
+  width: 112px;
+  filter: drop-shadow(0 0 14px rgb(88 115 255 / 0.55));
   pointer-events: none;
   transform: translateY(-50%) rotate(var(--giro, -7deg));
 }
 
-/* Sellados a mano: ninguno cae exactamente igual que el anterior. */
-.agenda__fila:nth-child(4n + 1) .sello {
-  --giro: -5deg;
-}
-
-.agenda__fila:nth-child(4n + 2) .sello {
-  --giro: -9deg;
-}
-
-.agenda__fila:nth-child(4n + 3) .sello {
-  --giro: -4deg;
-}
-
-.tu[data-llena] .agenda__fila .sello {
-  right: -8px;
-  width: 118px;
-}
-
-@media (min-width: 1200px) {
-  .agenda__fila .sello {
-    width: 158px;
-  }
-
-  .tu[data-llena] .agenda__fila .sello {
-    width: 120px;
+/* En una tarjeta angosta (los celulares mas chicos) el sello sube a la esquina: asi no le quita lugar al texto. */
+@container (max-width: 343px) {
+  .llega__tarjeta .sello {
+    top: 9px;
+    right: -8px;
+    width: 90px;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .agenda__fila .sello {
-    animation: sello-cae 220ms cubic-bezier(0.55, 0, 0.9, 0.35) both;
+  /* Espera a que la tarjeta del calendario este a la vista, y entonces cae. */
+  .llega__tarjeta .sello {
+    animation: sello-cae 220ms cubic-bezier(0.55, 0, 0.9, 0.35) 420ms both;
     will-change: transform, opacity;
   }
 
   /* La cita recibe el golpe: se hunde apenas y regresa. */
-  .agenda__fila[data-sellada] {
-    animation: golpe 160ms var(--suave) 200ms both;
+  .llega__tarjeta[data-sellada] {
+    animation: golpe 160ms var(--suave) 620ms both;
   }
 }
 
