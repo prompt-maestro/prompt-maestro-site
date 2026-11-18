@@ -28,9 +28,10 @@ test('en pausa lo que el agente ya hizo se queda a la vista, quieto: la pausa no
   test.slow();
   const corto = await abrirCortoDetenido(page);
   await hastaElCuadro(page, corto, 'agente');
-  const renglones = corto.locator('.franja__sobre--hecho .trato > *');
-  expect(await renglones.count()).toBeGreaterThan(2);
-  // Entran uno tras otro, un oficio despues de otro: se espera a que esten todos.
+  // La conversacion del oficio que toco: la unica a la vista.
+  const renglones = corto.locator('[data-escena]:not([hidden]) .escena__sobre--hecho .trato > *');
+  expect(await renglones.count()).toBeGreaterThan(4);
+  // Entran uno tras otro: se espera a que esten todos.
   for (const renglon of await renglones.all()) await expect(renglon).toHaveCSS('opacity', '1', { timeout: 20_000 });
   await corto.getByRole('button', { name: 'Pausar el video' }).click();
   await expect(corto).toHaveAttribute('data-pausada', '');
@@ -39,7 +40,9 @@ test('en pausa lo que el agente ya hizo se queda a la vista, quieto: la pausa no
     await expect(renglon).toBeVisible();
     await expect(renglon).toHaveCSS('opacity', '1');
   }
-  for (const sello of await corto.locator('.franja__sobre--hecho .sello').all()) await expect(sello).toBeVisible();
+  const sello = corto.locator('[data-escena]:not([hidden]) .escena__sobre--hecho .sello');
+  await expect(sello).toBeVisible();
+  await expect(sello).toHaveCSS('opacity', '1');
 });
 
 test('en pausa el contador de mensajes sin contestar tampoco avanza, y al reanudar sigue', async ({ page }, info) => {
@@ -49,7 +52,8 @@ test('en pausa el contador de mensajes sin contestar tampoco avanza, y al reanud
   const corto = await abrirCortoDetenido(page);
   await hastaElCuadro(page, corto, 'avalancha');
   await page.clock.runFor(500);
-  const cuenta = corto.locator('[data-corto-cuenta]').first();
+  // La cuenta del celular que se ve: la del oficio que toco.
+  const cuenta = corto.locator('.pantalla').filter({ visible: true }).locator('[data-corto-cuenta]');
   const pausa = corto.getByRole('button', { name: 'Pausar el video' });
   await pausa.click();
   const enPausa = await cuenta.textContent();

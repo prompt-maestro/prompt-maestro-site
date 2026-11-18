@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es-MX">
 <head>
-{{> cabeza}}<script src="{{armado.activos}}js/arranque.js" data-oficios="{{#cada corto.oficios}}{{clave}}{{#no @ultimo}} {{/no}}{{/cada}}"></script>
+{{> cabeza}}<script src="{{armado.activos}}js/arranque.js" data-oficios="{{#cada corto.oficios}}{{clave}}{{#no @ultimo}} {{/no}}{{/cada}}" data-escena="{{armado.recursos}}comercial/*-escena-1600.avif 1600w, {{armado.recursos}}comercial/*-escena-2560.avif 2560w" data-escena-mide="150vw"></script>
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/cartel-vista.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/corto-vista.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/corto.js">
@@ -15,8 +15,7 @@
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/encendido.js">
 <script type="module" src="{{armado.activos}}js/pagina.js"></script>
 <link rel="stylesheet" href="{{armado.activos}}estilos/pagina.css">
-{{#cada corto.oficios}}<link rel="preload" as="image" type="image/avif" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" imagesrcset="{{armado.recursos}}comercial/{{clave}}-trabajo-720.avif 720w, {{armado.recursos}}comercial/{{clave}}-trabajo-1080.avif 1080w" imagesizes="34vw"{{#si @primero}} fetchpriority="high"{{/si}}>
-{{/cada}}{{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true"></script>
+{{#si armado.medicion}}<script async src="{{armado.medicion.script}}" data-website-id="{{armado.medicion.sitio}}" data-host-url="{{armado.medicion.envio}}" data-domains="{{armado.medicion.dominios}}" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true"></script>
 {{/si}}<title>{{sitio.titulo}}</title>
 <meta name="description" content="{{sitio.descripcion}}">
 <link rel="canonical" href="{{armado.origen}}{{armado.base}}">
@@ -107,11 +106,10 @@
       </div>
     </div>
     <div class="corto__cine" data-corto-cine data-momento="{{corto.guion.0.clave}}" aria-hidden="true">
-      <div class="tri tri--calida" data-tri="calida">
-{{#cada corto.oficios}}        <div class="franja" data-franja="{{clave}}" data-persona="{{mira.persona}}" data-celular="{{mira.celular}}">
-          <div class="foto"><div class="foto__vivo"><div class="foto__luz" data-corto-luz>{{> foto-trabajo}}</div></div></div>
-          <p class="franja__nombre">{{nombre}}</p>
-          <div class="franja__sobre franja__sobre--hecho">
+      <div class="escenas escenas--calida" data-escenas="calida">
+{{#cada corto.oficios}}        <div class="escena" data-escena="{{clave}}" data-persona="{{mira.persona}}" data-celular="{{mira.celular}}" data-viva="{{mira.viva}}"{{#no @primero}} hidden{{/no}}>
+          <div class="foto"><div class="foto__vivo"><div class="foto__luz" data-corto-luz>{{> foto-escena}}</div></div></div>
+          <div class="escena__sobre escena__sobre--hecho">
             {{> trato}}
           </div>
         </div>
@@ -119,23 +117,22 @@
       <div class="corto__antes" data-corto-antes>
         <div class="corto__antes-dentro" data-corto-antes-dentro>
           <div class="corto__frio">
-            <div class="tri tri--fria" data-tri="fria">
-{{#cada corto.oficios}}              <div class="franja" data-franja="{{clave}}" data-persona="{{mira.persona}}" data-celular="{{mira.celular}}">
-                <div class="foto"><div class="foto__vivo"><div class="foto__luz" data-corto-luz>{{> foto-trabajo}}{{#si video}}<video class="foto__video" muted playsinline preload="none" tabindex="-1" aria-hidden="true" disablepictureinpicture disableremoteplayback data-src="{{armado.recursos}}comercial/{{clave}}-trabajo.mp4"></video>{{/si}}</div></div></div>
-                <p class="franja__nombre">{{nombre}}</p>
-                <div class="franja__sobre franja__sobre--llega">
+            <div class="escenas escenas--fria" data-escenas="fria">
+{{#cada corto.oficios}}              <div class="escena" data-escena="{{clave}}" data-persona="{{mira.persona}}" data-celular="{{mira.celular}}" data-viva="{{mira.viva}}"{{#no @primero}} hidden{{/no}}>
+                <div class="foto"><div class="foto__vivo"><div class="foto__luz" data-corto-luz>{{> foto-escena}}{{#si video}}<video class="foto__video" muted playsinline preload="none" tabindex="-1" aria-hidden="true" disablepictureinpicture disableremoteplayback data-src="{{armado.recursos}}comercial/{{clave}}-escena.mp4"></video>{{/si}}</div></div></div>
+                <div class="escena__sobre escena__sobre--llega">
 {{#cada llegan}}                  {{> aviso}}
 {{/cada}}                </div>
-              </div>
-{{/cada}}            </div>
-            <div class="telefonos">
-{{#cada corto.oficios}}              <div class="pantalla">
-                <p class="pantalla__hora">{{corto.pantalla.hora}}</p>
-                <p class="pantalla__dia">{{corto.pantalla.dia}}</p>
-                <p class="cuenta"><span class="cuenta__punto"></span><span><b data-corto-cuenta data-base="{{cuenta.base}}" data-tope="{{cuenta.tope}}">{{cuenta.tope}}</b> {{corto.pantalla.sinContestar}}</span></p>
-                <div class="pantalla__avisos">
-{{#cada avisos}}                  {{> aviso}}
-{{/cada}}                </div>
+                <div class="telefono">
+                  <div class="pantalla">
+                    <p class="pantalla__hora">{{corto.pantalla.hora}}</p>
+                    <p class="pantalla__dia">{{corto.pantalla.dia}}</p>
+                    <p class="cuenta"><span class="cuenta__punto"></span><span><b data-corto-cuenta data-base="{{cuenta.base}}" data-tope="{{cuenta.tope}}">{{cuenta.tope}}</b> {{corto.pantalla.sinContestar}}</span></p>
+                    <div class="pantalla__avisos">
+{{#cada avisos}}                      {{> aviso}}
+{{/cada}}                    </div>
+                  </div>
+                </div>
               </div>
 {{/cada}}            </div>
           </div>
@@ -143,12 +140,18 @@
       </div>
       <div class="corto__carro" data-corto-carro><span class="corto__estela"></span><span class="corto__rayo"></span></div>
       <div class="corto__marca">
-        <div class="halo"><span class="halo__rayos"></span><span class="halo__aura"></span><span class="halo__orbita"></span><span class="halo__disco"></span></div>
+        <div class="halo"><span class="halo__rayos"></span><span class="halo__aura"></span><span class="halo__latido"></span><span class="halo__orbita"></span><span class="halo__disco"></span></div>
         <p class="corto__logo">{{> marca}}</p>
         <p class="corto__nombre">{{corto.marca.nombre}}</p>
         <p class="corto__frase">{{corto.marca.frase}}</p>
       </div>
-{{#cada corto.guion}}{{#si letrero}}      <p class="letrero" data-letrero="{{clave}}">{{letrero}}{{#si cursor}}<span class="cursor"></span>{{/si}}</p>
+      <div class="todos">
+{{#cada corto.oficios}}        <div class="franja" data-franja="{{clave}}" data-persona="{{mira.dePie}}">
+          <div class="foto"><div class="foto__vivo"><div class="foto__luz">{{> foto-trabajo}}</div></div></div>
+          <p class="franja__nombre">{{nombre}}<small class="franja__agente">{{corto.todos.agenteDe}} {{cartel.charla.negocio}}</small></p>
+        </div>
+{{/cada}}      </div>
+{{#cada corto.guion}}{{#si letrero}}      <p class="letrero" data-letrero="{{clave}}">{{letrero}}{{#si cursor}}<span class="cursor"></span>{{/si}}{{#si @ultimo}}<small class="letrero__baja">{{corto.todos.baja}}</small>{{/si}}</p>
 {{/si}}{{/cada}}    </div>
   </section>
 

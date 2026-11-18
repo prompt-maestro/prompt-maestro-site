@@ -2,19 +2,19 @@
   "guion": [
     {
       "clave": "presion",
-      "dura": 3400,
+      "dura": 3200,
       "letrero": "Trabajas.",
       "cursor": false
     },
     {
       "clave": "vibra",
-      "dura": 3800,
+      "dura": 3600,
       "letrero": "Y tu celular no para de sonar.",
       "cursor": false
     },
     {
       "clave": "avalancha",
-      "dura": 4400,
+      "dura": 3400,
       "letrero": "",
       "cursor": false
     },
@@ -32,8 +32,14 @@
     },
     {
       "clave": "agente",
-      "dura": 13700,
+      "dura": 7000,
       "letrero": "",
+      "cursor": false
+    },
+    {
+      "clave": "todos",
+      "dura": 5000,
+      "letrero": "Cada negocio, su propio agente.",
       "cursor": false
     }
   ],
@@ -45,6 +51,10 @@
     "hora": "7:42",
     "dia": "jueves, en plena cita",
     "sinContestar": "sin contestar"
+  },
+  "todos": {
+    "baja": "Se arma con tus servicios, tus precios y tus horarios. Hoy para uñas, dentistas y médicos; pronto, más oficios.",
+    "agenteDe": "Agente de"
   },
   "cartel": {
     "sobre": "Uñas, dentistas, médicos y pronto más oficios",
@@ -76,8 +86,10 @@
       "video": true,
       "tarjeta": "Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta.",
       "mira": {
-        "persona": "50 30",
-        "celular": "46 78"
+        "persona": "64 44",
+        "celular": "52 81 31 14",
+        "viva": "41 6 47 74",
+        "dePie": "50 30"
       },
       "cuenta": {
         "base": 7,
@@ -150,7 +162,10 @@
         "voz": "",
         "foto": true,
         "responde": "Ese diseño cuesta $420. ¿Te lo aparto el sábado a las 11:00 am?",
-        "hizo": "Vio la foto, cotizó y cobró $150 de anticipo."
+        "fuente": "Precio de tu catálogo",
+        "pago": "$150 · Mercado Pago",
+        "hizo": "Vio la foto, cotizó y cobró $150 de anticipo.",
+        "agenda": "En tu calendario: sábado, 11:00 am"
       },
       "cartel": {
         "tarjeta": "cartel/unas-vida-tarjeta",
@@ -182,8 +197,10 @@
       "video": true,
       "tarjeta": "Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.",
       "mira": {
-        "persona": "50 41",
-        "celular": "46 80.5"
+        "persona": "58 45",
+        "celular": "44 79.5 43 15",
+        "viva": "35 0 60 81",
+        "dePie": "50 41"
       },
       "cuenta": {
         "base": 5,
@@ -272,7 +289,10 @@
         "voz": "0:21",
         "foto": false,
         "responde": "Claro, Sr. Medina. Hoy tengo lugar a las 5:30 pm. ¿Se la aparto?",
-        "hizo": "Escuchó el audio, dio horario y cobró $200 de anticipo."
+        "fuente": "Horario de tu agenda",
+        "pago": "$200 · Mercado Pago",
+        "hizo": "Escuchó el audio, dio horario y cobró $200 de anticipo.",
+        "agenda": "En tu calendario: hoy, 5:30 pm"
       },
       "cartel": {
         "tarjeta": "cartel/dentista-vida-tarjeta",
@@ -304,8 +324,10 @@
       "video": true,
       "tarjeta": "Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.",
       "mira": {
-        "persona": "50 43",
-        "celular": "50 84"
+        "persona": "66 36",
+        "celular": "49 82 33 14",
+        "viva": "42 0 58 82",
+        "dePie": "50 43"
       },
       "cuenta": {
         "base": 9,
@@ -394,17 +416,20 @@
         "voz": "",
         "foto": false,
         "responde": "Sí, mañana a las 10:00 am. ¿Se la aparto?",
-        "hizo": "Agendó la consulta y cobró $300 de anticipo."
+        "fuente": "Horario de tu agenda",
+        "pago": "$300 · Mercado Pago",
+        "hizo": "Agendó la consulta y cobró $300 de anticipo.",
+        "agenda": "En tu calendario: mañana, 10:00 am"
       },
       "cartel": {
         "tarjeta": "cartel/medico-vida-tarjeta",
-        "alt": "El médico lee con calma en la mesa de su casa, con una taza de café al lado.",
-        "encuadre": 82,
+        "alt": "La doctora lee con calma en la mesa de su casa, con una taza de café al lado.",
+        "encuadre": 100,
         "cuando": "Jueves · 10:00 am",
         "quien": "Doña Elvira · Consulta",
         "tu": {
           "foto": "cartel/medico-tu",
-          "alt": "Un médico escucha con su estetoscopio la espalda de un paciente en el consultorio.",
+          "alt": "Una doctora escucha con su estetoscopio la espalda de un paciente en el consultorio.",
           "recorte": {
             "x": 17,
             "y": 11,

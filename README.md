@@ -39,11 +39,20 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   armada. `--previa` arma la versión de revisión y `--comprobar` falla si la carpeta en disco no coincide con la fuente.
 - Los precios no se editan aquí: se copian con `herramientas/sincronizar-planes.mjs`.
 - La primera pantalla es el cartel (título, frase, botones y una imagen) y, solo en pantallas anchas (900 o más, y
-  más anchas que altas), el corto: una película de unos 33 segundos que corre sola al abrir y, al terminar, deja a la
-  vista el cartel, que siempre estuvo debajo. En celular y en tableta de pie el corto no existe: se ve el cartel,
+  más anchas que altas), el corto: una película de menos de 30 segundos que corre sola al abrir y, al terminar, deja
+  a la vista el cartel, que siempre estuvo debajo. En celular y en tableta de pie el corto no existe: se ve el cartel,
   quieto, y no se pide ni un video. El cartel también es lo que se ve sin JavaScript y con movimiento reducido. El
   guion del corto (sus momentos y lo que dura cada uno) y los textos viven en `fuente/datos/corto.json`; qué momento
   toca lo decide `fuente/js/corto.js` y la página la mueve `fuente/js/corto-vista.js`.
+- El corto cuenta UN oficio por visita, a pantalla completa: quien trabaja (con luz fría), su celular que vibra, la
+  pantalla que se llena de avisos, la raya de luz que lo barre, la marca en su halo, lo que hizo su agente (una sola
+  conversación: el mensaje, lo que contestó y de dónde lo sacó, el pago aprobado y el papel con su sello) y, para
+  cerrar, todos los oficios en pantalla dividida, cada uno con el negocio de su agente. El oficio es el mismo que
+  eligió el azar para el cartel; «Ver de nuevo» corre el que sigue en la lista. La página trae escrita una escena por
+  oficio y solo se pinta la que toca: de las demás no se pide ni la foto.
+- En pantallas anchas lo más grande es la foto de esa escena: `arranque.js` la adelanta (solo la del oficio elegido)
+  y el video, uno solo, se pide cuando la página ya se pintó. Con ahorro de datos o con una conexión lenta el corto
+  no corre solo ni se pide nada suyo: queda el cartel con su botón «Ver el video».
 - El cartel no depende del corto, y su imagen cambia con la pantalla. En pantallas más anchas que altas son las tres
   fotos de «su tiempo» como tarjetas (`cartel.tarjeta` de cada oficio, sin tamaño ni extensión), con la cita del
   primer oficio debajo (`fuente/plantillas/parciales/cartel-flota.html`). En celular y en tableta de pie es «Tú y tu
@@ -63,14 +72,22 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
 - Las fotos y los videos del corto y de su cartel se convierten con `herramientas/optimizar.mjs` (necesita ffmpeg en
   la laptop). Los originales, pesados, viven en `originales/` (fuera del repo); aquí solo entra lo ya optimizado, sin
   audio.
-- Sumar un oficio no toca el diseño ni el código: sus originales en `originales/comercial/` (`<oficio>-trabajo.png`
-  y, si tiene toma viva, `<oficio>-trabajo-viva.mp4`) y en `originales/cartel/` (`<oficio>-vida.png`), su entrada en
+- Sumar un oficio no toca el diseño ni el código: sus originales en `originales/comercial/` (`<oficio>-escena.png`,
+  su escena acostada, de 16 por 9; si tiene toma viva, `<oficio>-escena-viva.mp4`, ese mismo cuadro en movimiento; y
+  `<oficio>-trabajo.png`, de pie) y en `originales/cartel/` (`<oficio>-vida.png`), su entrada en
   `fuente/datos/corto.json` (su cuenta de mensajes sin contestar, sus avisos, lo que hizo el agente en `trato`: el
-  mensaje, lo que contestó y la frase con el anticipo que cobró; su cita, a dónde mira la cámara en cada foto y, para el
-  cartel, sus fotos, el recorte de su retrato y su conversación) y correr `node herramientas/optimizar.mjs <oficio>`,
-  que toma los oficios de ese mismo archivo. El retrato del cartel de celular se recorta de la foto de trabajo
-  (`cartel.tu.recorte`: desde dónde y cuánto de lo ancho, en por ciento; mide tres por cuatro). De esa lista salen
-  también los oficios entre los que elige el azar.
+  mensaje, lo que contestó, de dónde lo sacó, el pago, la frase con el anticipo que cobró y la cita en la agenda; a
+  dónde mira la cámara en `mira` y, para el cartel, sus fotos, el recorte de su retrato y su conversación) y correr
+  `node herramientas/optimizar.mjs <oficio>`, que toma los oficios de ese mismo archivo y vuelve a sacar todo lo de
+  ese oficio. El retrato del cartel de celular se recorta de la foto de pie (`cartel.tu.recorte`: desde dónde y
+  cuánto de lo ancho, en por ciento; mide tres por cuatro). De esa lista salen también los oficios entre los que
+  elige el azar.
+- `mira` se mide en por ciento de la foto. En la escena acostada: `persona` es el punto al que mira la cámara
+  (ancho y alto); `celular`, el celular de la mesa (desde dónde empieza y cuánto mide: x, y, ancho y alto): a él baja
+  la cámara, de él salen el aviso y el celular de la avalancha; y `viva`, la zona donde va la toma viva (x, y, ancho
+  y alto): el video se recorta a esa zona, que es donde algo se mueve, y la página lo funde con la foto en sus
+  orillas, así que debe terminar arriba del celular. `dePie` es el punto al que mira la cámara en la foto de pie, la
+  de la pantalla dividida del cierre. Si se cambia una foto, estos puntos se vuelven a medir mirándola.
 - Las tarjetas de «Para quién» salen de `fuente/datos/giros.json` (`tarjeta`: el nombre, su renglón y el texto que
   describe la foto), una por oficio. Su retrato es `originales/retratos/<oficio>-retrato.png` (cuatro de ancho por
   cinco de alto); `node herramientas/optimizar.mjs retratos` lo publica entero, sin recorte, en tres anchos y dos

@@ -6,7 +6,7 @@
 /**
  * Un momento del corto.
  * @typedef {object} Momento
- * @property {string} clave  presion, vibra, avalancha, barrido, marca o agente
+ * @property {string} clave  presion, vibra, avalancha, barrido, marca, agente o todos
  * @property {number} dura   lo que dura, en milisegundos
  */
 
@@ -169,4 +169,61 @@ export function punto(texto) {
   if (sobra !== undefined || x === undefined || y === undefined) return null;
   if (!(x >= 0 && x <= 100 && y >= 0 && y <= 100)) return null;
   return { x: x / 100, y: y / 100 };
+}
+
+/**
+ * Una zona de una foto, como viaja escrita en la pagina ("52 81 31 14": desde donde empieza, a lo ancho y a lo alto,
+ * y cuanto mide de ancho y de alto, en por ciento de la foto), ya en fracciones de 0 a 1. Si no se entiende, o se
+ * sale de la foto, null: los estilos traen una de respaldo.
+ * @param {string | undefined | null} texto
+ * @returns {{ x: number, y: number, ancho: number, alto: number } | null}
+ */
+export function zona(texto) {
+  const [x, y, ancho, alto, sobra] = (texto ?? '').trim().split(/\s+/).map(Number);
+  if (sobra !== undefined || x === undefined || y === undefined || ancho === undefined || alto === undefined) {
+    return null;
+  }
+  if (!(x >= 0 && y >= 0 && ancho > 0 && alto > 0 && x + ancho <= 100 && y + alto <= 100)) return null;
+  return { x: x / 100, y: y / 100, ancho: ancho / 100, alto: alto / 100 };
+}
+
+/**
+ * El oficio que sigue en la lista, dando la vuelta al llegar al ultimo: quien ve el corto de nuevo ve otra profesion.
+ * Si el de ahora no esta en la lista, toca el primero.
+ * @param {string[]} oficios
+ * @param {string} actual
+ * @returns {string}
+ */
+export function siguienteOficio(oficios, actual) {
+  return oficios[(oficios.indexOf(actual) + 1) % oficios.length] ?? actual;
+}
+
+/**
+ * Cuando empieza un momento del guion, en milisegundos desde el principio del corto. Si el guion no lo trae, lo que
+ * dura el corto entero.
+ * @param {Momento[]} guion
+ * @param {string} clave
+ * @returns {number}
+ */
+export function empiezaEn(guion, clave) {
+  let empieza = 0;
+  for (const momento of guion) {
+    if (momento.clave === clave) return empieza;
+    empieza += momento.dura;
+  }
+  return empieza;
+}
+
+/**
+ * Desde donde entra la toma viva (que dura menos que el corto) cuando falta "falta" para el momento en que ya no
+ * debe notarse que vuelve a empezar: entra a media pasada, justo para terminar a esa hora. Asi su relevo (se funde
+ * con su foto y arranca otra vez) cae donde algo lo tapa, y la pasada que sigue llega entera a lo que viene.
+ * Todo en milisegundos; si la toma alcanza de sobra, o no se sabe cuanto dura, entra desde su principio.
+ * @param {number} dura   lo que dura la toma viva
+ * @param {number} falta  lo que falta para la hora en que su pasada debe terminar
+ * @returns {number}
+ */
+export function entradaDeLaToma(dura, falta) {
+  if (!(dura > 0) || !(falta > 0) || falta >= dura) return 0;
+  return dura - falta;
 }

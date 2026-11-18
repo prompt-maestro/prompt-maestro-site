@@ -8,6 +8,7 @@ import { spawn } from 'node:child_process';
 import { mkdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { zona } from '../fuente/js/corto.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ORIGEN = path.join(raiz, 'originales');
@@ -24,6 +25,13 @@ const DESTINO = path.join(raiz, 'fuente', 'recursos');
 
 /** Las tomas de trabajo: oscuras y con el fondo fuera de foco, se dejan comprimir mucho. */
 const TOMA = { avif: 31, webp: 76 };
+/**
+ * Las escenas del corto: cada oficio en horizontal, a pantalla completa. Es lo mas grande de la pantalla ancha, asi
+ * que se cuidan mas que una toma: lo mas fino que deja cada foto de 1600 en AVIF en 90 KB o menos (una prueba lo
+ * cuida). La grande, para pantallas de mas de 1600 puntos, aguanta un poco mas de compresion.
+ */
+const ESCENA = { avif: 10, webp: 80 };
+const ESCENA_GRANDE = { avif: 16, webp: 76 };
 /** Las fotos de "su tiempo" del cartel: con luz de dia y mucho detalle, piden un poco mas de compresion. */
 const VIDA = { avif: 35, webp: 58 };
 /** Que parte del ancho de la foto entra en una tarjeta del cartel. */
@@ -37,10 +45,18 @@ const OFICIO = { avif: 22, webp: 80 };
 /** Sus anchos: la computadora, la de pantalla densa y el celular (ahi la foto ocupa casi todo lo ancho). */
 const ANCHOS_DEL_OFICIO = [480, 720, 960];
 /**
- * Hasta que altura del cuadro (de 0 a 1) llega la toma viva. Se recorta antes de achicar, en renglones pares: de los
- * 1928 del original quedan 1318, el 68.36 %. Ese porcentaje es el alto del video en fuente/estilos/corto.css.
+ * La toma viva: cuanto se comprime. Con esto cada una pesa 480 KB o menos (una prueba lo cuida): en cada visita se
+ * pide una sola.
  */
-const CORTE = 0.684;
+const VIVA = 29;
+/**
+ * El color de la toma viva: el del original (BT.709, de 16 a 235), que no lo trae escrito. Se le dice a ffmpeg antes
+ * de tocarla (si no, lo adivina, la convierte y sale mas oscura que la foto) y se deja escrito en lo que sale, para
+ * que el navegador la pinte con el mismo color que la foto de abajo.
+ */
+const COLOR = 'colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv';
+/** Un poco de filo, solo en la luz: el video original es mas suave que la foto, y encima de ella se notaria. */
+const FILO = 'unsharp=5:5:0.8:5:5:0';
 
 /**
  * Una imagen, ya con su filtro de tamano, en AVIF y en WebP (para los telefonos que todavia no leen AVIF).
@@ -127,19 +143,24 @@ function retrato(de, nombre, ancho, recorte) {
 }
 
 /**
- * La toma viva de un oficio: el mismo cuadro de su foto de trabajo, en movimiento, chico (el fondo va fuera de foco y
- * aguanta poca resolucion) y solo de arriba hasta CORTE. De ahi para abajo (la mesa y el celular en primer plano) la
- * pagina deja ver la foto, nitida y quieta: asi al celular no le aparece nada en la pantalla. H.264, sin audio (el
- * candado de siempre: -an, y solo la pista de video) y listo para empezar sin esperar. Corre una vez por aparicion: no
- * hace falta que el final empate con el principio.
+ * La toma viva de un oficio: el mismo cuadro de su escena, en movimiento, y solo la zona donde algo se mueve (quien
+ * trabaja). La zona la dice el dato de cada oficio, en por ciento de la foto: desde donde empieza y cuanto mide. La
+ * pagina la pone encima de la foto, en ese mismo lugar, y la funde con ella en sus orillas: la mesa y el celular son
+ * siempre los de la foto, nitidos y quietos, asi al celular no le aparece nada en la pantalla. Va a su tamano, sin
+ * achicar: en una pantalla ancha cada punto del video es un punto de la pantalla. H.264, sin audio (el candado de
+ * siempre: -an, y solo la pista de video), con su color declarado y listo para empezar sin esperar. No hace falta
+ * que el final empate con el principio: al terminar su pasada se funde con la foto.
  * @param {object} toma
  * @param {string} toma.de
  * @param {string} toma.a
- * @param {number} toma.ancho
- * @param {number} toma.crf
+ * @param {string} toma.zona  "x y ancho alto", en por ciento de la foto
  * @returns {Trabajo}
  */
-function viva({ de, a, ancho, crf }) {
+function viva({ de, a, zona: escrita }) {
+  const parte = zona(escrita);
+  if (!parte) throw new Error(`${a}: la zona de la toma viva ("${escrita}") no se entiende o se sale de la foto`);
+  const par = (/** @type {string} */ de, /** @type {number} */ cuanto) => `2*trunc(${de}*${cuanto.toFixed(4)}/2)`;
+  const recorte = `crop=${par('iw', parte.ancho)}:${par('ih', parte.alto)}:${par('iw', parte.x)}:${par('ih', parte.y)}`;
   return {
     de,
     a,
@@ -152,7 +173,7 @@ function viva({ de, a, ancho, crf }) {
       '-map_metadata',
       '-1',
       '-vf',
-      `crop=iw:2*trunc(ih*${CORTE}/2):0:0,scale=${ancho}:-2:flags=lanczos,setsar=1`,
+      `setparams=${COLOR},${recorte},${FILO},setsar=1`,
       '-c:v',
       'libx264',
       '-profile:v',
@@ -162,7 +183,15 @@ function viva({ de, a, ancho, crf }) {
       '-preset',
       'veryslow',
       '-crf',
-      String(crf),
+      String(VIVA),
+      '-colorspace',
+      'bt709',
+      '-color_primaries',
+      'bt709',
+      '-color_trc',
+      'bt709',
+      '-color_range',
+      'tv',
       '-movflags',
       '+faststart',
     ],
@@ -173,6 +202,7 @@ function viva({ de, a, ancho, crf }) {
  * @typedef {object} Oficio
  * @property {string} clave
  * @property {boolean} video
+ * @property {{ viva: string }} mira
  * @property {{ encuadre: number, tu: { recorte: { x: number, y: number, ancho: number } } }} cartel
  */
 /** @type {{ oficios: Oficio[] }} */
@@ -182,23 +212,19 @@ const giros = JSON.parse(await readFile(path.join(raiz, 'fuente', 'datos', 'giro
 
 /** @type {Trabajo[]} */
 const TRABAJOS = [
-  ...corto.oficios.flatMap(({ clave, video, cartel }) => [
-    // El corto: cada oficio trabajando, con el celular encendido en primer plano.
+  ...corto.oficios.flatMap(({ clave, video, mira, cartel }) => [
+    // El corto: la escena de cada oficio, en horizontal y a dos anchos, con su celular en la mesa; y su toma viva.
+    ...foto(`comercial/${clave}-escena.png`, `comercial/${clave}-escena`, 1600, ESCENA),
+    ...foto(`comercial/${clave}-escena.png`, `comercial/${clave}-escena`, 2560, ESCENA_GRANDE),
+    ...(video
+      ? [viva({ de: `comercial/${clave}-escena-viva.mp4`, a: `comercial/${clave}-escena.mp4`, zona: mira.viva })]
+      : []),
+    // El final del corto, con los oficios lado a lado: cada uno de pie, trabajando.
     ...foto(`comercial/${clave}-trabajo.png`, `comercial/${clave}-trabajo`, 720, TOMA),
     ...foto(`comercial/${clave}-trabajo.png`, `comercial/${clave}-trabajo`, 1080, TOMA),
-    ...(video
-      ? [
-          viva({
-            de: `comercial/${clave}-trabajo-viva.mp4`,
-            a: `comercial/${clave}-trabajo.mp4`,
-            ancho: 640,
-            crf: 29,
-          }),
-        ]
-      : []),
     // El cartel en pantallas anchas: la misma persona, ya en su tiempo, recortada para su tarjeta.
     ...tarjeta(`cartel/${clave}-vida.png`, `cartel/${clave}-vida`, 600, cartel.encuadre, VIDA),
-    // El cartel en celular: su retrato trabajando, sacado de la misma foto del corto.
+    // El cartel en celular: su retrato trabajando, sacado de su foto de pie.
     ...ANCHOS_DEL_RETRATO.flatMap((ancho) =>
       retrato(`comercial/${clave}-trabajo.png`, `cartel/${clave}-tu`, ancho, cartel.tu.recorte),
     ),

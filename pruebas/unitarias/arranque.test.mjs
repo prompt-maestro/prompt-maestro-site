@@ -1,6 +1,7 @@
 // @ts-check
 // arranque.js corre en el <head>, antes del primer pintado, y no es un modulo: aqui se corre tal cual, con una pagina
-// de mentiras, para comprobar lo que deja escrito. Lo que importa: que oficio elige para el cartel del celular.
+// de mentiras, para comprobar lo que deja escrito. Lo que importa: que oficio elige para el inicio (el cartel del
+// celular y el corto de las pantallas anchas), y que foto adelanta donde el corto va a correr solo.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -11,18 +12,26 @@ import vm from 'node:vm';
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CODIGO = await readFile(path.join(RAIZ, 'fuente', 'js', 'arranque.js'), 'utf8');
 const OFICIOS = ['unas', 'dentista', 'medico'];
+/** Lo que la etiqueta del archivo dice de la foto de cada escena del corto: sus archivos y lo que mide. */
+const FOTOS = '/r/comercial/*-escena-1600.avif 1600w, /r/comercial/*-escena-2560.avif 2560w';
+const MIDE = '150vw';
+/** Donde el corto corre solo: pantalla ancha, no muy bajita y con movimiento. */
+const CORRE_SOLO =
+  '(min-width: 900px) and (min-aspect-ratio: 1/1) and (min-height: 480px) and (prefers-reduced-motion: no-preference)';
 
 /**
- * Una escena del cartel como viaja en la pagina: la primera a la vista y las demas guardadas.
+ * Una escena del inicio como viaja en la pagina (la del cartel, data-duo, o una del corto, data-escena): la primera
+ * a la vista y las demas guardadas.
  * @param {string} clave
  * @param {boolean} guardada
+ * @param {'data-duo' | 'data-escena'} [dato]
  */
-function escena(clave, guardada) {
+function escena(clave, guardada, dato = 'data-duo') {
   return {
     clave,
     guardada,
     /** @param {string} nombre */
-    getAttribute: (nombre) => (nombre === 'data-duo' ? clave : null),
+    getAttribute: (nombre) => (nombre === dato ? clave : null),
     /**
      * @param {string} nombre
      * @param {boolean} valor
@@ -38,8 +47,10 @@ function escena(clave, guardada) {
  * @param {object} pagina
  * @param {number} pagina.azar              lo que contesta Math.random
  * @param {string | null} [pagina.oficios]  lo que dice la etiqueta del archivo (null: no hay etiqueta a la vista)
+ * @param {boolean} [pagina.correSolo]      si en esta pantalla el corto corre solo (ancha, con movimiento)
+ * @param {object} [pagina.conexion]        lo que el navegador dice de la conexion (navigator.connection), si lo dice
  */
-function correr({ azar, oficios = OFICIOS.join(' ') }) {
+function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion = undefined }) {
   /** @type {Set<string>} */
   const clases = new Set();
   /** @type {Record<string, string>} */
@@ -50,6 +61,14 @@ function correr({ azar, oficios = OFICIOS.join(' ') }) {
   const escuchas = {};
   /** @type {{ aviso: () => void, que: unknown, opciones: unknown, desconectado: boolean }[]} */
   const vigias = [];
+  /** Lo que el archivo deja en el <head>: cada etiqueta, con sus atributos. */
+  /** @type {{ etiqueta: string, atributos: Record<string, string> }[]} */
+  const cabeza = [];
+  /** Las preguntas que le hace a la pantalla. */
+  /** @type {string[]} */
+  const preguntas = [];
+  /** @type {Record<string, string>} */
+  const atributos = {};
   const raiz = {
     classList: {
       add: (/** @type {string[]} */ ...nombres) => {
@@ -59,6 +78,13 @@ function correr({ azar, oficios = OFICIOS.join(' ') }) {
     },
     dataset: datos,
     hasAttribute: () => false,
+    /**
+     * @param {string} nombre
+     * @param {string} valor
+     */
+    setAttribute: (nombre, valor) => {
+      atributos[nombre] = valor;
+    },
   };
   class Vigia {
     /** @param {() => void} aviso */
@@ -93,12 +119,35 @@ function correr({ azar, oficios = OFICIOS.join(' ') }) {
   const contexto = vm.createContext({
     document: {
       documentElement: raiz,
-      currentScript: oficios === null ? null : { dataset: { oficios } },
-      querySelectorAll: (/** @type {string} */ selector) => (selector === '[data-duo]' ? escenas : []),
+      currentScript: oficios === null ? null : { dataset: { oficios, escena: FOTOS, escenaMide: MIDE } },
+      querySelectorAll: (/** @type {string} */ selector) => (selector === '[data-duo], [data-escena]' ? escenas : []),
       querySelector: () => null,
       addEventListener: escuchar,
+      createElement: (/** @type {string} */ etiqueta) => {
+        /** @type {Record<string, string>} */
+        const suyos = {};
+        return {
+          etiqueta,
+          atributos: suyos,
+          /**
+           * @param {string} nombre
+           * @param {string} valor
+           */
+          setAttribute: (nombre, valor) => {
+            suyos[nombre] = valor;
+          },
+        };
+      },
+      head: {
+        append: (/** @type {{ etiqueta: string, atributos: Record<string, string> }} */ uno) => cabeza.push(uno),
+      },
     },
     window: { addEventListener: escuchar },
+    navigator: conexion === undefined ? {} : { connection: conexion },
+    matchMedia: (/** @type {string} */ pregunta) => {
+      preguntas.push(pregunta);
+      return { matches: correSolo };
+    },
     MutationObserver: Vigia,
     Math: Object.assign(Object.create(Math), { random: () => azar }),
   });
@@ -107,8 +156,11 @@ function correr({ azar, oficios = OFICIOS.join(' ') }) {
     raiz,
     clases,
     datos,
+    atributos,
     escenas,
     vigias,
+    cabeza,
+    preguntas,
     /** Lo que pasa cuando la pagina termina de leerse. */
     terminarDeLeer() {
       for (const escucha of escuchas.DOMContentLoaded ?? []) escucha();
@@ -194,4 +246,72 @@ test('si le toca el primer oficio, la pagina queda como venia escrita', () => {
   pagina.vigias[0]?.aviso();
   pagina.terminarDeLeer();
   assert.deepEqual(aLaVista(pagina.escenas), ['unas']);
+});
+
+test('las escenas del corto se guardan igual que la del cartel: a la vista queda solo la del oficio elegido', () => {
+  const pagina = correr({ azar: 0.9 });
+  assert.equal(pagina.datos.oficio, 'medico');
+  // Una del cartel y, por cada oficio, la del corto con luz calida y con luz fria: llegan en el orden de la pagina.
+  pagina.escenas.push(escena('unas', false), escena('dentista', true), escena('medico', true));
+  for (const _luz of ['calida', 'fria']) {
+    pagina.escenas.push(
+      escena('unas', false, 'data-escena'),
+      escena('dentista', true, 'data-escena'),
+      escena('medico', true, 'data-escena'),
+    );
+    pagina.vigias[0]?.aviso();
+    assert.deepEqual(aLaVista(pagina.escenas.slice(0, 3)), ['medico']);
+    assert.ok(aLaVista(pagina.escenas.slice(3)).every((clave) => clave === 'medico'));
+  }
+  pagina.terminarDeLeer();
+  assert.deepEqual(aLaVista(pagina.escenas), ['medico', 'medico', 'medico']);
+});
+
+test('donde el corto corre solo adelanta la foto del oficio elegido, y solo esa', () => {
+  for (const [azar, elegido] of /** @type {[number, string][]} */ ([
+    [0.1, 'unas'],
+    [0.5, 'dentista'],
+    [0.9, 'medico'],
+  ])) {
+    const { cabeza, preguntas } = correr({ azar, correSolo: true });
+    // La misma pregunta que hacen los estilos y corto-vista.js: pantalla ancha, no muy bajita y con movimiento.
+    assert.deepEqual(preguntas, [CORRE_SOLO]);
+    assert.equal(cabeza.length, 1, `con ${azar}`);
+    const [adelanto] = cabeza;
+    assert.equal(adelanto?.etiqueta, 'link');
+    assert.deepEqual(adelanto?.atributos, {
+      rel: 'preload',
+      as: 'image',
+      type: 'image/avif',
+      imagesrcset: FOTOS.replaceAll('*', elegido),
+      imagesizes: MIDE,
+      fetchpriority: 'high',
+    });
+  }
+});
+
+test('en celular, con movimiento reducido o sin oficio que elegir no adelanta ninguna foto del corto', () => {
+  assert.deepEqual(correr({ azar: 0.5, correSolo: false }).cabeza, []);
+  for (const oficios of ['', null]) assert.deepEqual(correr({ azar: 0.5, oficios, correSolo: true }).cabeza, []);
+});
+
+test('con ahorro de datos o conexion lenta lo anota en <html> y no adelanta nada: el corto no correra solo', () => {
+  for (const conexion of [
+    { saveData: true },
+    { effectiveType: 'slow-2g' },
+    { effectiveType: '2g' },
+    { effectiveType: '3g' },
+  ]) {
+    const { atributos, cabeza, datos } = correr({ azar: 0.5, correSolo: true, conexion });
+    assert.deepEqual(atributos, { 'data-ahorro': '' }, JSON.stringify(conexion));
+    assert.deepEqual(cabeza, [], JSON.stringify(conexion));
+    // El oficio se elige igual: el cartel lo necesita.
+    assert.equal(datos.oficio, 'dentista');
+  }
+  // Una conexion buena, o un navegador que no dice nada de su conexion, no anota nada.
+  for (const conexion of [{ saveData: false, effectiveType: '4g' }, {}, undefined]) {
+    const { atributos, cabeza } = correr({ azar: 0.5, correSolo: true, conexion });
+    assert.deepEqual(atributos, {}, JSON.stringify(conexion));
+    assert.equal(cabeza.length, 1);
+  }
 });
