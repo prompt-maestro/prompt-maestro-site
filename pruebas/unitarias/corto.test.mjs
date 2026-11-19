@@ -461,6 +461,26 @@ test('cada oficio trae lo suyo completo: a donde mira la camara, su cuenta, sus 
   }
 });
 
+test('en el inicio el agente siempre saluda y habla de usted: ni en el corto ni en el cartel tutea a quien le escribe', () => {
+  for (const oficio of corto.oficios) {
+    for (const [donde, responde] of [
+      ['el corto', oficio.trato.responde],
+      ['el cartel', oficio.cartel.charla.responde],
+    ]) {
+      assert.match(
+        responde,
+        /^(¡Hola\b|Buenos días\b|Buenas (tardes|noches)\b)/,
+        `${oficio.clave}, ${donde}: no saluda`,
+      );
+      assert.doesNotMatch(
+        responde,
+        /(^|[^\p{L}])(tú|te|ti|tu|tus|contigo|quieres|puedes|tienes)(?=$|[^\p{L}])/iu,
+        `${oficio.clave}, ${donde}: tutea`,
+      );
+    }
+  }
+});
+
 test('la cita que agenda el agente en el corto no es la de su cartel: nunca dos citas el mismo dia y a la misma hora', () => {
   const SEMANA = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
   // Que dia es hoy lo dice la pantalla del celular del corto: con eso se entienden "hoy" y "mañana".
