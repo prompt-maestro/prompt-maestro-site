@@ -6,10 +6,9 @@
 // por terminado. Que momento toca lo decide corto.js; aqui solo se escucha y se mueve la pagina.
 import {
   andar,
-  arrastre,
-  barrido,
   CARTEL,
   corridos,
+  cruza,
   empiezaEn,
   entradaDeLaToma,
   leerGuion,
@@ -36,15 +35,12 @@ const ESPERA_DEL_VIDEO = 300;
 const FUNDIDO_DEL_VIDEO = 900;
 /** El aire entre ese fundido y la conversacion del agente: cuando ella empieza, la toma ya va otra vez de corrido. */
 const AIRE_DEL_RELEVO = 400;
-/** Los dos momentos que el codigo mueve cuadro por cuadro; los demas son cosa de los estilos. */
+/** El momento en que el codigo lleva la cuenta del celular, cuadro por cuadro; lo demas se mueve con los estilos. */
 const AVALANCHA = 'avalancha';
+/** El momento en que la raya de luz cambia la luz fria por la calida: la mueve el navegador, no el codigo. */
 const BARRIDO = 'barrido';
 /** El momento en que la toma viva no debe notarse volver a empezar: ahi se mira a quien trabaja. */
 const AGENTE = 'agente';
-/** Lo que se inclina la raya de luz del barrido, en grados. */
-const INCLINACION = 5;
-/** Lo mas que la raya se lleva de lado lo que va barriendo, en centesimas del ancho de la pantalla. */
-const EMPUJE = 24;
 /** Desde cuanto de la seccion fuera de la pantalla la barra de arriba toma su fondo. */
 const CASI_ENTERA = 0.98;
 
@@ -133,9 +129,6 @@ export function montarCorto(raiz) {
   const avance = pieza(raiz, '[data-corto-avance]');
   const ver = pieza(raiz, '[data-corto-ver]');
   const verTexto = pieza(raiz, '[data-corto-ver-texto]');
-  const antes = pieza(raiz, '[data-corto-antes]');
-  const antesDentro = pieza(raiz, '[data-corto-antes-dentro]');
-  const carro = pieza(raiz, '[data-corto-carro]');
   const letreros = piezas(raiz, '[data-letrero]');
   // Una escena por oficio, con luz fria y con luz calida, y a la vista solo las del oficio que toca.
   const frias = piezas(raiz, '[data-escenas="fria"] [data-escena]');
@@ -188,6 +181,8 @@ export function montarCorto(raiz) {
     preparado = true;
     for (const escena of [...frias, ...calidas]) encuadrar(escena);
     for (const escena of frias) ponerFantasmas(escena);
+    // Lo que tarda la raya del barrido en cruzar: se lo dice a los estilos, que son los que la mueven.
+    cine.style.setProperty('--cruza', `${cruza(guion[calidoDesde]?.dura ?? 0)}ms`);
     for (const [turno, franja] of franjas.entries()) {
       encuadrar(franja);
       franja.style.setProperty('--n', String(turno));
@@ -235,25 +230,6 @@ export function montarCorto(raiz) {
       const texto = String(sinContestar(parte, limites));
       if (cuenta.textContent !== texto) cuenta.textContent = texto;
     }
-  }
-
-  /**
-   * El barrido: la caja de lo de antes se corre a la derecha y su contenido se corre igual a la izquierda, asi lo de
-   * adentro no se mueve y la orilla lo va destapando. La raya de luz viaja con la orilla y, ya dentro de la pantalla,
-   * se lleva lo viejo un poco de lado y lo inclina: lo barre.
-   * @param {number | null} va  de 0 a 1, o null para dejar todo en su lugar
-   */
-  function barrer(va) {
-    if (va === null) {
-      for (const capa of [antes, antesDentro, carro]) capa.style.removeProperty('transform');
-      return;
-    }
-    const corrida = (va * 100).toFixed(3);
-    antes.style.transform = `translateX(${corrida}%) skewX(-${INCLINACION}deg)`;
-    carro.style.transform = antes.style.transform;
-    const lleva = arrastre(va);
-    const lado = `translateX(${(lleva * EMPUJE).toFixed(3)}vw) skewX(-${(lleva * INCLINACION).toFixed(3)}deg)`;
-    antesDentro.style.transform = `skewX(${INCLINACION}deg) translateX(-${corrida}%) ${lado}`;
   }
 
   /**
@@ -331,7 +307,7 @@ export function montarCorto(raiz) {
     const dura = guion.find((uno) => uno.clave === clave)?.dura ?? 0;
     cine.style.setProperty('--dura', `${dura}ms`);
     for (const letrero of letreros) letrero.toggleAttribute('data-activo', letrero.dataset.letrero === clave);
-    if (clave !== BARRIDO) barrer(null);
+    // Al barrido el celular llega con su cuenta llena. La raya no se mueve desde aqui: es una animacion de los estilos.
     if (clave === BARRIDO) contar(1);
     videosAlDia();
   }
@@ -346,7 +322,6 @@ export function montarCorto(raiz) {
     if (instante.clave !== momento) ponerMomento(instante.clave);
     avance.style.transform = `scaleX(${instante.avance.toFixed(4)})`;
     if (momento === AVALANCHA) contar(instante.parte);
-    if (momento === BARRIDO) barrer(barrido(instante.parte));
   }
 
   function ciclo() {

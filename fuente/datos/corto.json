@@ -9,7 +9,7 @@
     {
       "clave": "vibra",
       "dura": 3600,
-      "letrero": "Y tu celular no para de sonar.",
+      "letrero": "Y tu WhatsApp no para de sonar.",
       "cursor": false
     },
     {
@@ -38,8 +38,8 @@
     },
     {
       "clave": "todos",
-      "dura": 5000,
-      "letrero": "Cada negocio, su propio agente.",
+      "dura": 6000,
+      "letrero": "Cada negocio tiene su propio agente.",
       "cursor": false
     }
   ],
@@ -53,11 +53,13 @@
     "sinContestar": "sin contestar"
   },
   "todos": {
-    "baja": "Se arma con tus servicios, tus precios y tus horarios. Hoy para uñas, dentistas y médicos; pronto, más oficios.",
-    "agenteDe": "Agente de"
+    "baja": [
+      "A la medida de tus servicios, tus precios y tus horarios, en el WhatsApp de tu negocio.",
+      "Hoy para uñas, dentistas y médicos; pronto, más oficios y profesiones."
+    ]
   },
   "cartel": {
-    "sobre": "Uñas, dentistas, médicos y pronto más oficios",
+    "sobre": "Uñas, dentistas, médicos y\u00a0pronto\u00a0más oficios y profesiones",
     "titulo": "Despreocúpate",
     "frase": "Enfócate en tu trabajo, ahorra tiempo y úsalo en lo que quieras. Deja que nuestros agentes se encarguen de tu WhatsApp y tu agenda.",
     "accion": "Empieza ahora",
@@ -79,6 +81,7 @@
     "verElVideo": "Ver el video"
   },
   "pagoAprobado": "Pago aprobado",
+  "canal": "WhatsApp",
   "oficios": [
     {
       "clave": "unas",

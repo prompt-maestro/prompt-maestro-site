@@ -29,13 +29,16 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  *   guion: { clave: string, dura: number, letrero: string }[],
  *   cartel: Record<string, string>,
  *   marca: { nombre: string, frase: string },
- *   todos: { baja: string, agenteDe: string },
+ *   todos: { baja: string[] },
  *   pagoAprobado: string,
+ *   canal: string,
  *   oficios: Oficio[],
  * }}
  */
 const CORTO = JSON.parse(readFileSync(new URL('../../fuente/datos/corto.json', import.meta.url), 'utf8'));
 const MOMENTOS = CORTO.guion.map((momento) => momento.clave);
+/** Los dos renglones chicos del cierre, como se leen seguidos. */
+const BAJA = CORTO.todos.baja.join(' ');
 const CARTEL = 'cartel';
 /** Los perfiles con pantalla ancha: los unicos donde corre el corto. */
 const ANCHOS = ['escritorio', 'firefox'];
@@ -222,7 +225,9 @@ test('el cartel trae el titulo, la frase, el boton al alta, el enlace a la demos
   const frase = corto.locator('.cartel__frase');
   await expect(frase).toHaveText(CORTO.cartel.frase ?? '');
   await expect(frase).toBeInViewport({ ratio: 1 });
-  await expect(corto.locator('.cartel .sobre')).toHaveText('Uñas, dentistas, médicos y pronto más oficios');
+  await expect(corto.locator('.cartel .sobre')).toHaveText(
+    'Uñas, dentistas, médicos y pronto más oficios y profesiones',
+  );
   const empieza = corto.getByRole('link', { name: 'Empieza ahora' });
   await expect(empieza).toBeInViewport({ ratio: 1 });
   await expect(empieza).toHaveAttribute('href', ALTA);
@@ -461,6 +466,23 @@ test.describe('"Tu y tu agente" en cada tamano', () => {
       await expect(escena).toHaveAttribute('data-duo', clave);
       await expect(escena.locator('.duo__foto')).toHaveJSProperty('complete', true);
       await page.evaluate(() => document.fonts.ready);
+      // El renglon chico va en dos renglones y se parte donde se lee bien: arriba los tres oficios y abajo lo que
+      // viene, entero. Nunca deja una "y" colgada ni una palabra sola.
+      const renglones = await corto.locator('.cartel .sobre').evaluate((sobre) => {
+        const texto = sobre.firstChild;
+        if (!(texto instanceof Text)) return [];
+        /** @type {Map<number, string[]>} */
+        const porAltura = new Map();
+        for (const palabra of texto.data.matchAll(/\S+/g)) {
+          const rango = document.createRange();
+          rango.setStart(texto, palabra.index);
+          rango.setEnd(texto, palabra.index + palabra[0].length);
+          const altura = Math.round(rango.getBoundingClientRect().top);
+          porAltura.set(altura, [...(porAltura.get(altura) ?? []), palabra[0]]);
+        }
+        return [...porAltura.values()].map((palabras) => palabras.join(' '));
+      });
+      expect(renglones).toEqual(['Uñas, dentistas, médicos', 'y pronto más oficios y profesiones']);
       // El cartel mide justo la pantalla y nada se sale a lo ancho.
       expect(await desborde(page)).toBeLessThanOrEqual(0);
       expect(Math.abs((await caja(corto)).abajo - alto)).toBeLessThanOrEqual(1);
@@ -660,7 +682,7 @@ test.describe('el corto, en pantallas anchas', () => {
       vistos.push(await corto.getAttribute('data-cuadro'));
       const letrero = corto.locator('.letrero[data-activo]');
       // El del cierre, que es el ultimo, lleva debajo su renglon chico.
-      const dice = lugar === CORTO.guion.length - 1 ? `${momento.letrero}${CORTO.todos.baja}` : momento.letrero;
+      const dice = lugar === CORTO.guion.length - 1 ? `${momento.letrero}${BAJA}` : momento.letrero;
       if (momento.letrero) await expect(letrero).toHaveText(dice);
       else await expect(letrero).toHaveCount(0);
       expect(await desborde(page)).toBeLessThanOrEqual(0);
@@ -791,14 +813,14 @@ test.describe('el corto, en pantallas anchas', () => {
     const cuenta = celular.locator('[data-corto-cuenta]');
     expect(Number(await cuenta.textContent())).toBeLessThan(oficio?.cuenta.tope ?? 0);
     await expect(celular.locator('.aviso__mira')).toBeVisible();
-    // Cabe entero entre la barra y los controles, y sale del celular de la mesa: a la derecha del centro.
+    // Cabe entero entre la barra y los controles, al centro de la pantalla (ventana por ventana lo cuida la prueba
+    // que sigue).
     await asentado(celular);
     const suCaja = await caja(celular);
     const medida = page.viewportSize() ?? { width: 0, height: 0 };
     expect(suCaja.arriba).toBeGreaterThanOrEqual((await caja(page.locator('.barra'))).abajo);
     expect(suCaja.abajo).toBeLessThanOrEqual((await caja(corto.locator('.control__linea'))).arriba);
-    expect(suCaja.derecha).toBeLessThanOrEqual(medida.width);
-    expect((suCaja.izquierda + suCaja.derecha) / 2).toBeGreaterThan(medida.width / 2);
+    expect(Math.abs((suCaja.izquierda + suCaja.derecha) / 2 - medida.width / 2)).toBeLessThanOrEqual(2);
     await hastaElCuadro(page, corto, 'barrido');
     await expect(cuenta).toHaveText(String(oficio?.cuenta.tope));
     // Cada oficio trae su cuenta, y ninguna se repite: quien vea otro oficio vera otro numero.
@@ -807,11 +829,220 @@ test.describe('el corto, en pantallas anchas', () => {
       .evaluateAll((cuentas) => cuentas.map((una) => una.getAttribute('data-tope')));
     expect(topes).toEqual(CORTO.oficios.map((uno) => String(uno.cuenta.tope)));
     expect(new Set(topes).size).toBe(CORTO.oficios.length);
-    // En el barrido el codigo corre la caja de lo viejo; al pasar, la deja en su lugar.
-    await page.clock.runFor(300);
-    await expect(corto.locator('[data-corto-antes]')).toHaveAttribute('style', /translateX/);
+  });
+
+  // De la laptop del dueño a la ventana mas chica donde corre el corto, con un oficio distinto en cada una.
+  const AL_CENTRO = /** @type {[number, number, string][]} */ ([
+    [1536, 695, 'unas'],
+    [1280, 720, 'dentista'],
+    [1024, 704, 'medico'],
+    [900, 480, 'unas'],
+  ]);
+
+  for (const [ancho, alto, clave] of AL_CENTRO) {
+    test(`a ${ancho} por ${alto}, el celular de los mensajes sale al centro de la pantalla, grande, y cabe con aire entre la barra y los controles`, async ({
+      page,
+    }) => {
+      // Con el corto corriendo el navegador de pruebas va despacio: se le da su tiempo.
+      test.slow();
+      await queLeToque(
+        page,
+        CORTO.oficios.findIndex((uno) => uno.clave === clave),
+      );
+      await page.setViewportSize({ width: ancho, height: alto });
+      const corto = await abrirCortoDetenido(page);
+      await hastaElCuadro(page, corto, 'avalancha');
+      const celular = corto.locator('.pantalla').filter({ visible: true });
+      await expect(celular).toHaveCount(1);
+      await expect(celular.locator('xpath=ancestor::*[@data-escena]')).toHaveAttribute('data-escena', clave);
+      await asentado(celular);
+      const suCaja = await caja(celular);
+      const barra = await caja(page.locator('.barra'));
+      const control = await caja(corto.locator('.control__linea'));
+      // Al centro, a lo ancho. (Mientras se llena zumba a ratos, apenas: se le perdonan dos puntos.)
+      expect(Math.abs((suCaja.izquierda + suCaja.derecha) / 2 - ancho / 2)).toBeLessThanOrEqual(2);
+      // Entre la barra y la raya de los controles, con aire arriba y abajo, y el mismo de los dos lados.
+      const aireArriba = suCaja.arriba - barra.abajo;
+      const aireAbajo = control.arriba - suCaja.abajo;
+      expect(aireArriba).toBeGreaterThanOrEqual(8);
+      expect(aireAbajo).toBeGreaterThanOrEqual(8);
+      expect(Math.abs(aireArriba - aireAbajo)).toBeLessThanOrEqual(4);
+      // Grande: se lleva casi todo el alto que le queda. En una laptop, cerca de ocho decimas de la pantalla.
+      const mide = suCaja.abajo - suCaja.arriba;
+      expect(mide / alto).toBeGreaterThanOrEqual(alto >= 600 ? 0.77 : 0.7);
+      expect(mide / alto).toBeLessThanOrEqual(0.82);
+      // Es un celular (el doble de alto que de ancho) y sus avisos caben todos dentro de su pantalla.
+      expect(Math.abs((suCaja.derecha - suCaja.izquierda) * 2 - mide)).toBeLessThanOrEqual(2);
+      const avisos = await celular.locator('.aviso').all();
+      expect(avisos.length).toBeGreaterThanOrEqual(4);
+      for (const aviso of avisos) {
+        const suyo = await caja(aviso);
+        expect(suyo.izquierda).toBeGreaterThanOrEqual(suCaja.izquierda);
+        expect(suyo.derecha).toBeLessThanOrEqual(suCaja.derecha);
+        expect(suyo.abajo).toBeLessThanOrEqual(suCaja.abajo - 8);
+      }
+      // Lo de atras se va de foco por su cuenta: el velo del celular ya no desenfoca el fondo.
+      const escena = corto.locator('[data-escenas="fria"] [data-escena]').filter({ visible: true });
+      await expect(escena.locator('.foto')).toHaveCSS('filter', /^blur\(/);
+      const velo = await escena
+        .locator('.telefono')
+        .evaluate((el) => getComputedStyle(el, '::before').getPropertyValue('backdrop-filter'));
+      expect(velo).toBe('none');
+      expect(await desborde(page)).toBeLessThanOrEqual(0);
+    });
+  }
+
+  test('al barrido lo mueve el navegador, no el codigo cuadro por cuadro: con el reloj de la pagina detenido la raya cruza sola, destapa lo de antes sin moverlo y, al llegar la marca, lo de antes ya no esta', async ({
+    page,
+  }) => {
+    // La cruzada corre en tiempo real: se le da su tiempo.
+    test.slow();
+    await queLeToque(page, 0);
+    const corto = await abrirCortoDetenido(page);
+    // Antes del barrido se anota donde quedo el celular de los mensajes: de ahi no se tiene que mover.
+    await hastaElCuadro(page, corto, 'avalancha');
+    const celular = corto.locator('.pantalla').filter({ visible: true });
+    await asentado(celular);
+    const suLugar = await caja(celular);
+    await hastaElCuadro(page, corto, 'barrido');
+    // Desde aqui el reloj de la pagina esta detenido: su codigo no corre ni un cuadro. Lo que se mueva lo mueve el
+    // navegador, con las animaciones de los estilos.
+    const antes = corto.locator('.corto__antes');
+    const dentro = corto.locator('.corto__antes-dentro');
+    const carro = corto.locator('.corto__carro');
+    // Ninguna de las tres capas lleva un estilo escrito por el codigo, y cada una trae su animacion: la caja de lo de
+    // antes y la raya, la misma; el contenido de la caja, la contraria. Solo animan transform (la raya, ademas, su luz).
+    /** @param {import('@playwright/test').Locator} capa */
+    const animaciones = (capa) =>
+      capa.evaluate((el) =>
+        el
+          .getAnimations()
+          .map((una) => {
+            const cuadros = una.effect instanceof KeyframeEffect ? una.effect.getKeyframes() : [];
+            const anima = [...new Set(cuadros.flatMap((cuadro) => Object.keys(cuadro)))].filter(
+              (dato) => !['offset', 'computedOffset', 'easing', 'composite'].includes(dato),
+            );
+            const nombre = una instanceof CSSAnimation ? una.animationName : 'otra';
+            return `${nombre}: ${anima.join(' ')} (${cuadros[0]?.easing}, ${una.effect?.getComputedTiming().duration} ms)`;
+          })
+          .sort(),
+      );
+    const cruza = Math.round(0.8 * (CORTO.guion.find((momento) => momento.clave === 'barrido')?.dura ?? 0));
+    expect(cruza).toBeGreaterThanOrEqual(2200);
+    expect(cruza).toBeLessThanOrEqual(2600);
+    const suave = `cubic-bezier(0.65, 0, 0.35, 1), ${cruza} ms`;
+    for (const capa of [antes, dentro, carro]) await expect(capa).not.toHaveAttribute('style', /.*/);
+    expect(await animaciones(antes)).toEqual([`barre: transform (${suave})`]);
+    expect(await animaciones(dentro)).toEqual([`destapa: transform (${suave})`]);
+    expect(await animaciones(carro)).toEqual([`barre: transform (${suave})`, `brilla: opacity (linear, ${cruza} ms)`]);
+    /**
+     * Por donde va el barrido: lo que se ha corrido la caja de lo de antes, su contenido y la raya, y la luz de la raya.
+     */
+    const va = () =>
+      corto.evaluate((seccion) => {
+        /** @param {string} selector */
+        const capa = (selector) => {
+          const el = seccion.querySelector(selector);
+          if (!el) throw new Error(`falta ${selector}`);
+          return getComputedStyle(el);
+        };
+        /** @param {string} selector */
+        const corrida = (selector) => new DOMMatrixReadOnly(capa(selector).transform).m41;
+        return {
+          caja: corrida('.corto__antes'),
+          contenido: corrida('.corto__antes-dentro'),
+          raya: corrida('.corto__carro'),
+          luz: Number(capa('.corto__carro').opacity),
+          ancho: innerWidth,
+        };
+      });
+    // Dentro de lo que se mueve no hay nada pesado: ningun desenfoque de fondo a la vista (el aviso que llego ya se
+    // guardo), y la foto de antes esta quieta.
+    await expect(antes.locator('.escena__sobre--llega').filter({ visible: true })).toHaveCount(0, { timeout: 15_000 });
+    const pesado = await antes.evaluate((caja) => {
+      /** @type {string[]} */
+      const hallados = [];
+      for (const el of caja.querySelectorAll('*')) {
+        if (!el.checkVisibility({ visibilityProperty: true })) continue;
+        for (const parte of ['', '::before', '::after']) {
+          const estilo = getComputedStyle(el, parte || null);
+          if (parte && estilo.content === 'none') continue;
+          const fondo =
+            estilo.getPropertyValue('backdrop-filter') || estilo.getPropertyValue('-webkit-backdrop-filter');
+          if (fondo && fondo !== 'none') hallados.push(`${el.className}${parte}: ${fondo}`);
+        }
+      }
+      return hallados;
+    });
+    expect(pesado).toEqual([]);
+    const fotoDeAntes = antes.locator('[data-escena]:not([hidden]) .foto__vivo');
+    expect(await fotoDeAntes.evaluate((foto) => foto.getAnimations().some((una) => una.playState === 'running'))).toBe(
+      false,
+    );
+    // La raya termina de cruzar sola, sin que el corto haya avanzado un milisegundo: lo de antes quedo destapado entero
+    // (su caja ya salio de la pantalla, con la raya) y la luz de la raya se apago. El contenido de la caja recorrio
+    // justo lo mismo al reves: en la pantalla, el celular de antes no se movio de su lugar, ni se arrastro, ni se
+    // inclino. (Como va a media cruzada, y con la pausa, lo cuida la prueba de uso.)
+    await expect
+      .poll(() => antes.evaluate((el) => el.getAnimations().every((una) => una.playState === 'finished')), {
+        timeout: 20_000,
+      })
+      .toBe(true);
+    const alSalir = await va();
+    expect(alSalir.caja).toBeGreaterThanOrEqual(alSalir.ancho);
+    expect(Math.abs(alSalir.raya - alSalir.caja)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(alSalir.contenido + alSalir.caja)).toBeLessThanOrEqual(0.5);
+    expect(alSalir.luz).toBe(0);
+    const alFinal = await caja(celular);
+    for (const lado of /** @type {const} */ (['izquierda', 'arriba', 'derecha', 'abajo'])) {
+      // Dos puntos de holgura: al anotar su lugar, en la avalancha, el celular zumbaba a ratos.
+      expect(Math.abs(alFinal[lado] - suLugar[lado])).toBeLessThanOrEqual(2);
+    }
+    await expect(corto).toHaveAttribute('data-cuadro', 'barrido');
+    // Al llegar la marca, lo de antes y la raya ya no estan, y no les queda ninguna animacion.
     await hastaElCuadro(page, corto, 'marca');
-    await expect(corto.locator('[data-corto-antes]')).not.toHaveAttribute('style', /translateX/);
+    await expect(antes).toBeHidden();
+    await expect(carro).toBeHidden();
+    for (const capa of [antes, dentro, carro]) {
+      expect(await capa.evaluate((el) => el.getAnimations().length)).toBe(0);
+      await expect(capa).not.toHaveAttribute('style', /.*/);
+    }
+  });
+
+  test('"Saltar" a media cruzada y "Ver de nuevo" dejan el barrido limpio: la raya vuelve a cruzar entera, desde su principio', async ({
+    page,
+  }) => {
+    // Dos cruzadas en tiempo real: se le da su tiempo.
+    test.slow();
+    const corto = await abrirCortoDetenido(page);
+    const antes = corto.locator('.corto__antes');
+    /** Lo que lleva la cruzada, en milisegundos, y si ya termino. Sin animacion (fuera del barrido), null. */
+    const cruzada = () =>
+      antes.evaluate((el) => {
+        const [una] = el.getAnimations();
+        return una ? { lleva: Number(una.currentTime), estado: una.playState } : null;
+      });
+    await hastaElCuadro(page, corto, 'barrido');
+    await expect.poll(async () => (await cruzada())?.lleva ?? 0, { timeout: 15_000 }).toBeGreaterThan(300);
+    await corto.getByRole('button', { name: 'Saltar' }).click();
+    await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+    // Al verlo de nuevo arranca en su primera toma: del barrido anterior no queda nada puesto.
+    await corto.getByRole('button', { name: 'Ver de nuevo' }).click();
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
+    expect(await cruzada()).toBeNull();
+    await expect(antes).not.toHaveAttribute('style', /.*/);
+    await expect(antes).toHaveCSS('transform', 'none');
+    // Y cuando vuelve a tocar, la raya cruza otra vez desde su principio: el navegador avisa cuando arranca su
+    // animacion (asi la prueba no depende de lo rapido que vaya la maquina).
+    await antes.evaluate((el) => {
+      el.addEventListener('animationstart', (aviso) => {
+        const suya = aviso instanceof AnimationEvent && aviso.animationName === 'barre';
+        if (aviso.target === el && suya) el.setAttribute('data-cruza-otra-vez', '');
+      });
+    });
+    await hastaElCuadro(page, corto, 'barrido');
+    await expect(antes).toHaveAttribute('data-cruza-otra-vez', '', { timeout: 15_000 });
+    await expect.poll(async () => (await cruzada())?.estado, { timeout: 20_000 }).toBe('finished');
   });
 
   test('la marca entra dentro de su halo: el logotipo, el nombre y la frase caben enteros en el disco', async ({
@@ -911,6 +1142,40 @@ test.describe('el corto, en pantallas anchas', () => {
       await expect(sello).toHaveAttribute('aria-label', 'Cita garantizada: anticipo pagado');
       await expect(trato.locator('.dice__foto')).toHaveCount(oficio.trato.foto ? 1 : 0);
       await asentado(trato);
+      // Donde pasa la conversacion: la palabra "WhatsApp", sola (ni un logotipo ni un icono), arriba del mensaje que
+      // entro. Es un rotulo chico y discreto, con la misma letra que lo demas; en una ventana bajita se guarda.
+      const canal = trato.locator('.trato__canal');
+      await expect(canal).toHaveText(CORTO.canal);
+      expect(CORTO.canal).toBe('WhatsApp');
+      expect(await canal.evaluate((el) => el.childElementCount)).toBe(0);
+      expect(await trato.evaluate((el) => el.firstElementChild?.className)).toBe('trato__canal');
+      if (ancho >= 1280 && alto >= 600) {
+        await expect(canal).toBeVisible();
+        await expect(canal).toHaveCSS('opacity', '1');
+        const suCanal = await caja(canal);
+        const suMensaje = await caja(mensaje);
+        expect(suCanal.arriba).toBeGreaterThanOrEqual((await caja(page.locator('.barra'))).abajo);
+        expect(suCanal.abajo).toBeLessThanOrEqual(suMensaje.arriba + 6);
+        expect(suCanal.izquierda).toBeGreaterThanOrEqual(suMensaje.izquierda);
+        expect(suCanal.derecha).toBeLessThanOrEqual(suMensaje.derecha);
+        const letras = await trato.evaluate((el) => {
+          /** @param {string} selector */
+          const letra = (selector) => {
+            const uno = el.querySelector(selector);
+            return uno ? getComputedStyle(uno) : null;
+          };
+          const [rotulo, texto] = [letra('.trato__canal'), letra('.dice__texto')];
+          return {
+            misma: rotulo?.fontFamily === texto?.fontFamily,
+            chico: Number.parseFloat(rotulo?.fontSize ?? '99') < Number.parseFloat(texto?.fontSize ?? '0'),
+            legible: Number.parseFloat(rotulo?.fontSize ?? '0') >= 12,
+            mayusculas: rotulo?.textTransform,
+            fondo: rotulo?.backgroundImage,
+          };
+        });
+        expect(letras).toEqual({ misma: true, chico: true, legible: true, mayusculas: 'none', fondo: 'none' });
+      }
+      if (alto < 600) await expect(canal).toBeHidden();
       // Van de arriba abajo, sin encimarse, y ninguna se sale de la pantalla ni se mete debajo de la barra o de
       // los controles.
       const barra = await caja(page.locator('.barra'));
@@ -964,7 +1229,7 @@ test.describe('el corto, en pantallas anchas', () => {
       expect(await desborde(page)).toBeLessThanOrEqual(0);
     });
 
-    test(`a ${ancho} por ${alto}, el cierre ensena todos los oficios en pantalla dividida, cada uno con su nombre y el negocio de su agente, y su letrero`, async ({
+    test(`a ${ancho} por ${alto}, el cierre ensena todos los oficios en pantalla dividida, cada uno solo con su nombre, y su letrero con sus dos renglones chicos`, async ({
       page,
     }) => {
       // El corto casi entero, con sus fotos: se le da su tiempo.
@@ -987,8 +1252,13 @@ test.describe('el corto, en pantallas anchas', () => {
       const control = await caja(corto.locator('.control__linea'));
       const letrero = corto.locator('.letrero[data-activo]');
       const cierre = CORTO.guion.at(-1);
-      await expect(letrero).toHaveText(`${cierre?.letrero}${CORTO.todos.baja}`);
-      await expect(letrero.locator('.letrero__baja')).toHaveCSS('opacity', '1', { timeout: 15_000 });
+      await expect(letrero).toHaveText(`${cierre?.letrero}${BAJA}`);
+      // Debajo, sus dos renglones chicos, que entran uno tras otro: una oracion en cada uno, con lo que el dueño pidio
+      // decir (a la medida, en WhatsApp, y que vienen mas oficios y profesiones).
+      const renglones = letrero.locator('.letrero__baja span');
+      await expect(renglones).toHaveText(CORTO.todos.baja);
+      expect(CORTO.todos.baja).toHaveLength(2);
+      for (const renglon of await renglones.all()) await expect(renglon).toHaveCSS('opacity', '1', { timeout: 15_000 });
       await asentado(letrero);
       const suLetrero = await caja(letrero);
       let orilla = 0;
@@ -1004,33 +1274,37 @@ test.describe('el corto, en pantallas anchas', () => {
         const foto = franja.locator('.foto__toma');
         await expect(foto).toHaveJSProperty('complete', true);
         expect(await foto.evaluate((img) => /** @type {HTMLImageElement} */ (img).naturalWidth)).toBeGreaterThan(1);
-        // Su nombre y, debajo, de que negocio es su agente: dentro de su franja, encima de los controles y debajo
-        // del letrero.
+        // Su nombre, y nada mas (ya no dice de que negocio es su agente): dentro de su franja, encima de los
+        // controles y debajo del letrero, en un renglon.
         const nombre = franja.locator('.franja__nombre');
-        await expect(nombre).toHaveText(`${oficio.nombre}${CORTO.todos.agenteDe} ${oficio.cartel.charla.negocio}`);
-        const agente = nombre.locator('.franja__agente');
-        await expect(agente).toHaveCSS('opacity', '1', { timeout: 15_000 });
+        await expect(nombre).toHaveText(oficio.nombre);
+        await expect(nombre).toHaveCSS('opacity', '1', { timeout: 15_000 });
         await asentado(nombre);
         const suNombre = await caja(nombre);
-        const suAgente = await caja(agente);
-        expect(suAgente.arriba).toBeGreaterThanOrEqual(suNombre.arriba + 8);
-        for (const rotulo of [suNombre, suAgente]) {
-          expect(rotulo.izquierda).toBeGreaterThanOrEqual(suCaja.izquierda);
-          expect(rotulo.derecha).toBeLessThanOrEqual(suCaja.derecha);
-          expect(rotulo.abajo).toBeLessThanOrEqual(control.arriba);
-          expect(rotulo.arriba).toBeGreaterThanOrEqual(suLetrero.abajo);
-        }
-        // Y cabe en un renglon: no se parte ni se corta.
-        expect(suAgente.abajo - suAgente.arriba).toBeLessThanOrEqual(26);
+        expect(suNombre.izquierda).toBeGreaterThanOrEqual(suCaja.izquierda);
+        expect(suNombre.derecha).toBeLessThanOrEqual(suCaja.derecha);
+        expect(suNombre.abajo).toBeLessThanOrEqual(control.arriba);
+        expect(suNombre.arriba).toBeGreaterThanOrEqual(suLetrero.abajo + 8);
+        expect(suNombre.abajo - suNombre.arriba).toBeLessThanOrEqual(26);
+        await expect(franja).not.toContainText(oficio.cartel.charla.negocio);
       }
+      await expect(capa.getByText(/agente de/i)).toHaveCount(0);
       expect(Math.abs(orilla - ancho)).toBeLessThanOrEqual(4);
-      // El letrero, con su renglon chico debajo, cabe entre la barra y los nombres.
+      // El letrero, con sus renglones chicos debajo, cabe entre la barra y los nombres.
       expect(suLetrero.arriba).toBeGreaterThanOrEqual(barra.abajo);
       expect(suLetrero.izquierda).toBeGreaterThanOrEqual(0);
       expect(suLetrero.derecha).toBeLessThanOrEqual(ancho);
-      const baja = await caja(letrero.locator('.letrero__baja'));
-      expect(baja.arriba).toBeGreaterThan(suLetrero.arriba + 20);
-      expect(baja.derecha).toBeLessThanOrEqual(ancho);
+      // Cada oracion va en su renglon, entera (no se parte), una debajo de la otra, y ninguna se sale a lo ancho.
+      let debajoDe = suLetrero.arriba + 20;
+      for (const renglon of await renglones.all()) {
+        const suyo = await caja(renglon);
+        expect(suyo.arriba).toBeGreaterThan(debajoDe);
+        expect(suyo.izquierda).toBeGreaterThanOrEqual(suLetrero.izquierda);
+        expect(suyo.derecha).toBeLessThanOrEqual(ancho);
+        const letra = await renglon.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
+        expect(suyo.abajo - suyo.arriba).toBeLessThanOrEqual(letra * 1.6);
+        debajoDe = suyo.abajo - 1;
+      }
       expect(await desborde(page)).toBeLessThanOrEqual(0);
     });
   }
@@ -1055,9 +1329,12 @@ test.describe('el corto, en pantallas anchas', () => {
       await hastaElCuadro(page, corto, 'agente');
       const escena = corto.locator('[data-escenas="calida"] [data-escena]').filter({ visible: true });
       await expect(escena).toHaveAttribute('data-escena', oficio.clave);
-      // Las piezas de la conversacion: el mensaje, lo que contesto (y de donde lo saco), el pago, el papel y su sello.
+      // Las piezas de la conversacion: donde pasa, el mensaje, lo que contesto (y de donde lo saco), el pago, el papel y
+      // su sello.
       const trato = escena.locator('.trato');
-      const piezas = trato.locator('.dice, .trato__fuente, .pago, .hizo, .sello').filter({ visible: true });
+      const piezas = trato
+        .locator('.trato__canal, .dice, .trato__fuente, .pago, .hizo, .sello')
+        .filter({ visible: true });
       for (const pieza of await piezas.all()) await expect(pieza).toHaveCSS('opacity', '1', { timeout: 20_000 });
       for (const [ancho, alto] of RECORTADAS) {
         const dice = `a ${ancho} por ${alto}`;

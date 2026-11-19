@@ -32,13 +32,12 @@ export const CARTEL = 'cartel';
 
 /** En que parte del momento de la avalancha el contador ya llego a su tope: lo demas lo deja leerse. */
 const LLENA_EN = 0.8;
-/** Desde que punto de su recorrido la raya del barrido ya se ve en la pantalla (arranca fuera, a la izquierda). */
-const ENTRA_EN = 0.18;
 /**
- * En que parte del momento del barrido la raya ya termino de cruzar: lo que queda del momento deja ver lo que
- * destapo, con su letrero, antes de que entre la marca.
+ * En que parte del momento del barrido la raya de luz ya termino de cruzar la pantalla: lo que queda del momento deja
+ * ver lo que destapo, con su letrero, antes de que entre la marca. A la raya la mueve el navegador (una animacion de
+ * los estilos); aqui solo se dice cuanto de su momento se lleva.
  */
-export const CRUZA_EN = 0.72;
+export const CRUZA_EN = 0.8;
 
 /**
  * El guion, como viaja escrito en la pagina: "presion:2600 vibra:2800". Lo que no se entiende, o no dura nada, se
@@ -137,25 +136,12 @@ export function sinContestar(parte, { base, tope }) {
 }
 
 /**
- * Por donde va la raya de luz del barrido: arranca suave, cruza casi parejo y frena suave. De 0 (todavia no entra) a
- * 1 (ya salio). Va fuera de la pantalla en las dos puntas, asi que se le ve cruzar casi todo el tiempo que cruza; y
- * termina de cruzar antes de que el momento acabe (CRUZA_EN).
- * @param {number} parte  de 0 a 1, cuanto lleva el momento del barrido
+ * Lo que tarda la raya de luz en cruzar la pantalla, en milisegundos: la parte de su momento que dice CRUZA_EN.
+ * @param {number} dura  lo que dura el momento del barrido
  * @returns {number}
  */
-export function barrido(parte) {
-  const t = Math.min(1, Math.max(0, parte) / CRUZA_EN);
-  return 0.5 * t + 0.25 * (1 - Math.cos(Math.PI * t));
-}
-
-/**
- * Cuanto se lleva la raya de luz lo que va barriendo: nada mientras todavia no entra a la pantalla y, desde ahi,
- * parejo hasta 1. Asi lo viejo se hace a un lado detras de la raya, nunca delante de ella.
- * @param {number} va  de 0 a 1, por donde va la raya (lo que devuelve barrido)
- * @returns {number}
- */
-export function arrastre(va) {
-  return Math.min(1, Math.max(0, va - ENTRA_EN) / (1 - ENTRA_EN));
+export function cruza(dura) {
+  return Math.round(Math.max(0, dura) * CRUZA_EN);
 }
 
 /**

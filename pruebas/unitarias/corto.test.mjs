@@ -6,11 +6,10 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   andar,
-  arrastre,
-  barrido,
   CARTEL,
   CRUZA_EN,
   corridos,
+  cruza,
   duracion,
   empiezaEn,
   entradaDeLaToma,
@@ -135,29 +134,83 @@ test('los mensajes sin contestar suben de la base al tope y ahi se quedan', () =
   }
 });
 
-test('la raya del barrido va de un lado al otro sin regresar, y termina de cruzar antes de que acabe su momento', () => {
-  assert.equal(barrido(0), 0);
-  // A media cruzada va a media pantalla.
-  assert.equal(barrido(CRUZA_EN / 2), 0.5);
-  // Ya cruzo: lo que queda del momento deja ver lo que destapo, con su letrero.
+test('la raya del barrido termina de cruzar antes de que acabe su momento: tarda unos 2.4 segundos y deja leer lo que destapo', () => {
+  // Cruza en una parte de su momento: lo que queda deja ver lo que destapo, con su letrero.
   assert.ok(CRUZA_EN > 0.5 && CRUZA_EN < 0.9);
-  assert.equal(barrido(CRUZA_EN), 1);
-  assert.equal(barrido(1), 1);
-  assert.equal(barrido(-3), 0);
-  assert.equal(barrido(3), 1);
-  let anterior = 0;
-  for (let parte = 0; parte <= 1; parte += 0.02) {
-    assert.ok(barrido(parte) >= anterior, `en ${parte}`);
-    anterior = barrido(parte);
-  }
+  assert.equal(cruza(1000), 1000 * CRUZA_EN);
+  assert.equal(cruza(0), 0);
+  assert.equal(cruza(-500), 0);
+  assert.ok(Number.isInteger(cruza(3333)), 'en milisegundos enteros');
+  // Con el guion de la pagina: unos 2.4 segundos de cruzada y, despues, medio segundo o mas con todo ya destapado.
+  const dura = GUION.find((momento) => momento.clave === 'barrido')?.dura ?? 0;
+  assert.ok(cruza(dura) >= 2200 && cruza(dura) <= 2600, `la raya cruza en ${cruza(dura)} ms`);
+  assert.ok(dura - cruza(dura) >= 500, `despues de cruzar quedan ${dura - cruza(dura)} ms`);
 });
 
-test('la raya no se lleva nada de lado mientras todavia no entra a la pantalla', () => {
-  assert.equal(arrastre(0), 0);
-  assert.equal(arrastre(0.18), 0);
-  assert.ok(arrastre(0.5) > 0 && arrastre(0.5) < 1);
-  assert.equal(arrastre(1), 1);
-  assert.equal(arrastre(4), 1);
+/**
+ * Lo que declara una regla de los estilos: el cuerpo de la primera que lleva ese selector, tal cual esta escrito.
+ * @param {string} estilos
+ * @param {string} selector
+ */
+function regla(estilos, selector) {
+  const empieza = estilos.indexOf(`${selector} {`);
+  return empieza < 0 ? '' : estilos.slice(empieza + selector.length + 2, estilos.indexOf('}', empieza));
+}
+
+test('al barrido lo mueve el navegador: una animacion de puro transform, con arranque y frenado suaves, que respeta la pausa; el codigo no mueve nada cuadro por cuadro', async () => {
+  const estilos = await readFile(path.join(FUENTE, 'estilos', 'corto.css'), 'utf8');
+  const vista = await readFile(path.join(FUENTE, 'js', 'corto-vista.js'), 'utf8');
+  const BARRE = '.corto[data-viva] .corto__cine[data-momento="barrido"]';
+  // La caja de lo de antes y la raya cruzan juntas; el contenido de la caja, al reves. Las tres con la misma curva
+  // (la de la camara: arranca y frena suave), lo que dice el codigo que tardan (--cruza) y la marcha del corto: con
+  // la pausa, o con la pestana escondida, se detienen donde iban.
+  for (const [capa, animacion] of [
+    ['.corto__antes', 'barre'],
+    ['.corto__antes-dentro', 'destapa'],
+    ['.corto__carro', 'barre'],
+  ]) {
+    assert.ok(
+      regla(estilos, `${BARRE} ${capa}`).includes(`${animacion} var(--cruza, 2400ms) var(--camara) both var(--marcha)`),
+      `${capa} se mueve con la animacion "${animacion}"`,
+    );
+  }
+  assert.match(estilos, /--camara: cubic-bezier\(0\.65, 0, 0\.35, 1\);/);
+  // La raya, ademas, entra y sale fundiendose: su luz se enciende y se apaga con la misma cruzada.
+  assert.ok(regla(estilos, `${BARRE} .corto__carro`).includes('brilla var(--cruza, 2400ms) linear both var(--marcha)'));
+  // Lo que animan: solo transform (y la luz de la raya, solo opacity). La caja y su contenido recorren lo mismo, una
+  // a la derecha y el otro a la izquierda, con la misma inclinacion al reves: en la pantalla, lo de antes no se
+  // mueve, ni se arrastra, ni se inclina.
+  /** @param {string} nombre */
+  const cuadros = (nombre) => new RegExp(`@keyframes ${nombre} \\{([\\s\\S]*?)\\n\\}`).exec(estilos)?.[1] ?? '';
+  /** @param {string} texto  las propiedades que declara, sin repetir */
+  const propiedades = (texto) => [...new Set([...texto.matchAll(/^\s+([a-z-]+):/gm)].map(([, nombre]) => nombre))];
+  assert.deepEqual(propiedades(cuadros('barre')), ['transform']);
+  assert.deepEqual(propiedades(cuadros('destapa')), ['transform']);
+  assert.deepEqual(propiedades(cuadros('brilla')), ['opacity']);
+  assert.ok(cuadros('barre').includes('transform: translateX(0) skewX(-5deg);'));
+  assert.ok(cuadros('barre').includes('transform: translateX(var(--recorre)) skewX(-5deg);'));
+  assert.ok(cuadros('destapa').includes('transform: skewX(5deg) translateX(0);'));
+  assert.ok(cuadros('destapa').includes('transform: skewX(5deg) translateX(calc(-1 * var(--recorre)));'));
+  // Lo que recorren va en medidas de la ventana, no de su caja: las dos capas recorren exactamente lo mismo.
+  assert.match(estilos, /--recorre: calc\(100vw \+ 2 \* var\(--vuelo\)\);/);
+  // Dentro de lo que se mueve no hay nada pesado: el velo del celular es un color plano (lo de atras se desenfoca
+  // por su cuenta, desde la avalancha), y la escena fria se queda quieta.
+  assert.doesNotMatch(regla(estilos, '.telefono::before'), /backdrop-filter|filter:/);
+  assert.match(
+    regla(estilos, '.corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .escenas--fria .foto'),
+    /filter: blur\(/,
+  );
+  assert.match(regla(estilos, `${BARRE} .escenas--fria .foto__vivo`), /animation-play-state: paused;/);
+  // Y el codigo de la pagina ya no mueve nada del barrido: ni corre capas, ni las inclina, ni les escribe estilos. Lo
+  // unico que les dice es cuanto tarda la cruzada.
+  const codigo = vista.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.doesNotMatch(codigo, /translateX|skewX|corto-antes|corto-carro|barrer/);
+  assert.match(codigo, /cine\.style\.setProperty\('--cruza', `\$\{cruza\(/);
+  assert.equal(
+    codigo.match(/\.style\.transform\b/g)?.length,
+    2,
+    'el unico transform del codigo es el de la raya de avance',
+  );
 });
 
 test('un punto de la foto se lee en fracciones, y lo que no es un punto no pasa', () => {
@@ -234,36 +287,49 @@ test('la toma viva entra a media pasada, justo para terminar a su hora; si alcan
   assert.ok(termina + fundido + dura >= empiezaEn(GUION, 'todos') + 1400, 'la pasada nueva llega hasta el cierre');
 });
 
-test('el guion de la pagina: siete momentos en su orden, de 26 a 30 segundos, y los letreros de siempre', () => {
+test('el guion de la pagina: siete momentos en su orden, de 26 a 32 segundos, y sus letreros', () => {
   assert.deepEqual(
     GUION.map((momento) => momento.clave),
     MOMENTOS,
   );
   for (const momento of GUION) assert.ok(momento.dura >= 1000, momento.clave);
   const total = duracion(GUION);
-  assert.ok(total >= 26_000 && total <= 30_000, `dura ${total} ms`);
+  assert.ok(total >= 26_000 && total <= 32_000, `dura ${total} ms`);
   const letreros = Object.fromEntries(
     corto.guion.map((/** @type {{ clave: string, letrero: string }} */ m) => [m.clave, m.letrero]),
   );
   assert.deepEqual(letreros, {
     presion: 'Trabajas.',
-    vibra: 'Y tu celular no para de sonar.',
+    vibra: 'Y tu WhatsApp no para de sonar.',
     avalancha: '',
     barrido: 'Despreocúpate',
     marca: '',
     agente: '',
-    todos: 'Cada negocio, su propio agente.',
+    todos: 'Cada negocio tiene su propio agente.',
   });
   assert.equal(corto.marca.frase, 'Deja que uno de nuestros agentes virtuales conteste por ti.');
-  // El cierre: debajo de su letrero va un renglon chico, y cada franja dice de que negocio es su agente.
-  assert.equal(
-    corto.todos.baja,
-    'Se arma con tus servicios, tus precios y tus horarios. Hoy para uñas, dentistas y médicos; pronto, más oficios.',
-  );
-  assert.equal(corto.todos.agenteDe, 'Agente de');
-  for (const texto of [...Object.values(letreros), corto.todos.baja, corto.todos.agenteDe]) {
+  // El cierre: debajo de su letrero van dos renglones chicos, una oracion en cada uno. Dice que el agente va a la
+  // medida de lo que el negocio le da (sus servicios, sus precios y sus horarios), sin prometer mas, y en donde
+  // trabaja; y que vienen mas oficios y profesiones. Como hay mas que leer, el cierre dura seis segundos.
+  assert.deepEqual(corto.todos.baja, [
+    'A la medida de tus servicios, tus precios y tus horarios, en el WhatsApp de tu negocio.',
+    'Hoy para uñas, dentistas y médicos; pronto, más oficios y profesiones.',
+  ]);
+  assert.equal(GUION.at(-1)?.dura, 6000);
+  // Ya no dice "Agente de <negocio>" en cada franja: ni el dato existe.
+  assert.deepEqual(Object.keys(corto.todos), ['baja']);
+  // El renglon chico del cartel dice lo mismo que el cierre. Sus dos espacios duros (escritos como  , a la
+  // vista) tienen juntas "y pronto más": donde no cabe en un renglon se parte despues de "médicos", nunca deja una
+  // "y" colgada.
+  assert.equal(corto.cartel.sobre, 'Uñas, dentistas, médicos y pronto más oficios y profesiones');
+  // La aplicacion donde trabaja el agente se dice con su nombre, escrito asi: en el letrero de vibra, en el cierre y
+  // en el rotulo de la conversacion del agente (uno solo, comun a todos los oficios).
+  assert.equal(corto.canal, 'WhatsApp');
+  for (const texto of [...Object.values(letreros), ...corto.todos.baja, corto.cartel.sobre, corto.canal]) {
     assert.doesNotMatch(String(texto), /asistente|—/i, String(texto));
+    for (const escrita of String(texto).match(/whatsapp/gi) ?? []) assert.equal(escrita, 'WhatsApp', String(texto));
   }
+  for (const texto of [letreros.vibra, corto.todos.baja[0], corto.canal]) assert.ok(texto.includes('WhatsApp'), texto);
 });
 
 test('el momento del agente dura lo que tarda su conversacion en entrar, paso a paso, y deja ver el sello un rato', async () => {
@@ -716,31 +782,79 @@ test('el corto trae escrita una escena por oficio: la primera a la vista y las d
   // El video de cada oficio va en su escena fria, y la calida no trae ninguno: el mismo se muda de una a otra.
   const calida = /data-escenas="calida"[\s\S]*?data-escenas="fria"/.exec(cine)?.[0] ?? '';
   assert.doesNotMatch(calida, /<video\b/);
-  // El cierre: una franja por oficio, con su nombre y el negocio de su agente; y su letrero, con el renglon chico.
+  // El cierre: una franja por oficio, solo con su nombre; y su letrero, con sus dos renglones chicos.
   const franjas = cine.match(/<div class="franja"[\s\S]*?<\/p>/g) ?? [];
   assert.equal(franjas.length, corto.oficios.length);
   for (const [lugar, franja] of franjas.entries()) {
     const oficio = corto.oficios[lugar];
     assert.ok(franja.includes(` data-franja="${oficio.clave}" data-persona="${oficio.mira.dePie}"`), oficio.clave);
     assert.ok(franja.includes(`-trabajo-720.avif`), `${oficio.clave}: su foto de pie`);
-    assert.ok(
-      franja.includes(
-        `<p class="franja__nombre">${oficio.nombre}<small class="franja__agente">${corto.todos.agenteDe} ${oficio.cartel.charla.negocio}</small></p>`,
-      ),
-      `${oficio.clave}: su nombre y el negocio de su agente`,
-    );
+    assert.ok(franja.endsWith(`<p class="franja__nombre">${oficio.nombre}</p>`), `${oficio.clave}: solo su nombre`);
+    // El negocio de ejemplo de cada oficio ya no sale en el cierre: vive en el celular del cartel.
+    assert.ok(!franja.includes(oficio.cartel.charla.negocio), `${oficio.clave}: su franja nombra un negocio`);
   }
-  const negocios = corto.oficios.map((/** @type {any} */ oficio) => oficio.cartel.charla.negocio);
-  assert.equal(new Set(negocios).size, negocios.length, 'cada agente es de un negocio distinto');
+  // "Agente de <negocio>" confundia: el inicio ya no dice "Agente de" nada, y en toda la pagina ningun negocio de
+  // ejemplo lleva ese renglon (mas abajo si se lee, y esta bien, "un agente de WhatsApp").
+  const inicio = /<section class="corto"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+  assert.ok(inicio.includes(cine), 'las capas del corto son parte del inicio');
+  assert.doesNotMatch(inicio, /agente de\b/i);
+  for (const oficio of corto.oficios) {
+    assert.ok(!html.includes(`Agente de ${oficio.cartel.charla.negocio}`), `${oficio.clave}: "Agente de" su negocio`);
+  }
+  assert.doesNotMatch(html, /franja__agente/);
   const cierre = corto.guion.at(-1);
   assert.equal(cierre.clave, 'todos', 'el cierre es el ultimo momento');
+  const [medida, oficios] = corto.todos.baja;
   assert.ok(
     cine.includes(
-      `<p class="letrero" data-letrero="todos">${cierre.letrero}<small class="letrero__baja">${corto.todos.baja}</small></p>`,
+      `<p class="letrero" data-letrero="todos">${cierre.letrero}<small class="letrero__baja"><span>${medida}</span> <span>${oficios}</span></small></p>`,
     ),
-    'el letrero del cierre lleva debajo su renglon chico',
+    'el letrero del cierre lleva debajo sus dos renglones chicos, una oracion en cada uno',
   );
-  assert.equal(cine.match(/class="letrero__baja"/g)?.length, 1, 'solo el cierre lleva renglon chico');
+  assert.equal(cine.match(/class="letrero__baja"/g)?.length, 1, 'solo el cierre lleva renglones chicos');
+});
+
+test('la pagina dice "WhatsApp" con la palabra, nunca con un logotipo: en el inicio no hay imagen ni dibujo que diga serlo', async () => {
+  const { archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
+  const html = archivos.get('index.html')?.toString('utf8') ?? '';
+  const seccion = /<section class="corto"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+  assert.ok(seccion, 'la seccion del inicio');
+  // La palabra, escrita asi, en sus tres lugares del corto: el letrero de vibra, el cierre y, una vez por oficio, el
+  // rotulo de la conversacion del agente, antes del mensaje que entro.
+  const cine = seccion.slice(seccion.indexOf('class="corto__cine"'));
+  assert.ok(cine.includes('<p class="letrero" data-letrero="vibra">Y tu WhatsApp no para de sonar.</p>'));
+  assert.ok(cine.includes('en el WhatsApp de tu negocio.</span>'));
+  assert.equal(
+    cine.match(/<div class="trato"><p class="trato__canal">WhatsApp<\/p><p class="dice">/g)?.length,
+    corto.oficios.length,
+    'el rotulo de la conversacion, una vez por oficio y arriba del mensaje que entro',
+  );
+  // En toda la pagina, cada vez que se nombra va escrita igual.
+  const texto = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ');
+  const nombradas = texto.match(/whats\s?app/gi) ?? [];
+  assert.ok(nombradas.length >= 5, 'la prueba esta leyendo la pagina');
+  for (const escrita of nombradas) assert.equal(escrita, 'WhatsApp');
+  // Las reglas de marca de Meta no dejan usar una imagen parecida a su logotipo: solo el oficial, sin cambios. Aqui
+  // no se usa ninguno. Ninguna imagen, dibujo o fuente de imagen del inicio se llama, se describe ni se anuncia como
+  // WhatsApp (ni "wa", ni su globo verde con telefono).
+  const SE_DICE_LOGO = /whats\s?app|\bwa[-_]|[-_/]wa\b|globo|logo(tipo)?[-_ ]?(de )?(wa|whats)/i;
+  const dibujos = [
+    ...(seccion.match(/<svg\b[\s\S]*?<\/svg>/g) ?? []),
+    ...(seccion.match(/<(img|source|picture|image|use|object|embed|video)\b[^>]*>/g) ?? []),
+  ];
+  assert.ok(dibujos.length >= 20, 'la prueba esta leyendo los dibujos y las fotos del inicio');
+  for (const dibujo of dibujos) assert.doesNotMatch(dibujo, SE_DICE_LOGO, dibujo.slice(0, 160));
+  // Tampoco como fondo: los estilos del inicio no traen ninguna imagen que se llame asi, y el rotulo de la
+  // conversacion es solo texto, con la letra de lo que lo rodea.
+  const estilos = await readFile(path.join(FUENTE, 'estilos', 'corto.css'), 'utf8');
+  for (const [, fondo = ''] of estilos.matchAll(/url\(([^)]*)\)/g)) assert.doesNotMatch(fondo, SE_DICE_LOGO, fondo);
+  const rotulo = regla(estilos, '.trato__canal');
+  assert.ok(rotulo, 'el rotulo de la conversacion tiene su estilo');
+  assert.doesNotMatch(
+    rotulo + regla(estilos, '.trato__canal,\n.trato__fuente'),
+    /background|content:|font-family|text-transform/,
+  );
+  assert.doesNotMatch(estilos, /\.trato__canal::(before|after)/);
 });
 
 test('el corto viaja escrito en la pagina: la marca en su halo, la cuenta de cada celular y lo que hizo el agente con su pago y su sello', async () => {
@@ -771,6 +885,7 @@ test('el corto viaja escrito en la pagina: la marca en su halo, la cuenta de cad
     const oficio = corto.oficios[lugar];
     const texto = trato.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
     for (const dice of [
+      corto.canal,
       oficio.trato.quien,
       oficio.trato.responde,
       oficio.trato.fuente,
@@ -783,9 +898,10 @@ test('el corto viaja escrito en la pagina: la marca en su halo, la cuenta de cad
     }
     if (oficio.trato.texto) assert.ok(texto.includes(oficio.trato.texto), `${oficio.clave}: el mensaje que entro`);
     assert.equal(trato.includes('class="dice__foto"'), oficio.trato.foto, `${oficio.clave}: la foto`);
-    // El orden de lo que entra: el mensaje, lo que contesto el agente (y de donde lo saco), el pago, y el papel
-    // con su renglon de la agenda y su sello.
+    // El orden de lo que entra: donde pasa la conversacion y el mensaje, lo que contesto el agente (y de donde lo
+    // saco), el pago, y el papel con su renglon de la agenda y su sello.
     const orden = [
+      'class="trato__canal"',
       'class="dice"',
       'class="dice dice--agente"',
       'class="trato__fuente"',

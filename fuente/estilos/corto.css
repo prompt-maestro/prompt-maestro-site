@@ -5,7 +5,7 @@
    agente contesta, cobra el anticipo y agenda. En pantallas anchas su imagen son las tres fotos de "su tiempo".
    Tambien es lo que se lee sin JavaScript, con movimiento reducido y en pantallas muy bajitas.
 
-   El corto es una pelicula de unos 28 segundos que corre sola al abrir la pagina en una pantalla ancha (900 o mas, y
+   El corto es una pelicula de unos 30 segundos que corre sola al abrir la pagina en una pantalla ancha (900 o mas, y
    mas ancha que alta) y, al terminar, deja a la vista el cartel, que ya estaba debajo. Cuenta UN oficio por visita, a
    pantalla completa. Son capas opacas encima: la escena de ese oficio con luz fria, su celular que vibra, la pantalla
    que se llena de avisos, el barrido de luz, la marca, lo que hizo el agente con luz calida y, para cerrar, todos los
@@ -39,8 +39,10 @@
   --llega-pago: 3000ms;
   --llega-papel: 4000ms;
   --cae-sello: 4900ms;
-  /* A que altura va el nombre de cada franja en el cierre: libra los controles, que miden 44 de alto. */
-  --pie-de-franja: calc(clamp(13px, 3.2 * var(--svh), 29px) + 54px);
+  /* A que altura quedan los controles (su orilla de abajo) y, en el cierre, el nombre de cada franja, que los libra:
+     miden 44 de alto. */
+  --pie-de-control: clamp(13px, 3.2 * var(--svh), 29px);
+  --pie-de-franja: calc(var(--pie-de-control) + 54px);
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -94,7 +96,7 @@
 }
 
 .corto .sobre {
-  max-width: 22em;
+  max-width: 31em;
   font-size: 0.6875rem;
   line-height: 1.6;
   letter-spacing: 0.24em;
@@ -109,6 +111,14 @@
   line-height: 1;
   letter-spacing: -0.04em;
   white-space: nowrap;
+}
+
+/* En los celulares mas angostos sus letras se arriman un poco: asi sigue en dos renglones, y el segundo ("y pronto
+   mas oficios y profesiones", que va junto) cabe entero. */
+@media (max-width: 359px) {
+  .corto .sobre {
+    letter-spacing: 0.14em;
+  }
 }
 
 /* En celular, si alguien fuerza el espaciado de las letras, el titulo se parte en vez de salirse de la pantalla.
@@ -659,7 +669,7 @@
 .control {
   position: absolute;
   right: var(--margen);
-  bottom: clamp(13px, 3.2 * var(--svh), 29px);
+  bottom: var(--pie-de-control);
   left: var(--margen);
   z-index: 3;
   align-items: center;
@@ -804,6 +814,11 @@ html.con-corto .corto[data-cuadro="cartel"] .control {
    reducido, solo si ella lo pidio; en ventanas muy bajitas no cabe y queda el cartel.
    --------------------------------------------------------------------------------------------------------------- */
 .corto__cine {
+  /* El barrido: lo que la orilla de lo de antes (y la raya de luz, con ella) arranca y termina fuera de la pantalla
+     (lo que pide su inclinacion, y un poco mas), y todo lo que recorre. Va en medidas de la ventana, no de su caja:
+     asi la caja y su contenido recorren exactamente lo mismo. */
+  --vuelo: calc(6 * var(--svh));
+  --recorre: calc(100vw + 2 * var(--vuelo));
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -1215,6 +1230,20 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   line-height: 1.3;
 }
 
+/* Donde pasa la conversacion: la palabra sola, chica y discreta, pegada arriba del mensaje que entro. Nunca un
+   logotipo ni un icono: sus reglas de marca solo dejan usar el oficial, sin cambios. */
+.trato__canal,
+.trato__fuente {
+  color: rgb(245 244 240 / 0.84);
+  font-size: max(0.76em, 0.75rem);
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 8px rgb(var(--papel-rgb) / 0.85);
+}
+
+.trato__canal {
+  margin: 0 0 -0.26em 0.5em;
+}
+
 .dice {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1281,10 +1310,6 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   justify-self: end;
   gap: 0.5em;
   margin: -0.26em 0.4em 0 0;
-  color: rgb(245 244 240 / 0.84);
-  font-size: max(0.76em, 0.75rem);
-  letter-spacing: 0.01em;
-  text-shadow: 0 1px 8px rgb(var(--papel-rgb) / 0.85);
 }
 
 .ficha {
@@ -1372,8 +1397,10 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 }
 
 /* En una ventana angosta el sello no cabe a un lado de la frase: baja a la orilla del papel y la frase toma todo el
-   ancho. Y el renglon de donde salio la respuesta se guarda: ahi apretaria la conversacion. */
+   ancho. Y los dos renglones chicos (donde pasa la conversacion y de donde salio la respuesta) se guardan: ahi la
+   apretarian. */
 @container (max-width: 25em) {
+  .trato__canal,
   .trato__fuente {
     display: none;
   }
@@ -1406,16 +1433,18 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   font-weight: 700;
 }
 
-/* Lo de antes del barrido: la escena fria con su celular. Va en una caja mas ancha que la pantalla, que el codigo
-   corre hacia la derecha mientras su contenido se corre igual hacia la izquierda: lo de adentro no se mueve y la
-   orilla (inclinada, como la raya de luz) lo va destapando. Solo transform. */
+/* Lo de antes del barrido: la escena fria con su celular. Va en una caja apenas mas ancha que la pantalla, que en el
+   barrido se corre hacia la derecha mientras su contenido se corre igual hacia la izquierda: lo de adentro no se
+   mueve y la orilla (inclinada, como la raya de luz) lo va destapando. Lo mueve el navegador, con una animacion de
+   puro transform (mas abajo, en "El movimiento"): el codigo no toca nada cuadro por cuadro. La orilla arranca y
+   termina fuera de la pantalla, lo que dice --vuelo. */
 .corto__antes,
 .corto__carro {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -20vw;
-  width: calc(100% + 40vw);
+  left: calc(-1 * var(--vuelo));
+  width: calc(100% + 2 * var(--vuelo));
 }
 
 .corto__antes {
@@ -1430,69 +1459,79 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
 .corto__frio {
   position: absolute;
-  inset: 0 20vw;
+  inset: 0 var(--vuelo);
 }
 
-/* La raya de luz azul que cruza, con su estela. */
+/* La raya de luz azul que cruza: viaja con la orilla de lo de antes. */
 .corto__carro {
   z-index: 5;
   visibility: hidden;
   pointer-events: none;
 }
 
+/* Su nucleo es delgado y su resplandor, ancho y suave. */
 .corto__rayo {
   position: absolute;
   top: -6%;
   bottom: -6%;
-  left: -5px;
-  width: 10px;
-  border-radius: 10px;
+  left: -1.5px;
+  width: 3px;
+  border-radius: 3px;
   background: #fff;
   box-shadow:
-    0 0 22px 6px rgb(132 151 255 / 0.95),
-    0 0 90px 30px rgb(63 92 245 / 0.75);
+    0 0 9px 1px rgb(214 222 255 / 0.95),
+    0 0 30px 5px rgb(132 151 255 / 0.72),
+    0 0 110px 26px rgb(63 92 245 / 0.4);
 }
 
+/* Y su estela, larga, se desvanece detras de ella, sobre lo que acaba de destapar; delante le va un poco de luz. */
 .corto__estela {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
-  width: 24%;
-  background: linear-gradient(90deg, rgb(120 142 255 / 0.5), rgb(88 115 255 / 0));
+  left: -40vw;
+  width: 52vw;
+  background: linear-gradient(
+    90deg,
+    rgb(88 115 255 / 0),
+    rgb(88 115 255 / 0.07) 40%,
+    rgb(120 142 255 / 0.3) 76.9%,
+    rgb(88 115 255 / 0.08) 90%,
+    rgb(88 115 255 / 0)
+  );
 }
 
-/* La avalancha: UN celular grande, con su marco, que sale del celular de la mesa; su pantalla de bloqueo se llena
-   de avisos. */
+/* La avalancha: UN celular grande, con su marco, al centro de la pantalla: sale del celular de la mesa y su pantalla
+   de bloqueo se llena de avisos. Su caja es lo que queda entre la barra de arriba y la raya de los controles. */
 .telefono {
+  --techo: var(--barra-alto);
+  --piso: calc(var(--pie-de-control) + 23px);
   position: absolute;
   inset: 0;
   z-index: 4;
   display: grid;
-  align-items: center;
-  justify-items: start;
+  place-items: center;
+  padding: var(--techo) 0 var(--piso);
   visibility: hidden;
 }
 
-/* El velo de noche que desenfoca lo de atras. Se funde el solo, no con su capa: un desenfoque de fondo no ve nada
-   mientras lo que lo contiene se esta fundiendo, y apareceria de golpe al final. */
+/* El velo de noche sobre lo de atras, que se desenfoca por su cuenta (mas abajo): un color plano, sin desenfoque de
+   fondo. Asi, cuando la raya del barrido destapa todo esto, dentro de lo que se mueve no hay nada pesado. */
 .telefono::before {
   position: absolute;
   inset: 0;
   background: rgb(8 9 12 / 0.62);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
   content: "";
   opacity: 0;
   transition: opacity 700ms var(--seda);
 }
 
-/* El celular mide lo que le deja el alto de la pantalla, y todo lo de adentro (en "em") se achica con el. Va encima
-   del celular de la mesa, sin salirse de la pantalla. */
+/* El celular es tan grande como cabe, con su aire, entre la barra y los controles, y todo lo de adentro (en "em")
+   se achica con el. */
 .pantalla {
-  --marco: clamp(300px, min(74 * var(--svh), 60vw), 760px);
+  --aire: clamp(10px, 2.2 * var(--svh), 24px);
+  --marco: clamp(300px, min(100cqh - var(--techo) - var(--piso) - 2 * var(--aire), 60vw), 760px);
   position: relative;
-  left: clamp(16px, var(--celular-x) - var(--marco) / 4, 100cqw - var(--marco) / 2 - 16px);
   display: grid;
   align-content: start;
   gap: 0.4375em;
@@ -1726,14 +1765,14 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 }
 
 /* Sobre cada franja, la luz calida que le cae de arriba y, abajo, la noche que sube hasta media franja: ahi se
-   leen su nombre, su agente y el letrero del cierre. */
+   leen su nombre y el letrero del cierre. */
 .franja::after {
   background:
     linear-gradient(0deg, rgb(var(--papel-rgb) / 0.9), rgb(var(--papel-rgb) / 0.66) 30%, rgb(var(--papel-rgb) / 0) 64%),
     radial-gradient(90% 70% at 78% 12%, rgb(255 216 160 / 0.26), rgb(255 216 160 / 0) 70%);
 }
 
-/* El nombre de cada oficio, al pie de su franja, y debajo el negocio de su agente: cada negocio tiene el suyo. */
+/* El nombre de cada oficio, al pie de su franja. */
 .franja__nombre {
   position: absolute;
   right: 16px;
@@ -1748,17 +1787,6 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     0 1px 2px rgb(0 0 0 / 0.55),
     0 1px 10px rgb(0 0 0 / 0.7);
   text-transform: uppercase;
-}
-
-.franja__agente {
-  display: block;
-  margin-top: 0.4rem;
-  color: rgb(245 244 240 / 0.82);
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.3;
-  letter-spacing: 0.01em;
-  text-transform: none;
 }
 
 /* En la primera franja el nombre arranca en la misma linea que el logotipo y que el letrero (en pantallas mas
@@ -1813,10 +1841,10 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   }
 }
 
-/* El del final es el cierre: va en un renglon, encima del nombre de las franjas, y debajo lleva un renglon chico
-   que dice mas. */
+/* El del final es el cierre: va en un renglon, encima del nombre de las franjas, y debajo lleva dos renglones
+   chicos que dicen mas: una oracion en cada uno. */
 .letrero[data-letrero="todos"] {
-  bottom: calc(var(--pie-de-franja) + 4.1rem);
+  bottom: calc(var(--pie-de-franja) + 2.9rem);
   max-width: calc(100% - 2 * var(--margen));
   font-size: clamp(2rem, min(3.7vw, 8 * var(--svh)), 4.5rem);
   line-height: 1.06;
@@ -1824,14 +1852,16 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
 .letrero__baja {
   display: block;
-  max-width: 34em;
   margin-top: 0.7em;
   color: rgb(245 244 240 / 0.9);
   font-size: clamp(0.9375rem, min(1.25vw, 2.8 * var(--svh)), 1.5rem);
   font-weight: 400;
   line-height: 1.4;
   letter-spacing: 0;
-  text-wrap: balance;
+}
+
+.letrero__baja span {
+  display: block;
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
@@ -1850,6 +1880,13 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
 .corto__cine:is([data-momento="vibra"], [data-momento="avalancha"], [data-momento="barrido"]) .fantasma {
   opacity: 0.6;
+}
+
+/* avalancha: detras del celular grande la foto se va de foco (la noche que la cubre es el velo del celular). Es un
+   desenfoque de la foto, no del fondo de otra capa: en el barrido la foto ya esta quieta y sin su toma viva, y la
+   raya la destapa sin que haya nada que volver a calcular. Se mide en la pantalla: la foto va acercada (--z). */
+.corto__cine:is([data-momento="avalancha"], [data-momento="barrido"]) .escenas--fria .foto {
+  filter: blur(calc(12px / var(--z)));
 }
 
 /* agente: en una ventana menos ancha que 16:9 la foto se recorta a lo ancho y, con la camara en medio, la
@@ -1922,7 +1959,9 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   transition: none;
 }
 
-.corto__cine[data-momento="barrido"] :is(.corto__antes, .corto__antes-dentro, .corto__carro) {
+/* Las tres capas del barrido estan listas desde la avalancha: cuando la raya arranca, el navegador ya las tiene. */
+.corto__cine:is([data-momento="avalancha"], [data-momento="barrido"])
+  :is(.corto__antes, .corto__antes-dentro, .corto__carro) {
   will-change: transform;
 }
 
@@ -1952,6 +1991,11 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   transition: transform 2000ms var(--camara);
 }
 
+/* Y se va de foco al salir el celular grande; al volver a empezar, regresa de golpe. */
+.corto__cine[data-momento="avalancha"] .escenas--fria .foto {
+  transition: filter 700ms var(--seda);
+}
+
 .corto[data-viva]
   .corto__cine:is(
     [data-momento="presion"],
@@ -1964,11 +2008,35 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   animation: acerca 15000ms linear both var(--marcha);
 }
 
+/* En el barrido lo de antes se queda quieto: la raya lo destapa limpio, sin arrastrarlo ni inclinarlo. La que
+   respira, muy poco, es la escena calida que aparece debajo. */
+.corto[data-viva] .corto__cine[data-momento="barrido"] .escenas--fria .foto__vivo {
+  animation-play-state: paused;
+}
+
 .corto[data-viva]
   .corto__cine:is([data-momento="barrido"], [data-momento="marca"], [data-momento="agente"], [data-momento="todos"])
   .escenas--calida
   .foto__vivo {
   animation: acerca 22000ms linear both var(--marcha);
+}
+
+/* El barrido lo mueve el navegador: la caja de lo de antes y la raya recorren la pantalla juntas, y el contenido de
+   la caja recorre lo mismo al reves, asi que no se mueve. Arrancan y frenan suave (la curva de la camara) y tardan
+   lo que dice el codigo (--cruza: una parte de su momento); con la pausa se detienen donde iban, como todo lo demas.
+   La raya entra y sale fundiendose: nunca aparece ni se corta de golpe en la orilla. */
+.corto[data-viva] .corto__cine[data-momento="barrido"] .corto__antes {
+  animation: barre var(--cruza, 2400ms) var(--camara) both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="barrido"] .corto__antes-dentro {
+  animation: destapa var(--cruza, 2400ms) var(--camara) both var(--marcha);
+}
+
+.corto[data-viva] .corto__cine[data-momento="barrido"] .corto__carro {
+  animation:
+    barre var(--cruza, 2400ms) var(--camara) both var(--marcha),
+    brilla var(--cruza, 2400ms) linear both var(--marcha);
 }
 
 .corto[data-viva] .corto__cine[data-momento="todos"] .franja .foto__vivo {
@@ -2076,18 +2144,18 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   will-change: transform, opacity;
 }
 
-/* En el cierre, el nombre de cada oficio entra despues de su franja, de izquierda a derecha; luego, tambien uno
-   por uno, el negocio de su agente. El renglon chico del letrero entra despues que el. */
+/* En el cierre, el nombre de cada oficio entra despues de su franja, de izquierda a derecha. Los renglones chicos
+   del letrero entran despues que el, uno tras otro. */
 .corto[data-viva] .corto__cine[data-momento="todos"] .franja__nombre {
   animation: sube 900ms var(--seda) calc(var(--n, 0) * 160ms + 500ms) both var(--marcha);
 }
 
-.corto[data-viva] .corto__cine[data-momento="todos"] .franja__agente {
-  animation: sube 800ms var(--seda) calc(var(--n, 0) * 320ms + 1700ms) both var(--marcha);
+.corto[data-viva] .letrero[data-activo] .letrero__baja span {
+  animation: aparece 1000ms var(--seda) 1300ms both var(--marcha);
 }
 
-.corto[data-viva] .letrero[data-activo] .letrero__baja {
-  animation: aparece 1000ms var(--seda) 1300ms both var(--marcha);
+.corto[data-viva] .letrero[data-activo] .letrero__baja span + span {
+  animation-delay: 2100ms;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -2137,11 +2205,47 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   }
 }
 
-/* El celular de la avalancha sale del celular de la mesa: chico y desde abajo. */
+/* El celular de la avalancha sale del celular de la mesa (chico, desde abajo y desde donde este queda) y llega al
+   centro de la pantalla: la mirada, que estaba en el de la mesa, se va con el. */
 @keyframes sale {
   from {
     opacity: 0;
-    transform: translateY(20%) scale(0.5);
+    transform: translate(calc(var(--celular-x) - 50cqw), 20%) scale(0.5);
+  }
+}
+
+/* La caja de lo de antes, y la raya con ella, cruzan la pantalla de izquierda a derecha... */
+@keyframes barre {
+  from {
+    transform: translateX(0) skewX(-5deg);
+  }
+
+  to {
+    transform: translateX(var(--recorre)) skewX(-5deg);
+  }
+}
+
+/* ...y el contenido de la caja hace justo lo contrario: en la pantalla no se mueve. */
+@keyframes destapa {
+  from {
+    transform: skewX(5deg) translateX(0);
+  }
+
+  to {
+    transform: skewX(5deg) translateX(calc(-1 * var(--recorre)));
+  }
+}
+
+/* La luz de la raya: se enciende al entrar y se apaga al salir. */
+@keyframes brilla {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  18%,
+  82% {
+    opacity: 1;
   }
 }
 
@@ -2390,8 +2494,9 @@ html[data-ahorro] .corto:not([data-pedido]) .corto__cine {
   display: none;
 }
 
-/* En una ventana bajita la conversacion del agente va justa: el renglon de donde salio la respuesta se guarda. */
+/* En una ventana bajita la conversacion del agente va justa: sus dos renglones chicos se guardan. */
 @media (max-height: 599px) {
+  .trato__canal,
   .trato__fuente {
     display: none;
   }

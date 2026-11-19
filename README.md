@@ -39,17 +39,31 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   armada. `--previa` arma la versión de revisión y `--comprobar` falla si la carpeta en disco no coincide con la fuente.
 - Los precios no se editan aquí: se copian con `herramientas/sincronizar-planes.mjs`.
 - La primera pantalla es el cartel (título, frase, botones y una imagen) y, solo en pantallas anchas (900 o más, y
-  más anchas que altas), el corto: una película de menos de 30 segundos que corre sola al abrir y, al terminar, deja
+  más anchas que altas), el corto: una película de unos 30 segundos que corre sola al abrir y, al terminar, deja
   a la vista el cartel, que siempre estuvo debajo. En celular y en tableta de pie el corto no existe: se ve el cartel,
   quieto, y no se pide ni un video. El cartel también es lo que se ve sin JavaScript y con movimiento reducido. El
   guion del corto (sus momentos y lo que dura cada uno) y los textos viven en `fuente/datos/corto.json`; qué momento
   toca lo decide `fuente/js/corto.js` y la página la mueve `fuente/js/corto-vista.js`.
-- El corto cuenta UN oficio por visita, a pantalla completa: quien trabaja (con luz fría), su celular que vibra, la
-  pantalla que se llena de avisos, la raya de luz que lo barre, la marca en su halo, lo que hizo su agente (una sola
-  conversación: el mensaje, lo que contestó y de dónde lo sacó, el pago aprobado y el papel con su sello) y, para
-  cerrar, todos los oficios en pantalla dividida, cada uno con el negocio de su agente. El oficio es el mismo que
-  eligió el azar para el cartel; «Ver de nuevo» corre el que sigue en la lista. La página trae escrita una escena por
-  oficio y solo se pinta la que toca: de las demás no se pide ni la foto.
+- El corto cuenta UN oficio por visita, a pantalla completa: quien trabaja (con luz fría), su celular que vibra, un
+  celular grande, al centro de la pantalla, que se llena de avisos, la raya de luz que lo barre, la marca en su
+  halo, lo que hizo su agente (una sola conversación, con su rótulo «WhatsApp»: el mensaje, lo que contestó y de
+  dónde lo sacó, el pago aprobado y el papel con su sello) y, para cerrar, todos los oficios en pantalla dividida,
+  cada uno con su nombre, bajo el letrero del cierre y sus dos renglones (`todos.baja`: una oración en cada uno). El
+  oficio es el mismo que eligió el azar para el cartel; «Ver de nuevo» corre el que sigue en la lista. La página
+  trae escrita una escena por oficio y solo se pinta la que toca: de las demás no se pide ni la foto.
+- A la raya de luz del barrido la mueve el navegador, no el código: es una animación de puro `transform`
+  (`barre` y `destapa`, en `fuente/estilos/corto.css`) que arranca y frena suave y entra y sale fundiéndose. La caja
+  de lo de antes cruza la pantalla con la raya y su contenido recorre lo mismo al revés, así que lo de antes no se
+  mueve: solo se va destapando. Cuánto tarda en cruzar lo dice `fuente/js/corto.js` (`CRUZA_EN`, una parte de su
+  momento) y `corto-vista.js` se lo pasa a los estilos en `--cruza`; con la pausa se detiene como todo lo demás
+  (`--marcha`). Dentro de lo que se mueve no va nada pesado: lo de atrás del celular grande se desenfoca con un
+  `filter` de la foto (no con un desenfoque de fondo) y en el barrido la escena fría se queda quieta.
+- La página dice «WhatsApp» con la palabra, escrita así y con la letra del texto que la rodea. Nunca con un
+  logotipo ni con un icono que se le parezca: las reglas de marca de Meta solo dejan usar el oficial, sin cambios.
+  El rótulo de la conversación del corto es un dato (`canal`), común a todos los oficios.
+- El renglón chico del cartel (`cartel.sobre`) lleva dos espacios duros, escritos a la vista como `\u00a0`: tienen
+  juntas «y pronto más», así donde no cabe en un renglón se parte después de los tres oficios y nunca deja una «y»
+  colgada.
 - El corto se acomoda a la ventana, solo con estilos. En una menos ancha que 16:9 la foto de la escena se recorta a
   lo ancho: cuando llega lo que hizo su agente, la cámara se corre despacio y deja a quien trabaja a la derecha, así
   la conversación cae sobre el fondo y no sobre sus manos. En una casi cuadrada (3 por 2 o menos) el celular acercado

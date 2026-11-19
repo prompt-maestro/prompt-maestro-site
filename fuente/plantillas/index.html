@@ -116,8 +116,8 @@
           </div>
         </div>
 {{/cada}}      </div>
-      <div class="corto__antes" data-corto-antes>
-        <div class="corto__antes-dentro" data-corto-antes-dentro>
+      <div class="corto__antes">
+        <div class="corto__antes-dentro">
           <div class="corto__frio">
             <div class="escenas escenas--fria" data-escenas="fria">
 {{#cada corto.oficios}}              <div class="escena" data-escena="{{clave}}" data-persona="{{mira.persona}}" data-celular="{{mira.celular}}" data-viva="{{mira.viva}}"{{#no @primero}} hidden{{/no}}>
@@ -140,7 +140,7 @@
           </div>
         </div>
       </div>
-      <div class="corto__carro" data-corto-carro><span class="corto__estela"></span><span class="corto__rayo"></span></div>
+      <div class="corto__carro"><span class="corto__estela"></span><span class="corto__rayo"></span></div>
       <div class="corto__marca">
         <div class="halo"><span class="halo__rayos"></span><span class="halo__aura"></span><span class="halo__latido"></span><span class="halo__orbita"></span><span class="halo__disco"></span></div>
         <p class="corto__logo">{{> marca}}</p>
@@ -150,10 +150,10 @@
       <div class="todos">
 {{#cada corto.oficios}}        <div class="franja" data-franja="{{clave}}" data-persona="{{mira.dePie}}">
           <div class="foto"><div class="foto__vivo"><div class="foto__luz">{{> foto-trabajo}}</div></div></div>
-          <p class="franja__nombre">{{nombre}}<small class="franja__agente">{{corto.todos.agenteDe}} {{cartel.charla.negocio}}</small></p>
+          <p class="franja__nombre">{{nombre}}</p>
         </div>
 {{/cada}}      </div>
-{{#cada corto.guion}}{{#si letrero}}      <p class="letrero" data-letrero="{{clave}}">{{letrero}}{{#si cursor}}<span class="cursor"></span>{{/si}}{{#si @ultimo}}<small class="letrero__baja">{{corto.todos.baja}}</small>{{/si}}</p>
+{{#cada corto.guion}}{{#si letrero}}      <p class="letrero" data-letrero="{{clave}}">{{letrero}}{{#si cursor}}<span class="cursor"></span>{{/si}}{{#si @ultimo}}<small class="letrero__baja">{{#cada corto.todos.baja}}<span>{{este}}</span>{{#no @ultimo}} {{/no}}{{/cada}}</small>{{/si}}</p>
 {{/si}}{{/cada}}    </div>
   </section>
 

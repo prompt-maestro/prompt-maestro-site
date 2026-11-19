@@ -107,6 +107,93 @@ test('en pausa el contador de mensajes sin contestar tampoco avanza, y al reanud
   expect(Number(await cuenta.textContent())).toBeGreaterThan(Number(enPausa));
 });
 
+test('en pausa la raya del barrido se queda donde iba, con lo de antes a medio destapar y sin moverse; al reanudar sigue cruzando', async ({
+  page,
+}, info) => {
+  test.skip(!esAncho(info), 'el corto solo corre en pantallas anchas');
+  // Con el corto corriendo el navegador de pruebas va despacio: se le da su tiempo.
+  test.slow();
+  const corto = await abrirCortoDetenido(page);
+  // A la raya la mueve el navegador, en tiempo real: para alcanzarla a media cruzada con cualquier maquina, aqui
+  // cruza mas despacio. (Lo que tarda se lo dice el codigo a los estilos en este mismo dato; lo que de verdad tarda
+  // lo cuida la prueba del barrido.)
+  await corto.locator('[data-corto-cine]').evaluate((cine) => cine.style.setProperty('--cruza', '14000ms'));
+  await hastaElCuadro(page, corto, 'barrido');
+  const pausa = corto.getByRole('button', { name: 'Pausar el video' });
+  /**
+   * Como van las tres capas del barrido (la caja de lo de antes, su contenido y la raya): si sus animaciones estan
+   * detenidas, por donde va cada una y cuanto se ha corrido. Y donde esta en la pantalla el celular de lo de antes.
+   */
+  const barrido = () =>
+    corto.evaluate(async (seccion) => {
+      const capas = ['.corto__antes', '.corto__antes-dentro', '.corto__carro'].map((selector) => {
+        const capa = seccion.querySelector(selector);
+        if (!capa) throw new Error(`falta ${selector}`);
+        return capa;
+      });
+      // Una pausa (o una reanudacion) no queda firme sino hasta el cuadro que sigue: se espera a que cada animacion
+      // este al dia antes de preguntarle por donde va.
+      await Promise.all(capas.flatMap((capa) => capa.getAnimations().map((una) => una.ready.catch(() => undefined))));
+      const celular = [...seccion.querySelectorAll('.pantalla')]
+        .find((una) => una.getClientRects().length > 0)
+        ?.getBoundingClientRect();
+      return {
+        estados: capas.map((capa) =>
+          capa
+            .getAnimations()
+            .map((una) => una.playState)
+            .join(' '),
+        ),
+        va: capas.map((capa) => capa.getAnimations().map((una) => Number(una.currentTime))),
+        corrida: capas.map((capa) => new DOMMatrixReadOnly(getComputedStyle(capa).transform).m41),
+        celular: celular ? [celular.left, celular.top, celular.width, celular.height] : [],
+        ancho: innerWidth,
+      };
+    });
+  /**
+   * La caja de lo de antes y la raya van juntas, y el contenido de la caja lleva lo mismo al reves: en la pantalla,
+   * lo de antes no se mueve.
+   * @param {Awaited<ReturnType<typeof barrido>>} cuadro
+   */
+  const sinMoverLoDeAntes = (cuadro) => {
+    const [caja = 0, contenido = 0, raya = 0] = cuadro.corrida;
+    expect(Math.abs(raya - caja)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(contenido + caja)).toBeLessThanOrEqual(0.5);
+  };
+
+  // La raya ya entro a la pantalla y va cruzando: lo de antes se va destapando.
+  await expect.poll(async () => (await barrido()).corrida[0] ?? 0, { timeout: 20_000 }).toBeGreaterThan(30);
+  const alEntrar = await barrido();
+  expect(alEntrar.celular).toHaveLength(4);
+  sinMoverLoDeAntes(alEntrar);
+
+  // Pausa a media cruzada: las tres capas se detienen donde iban, con lo de antes a medio destapar.
+  await pausa.click();
+  await expect(corto).toHaveAttribute('data-pausada', '');
+  const alPausar = await barrido();
+  expect(alPausar.estados).toEqual(['paused', 'paused', 'paused paused']);
+  sinMoverLoDeAntes(alPausar);
+  expect(alPausar.corrida[0] ?? 0).toBeGreaterThanOrEqual(alEntrar.corrida[0] ?? 0);
+  expect(alPausar.corrida[0] ?? 0).toBeLessThan(alPausar.ancho);
+  // Pasa el tiempo y nada avanzo: ni la raya, ni la caja, ni su contenido.
+  await page.waitForTimeout(1500);
+  expect(await barrido()).toEqual(alPausar);
+  await expect(corto).toHaveAttribute('data-cuadro', 'barrido');
+
+  // Al reanudar, la raya sigue cruzando desde donde se quedo, y lo de antes sigue en su lugar: el celular que se
+  // va destapando no se ha movido ni un punto desde que la raya entro.
+  await pausa.click();
+  await expect(corto).not.toHaveAttribute('data-pausada', /.*/);
+  await expect
+    .poll(async () => (await barrido()).corrida[0] ?? 0, { timeout: 20_000 })
+    .toBeGreaterThan((alPausar.corrida[0] ?? 0) + 60);
+  const despues = await barrido();
+  sinMoverLoDeAntes(despues);
+  for (const [cual, medida] of despues.celular.entries()) {
+    expect(Math.abs(medida - (alEntrar.celular[cual] ?? 0))).toBeLessThanOrEqual(0.5);
+  }
+});
+
 test('con movimiento reducido nada del inicio se mueve solo: ni el corto ni una sola animacion', async ({ page }) => {
   const corto = await abrirQuieta(page);
   await expect(corto).toHaveAttribute('data-cuadro', 'cartel');
