@@ -274,6 +274,27 @@ test('si no llega la calculadora, se guarda sola y lo demas sigue vivo', async (
   await expect(page.locator('.plan')).toHaveCount(3);
 });
 
+test('si no llega pagina.js, la pagina queda como sin JavaScript sin esperar a nada mas: el cartel, sin corto, y la calculadora guardada', async ({
+  page,
+}) => {
+  await page.route('**/js/pagina.js', (ruta) => ruta.abort());
+  await page.goto('./');
+  const pagina = page.locator('html');
+  // arranque.js se entera por la falla del archivo (no escucha "load") y le quita a cada pieza su marca.
+  await expect(pagina).not.toHaveClass(/con-js/);
+  await expect(pagina).not.toHaveClass(/con-corto/);
+  await expect(pagina).not.toHaveClass(/con-cuenta/);
+  const corto = page.locator('[data-corto]');
+  await expect(corto.getByRole('heading', { level: 1 })).toHaveText('Despreocúpate');
+  await expect(corto.getByRole('link', { name: 'Empieza ahora' })).toBeVisible();
+  await expect(corto.locator('[data-corto-cine]')).toBeHidden();
+  await expect(corto.locator('button').filter({ visible: true })).toHaveCount(0);
+  await expect(page.locator('[data-calculadora]')).toBeHidden();
+  await expect(page.locator('.plan')).toHaveCount(3);
+  // El oficio que le toco a la visita si quedo elegido: eso lo hace arranque.js solo.
+  await expect(pagina).toHaveAttribute('data-oficio', /^(unas|dentista|medico)$/);
+});
+
 test('la calculadora no regana a medio teclear, y su aviso de error queda ligado a su casilla', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');

@@ -83,6 +83,15 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   pintado, elige uno, lo deja escrito en `<html data-oficio>` y guarda o enseña cada escena en cuanto el navegador la
   lee: nunca se pinta una para cambiarla por otra. Los oficios que hay se los dice su propia etiqueta
   (`data-oficios`), que sale de los datos.
+- `arranque.js` NO escucha `DOMContentLoaded` ni `load`, y así debe seguir. En la tarea en que llegan esos avisos el
+  navegador puede acomodar la página entera por primera vez (lo más pesado de la carga); Lighthouse le cuelga esa
+  tarea completa al primer archivo de JavaScript que tenga algo corriendo ahí y la cuenta como si hubiera esperado a
+  que ese archivo bajara, ya después del primer pintado: el «tiempo bloqueado» de `npm run velocidad` fallaba la
+  mitad de las veces. Por eso deja de vigilar las escenas cuando su aviso llega con la página ya leída
+  (`document.readyState`), y si `pagina.js` no llega se entera por la falla del archivo (`error`), no al terminar de
+  cargar. Lo que sí cuesta en esa tarea es el primer acomodo de toda la página: cada sección que crece lo alarga.
+- `npm run velocidad` se corre con la laptop conectada a la corriente: con batería el procesador va más lento y el
+  tiempo bloqueado no pasa aunque la página no haya cambiado.
 - En celular lo primero es que el cartel se vea: las piezas de JavaScript (la demostración, la calculadora, la
   medición) se traen cuando el navegador ya pintó la página (`fuente/js/pagina.js`), y por eso sus `modulepreload`
   solo valen en pantallas anchas, donde el inicio es el corto y lo mueve una pieza. Si se cambia esa regla, medir con

@@ -19,9 +19,16 @@ if (ahorro) raiz.setAttribute('data-ahorro', '');
 // <html> desde ahora: antes de que exista la primera escena. Cada escena (la del cartel y las del corto) se guarda o
 // se ensena en cuanto el navegador la lee, asi que nunca se pinta una para cambiarla por otra. Sin JavaScript se ve
 // la primera.
+//
+// OJO: este archivo NO escucha "DOMContentLoaded" ni "load". En la tarea en que llegan esos dos avisos el navegador
+// puede acomodar la pagina entera por primera vez (lo mas pesado de la carga), y quien mide la velocidad le cuelga
+// esa tarea completa al archivo que tenga algo escuchando ahi: la cuenta como si hubiera esperado a que este archivo
+// terminara de bajar, ya despues del primer pintado.
 const etiqueta = document.currentScript;
 const oficios = (etiqueta?.dataset.oficios ?? '').split(' ').filter(Boolean);
 const elegido = oficios[Math.floor(Math.random() * oficios.length)];
+/** Deja de vigilar lo que el navegador va leyendo (si es que se vigila algo). */
+let soltar = () => {};
 if (elegido) {
   raiz.dataset.oficio = elegido;
   const acomodar = () => {
@@ -31,12 +38,14 @@ if (elegido) {
       escena.toggleAttribute('hidden', suyo !== elegido);
     }
   };
-  const vigia = new MutationObserver(acomodar);
-  vigia.observe(raiz, { childList: true, subtree: true });
-  document.addEventListener('DOMContentLoaded', () => {
-    vigia.disconnect();
+  // Vigila mientras la pagina se lee. El aviso que llega con la pagina ya leida entera acomoda por ultima vez y deja
+  // de vigilar: de ahi en adelante las escenas son de quien monta el inicio.
+  const vigia = new MutationObserver(() => {
     acomodar();
+    if (document.readyState !== 'loading') vigia.disconnect();
   });
+  vigia.observe(raiz, { childList: true, subtree: true });
+  soltar = () => vigia.disconnect();
 
   // Donde el corto va a correr solo (la misma pregunta que hacen los estilos y corto-vista.js: pantalla ancha, no muy
   // bajita, con movimiento y sin ahorro de datos) su foto es lo mas grande de la pantalla: se pide desde ahora, y solo
@@ -61,13 +70,22 @@ let revisado = false;
 function revisar() {
   if (revisado) return;
   revisado = true;
+  soltar();
   if (!document.querySelector('[data-demo][data-viva]')) raiz.classList.remove('con-js');
   if (!document.querySelector('[data-corto][data-viva]')) raiz.classList.remove('con-corto');
   if (!document.querySelector('[data-calculadora][data-viva]')) raiz.classList.remove('con-cuenta');
 }
 
 document.addEventListener('pagina:montada', revisar);
-// Si pagina.js no llego (o no pudo ni empezar) el aviso nunca vendra: entonces se revisa al terminar de cargar.
-window.addEventListener('load', () => {
-  if (!raiz.hasAttribute('data-arrancando')) revisar();
-});
+// Si pagina.js no llego (o trono antes de empezar) el aviso nunca vendra: entonces se revisa en cuanto el navegador
+// avisa de esa falla. La de un archivo que no llega se avisa en su etiqueta y no sube sola: por eso se escucha de
+// bajada. (Ver el OJO de arriba: no se espera a "load".)
+window.addEventListener(
+  'error',
+  (falla) => {
+    if (raiz.hasAttribute('data-arrancando')) return;
+    const origen = falla.filename || String(Reflect.get(falla.target ?? {}, 'src') ?? '');
+    if (/\/js\/pagina\.js$/.test(origen)) revisar();
+  },
+  true,
+);

@@ -57,8 +57,10 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
   const datos = {};
   /** @type {ReturnType<typeof escena>[]} */
   const escenas = [];
-  /** @type {Record<string, (() => void)[]>} */
+  /** @type {Record<string, ((suceso?: unknown) => void)[]>} */
   const escuchas = {};
+  /** Lo que el navegador dice de la lectura de la pagina (document.readyState): al principio, que sigue leyendo. */
+  let lectura = 'loading';
   /** @type {{ aviso: () => void, que: unknown, opciones: unknown, desconectado: boolean }[]} */
   const vigias = [];
   /** Lo que el archivo deja en el <head>: cada etiqueta, con sus atributos. */
@@ -91,7 +93,7 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
       remove: (/** @type {string} */ nombre) => clases.delete(nombre),
     },
     dataset: datos,
-    hasAttribute: () => false,
+    hasAttribute: (/** @type {string} */ nombre) => nombre in atributos,
     /**
      * @param {string} nombre
      * @param {string} valor
@@ -125,7 +127,7 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
   }
   /**
    * @param {string} tipo
-   * @param {() => void} escucha
+   * @param {(suceso?: unknown) => void} escucha
    */
   const escuchar = (tipo, escucha) => {
     escuchas[tipo] = [...(escuchas[tipo] ?? []), escucha];
@@ -133,6 +135,9 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
   const contexto = vm.createContext({
     document: {
       documentElement: raiz,
+      get readyState() {
+        return lectura;
+      },
       currentScript: oficios === null ? null : etiqueta,
       // Contesta como el navegador las dos maneras de preguntar por las escenas: si la pregunta no descarta las
       // etiquetas <script>, la del archivo tambien sale, porque dice "data-escena".
@@ -181,9 +186,20 @@ function correr({ azar, oficios = OFICIOS.join(' '), correSolo = false, conexion
     vigias,
     cabeza,
     preguntas,
-    /** Lo que pasa cuando la pagina termina de leerse. */
+    /** Que avisos del navegador escucha el archivo. */
+    escucha: () => Object.keys(escuchas).sort(),
+    /**
+     * El navegador da un aviso a quien lo escucha.
+     * @param {string} tipo
+     * @param {unknown} [suceso]
+     */
+    avisar(tipo, suceso) {
+      for (const escucha of escuchas[tipo] ?? []) escucha(suceso);
+    },
+    /** Lo que pasa cuando la pagina termina de leerse: el aviso del ultimo pedazo llega con la pagina ya leida. */
     terminarDeLeer() {
-      for (const escucha of escuchas.DOMContentLoaded ?? []) escucha();
+      lectura = 'interactive';
+      for (const vigia of vigias) if (!vigia.desconectado) vigia.aviso();
     },
   };
 }
@@ -258,6 +274,61 @@ test('cada escena se guarda o se ensena en cuanto el navegador la lee: nunca que
   pagina.terminarDeLeer();
   assert.equal(vigia.desconectado, true);
   assert.deepEqual(aLaVista(pagina.escenas), ['dentista']);
+});
+
+test('lo ultimo que el navegador lee tambien se acomoda: el aviso del ultimo pedazo llega con la pagina ya leida', () => {
+  const pagina = correr({ azar: 0.9 });
+  pagina.escenas.push(escena('unas', false));
+  pagina.vigias[0]?.aviso();
+  // El ultimo pedazo trae las demas escenas; cuando su aviso llega, la pagina ya no se esta leyendo.
+  pagina.escenas.push(escena('dentista', true), escena('medico', true));
+  pagina.terminarDeLeer();
+  assert.deepEqual(aLaVista(pagina.escenas), ['medico']);
+  assert.equal(pagina.vigias[0]?.desconectado, true);
+});
+
+test('no escucha "DOMContentLoaded" ni "load": en la tarea de esos avisos el navegador acomoda la pagina entera, y quien mide la velocidad se la colgaria a este archivo', () => {
+  for (const azar of [0.1, 0.5, 0.9]) {
+    assert.deepEqual(correr({ azar }).escucha(), ['error', 'pagina:montada']);
+  }
+  assert.deepEqual(correr({ azar: 0.5, oficios: '' }).escucha(), ['error', 'pagina:montada']);
+});
+
+test('cuando pagina.js avisa que ya monto, deja de vigilar y le quita su marca a la pieza que no arranco', () => {
+  const pagina = correr({ azar: 0.5 });
+  // El navegador todavia no entrega el ultimo aviso de lo que leyo, y pagina.js ya termino.
+  pagina.avisar('pagina:montada');
+  assert.equal(pagina.vigias[0]?.desconectado, true);
+  // En esta pagina de mentiras no arranco ninguna pieza: se quedan sin su marca.
+  assert.deepEqual([...pagina.clases], []);
+});
+
+test('si pagina.js no llega, o truena antes de empezar, la pagina queda como sin JavaScript sin esperar a que todo cargue', () => {
+  const noLlego = correr({ azar: 0.5 });
+  // La falla de un archivo que no llega se avisa en su etiqueta.
+  noLlego.avisar('error', { target: { src: 'https://prompt-maestro.com/a/0123456789/js/pagina.js' } });
+  assert.deepEqual([...noLlego.clases], []);
+  assert.equal(noLlego.vigias[0]?.desconectado, true);
+
+  const trono = correr({ azar: 0.5 });
+  // La de un archivo que truena al leerse llega con su nombre.
+  trono.avisar('error', { filename: 'https://prompt-maestro.com/a/0123456789/js/pagina.js', target: {} });
+  assert.deepEqual([...trono.clases], []);
+});
+
+test('la falla de otro archivo, o una de pagina.js cuando ya habia arrancado, no le quita nada a la pagina', () => {
+  const otra = correr({ azar: 0.5 });
+  otra.avisar('error', { target: { src: 'https://prompt-maestro.com/a/0123456789/js/medicion-vista.js' } });
+  otra.avisar('error', { target: { src: 'https://prompt-maestro.com/r/0123456789/cartel/unas-tu-540.avif' } });
+  otra.avisar('error', { filename: 'https://prompt-maestro.com/a/0123456789/js/demo-vista.js', target: {} });
+  otra.avisar('error', { target: null });
+  assert.deepEqual([...otra.clases].sort(), ['con-corto', 'con-cuenta', 'con-js']);
+
+  const arrancada = correr({ azar: 0.5 });
+  // pagina.js llego y dejo dicho que su aviso de "ya monte" viene en camino.
+  arrancada.atributos['data-arrancando'] = '';
+  arrancada.avisar('error', { filename: 'https://prompt-maestro.com/a/0123456789/js/pagina.js', target: {} });
+  assert.deepEqual([...arrancada.clases].sort(), ['con-corto', 'con-cuenta', 'con-js']);
 });
 
 test('si le toca el primer oficio, la pagina queda como venia escrita', () => {
