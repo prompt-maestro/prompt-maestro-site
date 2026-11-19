@@ -327,10 +327,10 @@
       "video": true,
       "mira": {
         "persona": "66 36",
-        "manos": "55 57",
-        "celular": "49 82 33 14",
-        "viva": "42 0 58 82",
-        "dePie": "72 33"
+        "manos": "69 58",
+        "celular": "53 82 27 15.5",
+        "viva": "43 0 52 80",
+        "dePie": "64 30"
       },
       "cuenta": {
         "base": 9,
@@ -432,11 +432,11 @@
         "quien": "Doña Elvira · Consulta",
         "tu": {
           "foto": "cartel/medico-tu",
-          "alt": "Una doctora escucha con su estetoscopio la espalda de un paciente en el consultorio.",
+          "alt": "Una doctora escucha con su estetoscopio el pecho de un paciente en el consultorio.",
           "recorte": {
-            "x": 17,
-            "y": 11,
-            "ancho": 82
+            "x": 28,
+            "y": 13,
+            "ancho": 72
           }
         },
         "charla": {
