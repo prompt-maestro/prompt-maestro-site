@@ -124,6 +124,18 @@ export function corridos(reloj, ahora) {
 }
 
 /**
+ * Pone el reloj en otro instante del corto (la visitante movio la raya de avance): si andaba, sigue andando desde
+ * ahi; detenido, se queda detenido.
+ * @param {Reloj} reloj
+ * @param {number} hasta  milisegundos desde el principio del corto
+ * @param {number} ahora
+ * @returns {Reloj}
+ */
+export function ponerEn(reloj, hasta, ahora) {
+  return { corrido: Math.max(0, hasta), desde: reloj.desde === null ? null : ahora };
+}
+
+/**
  * Los mensajes sin contestar que marca la pantalla del celular mientras se llena: suben parejo desde la base y se
  * quedan en el tope un poco antes de que el momento termine.
  * @param {number} parte  de 0 a 1, cuanto lleva el momento de la avalancha

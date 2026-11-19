@@ -17,6 +17,7 @@ import {
   momentoEn,
   nuevoReloj,
   parar,
+  ponerEn,
   punto,
   siguienteOficio,
   sinContestar,
@@ -118,6 +119,17 @@ test('el reloj solo avanza mientras anda: en pausa, o con la pestana escondida, 
   assert.equal(corridos(andar(nuevoReloj(), 1000), 400), 0);
 });
 
+test('la raya de avance pone el reloj en otro instante: si andaba sigue andando desde ahi, y detenido se queda detenido', () => {
+  const andando = ponerEn(andar(nuevoReloj(), 1000), 12_000, 5000);
+  assert.equal(corridos(andando, 5000), 12_000);
+  assert.equal(corridos(andando, 5400), 12_400, 'sigue corriendo desde el instante nuevo');
+  const detenido = ponerEn(parar(andar(nuevoReloj(), 1000), 3000), 12_000, 5000);
+  assert.equal(corridos(detenido, 90_000), 12_000, 'en pausa se queda en el instante nuevo');
+  // Hacia atras tambien, y nunca antes del principio.
+  assert.equal(corridos(ponerEn(andando, 2000, 6000), 6000), 2000);
+  assert.equal(corridos(ponerEn(andando, -500, 6000), 6000), 0);
+});
+
 test('los mensajes sin contestar suben de la base al tope y ahi se quedan', () => {
   const limites = { base: 7, tope: 23 };
   assert.equal(sinContestar(0, limites), 7);
@@ -208,7 +220,7 @@ test('al barrido lo mueve el navegador: una animacion de puro transform, con arr
   assert.match(codigo, /cine\.style\.setProperty\('--cruza', `\$\{cruza\(/);
   assert.equal(
     codigo.match(/\.style\.transform\b/g)?.length,
-    2,
+    1,
     'el unico transform del codigo es el de la raya de avance',
   );
 });
@@ -363,6 +375,18 @@ test('el momento del agente dura lo que tarda su conversacion en entrar, paso a 
   const quieto = agente - (sello + cae);
   assert.ok(quieto >= 1500, `el sello cae a los ${sello + cae} ms y el momento dura ${agente}`);
   assert.ok(quieto <= 3000, `el momento dura ${agente} ms: ${quieto} despues del sello`);
+});
+
+test('los controles del corto: la raya de avance es un control que se agarra, con su nombre, y el boton dice "Saltar video"', async () => {
+  const html = await readFile(path.join(FUENTE, 'plantillas', 'index.html'), 'utf8');
+  assert.equal(corto.controles.saltar, 'Saltar video');
+  assert.match(
+    html,
+    /<span class="control__riel" role="slider" tabindex="0" aria-label="\{\{corto\.controles\.avance\}\}" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" data-corto-riel data-va-en="\{\{corto\.controles\.vaEn\}\}">/,
+  );
+  assert.equal(corto.controles.avance, 'Avance del video');
+  // Lo que se le dice a quien no ve la raya: los segundos que lleva y los que dura.
+  assert.ok(corto.controles.vaEn.includes('{va}') && corto.controles.vaEn.includes('{total}'));
 });
 
 test('cada oficio trae lo suyo completo: a donde mira la camara, su cuenta, sus avisos, lo que hizo el agente y su cita', () => {
@@ -703,7 +727,7 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
     delCartel,
     /<a class="boton boton--sello boton--luz" href="https:\/\/alta\.prompt-maestro\.com\/" data-lugar="pelicula">/,
   );
-  assert.match(delCartel, /<a class="enlace" href="#citas" data-lugar="pelicula">Vívelo tú<\/a>/);
+  assert.match(delCartel, /<a class="enlace" href="#citas" data-lugar="pelicula">Míralo en acción<\/a>/);
   assert.equal(html.match(/<h1\b/g)?.length, 1, 'un solo h1 en la pagina');
   // Las capas del corto son decorativas: escondidas para lectores, sin enlaces ni botones adentro.
   const delCine = seccion.slice(cine);

@@ -9,12 +9,14 @@ import {
   CARTEL,
   corridos,
   cruza,
+  duracion,
   empiezaEn,
   entradaDeLaToma,
   leerGuion,
   momentoEn,
   nuevoReloj,
   parar,
+  ponerEn,
   punto,
   siguienteOficio,
   sinContestar,
@@ -41,6 +43,8 @@ const AVALANCHA = 'avalancha';
 const BARRIDO = 'barrido';
 /** El momento en que la toma viva no debe notarse volver a empezar: ahi se mira a quien trabaja. */
 const AGENTE = 'agente';
+/** Lo que avanza o regresa el corto con cada flecha del teclado sobre la raya de avance, en milisegundos. */
+const PASO = 2000;
 /** Desde cuanto de la seccion fuera de la pantalla la barra de arriba toma su fondo. */
 const CASI_ENTERA = 0.98;
 
@@ -127,6 +131,9 @@ export function montarCorto(raiz) {
   const saltar = pieza(raiz, '[data-corto-saltar]');
   const pausa = pieza(raiz, '[data-corto-pausa]');
   const avance = pieza(raiz, '[data-corto-avance]');
+  const riel = pieza(raiz, '[data-corto-riel]');
+  const total = duracion(guion);
+  const enSegundos = String(Math.round(total / 1000));
   const ver = pieza(raiz, '[data-corto-ver]');
   const verTexto = pieza(raiz, '[data-corto-ver-texto]');
   const letreros = piezas(raiz, '[data-letrero]');
@@ -154,6 +161,7 @@ export function montarCorto(raiz) {
   /** @type {Set<string>} */
   const adelantados = new Set();
   const calidoDesde = guion.findIndex((momento) => momento.clave === BARRIDO);
+  const avalanchaEn = guion.findIndex((momento) => momento.clave === AVALANCHA);
   const ancha = matchMedia(ANCHA);
   const quieta = matchMedia(QUIETA);
   /** Si el corto cabe en esta pantalla: ancha y no muy bajita. La misma pregunta que hacen los estilos. */
@@ -164,6 +172,8 @@ export function montarCorto(raiz) {
   /** Si el corto esta puesto (corriendo o en pausa). Si no, lo que se ve es el cartel. */
   let corre = false;
   let pausada = false;
+  /** Si la visitante tiene agarrada la raya de avance: mientras, el corto espera donde ella lo lleve. */
+  let agarrada = false;
   let yaCorrio = false;
   let momento = '';
   let cuadro = 0;
@@ -268,7 +278,7 @@ export function montarCorto(raiz) {
    * Solo se pide el del oficio que toca, y mientras el corto no corre no se pide: en celular, nunca.
    */
   function videosAlDia() {
-    const andan = conVideos && corre && !pausada && !document.hidden;
+    const andan = conVideos && corre && !pausada && !agarrada && !document.hidden;
     const calido = calidoDesde >= 0 && guion.findIndex((uno) => uno.clave === momento) >= calidoDesde;
     for (const { video, oficio: suyo } of videos) {
       if (suyo !== oficio) {
@@ -312,6 +322,23 @@ export function montarCorto(raiz) {
     videosAlDia();
   }
 
+  /**
+   * La raya de avance: cuanto lleva el corto, a la vista y dicho en segundos a quien no la ve.
+   * @param {number} parte  de 0 a 1
+   */
+  function ponerAvance(parte) {
+    const va = parte.toFixed(4);
+    avance.style.transform = `scaleX(${va})`;
+    riel.style.setProperty('--va', va);
+    const segundos = String(Math.round((parte * total) / 1000));
+    if (riel.getAttribute('aria-valuenow') === segundos) return;
+    riel.setAttribute('aria-valuenow', segundos);
+    riel.setAttribute(
+      'aria-valuetext',
+      (riel.dataset.vaEn ?? '').replace('{va}', segundos).replace('{total}', enSegundos),
+    );
+  }
+
   /** @param {number} ahora */
   function pintar(ahora) {
     const instante = momentoEn(guion, corridos(reloj, ahora));
@@ -320,13 +347,48 @@ export function montarCorto(raiz) {
       return;
     }
     if (instante.clave !== momento) ponerMomento(instante.clave);
-    avance.style.transform = `scaleX(${instante.avance.toFixed(4)})`;
+    ponerAvance(instante.avance);
     if (momento === AVALANCHA) contar(instante.parte);
+  }
+
+  /**
+   * Lleva el corto a otro instante: la visitante movio la raya de avance. Su momento se quita y se vuelve a poner,
+   * para que sus animaciones empiecen otra vez, y se adelantan a lo que ese momento ya lleva a esa hora; lo que va de
+   * un momento a otro (la camara) llega de una vez. La toma viva entra donde entraria a esa hora.
+   * @param {number} hasta  milisegundos desde el principio del corto
+   */
+  function irA(hasta) {
+    if (!corre) return;
+    const destino = Math.min(Math.max(0, hasta), total - 1);
+    reloj = ponerEn(reloj, destino, performance.now());
+    const instante = momentoEn(guion, destino);
+    for (const letrero of letreros) letrero.removeAttribute('data-activo');
+    cine.removeAttribute('data-momento');
+    void cine.offsetWidth;
+    ponerMomento(instante.clave);
+    // La cuenta del celular: en ceros antes de la avalancha, llena despues, y a media avalancha lo que le toque.
+    contar(instante.indice < avalanchaEn ? 0 : instante.indice > avalanchaEn ? 1 : instante.parte);
+    const lleva = instante.parte * (guion[instante.indice]?.dura ?? 0);
+    for (const animacion of raiz.getAnimations({ subtree: true })) {
+      const suyo = animacion.effect instanceof KeyframeEffect ? animacion.effect.target : null;
+      // Las del cartel y las de los controles no son del momento: siguen a lo suyo.
+      if (!suyo || cartel.contains(suyo) || control.contains(suyo)) continue;
+      if (animacion instanceof CSSTransition) animacion.finish();
+      else animacion.currentTime = lleva;
+    }
+    const calido = calidoDesde >= 0 && instante.indice >= calidoDesde;
+    for (const { video, oficio: suyo } of videos) {
+      if (suyo !== oficio || !(video.readyState > 0)) continue;
+      clearTimeout(relevos.get(video));
+      relevos.delete(video);
+      video.currentTime = calido ? entrada(video) : Math.min(destino / 1000, video.duration);
+    }
+    ponerAvance(instante.avance);
   }
 
   function ciclo() {
     cancelAnimationFrame(cuadro);
-    if (!corre || pausada || document.hidden) return;
+    if (!corre || pausada || agarrada || document.hidden) return;
     cuadro = requestAnimationFrame(() => {
       pintar(performance.now());
       ciclo();
@@ -347,7 +409,7 @@ export function montarCorto(raiz) {
     reloj = document.hidden ? nuevoReloj() : andar(nuevoReloj(), performance.now());
     raiz.toggleAttribute('data-pausada', document.hidden);
     pausa.setAttribute('aria-pressed', 'false');
-    avance.style.transform = 'scaleX(0)';
+    ponerAvance(0);
     for (const { video } of videos) if (video.readyState > 0) video.currentTime = 0;
     // El momento y su letrero se quitan y se vuelven a poner: asi las entradas de la primera toma corren otra vez
     // desde su principio, tambien si el corto se corto en ella.
@@ -363,7 +425,9 @@ export function montarCorto(raiz) {
     if (!corre) return;
     corre = false;
     pausada = false;
+    agarrada = false;
     yaCorrio = true;
+    riel.removeAttribute('data-agarrada');
     reloj = parar(reloj, performance.now());
     cancelAnimationFrame(cuadro);
     raiz.dataset.cuadro = CARTEL;
@@ -396,6 +460,62 @@ export function montarCorto(raiz) {
     ciclo();
   });
 
+  // La raya de avance se agarra con el puntero: mientras la traen, el corto espera (reloj, videos y animaciones) y
+  // ensena el instante que queda bajo el puntero; al soltarla sigue desde ahi, salvo que estuviera en pausa.
+  /**
+   * @param {PointerEvent} suceso
+   * @returns {number} el instante del corto que queda bajo el puntero, en milisegundos
+   */
+  const bajoElPuntero = (suceso) => {
+    const caja = riel.getBoundingClientRect();
+    return ((suceso.clientX - caja.left) / caja.width) * total;
+  };
+  riel.addEventListener('pointerdown', (suceso) => {
+    if (!corre || suceso.button !== 0) return;
+    riel.setPointerCapture(suceso.pointerId);
+    agarrada = true;
+    riel.setAttribute('data-agarrada', '');
+    reloj = parar(reloj, performance.now());
+    raiz.setAttribute('data-pausada', '');
+    ciclo();
+    irA(bajoElPuntero(suceso));
+  });
+  riel.addEventListener('pointermove', (suceso) => {
+    if (!agarrada) return;
+    // A lo mas una vez por cuadro: el puntero avisa mas seguido de lo que la pantalla pinta.
+    const hasta = bajoElPuntero(suceso);
+    cancelAnimationFrame(cuadro);
+    cuadro = requestAnimationFrame(() => irA(hasta));
+  });
+  riel.addEventListener('lostpointercapture', () => {
+    if (!agarrada) return;
+    agarrada = false;
+    riel.removeAttribute('data-agarrada');
+    if (!corre) return;
+    const detenido = pausada || document.hidden;
+    if (!detenido) reloj = andar(reloj, performance.now());
+    raiz.toggleAttribute('data-pausada', detenido);
+    videosAlDia();
+    ciclo();
+  });
+
+  // Y con el teclado: las flechas la llevan de dos en dos segundos; Inicio y Fin, a sus extremos.
+  riel.addEventListener('keydown', (suceso) => {
+    if (!corre) return;
+    const va = corridos(reloj, performance.now());
+    const hasta = /** @type {Record<string, number>} */ ({
+      ArrowLeft: va - PASO,
+      ArrowDown: va - PASO,
+      ArrowRight: va + PASO,
+      ArrowUp: va + PASO,
+      Home: 0,
+      End: total,
+    })[suceso.key];
+    if (hasta === undefined) return;
+    suceso.preventDefault();
+    irA(hasta);
+  });
+
   // Ella pidio verlo: corre aunque haya pedido menos movimiento o ahorro de datos. Quien ya lo vio ve ahora el oficio
   // que sigue: asi conoce otra profesion. El foco pasa a la pausa, que es lo que sigue a la mano.
   ver.addEventListener('click', () => {
@@ -419,7 +539,7 @@ export function montarCorto(raiz) {
 
   // Con la pestana escondida el reloj no avanza, y con el todo lo demas.
   document.addEventListener('visibilitychange', () => {
-    if (!corre || pausada) return;
+    if (!corre || pausada || agarrada) return;
     reloj = document.hidden ? parar(reloj, performance.now()) : andar(reloj, performance.now());
     raiz.toggleAttribute('data-pausada', document.hidden);
     // Escondida, la pagina deja de pintarse: se le pide una medida para que la pausa de las animaciones quede puesta
@@ -464,6 +584,7 @@ export function montarCorto(raiz) {
   else window.addEventListener('load', despuesDeCargar, { once: true });
 
   for (const guardado of [control, ver]) guardado.hidden = false;
+  riel.setAttribute('aria-valuemax', enSegundos);
   rotular();
   raiz.setAttribute('data-viva', '');
   // Solo corre solo en una pantalla ancha, sin movimiento reducido, sin ahorro de datos ni conexion lenta (lo anota

@@ -692,12 +692,51 @@ html.con-corto .corto[data-cuadro="cartel"] .control {
     visibility 0s 520ms;
 }
 
+/* La raya de avance tambien se agarra: con el puntero, o con las flechas, el corto va y viene. Lo que se toca mide 28
+   de alto; lo que se ve sigue siendo la raya fina, que engorda y saca su perilla cuando alguien se acerca. */
+.control__riel {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  height: 28px;
+  margin-right: 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.control__riel::after {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--va, 0) * 100%);
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 10px rgb(132 151 255 / 0.9);
+  content: "";
+  opacity: 0;
+  transition: opacity 160ms var(--suave);
+}
+
 .control__linea {
   flex: 1;
   height: 2px;
-  margin-right: 5px;
   border-radius: 2px;
   background: rgb(255 255 255 / 0.25);
+  transition: transform 160ms var(--suave);
+}
+
+.control__riel:is(:hover, :focus-visible, [data-agarrada])::after {
+  opacity: 1;
+}
+
+.control__riel:is(:hover, :focus-visible, [data-agarrada]) .control__linea {
+  transform: scaleY(2);
 }
 
 .control__linea i {

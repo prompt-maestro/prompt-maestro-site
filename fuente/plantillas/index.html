@@ -50,7 +50,7 @@
 <main id="contenido">
   <section class="corto" id="inicio" data-corto data-cuadro="{{corto.guion.0.clave}}" data-guion="{{#cada corto.guion}}{{clave}}:{{dura}} {{/cada}}" aria-labelledby="titulo-inicio">
     <div class="control" role="group" aria-label="{{corto.controles.titulo}}" data-corto-control hidden>
-      <span class="control__linea" aria-hidden="true"><i data-corto-avance></i></span>
+      <span class="control__riel" role="slider" tabindex="0" aria-label="{{corto.controles.avance}}" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" data-corto-riel data-va-en="{{corto.controles.vaEn}}"><span class="control__linea"><i data-corto-avance></i></span></span>
       <button class="control__boton" type="button" data-corto-saltar><span class="control__pastilla">{{corto.controles.saltar}}</span></button>
       <button class="control__pausa" type="button" data-corto-pausa aria-pressed="false" aria-label="{{corto.controles.pausar}}"><svg class="control__para" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12 10v10M18 10v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="control__sigue" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M12.5 10l8 5-8 5z" fill="currentColor"/></svg></button>
     </div>

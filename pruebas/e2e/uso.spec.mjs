@@ -218,7 +218,7 @@ test('en celular, recorrer el cartel con el teclado no mueve la pagina, y de la 
       .filter((uno) => uno.getClientRects().length > 0 && uno.getAttribute('tabindex') !== '-1')
       .map((uno) => uno.textContent?.trim()),
   );
-  expect(paradas).toEqual(['Empieza ahora', 'Vívelo tú']);
+  expect(paradas).toEqual(['Empieza ahora', 'Míralo en acción']);
   for (const nombre of paradas) {
     await corto.getByRole('link', { name: nombre, exact: true }).focus();
     expect(await page.evaluate(() => scrollY)).toBeLessThanOrEqual(arriba);

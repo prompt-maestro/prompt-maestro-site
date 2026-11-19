@@ -58,6 +58,13 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   momento) y `corto-vista.js` se lo pasa a los estilos en `--cruza`; con la pausa se detiene como todo lo demás
   (`--marcha`). Dentro de lo que se mueve no va nada pesado: lo de atrás del celular grande se desenfoca con un
   `filter` de la foto (no con un desenfoque de fondo) y en el barrido la escena fría se queda quieta.
+- La raya de avance del corto se agarra: con un clic, arrastrándola o con las flechas (de dos en dos segundos; Inicio
+  y Fin a sus extremos) el corto va y viene. Es un control con su nombre (`role="slider"`, `.control__riel`, de 28 de
+  alto; la raya que se ve, `.control__linea`, sigue midiendo 2). Para saltar, `corto-vista.js` quita el momento y lo
+  vuelve a poner, adelanta sus animaciones a lo que ya lleva (`currentTime`) y da por terminado lo que va de un
+  momento a otro; mientras la traen agarrada el corto espera, y al soltarla sigue, salvo que estuviera en pausa. Una
+  animación nueva del corto tiene que empezar con su momento (no después, desde el código): si no, al saltar no cae
+  en su lugar.
 - La página dice «WhatsApp» con la palabra, escrita así y con la letra del texto que la rodea. Nunca con un
   logotipo ni con un icono que se le parezca: las reglas de marca de Meta solo dejan usar el oficial, sin cambios.
   El rótulo de la conversación del corto es un dato (`canal`), común a todos los oficios.

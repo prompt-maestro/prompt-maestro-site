@@ -259,8 +259,8 @@ test('el cartel trae el titulo, la frase, el boton al alta, el enlace a la demos
   // axe usa sus propios relojes: con el de la pagina detenido no terminaria nunca.
   await page.clock.resume();
   await sinFaltasDeAccesibilidad(page, '.barra', '#inicio');
-  // "Vívelo tú" baja a la demostracion.
-  await corto.getByRole('link', { name: 'Vívelo tú' }).click();
+  // "Míralo en acción" baja a la demostracion.
+  await corto.getByRole('link', { name: 'Míralo en acción' }).click();
   await expect(page).toHaveURL(/#citas$/);
   await expect(page.locator('#citas').getByRole('heading', { level: 2 })).toBeInViewport();
   expect(fallas).toEqual([]);
@@ -492,7 +492,7 @@ test.describe('"Tu y tu agente" en cada tamano', () => {
         corto.getByRole('heading', { level: 1 }),
         corto.locator('.cartel__frase'),
         empieza,
-        corto.getByRole('link', { name: 'Vívelo tú' }),
+        corto.getByRole('link', { name: 'Míralo en acción' }),
       ]) {
         await expect(pieza).toBeInViewport({ ratio: 1 });
       }
@@ -622,7 +622,7 @@ test.describe('sin JavaScript', () => {
     await expect(corto.locator('.cartel__frase')).toBeVisible();
     await expect(corto.locator('.cartel__frase')).toHaveText(CORTO.cartel.frase ?? '');
     await expect(corto.getByRole('link', { name: 'Empieza ahora' })).toHaveAttribute('href', ALTA);
-    await expect(corto.getByRole('link', { name: 'Vívelo tú' })).toHaveAttribute('href', '#citas');
+    await expect(corto.getByRole('link', { name: 'Míralo en acción' })).toHaveAttribute('href', '#citas');
     const [primero] = CORTO.oficios;
     if (esAncho(info)) {
       await expect(corto.locator('.vida').first().locator('img')).toBeVisible();
@@ -1630,6 +1630,117 @@ test.describe('el corto, en pantallas anchas', () => {
     await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
   });
 
+  test('la raya de avance se agarra: un clic lleva el corto a ese instante, hacia adelante o hacia atras, y sigue desde ahi', async ({
+    page,
+  }) => {
+    const corto = await abrirCortoDetenido(page);
+    const riel = corto.getByRole('slider', { name: 'Avance del video' });
+    const total = CORTO.guion.reduce((suma, momento) => suma + momento.dura, 0);
+    const enSegundos = Math.round(total / 1000);
+    await expect(riel).toHaveAttribute('aria-valuemax', String(enSegundos));
+    await expect(riel).toHaveAttribute('aria-valuenow', '0');
+    const { x, y, width, height } = (await riel.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+    // Lo que se toca da para el cursor o el dedo, aunque la raya que se ve sea fina.
+    expect(height).toBeGreaterThanOrEqual(24);
+    // A la mitad del penultimo momento (lo que hizo el agente).
+    const penultimo = CORTO.guion.length - 2;
+    const antes = CORTO.guion.slice(0, penultimo).reduce((suma, momento) => suma + momento.dura, 0);
+    const lleva = (CORTO.guion[penultimo]?.dura ?? 0) / 2;
+    await page.mouse.click(x + (width * (antes + lleva)) / total, y + height / 2);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[penultimo] ?? '');
+    const segundos = Math.round((antes + lleva) / 1000);
+    await expect(riel).toHaveAttribute('aria-valuenow', String(segundos));
+    await expect(riel).toHaveAttribute('aria-valuetext', `${segundos} de ${enSegundos} segundos`);
+    // Sus animaciones no empiezan de cero: van adelantadas a lo que ese momento ya lleva.
+    const adelantadas = await corto.locator('[data-corto-cine]').evaluate((cine) =>
+      cine
+        .getAnimations({ subtree: true })
+        .filter((animacion) => !(animacion instanceof CSSTransition))
+        .map((animacion) => Number(animacion.currentTime)),
+    );
+    expect(adelantadas.length).toBeGreaterThan(0);
+    for (const va of adelantadas) expect(va).toBeGreaterThanOrEqual(lleva - 20);
+    // Y lo que va de un momento a otro (la camara) ya llego: nada se queda a medio camino.
+    expect(
+      await corto
+        .locator('[data-corto-cine]')
+        .evaluate(
+          (cine) =>
+            cine.getAnimations({ subtree: true }).filter((animacion) => animacion instanceof CSSTransition).length,
+        ),
+    ).toBe(0);
+    // No estaba en pausa: el reloj sigue y el corto avanza desde ahi.
+    await expect(corto).not.toHaveAttribute('data-pausada', /.*/);
+    await hastaElCuadro(page, corto, MOMENTOS.at(-1) ?? '');
+    // Hacia atras: de vuelta a la primera toma, con la raya en ceros.
+    await page.mouse.click(x + 1, y + height / 2);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
+    await expect(riel).toHaveAttribute('aria-valuenow', '0');
+    await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
+  });
+
+  test('mientras traen agarrada la raya el corto espera y la sigue; al soltarla corre otra vez, salvo que estuviera en pausa', async ({
+    page,
+  }) => {
+    const corto = await abrirCortoDetenido(page);
+    const riel = corto.getByRole('slider', { name: 'Avance del video' });
+    const pausa = corto.getByRole('button', { name: 'Pausar el video' });
+    const total = CORTO.guion.reduce((suma, momento) => suma + momento.dura, 0);
+    const { x, y, width, height } = (await riel.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+    /** @param {number} lugar  @returns {number} donde queda en la raya la mitad de ese momento del guion */
+    const enMedioDe = (lugar) => {
+      const antes = CORTO.guion.slice(0, lugar).reduce((suma, momento) => suma + momento.dura, 0);
+      return x + (width * (antes + (CORTO.guion[lugar]?.dura ?? 0) / 2)) / total;
+    };
+    await page.mouse.move(enMedioDe(1), y + height / 2);
+    await page.mouse.down();
+    await expect(riel).toHaveAttribute('data-agarrada', '');
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[1] ?? '');
+    await expect(corto).toHaveAttribute('data-pausada', '');
+    // Agarrada, el tiempo no la mueve; y no es la pausa de la visitante: su boton sigue diciendo que corre.
+    await page.clock.runFor(20_000);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[1] ?? '');
+    await expect(pausa).toHaveAttribute('aria-pressed', 'false');
+    // Arrastrada, el corto la sigue (a lo mas una vez por cuadro).
+    await page.mouse.move(enMedioDe(4), y + height / 2, { steps: 4 });
+    await page.clock.runFor(50);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[4] ?? '');
+    await page.mouse.up();
+    await expect(riel).not.toHaveAttribute('data-agarrada', /.*/);
+    await expect(corto).not.toHaveAttribute('data-pausada', /.*/);
+    await hastaElCuadro(page, corto, MOMENTOS[5] ?? '');
+    // En pausa, moverla no la reanuda: se queda en el instante nuevo.
+    await pausa.click();
+    await page.mouse.click(enMedioDe(3), y + height / 2);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[3] ?? '');
+    await expect(corto).toHaveAttribute('data-pausada', '');
+    await page.clock.runFor(20_000);
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[3] ?? '');
+    await expect(pausa).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('con el teclado la raya va y viene: las flechas de dos en dos segundos, Inicio y Fin a sus extremos', async ({
+    page,
+  }) => {
+    const corto = await abrirCortoDetenido(page);
+    const riel = corto.getByRole('slider', { name: 'Avance del video' });
+    await riel.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(riel).toHaveAttribute('aria-valuenow', '2');
+    await page.keyboard.press('ArrowRight');
+    await expect(riel).toHaveAttribute('aria-valuenow', '4');
+    await page.keyboard.press('ArrowLeft');
+    await expect(riel).toHaveAttribute('aria-valuenow', '2');
+    await page.keyboard.press('End');
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS.at(-1) ?? '');
+    await page.keyboard.press('Home');
+    await expect(riel).toHaveAttribute('aria-valuenow', '0');
+    await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
+    // El foco sigue en la raya y el corto sigue puesto: llevarlo con el teclado no lo da por terminado.
+    await expect(riel).toBeFocused();
+    await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
+  });
+
   test('con la pestaña escondida el reloj tampoco avanza', async ({ page }) => {
     const corto = await abrirCortoDetenido(page);
     /** @param {boolean} escondida */
@@ -1796,10 +1907,10 @@ test.describe('el corto, en pantallas anchas', () => {
         .filter((uno) => uno.getAttribute('tabindex') !== '-1')
         .map((uno) => uno.getAttribute('aria-label') ?? uno.textContent?.trim()),
     );
-    expect(paradas.slice(0, 4)).toEqual(['Saltar', 'Pausar el video', 'Empieza ahora', 'Vívelo tú']);
+    expect(paradas.slice(0, 4)).toEqual(['Avance del video', 'Saltar video', 'Pausar el video', 'Empieza ahora']);
     // Las capas del corto no traen ninguna parada.
     expect(await corto.locator('[data-corto-cine]').locator('a, button, [tabindex="0"]').count()).toBe(0);
-    const enlace = corto.getByRole('link', { name: 'Vívelo tú' });
+    const enlace = corto.getByRole('link', { name: 'Míralo en acción' });
     await enlace.focus();
     await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
     await expect(enlace).toBeFocused();

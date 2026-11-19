@@ -63,7 +63,7 @@
     "titulo": "Despreocúpate",
     "frase": "Enfócate en tu trabajo, ahorra tiempo y úsalo en lo que quieras. Deja que nuestros agentes se encarguen de tu WhatsApp y tu agenda.",
     "accion": "Empieza ahora",
-    "otra": "Vívelo tú",
+    "otra": "Míralo en acción",
     "ejemplo": "Ejemplo: así atiende tu agente",
     "tu": "Tú",
     "enLoTuyo": "En lo tuyo",
@@ -75,7 +75,9 @@
   },
   "controles": {
     "titulo": "Video de inicio",
-    "saltar": "Saltar",
+    "saltar": "Saltar video",
+    "avance": "Avance del video",
+    "vaEn": "{va} de {total} segundos",
     "pausar": "Pausar el video",
     "verDeNuevo": "Ver de nuevo",
     "verElVideo": "Ver el video"
