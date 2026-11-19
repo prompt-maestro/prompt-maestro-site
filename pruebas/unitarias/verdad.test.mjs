@@ -119,6 +119,13 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'te siguen escribiendo, y tu agente contesta por ti',
     'la fija mercado pago, no nosotros',
     'médicos generales y especialistas',
+    // "Como funciona", desde el primer mensaje hasta despues de la cita: el pago se verifica antes de agendar y ella
+    // aprueba cada cambio. Y "Citas garantizadas" dice que todo pasa en WhatsApp.
+    'desde el primer «hola»',
+    'hasta el seguimiento después de la cita',
+    'verifica el pago',
+    'nada se aplica sin tu sí',
+    'atiende por whatsapp',
   ]) {
     assert.ok(visible.includes(frase), frase);
   }

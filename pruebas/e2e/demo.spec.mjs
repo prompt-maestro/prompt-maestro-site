@@ -215,7 +215,7 @@ test('en reposo: el celular del negocio en linea, el letrero del primer momento 
     'Directo a tu cuenta',
   ]);
   await expect(page.locator('#citas .clave__texto')).toHaveText([
-    'Tu agente comprueba el anticipo con Mercado Pago y solo entonces agenda.',
+    'Tu agente atiende por WhatsApp, comprueba el anticipo con Mercado Pago y solo entonces agenda.',
     'El dinero cae en tu Mercado Pago, sin pasar por nosotros. Rápido para tu clientela y con tu agenda a la segura.',
   ]);
   await expect(page.locator('#citas .clave--principal')).toHaveCount(1);

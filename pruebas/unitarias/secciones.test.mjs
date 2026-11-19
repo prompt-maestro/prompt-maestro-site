@@ -1,5 +1,5 @@
 // @ts-check
-// Las secciones de despues de la demostracion, leidas de la pagina ya armada: la ruta de "Como funciona", los retratos
+// Las secciones de despues de la demostracion, leidas de la pagina ya armada: los pasos de "Como funciona", los retratos
 // de "Para quien", la letra chica de los planes, las preguntas y la hoja de estilos que viaja achicada. Todo sale de
 // los datos: aqui se comprueba que la pagina dice lo que dicen ellos, y que ellos dicen lo que aprobo el dueno.
 import assert from 'node:assert/strict';
@@ -59,152 +59,193 @@ before(async () => {
   preguntas = await leer('preguntas.json');
 });
 
-test('como funciona: seis estaciones en orden, con los rotulos aprobados, y cada una dice quien la hace', () => {
-  const { lista } = secciones.pasos;
-  assert.deepEqual(
-    lista.map((/** @type {any} */ paso) => [paso.quien, paso.rotulo]),
-    [
-      ['Tu clientela', 'Te escriben por WhatsApp'],
-      ['Tu agente', 'Contesta y ofrece tus horarios libres'],
-      ['Tu agente', 'Aparta el lugar y cobra el anticipo'],
-      ['Tu agente', 'La cita entra a tu calendario, garantizada'],
-      ['Tu agente', 'Recuerda la cita, un día y una hora antes'],
-      ['Tú', 'Tocas sí o no: ¿asistió?'],
-    ],
-  );
+/** Los nueve pasos aprobados por Jose (18-nov-2026): acto, numero, quien, papel y rotulo. */
+const PASOS = [
+  ['Antes de la cita', '01', 'Tu clientela', 'clientela', 'Te escriben por WhatsApp'],
+  [
+    'Antes de la cita',
+    '02',
+    'Tu agente',
+    'agente',
+    'Contesta, resuelve dudas con tu base de conocimiento y gestiona tus citas',
+  ],
+  ['Antes de la cita', '03', 'Tu agente', 'agente', 'Aparta el lugar y cobra el anticipo'],
+  ['La cita, garantizada', '04', 'Tu agente', 'agente', 'Verifica el pago, agenda la cita y la agrega a tu calendario'],
+  [
+    'La cita, garantizada',
+    '05',
+    'Tu agente',
+    'agente',
+    'Recuerda la cita un día y una hora antes y, si hace falta, la reagenda según tu calendario',
+  ],
+  ['La cita, garantizada', '06', 'Tú', 'tu', 'Le confirmas a tu agente si tu clienta o paciente llegó'],
+  ['Después, y cuando tú quieras', '07', 'Tu agente', 'agente', 'Según si llegó o no, le da el seguimiento adecuado'],
+  [
+    'Después, y cuando tú quieras',
+    '08',
+    'Tú',
+    'tu',
+    'Intervienes cuando quieras; tu agente solo te busca si hace falta',
+  ],
+  ['Después, y cuando tú quieras', '09', 'Tú', 'tu', 'Le pides cambios por WhatsApp: nada se aplica sin tu sí'],
+];
+
+/**
+ * Las tarjetas de "Como funciona" en la pagina armada, en orden: su acto, su papel y lo que dicen.
+ * @returns {{ acto: string, papel: string, icono: string, quien: string, escena: string, adorno: boolean, numero: string, rotulo: string }[]}
+ */
+function tarjetasDeLaRuta() {
   const bloque = seccion('como-funciona');
-  assert.ok(bloque.includes('>De «hola» a «asistió», <em>casi sin tocar el celular.</em></h2>'));
-  // Es una lista ordenada. Cada estacion lleva su papel, quien la hace (para quien no la ve), su numero y su rotulo.
-  assert.match(bloque, /<ol class="ruta__lista" role="list">/);
-  const estaciones = [
-    ...bloque.matchAll(
-      /<li class="ruta__estacion" data-papel="(\w+)"( data-abre)? data-enciende>\s*<span class="ruta__punto" aria-hidden="true"><\/span>\s*<span class="ruta__quien( solo-lector)?">([^<]+)<\/span>\s*<span class="ruta__numero" aria-hidden="true">(\d\d)<\/span>\s*<p class="ruta__rotulo">([^<]+)<\/p>/g,
+  return [...bloque.matchAll(/<div class="acto">\s*<h3 class="acto__nombre">([^<]+)<\/h3>([\s\S]*?)<\/ol>/g)].flatMap(
+    ([, acto, dentro]) =>
+      [
+        ...(dentro ?? '').matchAll(
+          /<li class="paso" data-papel="(\w+)" data-enciende>\s*<p class="paso__quien"><span class="paso__icono" aria-hidden="true"><svg focusable="false"><use href="#(i-[\w-]+)"\/><\/svg><\/span>([^<]+)<\/p>\s*<div class="paso__escena"( aria-hidden="true")?>([\s\S]*?)<\/div>\s*<p class="paso__pie"><span class="paso__numero">(\d\d)<\/span> <span class="paso__rotulo">([^<]+)<\/span><\/p>\s*<\/li>/g,
+        ),
+      ].map(([, papel, icono, quien, adorno, escena, numero, rotulo]) => ({
+        acto: acto ?? '',
+        papel: papel ?? '',
+        icono: icono ?? '',
+        quien: quien ?? '',
+        escena: escena ?? '',
+        adorno: Boolean(adorno),
+        numero: numero ?? '',
+        rotulo: rotulo ?? '',
+      })),
+  );
+}
+
+/**
+ * Lo que se lee de una escena, sin etiquetas.
+ * @param {string} escena
+ */
+const textoDe = (escena) =>
+  escena
+    .replace(/<svg[\s\S]*?<\/svg>/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+test('como funciona: nueve pasos en tres actos, numerados de corrido, con su insignia, su numero y su rotulo', () => {
+  const bloque = seccion('como-funciona');
+  assert.ok(bloque.includes('>Desde el primer «hola» <em>hasta el seguimiento después de la cita.</em></h2>'));
+  // Tres actos, cada uno con su nombre de titulo y sus tres pasos en una lista ordenada.
+  assert.deepEqual(
+    [...bloque.matchAll(/<h3 class="acto__nombre">([^<]+)<\/h3>\s*<ol class="acto__pasos" role="list">/g)].map(
+      ([, nombre]) => nombre,
     ),
-  ].map(([, papel, abre, escondido, quien, numero, rotulo]) => ({
-    papel,
-    abre: Boolean(abre),
-    escondido: Boolean(escondido),
-    quien,
-    numero,
-    rotulo,
-  }));
+    ['Antes de la cita', 'La cita, garantizada', 'Después, y cuando tú quieras'],
+  );
+  const tarjetas = tarjetasDeLaRuta();
   assert.deepEqual(
-    estaciones,
-    lista.map((/** @type {any} */ paso, /** @type {number} */ lugar) => ({
-      papel: paso.papel,
-      abre: paso.abre === true,
-      // Solo la estacion que abre un tramo ensena quien lo hace; las demas lo dicen para el lector de pantalla.
-      escondido: paso.abre !== true,
-      quien: paso.quien,
-      numero: `0${lugar + 1}`,
-      rotulo: paso.rotulo,
-    })),
+    tarjetas.map(({ acto, numero, quien, papel, rotulo }) => [acto, numero, quien, papel, rotulo]),
+    PASOS,
+  );
+  // Cada insignia lleva el icono de su papel, y la escena es de adorno: lo que se lee es la insignia, el numero y el rotulo.
+  for (const { papel, icono, adorno } of tarjetas) {
+    assert.equal(icono, `i-papel-${papel}`);
+    assert.ok(adorno, 'una escena no es de adorno');
+  }
+  // Los datos dicen lo mismo, sin numeros: los pone la armada.
+  const enDatos = secciones.pasos.actos.flatMap((/** @type {any} */ acto) =>
+    acto.pasos.map((/** @type {any} */ paso) => [acto.nombre, paso.quien, paso.papel, paso.rotulo]),
   );
   assert.deepEqual(
-    estaciones.map(({ papel }) => papel),
-    ['clientela', 'agente', 'agente', 'agente', 'agente', 'tu'],
+    enDatos,
+    PASOS.map(([acto, , quien, papel, rotulo]) => [acto, quien, papel, rotulo]),
   );
-  assert.deepEqual(
-    estaciones.filter(({ abre }) => abre).map(({ numero }) => numero),
-    ['01', '02', '06'],
-  );
-  // En pantallas anchas quien hace que va en una fila aparte, que el lector de pantalla no repite.
-  const fila = /<p class="ruta__quienes" aria-hidden="true">(.*?)<\/p>/.exec(bloque)?.[1] ?? '';
-  assert.deepEqual(
-    [...fila.matchAll(/<span class="ruta__de" data-papel="(\w+)">([^<]+)<\/span>/g)].map(([, papel, quien]) => [
-      papel,
-      quien,
-    ]),
-    [
-      ['clientela', 'Tu clientela'],
-      ['agente', 'Tu agente'],
-      ['tu', 'Tú'],
-    ],
-  );
-  // Los seis renglones largos de antes ya no van.
+  assert.ok(!JSON.stringify(secciones.pasos).includes('"numero"'));
+  // La ruta de seis, sus fichas de hora, su aviso de app y la barra "Lo que haces tu" ya no van.
   for (const viejo of [
-    'Le escriben al WhatsApp de tu negocio.',
-    'horarios reales de tu Google Calendar',
-    'pasos__lista',
+    'ruta__',
+    'mini__',
+    'pasos__tu',
+    'Lo que haces tú',
+    'Contesta y ofrece tus horarios libres',
+    'Tocas sí o no',
+    'i-campana',
+    'i-toque',
   ]) {
     assert.ok(!html.includes(viejo), viejo);
   }
+  for (const viejo of ['lista', 'tu', 'tuTitulo']) assert.equal(viejo in secciones.pasos, false, viejo);
+  // Todo icono que la pagina pide esta dibujado en ella, una sola vez.
+  const pedidos = new Set([...html.matchAll(/<use href="#(i-[\w-]+)"/g)].map(([, id]) => id));
+  for (const id of ['i-papel-clientela', 'i-papel-agente', 'i-papel-tu', 'i-responder']) assert.ok(pedidos.has(id), id);
+  for (const id of pedidos) assert.equal(html.split(`<symbol id="${id}"`).length - 1, 1, id);
 });
 
-test('como funciona: cada estacion trae su mini escena, de adorno, con los textos de los datos', () => {
-  const bloque = seccion('como-funciona');
-  const escenas = [...bloque.matchAll(/<div class="ruta__escena"( aria-hidden="true")?>([\s\S]*?)<\/div>\s*<\/li>/g)];
-  assert.equal(escenas.length, 6);
-  for (const [, adorno] of escenas) assert.ok(adorno, 'una escena no es de adorno');
-  const texto = (/** @type {number} */ lugar) =>
-    (escenas[lugar]?.[2] ?? '')
-      .replace(/<svg[\s\S]*?<\/svg>/g, ' ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  assert.equal(texto(0), 'Hola, ¿tienes lugar el jueves? 10:12 a. m.');
-  assert.equal(texto(1), 'Te puedo ofrecer el jueves: 10:00 am 12:30 pm 5:00 pm');
-  assert.equal(texto(2), '$ Anticipo Gelish $150');
-  assert.equal(texto(3), 'JUE 19 5:00 pm Ana · Gelish');
-  assert.equal(texto(4), 'Te recordamos tu cita Mañana, 5:00 pm');
-  assert.equal(texto(5), 'Sí No');
-  // La hora elegida es la ultima, y el "Si" es el que va tocado.
-  assert.match(escenas[1]?.[2] ?? '', /<span>10:00 am<\/span><span>12:30 pm<\/span><span data-elegida>5:00 pm<\/span>/);
-  assert.match(escenas[5]?.[2] ?? '', /<span data-toca>Sí<\/span><span>No<\/span>/);
-  // La cita entra sellada: el sello de la marca, y solo en esa estacion.
-  assert.equal(escenas.filter(([, , dentro]) => dentro?.includes('class="sello"')).length, 1);
-  assert.match(escenas[3]?.[2] ?? '', /class="sello"/);
+test('como funciona: cada escena trae sus mensajes de WhatsApp, con los textos de los datos y nada que se toque', () => {
+  const tarjetas = tarjetasDeLaRuta();
+  assert.deepEqual(
+    tarjetas.map(({ escena }) => textoDe(escena)),
+    [
+      'Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves? 10:12 a. m.',
+      'El gelish cuesta $350 y dura de 2 a 3 semanas. El jueves tengo lugar a las 5:00 pm. ¿Te lo aparto? 10:12 a. m. Lo sabe por tu base de conocimiento',
+      '$ Anticipo Gelish semipermanente $150 mercadopago.com.mx Te aparté el jueves a las 5:00 pm. Se confirma con el anticipo de $150. 10:14 a. m.',
+      'Pago verificado · $150 JUE 19 5:00 pm Ana · Gelish',
+      '¡Hola Ana! Te recordamos tu cita de Gelish mañana jueves a las 5:00 pm. 5:00 p. m. Cambiar cita',
+      '¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm? 6:05 p. m. Sí No',
+      '¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita. 6:06 p. m. Si no llega, le ofrece reagendar',
+      'Hola Ana, soy Bella. Con gusto te lo reviso yo. 11:20 a. m. Tu agente se hace a un lado',
+      'Sube el gelish a $380 9:02 a. m. Cambio el precio del gelish de $350 a $380. ¿Lo aplico? 9:02 a. m. Sí, aplícalo No',
+    ],
+  );
+  const escena = (/** @type {number} */ lugar) => tarjetas[lugar]?.escena ?? '';
+  // Quien escribe: lo de la clienta (y lo de ella) sale en verde, con palomitas; lo de su agente entra en blanco.
+  const lados = tarjetas.map(({ escena: dentro }) =>
+    [...dentro.matchAll(/<p class="wa__m wa__m--(sale|entra)">/g)].map(([, lado]) => lado),
+  );
+  assert.deepEqual(lados, [
+    ['sale'],
+    ['entra'],
+    ['entra'],
+    [],
+    ['entra'],
+    ['entra'],
+    ['entra'],
+    ['sale'],
+    ['sale', 'entra'],
+  ]);
+  for (const dentro of tarjetas.map(({ escena: una }) => una)) {
+    const sale = [...dentro.matchAll(/<p class="wa__m wa__m--sale">[\s\S]*?<\/p>/g)];
+    for (const [globo] of sale) assert.match(globo, /<use href="#i-tics"\/>/);
+  }
+  // El link de pago va dentro del globo que lo trae, como en WhatsApp.
+  assert.match(escena(2), /<p class="wa__m wa__m--entra"><span class="wa__liga">/);
+  // La cita entra sellada, y solo en el paso 04; el pago verificado lleva la palomita verde.
+  assert.equal(tarjetas.filter(({ escena: dentro }) => dentro.includes('class="sello"')).length, 1);
+  assert.match(
+    escena(3),
+    /<p class="mv__hizo mv__hizo--bien"><i>[\s\S]*?<\/i>Pago verificado · \$150<\/p>\s*<p class="minicita">/,
+  );
+  // El recordatorio trae el boton de responder de WhatsApp; las respuestas tocadas son el "Si" y el "Si, aplicalo".
+  assert.match(
+    escena(4),
+    /<p class="paso__botones"><span><svg focusable="false"><use href="#i-responder"\/><\/svg>Cambiar cita<\/span><\/p>/,
+  );
+  assert.match(escena(5), /<p class="paso__botones"><span data-toca>Sí<\/span><span>No<\/span><\/p>/);
+  assert.match(escena(8), /<p class="paso__botones"><span data-toca>Sí, aplícalo<\/span><span>No<\/span><\/p>/);
+  // Son dibujos: dentro de las escenas no hay nada que se enfoque o se toque.
+  for (const { escena: dentro } of tarjetas) {
+    assert.doesNotMatch(dentro, /<(button|a|input|select|textarea)\b|tabindex|<svg(?![^>]*focusable="false")/);
+  }
   // Ningun texto de las escenas vive en la plantilla: salen de secciones.json.
-  const enDatos = JSON.stringify(secciones.pasos.lista);
-  for (const dicho of [
-    'Hola, ¿tienes lugar el jueves?',
-    'Te puedo ofrecer el jueves:',
-    'Anticipo Gelish',
-    'Te recordamos tu cita',
-    'Mañana, 5:00 pm',
-  ]) {
+  const plantilla = /<div class="actos">[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+  assert.ok(plantilla);
+  const enDatos = JSON.stringify(secciones.pasos.actos);
+  for (const dicho of ['Lo sabe por tu base de conocimiento', 'Cambiar cita', 'Sí, aplícalo', 'mercadopago.com.mx']) {
     assert.ok(enDatos.includes(dicho), dicho);
   }
 });
 
-test('como funciona: lo que haces tu conserva sus tres renglones, cada uno con un icono que existe', () => {
-  const bloque = seccion('como-funciona');
-  assert.deepEqual(
-    secciones.pasos.tu.map((/** @type {any} */ tarea) => tarea.texto),
-    [
-      'Tocar sí o no al final de cada cita.',
-      'Contestar tú cuando tu agente te avise que no sabe algo.',
-      'Pedirle cambios por WhatsApp: nada se aplica sin tu sí.',
-    ],
-  );
-  assert.ok(bloque.includes('<h3 class="pasos__subtitulo">Lo que haces tú</h3>'));
-  const renglones = [
-    ...bloque.matchAll(
-      /<li><svg class="pasos__icono" aria-hidden="true" focusable="false"><use href="#i-(\w+)"\/><\/svg>([^<]+)<\/li>/g,
-    ),
-  ].map(([, icono, texto]) => ({ icono, texto }));
-  assert.deepEqual(renglones, secciones.pasos.tu);
-  assert.deepEqual(
-    renglones.map(({ icono }) => icono),
-    ['toque', 'aviso', 'perillas'],
-  );
-  // Todo icono que la pagina pide esta dibujado en ella, una sola vez.
-  const pedidos = new Set([...html.matchAll(/<use href="#(i-\w+)"/g)].map(([, id]) => id));
-  assert.ok(pedidos.size >= 6);
-  for (const id of pedidos) assert.equal(html.split(`<symbol id="${id}"`).length - 1, 1, id);
-});
-
-test('llms.txt cuenta los seis pasos con quien hace cada uno', () => {
+test('llms.txt cuenta los nueve pasos, numerados, con quien hace cada uno', () => {
   const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
   const pasos = /## Cómo funciona\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
-  assert.deepEqual(pasos, [
-    '1. Tu clientela: Te escriben por WhatsApp',
-    '2. Tu agente: Contesta y ofrece tus horarios libres',
-    '3. Tu agente: Aparta el lugar y cobra el anticipo',
-    '4. Tu agente: La cita entra a tu calendario, garantizada',
-    '5. Tu agente: Recuerda la cita, un día y una hora antes',
-    '6. Tú: Tocas sí o no: ¿asistió?',
-  ]);
+  assert.deepEqual(
+    pasos,
+    PASOS.map(([, numero, quien, , rotulo]) => `${Number(numero)}. ${quien}: ${rotulo}`),
+  );
 });
 
 test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de siempre y un texto que describe la foto', async () => {

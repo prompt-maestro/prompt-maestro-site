@@ -123,9 +123,10 @@ html.con-corto .barra--corto:not([data-fondo]) {
   }
 }
 
-/* Ya con fondo, la barra se separa de lo que le pasa por debajo con una raya. */
+/* Ya con fondo, la barra se separa de lo que le pasa por debajo con una raya. La raya es una sombra y no un borde:
+   un borde le suma un pixel de alto a la barra y, como va pegada arriba, empuja un pixel toda la pagina. */
 .barra[data-fondo] {
-  border-bottom: 1px solid var(--linea);
+  box-shadow: 0 1px 0 var(--linea);
 }
 
 /* Al regresar con el teclado a la barra (que ya esta fija a la vista) la pagina no tiene por que moverse. */

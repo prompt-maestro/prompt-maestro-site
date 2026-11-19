@@ -284,151 +284,168 @@ test('"Ver más preguntas" se maneja con el teclado y ensena su foco', async ({ 
   await expect(boton).toBeFocused();
 });
 
-test('como funciona es una ruta de seis estaciones con su mini escena, y cada una dice quien la hace', async ({
+test('como funciona: nueve pasos en tres actos, cada uno con quien lo hace, su escena, su numero y su rotulo', async ({
   page,
 }) => {
   const seccion = await abrirEn(page, 'como-funciona');
   await expect(seccion.getByRole('heading', { level: 2 })).toHaveText(
-    'De «hola» a «asistió», casi sin tocar el celular.',
+    'Desde el primer «hola» hasta el seguimiento después de la cita.',
   );
-  // Una lista ordenada de seis: su rotulo y, para quien no la ve, quien hace ese paso.
-  const estaciones = seccion.locator('ol.ruta__lista > li');
-  const ESPERADAS = [
+  // Tres actos, cada uno con su titulo y su lista de tres pasos.
+  await expect(seccion.getByRole('heading', { level: 3 })).toHaveText([
+    'Antes de la cita',
+    'La cita, garantizada',
+    'Después, y cuando tú quieras',
+  ]);
+  const actos = seccion.locator('.acto');
+  await expect(actos).toHaveCount(3);
+  for (const acto of await actos.all()) await expect(acto.getByRole('listitem')).toHaveCount(3);
+  const pasos = seccion.locator('.paso');
+  const ESPERADOS = [
     ['Tu clientela', 'Te escriben por WhatsApp'],
-    ['Tu agente', 'Contesta y ofrece tus horarios libres'],
+    ['Tu agente', 'Contesta, resuelve dudas con tu base de conocimiento y gestiona tus citas'],
     ['Tu agente', 'Aparta el lugar y cobra el anticipo'],
-    ['Tu agente', 'La cita entra a tu calendario, garantizada'],
-    ['Tu agente', 'Recuerda la cita, un día y una hora antes'],
-    ['Tú', 'Tocas sí o no: ¿asistió?'],
+    ['Tu agente', 'Verifica el pago, agenda la cita y la agrega a tu calendario'],
+    ['Tu agente', 'Recuerda la cita un día y una hora antes y, si hace falta, la reagenda según tu calendario'],
+    ['Tú', 'Le confirmas a tu agente si tu clienta o paciente llegó'],
+    ['Tu agente', 'Según si llegó o no, le da el seguimiento adecuado'],
+    ['Tú', 'Intervienes cuando quieras; tu agente solo te busca si hace falta'],
+    ['Tú', 'Le pides cambios por WhatsApp: nada se aplica sin tu sí'],
   ];
-  await expect(seccion.getByRole('list').first().getByRole('listitem')).toHaveCount(6);
-  await expect(estaciones.locator('.ruta__rotulo')).toHaveText(ESPERADAS.map(([, rotulo]) => rotulo ?? ''));
-  await expect(estaciones.locator('.ruta__quien')).toHaveText(ESPERADAS.map(([quien]) => quien ?? ''));
-  await expect(estaciones.locator('.ruta__numero')).toHaveText(['01', '02', '03', '04', '05', '06']);
-  // Las escenas son ilustraciones: se ven, pero no se le leen a quien no las ve.
-  const escenas = estaciones.locator('.ruta__escena');
-  await expect(escenas).toHaveCount(6);
+  await expect(pasos).toHaveCount(9);
+  await expect(pasos.locator('.paso__quien')).toHaveText(ESPERADOS.map(([quien]) => quien ?? ''));
+  await expect(pasos.locator('.paso__rotulo')).toHaveText(ESPERADOS.map(([, rotulo]) => rotulo ?? ''));
+  await expect(pasos.locator('.paso__numero')).toHaveText(['01', '02', '03', '04', '05', '06', '07', '08', '09']);
+  // Lo que se lee de cada paso: quien, su numero y su rotulo. La escena es de adorno.
+  await expect(pasos.locator('.paso__pie').first()).toHaveText('01 Te escriben por WhatsApp');
+  const escenas = pasos.locator('.paso__escena');
   for (const escena of await escenas.all()) {
     await expect(escena).toHaveAttribute('aria-hidden', 'true');
-    await expect(escena.locator(':scope > *')).toBeVisible();
-    await expect(escena.locator(':scope > *')).toHaveCSS('opacity', '1');
+    await expect(escena.locator(':scope > *').first()).toBeVisible();
+    await expect(escena.locator(':scope > *').first()).toHaveCSS('opacity', '1');
   }
-  await expect(escenas.nth(0)).toContainText('Hola, ¿tienes lugar el jueves?');
-  await expect(escenas.nth(1).locator('.mini__horas span')).toHaveText(['10:00 am', '12:30 pm', '5:00 pm']);
-  await expect(escenas.nth(2)).toContainText('Anticipo Gelish');
+  // Cada escena, con sus mensajes de WhatsApp.
+  await expect(escenas.nth(0).locator('.wa__m--sale')).toContainText('Hola, ¿cuánto cuesta el gelish?');
+  await expect(escenas.nth(1).locator('.wa__m--entra')).toContainText('El gelish cuesta $350');
+  await expect(escenas.nth(1).locator('.mv__hizo')).toHaveText('Lo sabe por tu base de conocimiento');
+  await expect(escenas.nth(2).locator('.wa__liga')).toContainText('Anticipo Gelish semipermanente');
+  await expect(escenas.nth(3).locator('.mv__hizo')).toHaveText('Pago verificado · $150');
   await expect(escenas.nth(3).locator('.sello')).toBeVisible();
-  await expect(escenas.nth(4)).toContainText('Te recordamos tu cita');
-  await expect(escenas.nth(5).locator('span')).toHaveText(['Sí', 'No']);
-  // Dentro de las escenas la letra es la del sistema, como en el WhatsApp de la demostracion, y sus colores.
+  await expect(escenas.nth(4).locator('.paso__botones span')).toHaveText(['Cambiar cita']);
+  await expect(escenas.nth(5).locator('.paso__botones span')).toHaveText(['Sí', 'No']);
+  await expect(escenas.nth(6).locator('.mv__hizo')).toHaveText('Si no llega, le ofrece reagendar');
+  await expect(escenas.nth(7).locator('.mv__hizo')).toHaveText('Tu agente se hace a un lado');
+  await expect(escenas.nth(8).locator('.wa__m--entra')).toContainText(
+    'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
+  );
+  await expect(escenas.nth(8).locator('.paso__botones span')).toHaveText(['Sí, aplícalo', 'No']);
+  // Ya no hay fichas de hora, ni aviso de app, ni la barra "Lo que haces tu".
+  await expect(seccion.locator('.mini__horas, .mini__aviso, .pasos__tu, .ruta')).toHaveCount(0);
+  await expect(seccion).not.toContainText('Lo que haces tú');
+  // Dentro de las escenas nada se enfoca ni se toca: son dibujo.
   expect(
-    await escenas
-      .nth(0)
-      .locator('.mini')
-      .evaluate((pieza) => getComputedStyle(pieza).fontFamily),
-  ).toMatch(/^system-ui/);
-  await expect(escenas.nth(0).locator('.mini')).toHaveCSS('background-color', 'rgb(217, 253, 211)');
+    await escenas.evaluateAll(
+      (lista) =>
+        lista
+          .flatMap((escena) => [...escena.querySelectorAll('*')])
+          .filter((pieza) => {
+            const el = /** @type {HTMLElement} */ (pieza);
+            return el.tabIndex >= 0 || el.matches('a, button, input, select, textarea, [onclick]');
+          }).length,
+    ),
+  ).toBe(0);
+  // La letra de la escena es la del sistema, con los colores del WhatsApp de dia; lo tocado va en el azul de la marca.
+  expect(await escenas.first().evaluate((escena) => getComputedStyle(escena).fontFamily)).toMatch(/^system-ui/);
+  await expect(escenas.first()).toHaveCSS('background-color', 'rgb(239, 233, 224)');
+  await expect(escenas.nth(0).locator('.wa__m--sale')).toHaveCSS('background-color', 'rgb(217, 253, 211)');
   await expect(escenas.nth(5).locator('[data-toca]')).toHaveCSS('background-color', 'rgb(63, 92, 245)');
+  await expect(escenas.nth(3).locator('.sello')).toHaveCSS('color', 'rgb(11, 122, 67)');
 
-  const cajas = await estaciones.evaluateAll((lista) =>
-    lista.map((estacion) => {
-      const caja = (/** @type {string} */ que) => {
-        const { top, left, right, bottom, width, height } = /** @type {Element} */ (
-          estacion.querySelector(que)
-        ).getBoundingClientRect();
-        return { top, left, right, bottom, width, height };
-      };
-      const punto = getComputedStyle(/** @type {Element} */ (estacion.querySelector('.ruta__punto')), '::after');
-      return {
-        escena: caja('.ruta__escena'),
-        rotulo: caja('.ruta__rotulo'),
-        quien: caja('.ruta__quien'),
-        panel: getComputedStyle(estacion, '::before').content,
-        marco: getComputedStyle(/** @type {Element} */ (estacion.querySelector('.ruta__escena'))).boxShadow,
-        punto: punto.backgroundColor,
-      };
-    }),
-  );
-  const acostada = await page.evaluate(() => matchMedia('(min-width: 900px)').matches);
-  const fila = seccion.locator('.ruta__quienes');
-  // El punto de ella es blanco; los demas, huecos, con el filo de luz.
-  expect(cajas.map(({ punto }) => punto)).toEqual([...Array(5).fill('rgb(15, 16, 20)'), 'rgb(245, 244, 240)']);
-  if (acostada) {
-    // La ruta va acostada: las seis escenas en un renglon, de izquierda a derecha, cada una en su marco.
-    for (const [lugar, { escena, rotulo, quien, marco }] of cajas.entries()) {
-      expect(Math.abs(escena.top - (cajas[0]?.escena.top ?? 0))).toBeLessThanOrEqual(1);
-      if (lugar > 0) expect(escena.left).toBeGreaterThan(cajas[lugar - 1]?.escena.right ?? 0);
-      // Debajo de cada escena, su rotulo; quien la hace ya esta arriba, y aqui solo queda para el lector de pantalla.
-      expect(rotulo.top).toBeGreaterThan(escena.bottom);
-      expect(quien.width).toBeLessThanOrEqual(1);
-      expect(marco).not.toBe('none');
-    }
-    // Arriba, quien hace que: el rotulo de su agente abarca sus cuatro estaciones, de la segunda a la quinta.
-    await expect(fila).toBeVisible();
-    await expect(fila).toHaveAttribute('aria-hidden', 'true');
-    await expect(fila.locator('span')).toHaveText(['Tu clientela', 'Tu agente', 'Tú']);
-    const [clientela, agente, tu] = await fila
-      .locator('span')
-      .evaluateAll((rotulos) => rotulos.map((rotulo) => rotulo.getBoundingClientRect().toJSON()));
-    expect(Math.abs(agente.left - (cajas[1]?.escena.left ?? 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs(agente.right - (cajas[4]?.escena.right ?? 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs(clientela.right - (cajas[0]?.escena.right ?? 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs(tu.left - (cajas[5]?.escena.left ?? 0))).toBeLessThanOrEqual(1);
-    expect(agente.bottom).toBeLessThan(cajas[1]?.escena.top ?? 0);
-    // La estacion de ella va resaltada: su marco lleva la luz de la marca, y solo el suyo.
-    expect(cajas.map(({ marco }) => marco.includes('rgba(132, 151, 255, 0.75)'))).toEqual([
-      ...Array(5).fill(false),
-      true,
-    ]);
-  } else {
-    // La ruta va de pie: una estacion debajo de otra, con la escena debajo o a un lado de su rotulo.
-    await expect(fila).toBeHidden();
-    for (const [lugar, { escena, rotulo, quien }] of cajas.entries()) {
-      if (lugar > 0) expect(rotulo.top).toBeGreaterThan(cajas[lugar - 1]?.rotulo.bottom ?? 0);
-      expect(escena.bottom).toBeGreaterThan(rotulo.top);
-      // Quien hace el paso se lee arriba de la estacion que abre su tramo: la 01, la 02 y la 06.
-      const abre = [0, 1, 5].includes(lugar);
-      if (abre) expect(quien.bottom).toBeLessThanOrEqual(rotulo.top);
-      expect(quien.height > 4).toBe(abre);
-    }
-    // La de ella va dentro de un panel resaltado, y solo la suya.
-    expect(cajas.map(({ panel }) => panel !== 'none')).toEqual([...Array(5).fill(false), true]);
-  }
-  await sinFaltasDeAccesibilidad(page, '#como-funciona');
-});
-
-test('lo que haces tu: sus tres renglones de siempre, en una tarjeta y cada uno con su icono', async ({ page }) => {
-  const seccion = await abrirEn(page, 'como-funciona');
-  const tarjeta = seccion.locator('.pasos__tu');
-  await expect(tarjeta.getByRole('heading', { level: 3 })).toHaveText('Lo que haces tú');
-  const renglones = tarjeta.getByRole('listitem');
-  await expect(renglones).toHaveText([
-    'Tocar sí o no al final de cada cita.',
-    'Contestar tú cuando tu agente te avise que no sabe algo.',
-    'Pedirle cambios por WhatsApp: nada se aplica sin tu sí.',
-  ]);
-  // Cada icono es de adorno, mide lo mismo y de verdad se dibuja: su figura existe en la pagina.
-  const iconos = await renglones.locator('svg').evaluateAll((lista) =>
-    lista.map((icono) => {
-      const figura = /** @type {SVGGraphicsElement} */ (icono.querySelector('use'));
-      const { width, height } = icono.getBoundingClientRect();
-      return {
-        adorno: icono.getAttribute('aria-hidden'),
-        cual: figura.getAttribute('href'),
-        existe: document.querySelector(figura.getAttribute('href') ?? 'nada') instanceof SVGSymbolElement,
-        ancho: Math.round(width),
-        alto: Math.round(height),
-      };
-    }),
-  );
-  expect(iconos).toEqual(
-    ['#i-toque', '#i-aviso', '#i-perillas'].map((cual) => ({
-      adorno: 'true',
-      cual,
-      existe: true,
-      ancho: 38,
-      alto: 38,
+  // Las tres de "Tu" van encendidas en azul (su capa de luz y su insignia rellena), y ninguna otra.
+  const aspecto = await pasos.evaluateAll((lista) =>
+    lista.map((paso) => ({
+      papel: paso.getAttribute('data-papel'),
+      capa: getComputedStyle(paso, '::after').content,
+      borde: getComputedStyle(paso, '::after').boxShadow,
+      insignia: getComputedStyle(/** @type {Element} */ (paso.querySelector('.paso__quien'))).backgroundColor,
     })),
   );
+  expect(aspecto.map(({ papel }) => papel)).toEqual([
+    'clientela',
+    'agente',
+    'agente',
+    'agente',
+    'agente',
+    'tu',
+    'agente',
+    'tu',
+    'tu',
+  ]);
+  for (const { papel, capa, borde, insignia } of aspecto) {
+    const tu = papel === 'tu';
+    expect(capa !== 'none').toBe(tu);
+    if (tu) expect(borde).toContain('rgba(132, 151, 255, 0.6)');
+    expect(insignia === 'rgb(63, 92, 245)').toBe(tu);
+  }
+  // Cada insignia lleva el icono de su papel, de adorno y dibujado en la pagina.
+  const iconos = await pasos.locator('.paso__icono').evaluateAll((lista) =>
+    lista.map((icono) => {
+      const figura = /** @type {Element} */ (icono.querySelector('use')).getAttribute('href') ?? 'nada';
+      return {
+        adorno: icono.getAttribute('aria-hidden'),
+        figura,
+        existe: document.querySelector(figura) instanceof SVGSymbolElement,
+      };
+    }),
+  );
+  expect(iconos).toEqual(aspecto.map(({ papel }) => ({ adorno: 'true', figura: `#i-papel-${papel}`, existe: true })));
+
+  // La composicion: en computadora tres por fila, con insignias, escenas y rotulos a la misma altura; en tableta
+  // una por renglon con la escena a la izquierda; en celular una debajo de otra. Siempre en orden.
+  const cajas = await pasos.evaluateAll((lista) =>
+    lista.map((paso) => {
+      const caja = (/** @type {string} */ que) =>
+        /** @type {Element} */ (paso.querySelector(que)).getBoundingClientRect().toJSON();
+      return {
+        paso: paso.getBoundingClientRect().toJSON(),
+        quien: caja('.paso__quien'),
+        escena: caja('.paso__escena'),
+        rotulo: caja('.paso__rotulo'),
+        flecha: getComputedStyle(paso, '::before').content,
+      };
+    }),
+  );
+  const ancho = page.viewportSize()?.width ?? 0;
+  for (const [lugar, { paso, quien, escena, rotulo, flecha }] of cajas.entries()) {
+    const enElActo = lugar % 3;
+    // Una flecha une cada tarjeta con la anterior de su acto.
+    expect(flecha !== 'none', `flecha del paso ${lugar + 1}`).toBe(enElActo > 0);
+    const anterior = cajas[lugar - 1];
+    if (ancho >= 900) {
+      // La insignia al centro de la tarjeta, arriba de la escena; el rotulo debajo.
+      expect(Math.abs(quien.left + quien.width / 2 - (paso.left + paso.width / 2))).toBeLessThanOrEqual(1);
+      expect(quien.bottom).toBeLessThanOrEqual(escena.top);
+      expect(rotulo.top).toBeGreaterThanOrEqual(escena.bottom);
+      if (anterior && enElActo > 0) {
+        expect(paso.left).toBeGreaterThan(anterior.paso.right);
+        expect(Math.abs(paso.top - anterior.paso.top)).toBeLessThanOrEqual(1);
+        expect(Math.abs(quien.top - anterior.quien.top)).toBeLessThanOrEqual(1);
+        expect(Math.abs(escena.top - anterior.escena.top)).toBeLessThanOrEqual(1);
+        expect(Math.abs(escena.height - anterior.escena.height)).toBeLessThanOrEqual(1);
+      }
+    } else {
+      if (anterior) expect(paso.top).toBeGreaterThan(anterior.paso.bottom);
+      if (ancho >= 600) {
+        // La escena a la izquierda; quien y el rotulo a su derecha.
+        expect(quien.left).toBeGreaterThan(escena.right);
+        expect(rotulo.left).toBeGreaterThan(escena.right);
+      } else {
+        expect(quien.bottom).toBeLessThanOrEqual(escena.top);
+        expect(rotulo.top).toBeGreaterThanOrEqual(escena.bottom);
+      }
+    }
+  }
+  await sinFaltasDeAccesibilidad(page, '#como-funciona');
 });
 
 test('para quien: tres retratos enmarcados, con la foto completa y nitida y, debajo, su nombre y su renglon', async ({
@@ -714,6 +731,38 @@ test('las tres anclas de la barra llevan a su seccion', async ({ page }) => {
     await barra.getByRole('link', { name: nombre }).click();
     await expect(page).toHaveURL(new RegExp(`#${ancla}$`));
     await expect(page.locator(`#${ancla}`).getByRole('heading', { level: 2 })).toBeInViewport();
+  }
+});
+
+test('al bajar del inicio la barra toma su fondo y su raya sin cambiar de alto: la pagina no se mueve ni un pixel', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('./');
+  const barra = page.locator('[data-barra]');
+  const medidas = () =>
+    page.evaluate(() => {
+      const caja = (/** @type {string} */ que) =>
+        /** @type {Element} */ (document.querySelector(que)).getBoundingClientRect();
+      return {
+        barra: caja('[data-barra]').height,
+        citas: caja('#citas').top + scrollY,
+        pasos: caja('#como-funciona').top + scrollY,
+      };
+    });
+  await expect(page.locator('html')).toHaveClass(/con-js/);
+  await page.evaluate(() => document.fonts.ready);
+  // Arriba, sobre el inicio, la barra va transparente y sin raya.
+  await expect(barra).not.toHaveAttribute('data-fondo', /.*/);
+  await expect(barra).toHaveCSS('box-shadow', 'none');
+  const arriba = await medidas();
+  // Al bajar toma su fondo y su raya. La barra va pegada arriba: si creciera, empujaria todo lo que sigue.
+  await page.locator('#citas').evaluate((seccion) => seccion.scrollIntoView({ block: 'start' }));
+  await expect(barra).toHaveAttribute('data-fondo', '');
+  await expect(barra).not.toHaveCSS('box-shadow', 'none');
+  const abajo = await medidas();
+  for (const [cual, medida] of Object.entries(arriba)) {
+    expect(abajo[/** @type {keyof typeof arriba} */ (cual)], cual).toBeCloseTo(medida, 1);
   }
 });
 

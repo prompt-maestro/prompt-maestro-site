@@ -125,10 +125,13 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   acepta valores de una lista cerrada; una prueba avisa si falta). La armada se detiene si a un ejemplo le falta un texto.
 - Los textos de las secciones viven en `fuente/datos/secciones.json` y `preguntas.json`. Ninguno promete algo que el
   producto no hace: se revisan contra la tabla de la verdad del PRD antes de cambiarse.
-- «Cómo funciona» es la ruta de una cita: seis estaciones (`secciones.pasos.lista`), cada una con su rótulo, quién
-  la hace (`quien` y `papel`; `abre` marca la que empieza el tramo de alguien) y los textos de su mini escena, que
-  es una ilustración hecha con las piezas del WhatsApp de día. En celular la ruta va de pie y desde 900 de ancho,
-  acostada. «En una frase» conserva la frase que define el producto y sus tres palabras (de ahí leen los buscadores
+- «Cómo funciona» cuenta una cita de punta a punta en nueve pasos y tres actos (`secciones.pasos.actos`: cada acto
+  con su nombre y sus pasos). Cada paso es una tarjeta: quién lo hace (`quien` y `papel`, que elige su icono), una
+  escena hecha con mensajes del WhatsApp de día (`escena`: globos que salen o entran, una nota, la cita con su sello y
+  botones de respuesta) y su rótulo. Los números (01 a 09) los pone la armada (`herramientas/pasos.mjs`), así que
+  sumar o quitar un paso es tocar los datos. Los pasos de ella (`papel: "tu"`) van encendidos en azul. En celular las
+  tarjetas van una debajo de otra, en tableta acostadas (la escena a la izquierda) y desde 900 de ancho, tres por
+  fila. «En una frase» conserva la frase que define el producto y sus tres palabras (de ahí leen los buscadores
   y los asistentes con IA) y, en medio, un antes y un después (`secciones.enUnaFrase.lados`).
 - «Tu agente» es un menú de beneficios (hoy, nueve) y cada uno abre su mini video: una escena de unos segundos hecha con las
   piezas del WhatsApp de día, no un archivo de video. En celular el menú es un acordeón y desde 900 de ancho lleva un
@@ -145,7 +148,7 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   pieza no arranca o al imprimir se lee como lista, y con movimiento reducido cada beneficio es su último cuadro.
 - En `preguntas.json`, `principal` marca las cinco preguntas que se ven de entrada; las demás van dentro de un
   `<details>` («Ver más preguntas»), sin JavaScript. Los datos estructurados y `llms.txt` llevan todas.
-- Las estaciones de la ruta, los retratos de «Para quién» y el antes y después se encienden al entrar a la vista,
+- Los pasos de «Cómo funciona», los retratos de «Para quién» y el antes y después se encienden al entrar a la vista,
   una sola vez. La página llega con todo encendido: `fuente/js/encendido.js` apaga lo que todavía no se ve
   (`data-enciende="espera"`) y lo enciende al llegar (`"ya"`); cómo se ve cada estado lo dicen los estilos. Sin ese
   archivo, sin JavaScript o con movimiento reducido, todo se queda encendido y quieto.

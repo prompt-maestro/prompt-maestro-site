@@ -187,31 +187,24 @@
       <p class="sobre">{{secciones.pasos.sobre}}</p>
       <h2 class="seccion__titulo" id="titulo-pasos">{{secciones.pasos.titulo}} <em>{{secciones.pasos.tituloFuerte}}</em></h2>
     </div>
-    <div class="ruta">
-      <p class="ruta__quienes" aria-hidden="true">{{#cada secciones.pasos.lista}}{{#si abre}}<span class="ruta__de" data-papel="{{papel}}">{{quien}}</span>{{/si}}{{/cada}}</p>
-      <ol class="ruta__lista" role="list">
-{{#cada secciones.pasos.lista}}        <li class="ruta__estacion" data-papel="{{papel}}"{{#si abre}} data-abre{{/si}} data-enciende>
-          <span class="ruta__punto" aria-hidden="true"></span>
-          <span class="ruta__quien{{#no abre}} solo-lector{{/no}}">{{quien}}</span>
-          <span class="ruta__numero" aria-hidden="true">0{{@numero}}</span>
-          <p class="ruta__rotulo">{{rotulo}}</p>
-          <div class="ruta__escena" aria-hidden="true">
-{{#si escribe}}            <p class="mini mini__globo mini__globo--sale">{{escribe.texto}}<small>{{escribe.hora}} <svg class="mini__tics" aria-hidden="true" focusable="false"><use href="#i-tics"/></svg></small></p>
-{{/si}}{{#si ofrece}}            <div class="mini mini__globo mini__globo--entra">{{ofrece.texto}}<p class="mini__horas">{{#cada ofrece.horas}}<span{{#si elegida}} data-elegida{{/si}}>{{hora}}</span>{{/cada}}</p></div>
-{{/si}}{{#si cobra}}            <p class="mini mini__liga"><b>$</b><span><strong>{{cobra.titulo}}</strong><small>{{cobra.monto}}</small></span></p>
-{{/si}}{{#si agenda}}            <p class="minicita"><span class="minicita__dia"><small>{{agenda.dia}}</small><b>{{agenda.fecha}}</b></span><span class="minicita__texto"><b>{{agenda.hora}}</b><span>{{agenda.detalle}}</span></span>{{> sello}}</p>
-{{/si}}{{#si recuerda}}            <p class="mini mini__aviso"><svg class="mini__campana" aria-hidden="true" focusable="false"><use href="#i-campana"/></svg><span><strong>{{recuerda.titulo}}</strong><small>{{recuerda.detalle}}</small></span></p>
-{{/si}}{{#si toca}}            <p class="mini mini__sino"><span data-toca>{{toca.si}}</span><span>{{toca.no}}</span></p>
-{{/si}}          </div>
-        </li>
-{{/cada}}      </ol>
-    </div>
-    <div class="pasos__tu">
-      <h3 class="pasos__subtitulo">{{secciones.pasos.tuTitulo}}</h3>
-      <ul class="pasos__tareas" role="list">
-{{#cada secciones.pasos.tu}}        <li><svg class="pasos__icono" aria-hidden="true" focusable="false"><use href="#i-{{icono}}"/></svg>{{texto}}</li>
-{{/cada}}      </ul>
-    </div>
+    <div class="actos">
+{{#cada secciones.pasos.actos}}      <div class="acto">
+        <h3 class="acto__nombre">{{nombre}}</h3>
+        <ol class="acto__pasos" role="list">
+{{#cada pasos}}          <li class="paso" data-papel="{{papel}}" data-enciende>
+            <p class="paso__quien"><span class="paso__icono" aria-hidden="true"><svg focusable="false"><use href="#i-papel-{{papel}}"/></svg></span>{{quien}}</p>
+            <div class="paso__escena" aria-hidden="true">
+{{#cada escena}}{{#si sale}}              <p class="wa__m wa__m--sale">{{sale.texto}}<span class="wa__hora">{{sale.hora}} <svg class="wa__tics" focusable="false"><use href="#i-tics"/></svg></span></p>
+{{/si}}{{#si entra}}              <p class="wa__m wa__m--entra">{{#si entra.liga}}<span class="wa__liga"><span class="wa__liga-signo">$</span><span class="wa__liga-texto"><b class="wa__liga-titulo">{{entra.liga.titulo}}</b><span class="wa__liga-monto">{{entra.liga.monto}}</span><small class="wa__liga-sitio">{{entra.liga.sitio}}</small></span></span>{{/si}}{{entra.texto}}<span class="wa__hora">{{entra.hora}}</span></p>
+{{/si}}{{#si nota}}              <p class="mv__hizo{{#si nota.bien}} mv__hizo--bien{{/si}}"><i><svg focusable="false"><use href="#i-palomita"/></svg></i>{{nota.texto}}</p>
+{{/si}}{{#si cita}}              <p class="minicita"><span class="minicita__dia"><small>{{cita.dia}}</small><b>{{cita.fecha}}</b></span><span class="minicita__texto"><b>{{cita.hora}}</b><span>{{cita.detalle}}</span></span>{{> sello}}</p>
+{{/si}}{{#si botones}}              <p class="paso__botones">{{#cada botones}}<span{{#si toca}} data-toca{{/si}}>{{#si responde}}<svg focusable="false"><use href="#i-responder"/></svg>{{/si}}{{texto}}</span>{{/cada}}</p>
+{{/si}}{{/cada}}            </div>
+            <p class="paso__pie"><span class="paso__numero">{{numero}}</span> <span class="paso__rotulo">{{rotulo}}</span></p>
+          </li>
+{{/cada}}        </ol>
+      </div>
+{{/cada}}    </div>
   </section>
 
   <section class="agentes" id="agente" aria-labelledby="titulo-agentes">

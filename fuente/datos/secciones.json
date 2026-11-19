@@ -8,7 +8,7 @@
         "icono": "escudo",
         "principal": true,
         "titulo": "Primero el pago, después la cita",
-        "antes": "Tu agente comprueba el anticipo con Mercado Pago y ",
+        "antes": "Tu agente atiende por WhatsApp, comprueba el anticipo con Mercado Pago y ",
         "fuerte": "solo entonces agenda",
         "despues": "."
       },
@@ -27,93 +27,204 @@
   },
   "pasos": {
     "sobre": "Cómo funciona",
-    "titulo": "De «hola» a «asistió»,",
-    "tituloFuerte": "casi sin tocar el celular.",
-    "lista": [
+    "titulo": "Desde el primer «hola»",
+    "tituloFuerte": "hasta el seguimiento después de la cita.",
+    "actos": [
       {
-        "rotulo": "Te escriben por WhatsApp",
-        "quien": "Tu clientela",
-        "papel": "clientela",
-        "abre": true,
-        "escribe": {
-          "texto": "Hola, ¿tienes lugar el jueves?",
-          "hora": "10:12 a. m."
-        }
+        "nombre": "Antes de la cita",
+        "pasos": [
+          {
+            "quien": "Tu clientela",
+            "papel": "clientela",
+            "rotulo": "Te escriben por WhatsApp",
+            "escena": [
+              {
+                "sale": {
+                  "texto": "Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?",
+                  "hora": "10:12 a. m."
+                }
+              }
+            ]
+          },
+          {
+            "quien": "Tu agente",
+            "papel": "agente",
+            "rotulo": "Contesta, resuelve dudas con tu base de conocimiento y gestiona tus citas",
+            "escena": [
+              {
+                "entra": {
+                  "texto": "El gelish cuesta $350 y dura de 2 a 3 semanas. El jueves tengo lugar a las 5:00 pm. ¿Te lo aparto?",
+                  "hora": "10:12 a. m."
+                }
+              },
+              {
+                "nota": {
+                  "texto": "Lo sabe por tu base de conocimiento"
+                }
+              }
+            ]
+          },
+          {
+            "quien": "Tu agente",
+            "papel": "agente",
+            "rotulo": "Aparta el lugar y cobra el anticipo",
+            "escena": [
+              {
+                "entra": {
+                  "liga": {
+                    "titulo": "Anticipo Gelish semipermanente",
+                    "monto": "$150",
+                    "sitio": "mercadopago.com.mx"
+                  },
+                  "texto": "Te aparté el jueves a las 5:00 pm. Se confirma con el anticipo de $150.",
+                  "hora": "10:14 a. m."
+                }
+              }
+            ]
+          }
+        ]
       },
       {
-        "rotulo": "Contesta y ofrece tus horarios libres",
-        "quien": "Tu agente",
-        "papel": "agente",
-        "abre": true,
-        "ofrece": {
-          "texto": "Te puedo ofrecer el jueves:",
-          "horas": [
-            {
-              "hora": "10:00 am"
-            },
-            {
-              "hora": "12:30 pm"
-            },
-            {
-              "hora": "5:00 pm",
-              "elegida": true
-            }
-          ]
-        }
+        "nombre": "La cita, garantizada",
+        "pasos": [
+          {
+            "quien": "Tu agente",
+            "papel": "agente",
+            "rotulo": "Verifica el pago, agenda la cita y la agrega a tu calendario",
+            "escena": [
+              {
+                "nota": {
+                  "texto": "Pago verificado · $150",
+                  "bien": true
+                }
+              },
+              {
+                "cita": {
+                  "dia": "JUE",
+                  "fecha": "19",
+                  "hora": "5:00 pm",
+                  "detalle": "Ana · Gelish"
+                }
+              }
+            ]
+          },
+          {
+            "quien": "Tu agente",
+            "papel": "agente",
+            "rotulo": "Recuerda la cita un día y una hora antes y, si hace falta, la reagenda según tu calendario",
+            "escena": [
+              {
+                "entra": {
+                  "texto": "¡Hola Ana! Te recordamos tu cita de Gelish mañana jueves a las 5:00 pm.",
+                  "hora": "5:00 p. m."
+                }
+              },
+              {
+                "botones": [
+                  {
+                    "texto": "Cambiar cita",
+                    "responde": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "quien": "Tú",
+            "papel": "tu",
+            "rotulo": "Le confirmas a tu agente si tu clienta o paciente llegó",
+            "escena": [
+              {
+                "entra": {
+                  "texto": "¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm?",
+                  "hora": "6:05 p. m."
+                }
+              },
+              {
+                "botones": [
+                  {
+                    "texto": "Sí",
+                    "toca": true
+                  },
+                  {
+                    "texto": "No"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       {
-        "rotulo": "Aparta el lugar y cobra el anticipo",
-        "quien": "Tu agente",
-        "papel": "agente",
-        "cobra": {
-          "titulo": "Anticipo Gelish",
-          "monto": "$150"
-        }
-      },
-      {
-        "rotulo": "La cita entra a tu calendario, garantizada",
-        "quien": "Tu agente",
-        "papel": "agente",
-        "agenda": {
-          "dia": "JUE",
-          "fecha": "19",
-          "hora": "5:00 pm",
-          "detalle": "Ana · Gelish"
-        }
-      },
-      {
-        "rotulo": "Recuerda la cita, un día y una hora antes",
-        "quien": "Tu agente",
-        "papel": "agente",
-        "recuerda": {
-          "titulo": "Te recordamos tu cita",
-          "detalle": "Mañana, 5:00 pm"
-        }
-      },
-      {
-        "rotulo": "Tocas sí o no: ¿asistió?",
-        "quien": "Tú",
-        "papel": "tu",
-        "abre": true,
-        "toca": {
-          "si": "Sí",
-          "no": "No"
-        }
-      }
-    ],
-    "tuTitulo": "Lo que haces tú",
-    "tu": [
-      {
-        "icono": "toque",
-        "texto": "Tocar sí o no al final de cada cita."
-      },
-      {
-        "icono": "aviso",
-        "texto": "Contestar tú cuando tu agente te avise que no sabe algo."
-      },
-      {
-        "icono": "perillas",
-        "texto": "Pedirle cambios por WhatsApp: nada se aplica sin tu sí."
+        "nombre": "Después, y cuando tú quieras",
+        "pasos": [
+          {
+            "quien": "Tu agente",
+            "papel": "agente",
+            "rotulo": "Según si llegó o no, le da el seguimiento adecuado",
+            "escena": [
+              {
+                "entra": {
+                  "texto": "¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita.",
+                  "hora": "6:06 p. m."
+                }
+              },
+              {
+                "nota": {
+                  "texto": "Si no llega, le ofrece reagendar"
+                }
+              }
+            ]
+          },
+          {
+            "quien": "Tú",
+            "papel": "tu",
+            "rotulo": "Intervienes cuando quieras; tu agente solo te busca si hace falta",
+            "escena": [
+              {
+                "sale": {
+                  "texto": "Hola Ana, soy Bella. Con gusto te lo reviso yo.",
+                  "hora": "11:20 a. m."
+                }
+              },
+              {
+                "nota": {
+                  "texto": "Tu agente se hace a un lado"
+                }
+              }
+            ]
+          },
+          {
+            "quien": "Tú",
+            "papel": "tu",
+            "rotulo": "Le pides cambios por WhatsApp: nada se aplica sin tu sí",
+            "escena": [
+              {
+                "sale": {
+                  "texto": "Sube el gelish a $380",
+                  "hora": "9:02 a. m."
+                }
+              },
+              {
+                "entra": {
+                  "texto": "Cambio el precio del gelish de $350 a $380. ¿Lo aplico?",
+                  "hora": "9:02 a. m."
+                }
+              },
+              {
+                "botones": [
+                  {
+                    "texto": "Sí, aplícalo",
+                    "toca": true
+                  },
+                  {
+                    "texto": "No"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },
