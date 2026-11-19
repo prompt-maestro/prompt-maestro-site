@@ -101,9 +101,9 @@ async function arrancar() {
     ),
     pieza(
       () => import('./agente-vista.js'),
-      ({ montarAgente }) => {
-        const agente = document.querySelector('[data-agente]');
-        if (agente instanceof HTMLElement) montarAgente(agente);
+      ({ montarAgentes }) => {
+        const agentes = document.querySelector('[data-agentes]');
+        if (agentes instanceof HTMLElement) montarAgentes(agentes);
       },
     ),
   ]);
@@ -187,8 +187,11 @@ try {
 trasElCartel()
   .then(() => Promise.race([arrancar(), new Promise((listo) => setTimeout(listo, ESPERA_MAXIMA))]))
   .finally(() => {
-    // El menu de "Tu agente" llega con su aspecto de menu. Si su pieza no arranco, se queda escrito como lista: cada
-    // beneficio con su oracion.
-    document.querySelector('[data-agente]:not([data-viva])')?.setAttribute('data-lista', '');
+    // "Tu agente" llega con su aspecto de menu. Si su pieza no arranco completa (un menu o el selector de capitulos),
+    // toda la seccion se queda escrita como lista: los dos capitulos, cada renglon con su oracion.
+    if (document.querySelector(':is([data-agente], [data-capitulos]):not([data-viva])')) {
+      for (const parte of document.querySelectorAll('[data-agente], [data-capitulos]'))
+        parte.setAttribute('data-lista', '');
+    }
     document.dispatchEvent(new Event('pagina:montada'));
   });

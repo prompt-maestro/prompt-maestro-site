@@ -6,11 +6,11 @@ import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 /** Las secciones que cambiaron. */
-const SECCIONES = ['como-funciona', 'para-quien', 'en-una-frase', 'planes', 'preguntas'];
-/** Las tres que traen piezas que se encienden: nueve pasos, tres retratos y el antes y el despues. */
-const CON_ENCENDIDO = ['#como-funciona', '#para-quien', '#en-una-frase'];
+const SECCIONES = ['para-quien', 'en-una-frase', 'planes', 'preguntas'];
+/** Las dos que traen piezas que se encienden: tres retratos y el antes y el despues. */
+const CON_ENCENDIDO = ['#para-quien', '#en-una-frase'];
 // Y una mas: el boton con luz de "Citas garantizadas", que da sus dos vueltas al llegar a el.
-const PIEZAS = 1 + 9 + 3 + 2;
+const PIEZAS = 1 + 3 + 2;
 /** Los tamanos en que se revisa que nada se salga: cuatro celulares o tabletas de pie y tres computadoras. */
 const TAMANOS = /** @type {const} */ ([
   [320, 640],
@@ -83,16 +83,8 @@ function aspecto(page) {
       if (!pieza) throw new Error(`no encontre ${que}`);
       return getComputedStyle(pieza, pseudo);
     };
-    const paso = '#como-funciona .paso';
-    const tuyo = '#como-funciona .paso[data-papel="tu"]';
     return {
       estados: [...document.querySelectorAll('[data-enciende]')].map((pieza) => pieza.getAttribute('data-enciende')),
-      escena: estilo(`${paso} .paso__escena > *`).opacity,
-      rotulo: estilo(`${paso} .paso__rotulo`).color,
-      numero: estilo(`${paso} .paso__numero`).color,
-      // La luz azul de los pasos de ella y su insignia rellena.
-      tuyo: estilo(tuyo, '::after').opacity,
-      insignia: estilo(`${tuyo} .paso__quien`).backgroundColor,
       foto: estilo('#para-quien .oficio__foto').filter,
       acercada: estilo('#para-quien .oficio__foto').scale,
       tarjeta: estilo('#en-una-frase .frase__lado--despues').translate,
@@ -104,11 +96,6 @@ function aspecto(page) {
 
 /** Todo encendido: lo que se ve sin JavaScript, con movimiento reducido y cuando la visitante ya paso por ahi. */
 const ENCENDIDO = {
-  escena: '1',
-  rotulo: 'rgb(245, 244, 240)',
-  numero: 'rgb(132, 151, 255)',
-  tuyo: '1',
-  insignia: 'rgb(63, 92, 245)',
   foto: 'none',
   acercada: 'none',
   tarjeta: 'none',
@@ -126,37 +113,26 @@ test('con movimiento, lo que falta por ver espera apagado y se enciende al llega
   // Todas las piezas empiezan debajo de la pantalla: esperan apagadas.
   const apagada = await aspecto(page);
   expect(apagada.estados).toEqual(Array(PIEZAS).fill('espera'));
-  expect(apagada).toMatchObject({
-    escena: '0',
-    // Apagados, los rotulos van en gris: se siguen leyendo, con su contraste.
-    rotulo: 'rgb(151, 158, 196)',
-    numero: 'rgb(151, 158, 196)',
-    tuyo: '0',
-    tarjeta: '0px 18px',
-    luz: '0',
-    sello: '0',
-  });
-  expect(apagada.insignia).not.toBe(ENCENDIDO.insignia);
+  expect(apagada).toMatchObject({ tarjeta: '0px 18px', luz: '0', sello: '0' });
   expect(apagada.foto).not.toBe('none');
   expect(Number(apagada.acercada)).toBeGreaterThan(1);
   // Apagadas tampoco hay una sola falta de accesibilidad: lo que es texto nunca se esconde ni pierde contraste.
   await sinFaltasDeAccesibilidad(page, ...CON_ENCENDIDO);
 
-  // Al llegar a un acto se enciende lo que entra a la vista: en computadora, sus tres tarjetas, una tras otra.
-  const pasos = page.locator('#como-funciona .paso');
-  const primerActo = page.locator('#como-funciona .acto').first().locator('.paso');
-  await llegarA(pasos.first());
-  await expect(pasos.first()).toHaveAttribute('data-enciende', 'ya');
-  const turnos = await primerActo.evaluateAll((lista) =>
+  // Al llegar a los retratos se enciende lo que entra a la vista: en computadora, los tres, uno tras otro.
+  const retratos = page.locator('#para-quien .oficio__tarjeta');
+  await llegarA(retratos.first());
+  await expect(retratos.first()).toHaveAttribute('data-enciende', 'ya');
+  const turnos = await retratos.evaluateAll((lista) =>
     lista
-      .filter((paso) => paso.getAttribute('data-enciende') === 'ya')
-      .map((paso) => /** @type {HTMLElement} */ (paso).style.getPropertyValue('--orden')),
+      .filter((retrato) => retrato.getAttribute('data-enciende') === 'ya')
+      .map((retrato) => /** @type {HTMLElement} */ (retrato).style.getPropertyValue('--orden')),
   );
-  // Las de un acto que entraron juntas llevan turnos seguidos, desde cero: asi se encienden en orden.
+  // Los que entraron juntos llevan turnos seguidos, desde cero: asi se encienden en orden.
   expect(turnos).toEqual(turnos.map((_, lugar) => String(lugar)));
   if (await page.evaluate(() => matchMedia('(min-width: 900px)').matches)) expect(turnos).toEqual(['0', '1', '2']);
   await quieta(page);
-  expect(await aspecto(page)).toMatchObject({ escena: '1', rotulo: ENCENDIDO.rotulo, numero: ENCENDIDO.numero });
+  expect(await aspecto(page)).toMatchObject({ foto: ENCENDIDO.foto, acercada: ENCENDIDO.acercada });
 
   // Se recorre lo demas, pieza por pieza: cada una se enciende al llegar a ella.
   for (const pieza of await page.locator('[data-enciende]').all()) {
@@ -172,7 +148,7 @@ test('con movimiento, lo que falta por ver espera apagado y se enciende al llega
   // Y no se repite: al irse y regresar nada se apaga ni se vuelve a mover.
   await page.evaluate(() => scrollTo(0, 0));
   await expect(page.locator('#inicio')).toBeInViewport();
-  await llegarA(pasos.first());
+  await llegarA(retratos.first());
   await llegarA(page.locator('#en-una-frase .frase__lado--despues'));
   expect((await aspecto(page)).estados).toEqual(Array(PIEZAS).fill('ya'));
   const moviendose = await page.evaluate(
@@ -187,15 +163,15 @@ test('quien llega directo a una seccion la encuentra encendida: no se le apaga p
   page,
 }) => {
   await avisarAlMontar(page);
-  await page.goto('./#como-funciona');
+  await page.goto('./#para-quien');
   await yaMonto(page);
-  const pasos = page.locator('#como-funciona .paso');
-  // El primer paso ya estaba a la vista cuando llego el codigo: se queda como estaba, encendido y quieto.
-  await expect(pasos.first()).toBeInViewport();
-  await expect(pasos.first()).toHaveAttribute('data-enciende', '');
-  expect(await aspecto(page)).toMatchObject({ escena: '1', rotulo: ENCENDIDO.rotulo });
+  const retratos = page.locator('#para-quien .oficio__tarjeta');
+  // El primer retrato ya estaba a la vista cuando llego el codigo: se queda como estaba, encendido y quieto.
+  await expect(retratos.first()).toBeInViewport();
+  await expect(retratos.first()).toHaveAttribute('data-enciende', '');
+  expect(await aspecto(page)).toMatchObject({ foto: ENCENDIDO.foto, acercada: ENCENDIDO.acercada });
   expect(
-    await page.evaluate(() => document.querySelector('#como-funciona')?.getAnimations({ subtree: true }).length),
+    await page.evaluate(() => document.querySelector('#para-quien')?.getAnimations({ subtree: true }).length),
   ).toBe(0);
   // Lo que sigue mas abajo, que todavia no ve, si espera su turno.
   await expect(page.locator('#en-una-frase .frase__lado').last()).toHaveAttribute('data-enciende', 'espera');
@@ -224,7 +200,7 @@ test('al imprimir o guardar en PDF todo sale encendido, aunque no se haya recorr
   // En pantalla, lo que falta por ver espera apagado.
   const enPantalla = await aspecto(page);
   expect(enPantalla.estados).toEqual(Array(PIEZAS).fill('espera'));
-  expect(enPantalla).toMatchObject({ escena: '0', tuyo: '0', luz: '0', sello: '0' });
+  expect(enPantalla).toMatchObject({ luz: '0', sello: '0' });
   // En papel no hay a donde llegar: las mismas piezas, sin tocarlas, se ven encendidas.
   await page.emulateMedia({ media: 'print' });
   const enPapel = await aspecto(page);
@@ -384,16 +360,6 @@ test.describe('sin JavaScript', () => {
     // Sin codigo no hay quien apague ni encienda nada: todo se ve como al final.
     await expect(page.locator('[data-enciende]')).toHaveCount(PIEZAS);
     await expect(page.locator('[data-enciende=""]')).toHaveCount(PIEZAS);
-    const paso = page.locator('#como-funciona .paso').first();
-    await paso.scrollIntoViewIfNeeded();
-    await expect(paso.locator('.paso__escena > *')).toHaveCSS('opacity', '1');
-    await expect(paso.locator('.paso__rotulo')).toHaveCSS('color', ENCENDIDO.rotulo);
-    await expect(page.locator('#como-funciona .paso')).toHaveCount(9);
-    await expect(page.locator('#como-funciona .paso__escena').last()).toContainText('Sí, aplícalo');
-    // Los pasos de ella, encendidos en azul aunque no haya codigo.
-    const tuyo = page.locator('#como-funciona .paso[data-papel="tu"]').first();
-    await expect(tuyo.locator('.paso__quien')).toHaveCSS('background-color', ENCENDIDO.insignia);
-    expect(await tuyo.evaluate((el) => getComputedStyle(el, '::after').opacity)).toBe('1');
     const foto = page.locator('#para-quien .oficio__foto').first();
     await foto.scrollIntoViewIfNeeded();
     await expect(foto).toHaveCSS('filter', 'none');
@@ -424,7 +390,7 @@ test.describe('sin JavaScript', () => {
 
 for (const [ancho, alto] of TAMANOS) {
   test(`a ${ancho} de ancho nada de las secciones se sale de la pantalla ni se encima`, async ({ page }) => {
-    // Mide cada pieza de cinco secciones: con la maquina cargada se le da su tiempo.
+    // Mide cada pieza de cuatro secciones: con la maquina cargada se le da su tiempo.
     test.slow();
     await page.setViewportSize({ width: ancho, height: alto });
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -446,33 +412,6 @@ for (const [ancho, alto] of TAMANOS) {
         return { salidos, desborde: document.documentElement.scrollWidth - tope };
       });
       expect(fuera, id).toEqual({ salidos: [], desborde: 0 });
-    }
-
-    // Los pasos: cada escena cabe en su marco, con todo y el sello de la cita.
-    const escenas = await page.locator('#como-funciona .paso__escena').evaluateAll((lista) =>
-      lista.map((escena) => {
-        const marco = escena.getBoundingClientRect();
-        return [...escena.querySelectorAll(':scope > *, .sello')].every((pieza) => {
-          const caja = pieza.getBoundingClientRect();
-          return (
-            caja.left >= marco.left - 1 &&
-            caja.right <= marco.right + 1 &&
-            caja.top >= marco.top - 1 &&
-            caja.bottom <= marco.bottom + 1
-          );
-        });
-      }),
-    );
-    expect(escenas).toEqual(Array(9).fill(true));
-    // Y ningun rotulo se encima con el del paso vecino.
-    const rotulos = await page
-      .locator('#como-funciona .paso__rotulo')
-      .evaluateAll((lista) => lista.map((rotulo) => rotulo.getBoundingClientRect().toJSON()));
-    for (const [lugar, rotulo] of rotulos.entries()) {
-      const anterior = rotulos[lugar - 1];
-      if (!anterior) continue;
-      const separados = rotulo.left >= anterior.right || rotulo.top >= anterior.bottom;
-      expect(separados, `el rotulo ${lugar + 1} se encima con el ${lugar}`).toBe(true);
     }
 
     // El antes y el despues: ni la marca de duda ni el sello tapan el texto de su cita.

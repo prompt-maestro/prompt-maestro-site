@@ -1,10 +1,12 @@
-/* "Tu agente": un menu de beneficios y, al elegir uno, su mini video: una escena hecha con las piezas del
-   WhatsApp de dia que corre sola unos segundos, como un video. En celular el menu es un acordeon (lo elegido se abre
-   ahi mismo); desde 900 de ancho, el menu va a la izquierda y un solo escenario a la derecha. Debajo, lo que cuidamos
-   (su numero, su dinero y sus reglas) y lo que el agente no hace.
+/* "Tu agente": dos capitulos con el mismo menu. "Lo que hace" (sus beneficios; el primero cuenta una cita de principio
+   a fin) y "Como empiezas" (los pasos para contratarlo, numerados). Al elegir un renglon corre su mini video: una
+   escena hecha con las piezas del WhatsApp de dia que corre sola unos segundos, como un video. En celular el menu es
+   un acordeon (lo elegido se abre ahi mismo); desde 900 de ancho, el titulo, el selector de capitulos y el menu van a
+   la izquierda y un solo escenario a la derecha, que sube junto al titulo y se queda a la vista mientras se recorre
+   el menu. Debajo, lo que cuidamos (su numero, su dinero y sus reglas) y lo que el agente no hace.
 
-   La pagina llega con el menu armado y el primero abierto. Sin JavaScript, si su pieza no arranca o al imprimir, se
-   lee como lista: cada beneficio con su oracion. */
+   La pagina llega con el menu armado, el primer capitulo a la vista y su primer renglon abierto. Sin JavaScript, si
+   su pieza no arranca o al imprimir, se lee como lista: los dos capitulos, cada renglon con su oracion. */
 .agentes {
   display: grid;
   max-width: 1440px;
@@ -49,7 +51,159 @@
    oracion y lleva el circulo encendido, con el azul de la marca.
    --------------------------------------------------------------------------------------------------------------- */
 .agentes__duo {
-  margin-top: 36px;
+  margin-top: 24px;
+}
+
+/* El selector de capitulos: dos posiciones en una pastilla. La elegida va en el azul de la marca. La pagina llega con
+   la primera elegida y su capitulo a la vista; el otro espera guardado. */
+.capitulos {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 28px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.capitulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--tinta-2);
+  font-family: var(--f-titulo);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.capitulo {
+  cursor: pointer;
+}
+
+.capitulo:focus-visible {
+  outline-offset: 3px;
+}
+
+/* Cuantos pasos trae el capitulo. */
+.capitulo small {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.capitulo[data-activo] {
+  background: var(--sello);
+  box-shadow: 0 0 28px rgb(63 92 245 / 0.55);
+  color: #fff;
+}
+
+.capitulo[data-activo] small {
+  background: rgb(7 9 22 / 0.3);
+}
+
+@media (hover: hover) {
+  button.capitulo:not([data-activo]):hover {
+    color: var(--tinta);
+  }
+}
+
+/* En un celular angosto la pastilla cabe sin la cuenta de pasos. */
+@media (max-width: 419.98px) {
+  .capitulo {
+    padding: 0 16px;
+    font-size: 1rem;
+  }
+
+  .capitulo small {
+    display: none;
+  }
+}
+
+/* El capitulo guardado no ocupa lugar en la pantalla. Como lista (sin JavaScript o sin su pieza) y en papel se leen
+   los dos. */
+@media screen {
+  html.con-js .agentes__duo[data-guardado]:not([data-lista]) {
+    display: none;
+  }
+}
+
+/* El nombre del capitulo, escrito arriba de su lista: solo hace falta cuando no hay selector, y entonces es un
+   encabezado mas, para quien recorre la pagina de titulo en titulo. */
+.agentes__capitulo {
+  display: none;
+  margin-bottom: 6px;
+  color: var(--luz);
+  font-family: var(--f-titulo);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+/* Al final de "Lo que hace", el paso al otro capitulo; al final de "Como empiezas", el boton para empezar. */
+.agentes__sigue {
+  margin-top: 14px;
+}
+
+.agentes__ir {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--luz);
+  font-family: var(--f-titulo);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.agentes__ir {
+  cursor: pointer;
+}
+
+.agentes__ir svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+@media (hover: hover) {
+  button.agentes__ir:hover {
+    color: var(--tinta);
+  }
+}
+
+.agentes__arranca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+  margin-top: 28px;
+}
+
+.agentes__arranca span {
+  color: var(--tinta-2);
+  font-size: 0.9375rem;
+  font-weight: 300;
 }
 
 .beneficios {
@@ -113,6 +267,14 @@ button.beneficio__boton {
   width: 11px;
   height: 12px;
   margin-left: 2px;
+}
+
+/* En "Como empiezas" el circulo lleva el numero del paso en vez del triangulo. */
+.beneficio__play b {
+  font-family: var(--f-titulo);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .beneficio[data-abierto] .beneficio__boton {
@@ -324,8 +486,7 @@ button.beneficio__boton {
 }
 
 .mv__hizo i,
-.mv__aprobado i,
-.mv__bien {
+.mv__aprobado i {
   display: grid;
   flex: none;
   place-items: center;
@@ -337,13 +498,12 @@ button.beneficio__boton {
 }
 
 .mv__hizo svg,
-.mv__aprobado svg,
-.mv__bien svg {
+.mv__aprobado svg {
   width: 12px;
   height: 12px;
 }
 
-/* La insignia grande: la que cierra el examen. */
+/* La insignia grande: la que cierra un mini video con lo que se logro. */
 .mv__hizo--grande {
   gap: 10px;
   padding: 9px 20px 9px 10px;
@@ -378,9 +538,7 @@ button.beneficio__boton {
   font-weight: 600;
 }
 
-.mv__aprobado i,
-.mv__hizo--bien i,
-.mv__bien {
+.mv__aprobado i {
   background: #00a650;
 }
 
@@ -609,33 +767,101 @@ button.beneficio__boton {
   text-wrap: pretty;
 }
 
-/* Un examen: su nombre, la barra que se llena y su palomita. */
-.mv__examen {
+/* Los botones de respuesta de WhatsApp, debajo del globo que pregunta. El que ya se toco, en el azul de la marca. */
+.mv__botones {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 22px;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  align-self: flex-start;
+  gap: 4px;
+  width: 78%;
+}
+
+.mv__cabe > .mv__botones {
+  margin-top: 0;
+}
+
+p.mv__botones span {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  align-self: center;
-  gap: 12px;
-  width: min(100%, 19rem);
-  padding: 8px 10px 8px 14px;
-  border-radius: 12px;
-  background: var(--wa-barra);
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--wa-entra);
   box-shadow: var(--wa-sombra);
+  color: var(--wa-liga);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.mv__botones [data-toca] {
+  background: var(--sello);
+  box-shadow: 0 0 0 3px rgb(63 92 245 / 0.25);
+  color: #fff;
+}
+
+/* Las cuentas ya conectadas: una ficha de noche, renglon por renglon, cada una con su palomita verde. */
+.mv__conecta {
+  align-self: center;
+  width: min(100%, 22rem);
+  padding: 13px 10px 10px;
+  border-radius: 14px;
+  background: #0d1230;
+  box-shadow:
+    inset 0 0 0 1px rgb(132 151 255 / 0.7),
+    0 14px 34px rgb(7 9 22 / 0.35);
+  color: var(--tinta);
   font-family: var(--f-texto);
+}
+
+.mv__conecta .mv__rotulo {
+  padding: 0 6px 9px;
+}
+
+.mv__conecta ul {
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.mv__conecta li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  background: #141a44;
+  /* La raya entre un renglon y el de arriba: la del primero queda fuera de la ficha, y no se ve. */
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.1);
   font-size: 0.875rem;
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
-.mv__raya {
-  display: block;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 6px;
-  background: #e2e6ea;
+.mv__conecta li b {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--bien);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
-.mv__raya i,
+.mv__conecta b i {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00a650;
+  color: #fff;
+}
+
+.mv__conecta b svg {
+  width: 10px;
+  height: 10px;
+}
+
 .mv__avance {
   display: block;
   height: 100%;
@@ -842,19 +1068,44 @@ button.beneficio__boton {
    mini video de cada beneficio vive en su renglon; aqui se saca de el y se pone en el escenario.
    --------------------------------------------------------------------------------------------------------------- */
 @media (min-width: 900px) {
-  .agentes__duo {
+  /* Todo lo de arriba de la seccion (titulo, selector y menu) va en la columna de la izquierda, y el escenario, a su
+     derecha, de arriba abajo. Lo alto que se aparta es lo del escenario: asi nunca se sale por abajo. */
+  .agentes__principal {
     --hueco: clamp(36px, 5vw, 72px);
     --menu: calc((100% - var(--hueco)) * 0.5);
 
     position: relative;
-    margin-top: var(--e-12);
+    min-height: 600px;
+  }
+
+  .agentes__cabeza,
+  .agentes__sigue,
+  .agentes__arranca {
+    width: var(--menu);
+  }
+
+  .capitulos {
+    max-width: var(--menu);
+    margin-top: 30px;
+  }
+
+  .agentes__duo {
+    margin-top: 26px;
+  }
+
+  /* El titulo se mide con su columna, que aqui es la del menu: en una laptop ancha llega al mismo tamano que los
+     titulos de las demas secciones. */
+  @supports (font-size: 1cqi) {
+    .agentes__titulo {
+      font-size: clamp(2.25rem, 12.4cqi, 4.25rem);
+    }
   }
 
   /* El menu aparta lo alto de su oracion mas larga (lo mide agente-vista.js): al cambiar de beneficio lo de abajo
      no se mueve. */
   .beneficios {
     width: var(--menu);
-    min-height: max(612px, var(--menu-alto, 0px));
+    min-height: var(--menu-alto, 0px);
   }
 
   .beneficio__nombre {
@@ -886,18 +1137,25 @@ button.beneficio__boton {
     overflow: hidden;
   }
 
-  /* El escenario queda a media altura del menu, pero cuelga de su orilla de arriba, no de su centro: lo alto del menu
-     puede cambiar (lo mide el codigo al llegar) y el escenario no se mueve con el. */
-  .mv {
+  /* El escenario: su riel ocupa la columna de la derecha de arriba abajo, desde el titulo, y el mini video se queda
+     pegado bajo la barra de la pagina mientras la visitante recorre el menu. En una pantalla bajita se achica para
+     que su barra de pausa no se salga. El riel no estorba a lo que hay debajo: solo el mini video recibe los toques. */
+  .mv__riel {
     position: absolute;
-    top: 56px;
-    right: 0;
+    inset: 0 0 0 auto;
     width: calc(100% - var(--menu) - var(--hueco));
-    height: 500px;
-    margin: 0;
+    pointer-events: none;
   }
 
-  .beneficio:not([data-abierto]) .mv {
+  .mv {
+    position: sticky;
+    top: 88px;
+    height: clamp(440px, 100svh - 136px, 600px);
+    margin: 0;
+    pointer-events: auto;
+  }
+
+  .beneficio:not([data-abierto]) .mv__riel {
     display: none;
   }
 
@@ -937,7 +1195,7 @@ button.beneficio__boton {
     padding-block: var(--e-24) var(--e-40);
   }
 
-  .agentes__duo {
+  .agentes__principal {
     --menu: calc((100% - var(--hueco)) * 5 / 11);
   }
 
@@ -961,6 +1219,20 @@ button.beneficio__boton {
 :is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficios {
   width: auto;
   min-height: 0;
+}
+
+/* Sin selector, cada capitulo dice su nombre arriba de su lista, y el paso de uno a otro sobra. */
+:is(html:not(.con-js) .capitulos, .capitulos[data-lista]),
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .agentes__sigue {
+  display: none;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .agentes__capitulo {
+  display: block;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) + .agentes__duo {
+  margin-top: var(--e-8);
 }
 
 :is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficio__boton {
@@ -987,6 +1259,24 @@ button.beneficio__boton {
   display: none;
 }
 
+/* En la lista los pasos conservan su numero: va escrito antes del titulo, sin circulo. */
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista])[data-numerado] .beneficio__play {
+  display: inline;
+  box-shadow: none;
+  background: none;
+  color: inherit;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista])[data-numerado] .beneficio__play b {
+  font: inherit;
+}
+
+:is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista])[data-numerado]
+  .beneficio__play
+  b::after {
+  content: ". ";
+}
+
 @media (min-width: 720px) {
   :is(html:not(.con-js) .agentes__duo:not([data-viva]), .agentes__duo[data-lista]) .beneficios {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1003,6 +1293,20 @@ button.beneficio__boton {
   .agentes__duo .beneficios {
     width: auto;
     min-height: 0;
+  }
+
+  /* En papel van los dos capitulos, cada uno con su nombre, sin selector. */
+  .capitulos,
+  .agentes__duo .agentes__sigue {
+    display: none;
+  }
+
+  .agentes__duo .agentes__capitulo {
+    display: block;
+  }
+
+  .agentes__duo + .agentes__duo {
+    margin-top: var(--e-8);
   }
 
   .agentes__duo .beneficio__boton {
@@ -1027,6 +1331,21 @@ button.beneficio__boton {
 
   .agentes__duo :is(.beneficio__play, .mv) {
     display: none;
+  }
+
+  .agentes__duo[data-numerado] .beneficio__play {
+    display: inline;
+    box-shadow: none;
+    background: none;
+    color: inherit;
+  }
+
+  .agentes__duo[data-numerado] .beneficio__play b {
+    font: inherit;
+  }
+
+  .agentes__duo[data-numerado] .beneficio__play b::after {
+    content: ". ";
   }
 }
 
@@ -1092,16 +1411,27 @@ button.beneficio__boton {
       var(--mv-marcha);
   }
 
-  .mv__base li:nth-child(2) {
+  /* Las cuentas se conectan una tras otra, igual. */
+  [data-fase="sigue"] .mv__conecta li {
+    animation: mv-llega 360ms var(--suave) calc(var(--mv-en, 0s) + 420ms + var(--orden, 0) * 520ms) both
+      var(--mv-marcha);
+  }
+
+  :is(.mv__base, .mv__conecta) li:nth-child(2) {
     --orden: 1;
   }
 
-  .mv__base li:nth-child(3) {
+  :is(.mv__base, .mv__conecta) li:nth-child(3) {
     --orden: 2;
   }
 
-  .mv__base li:nth-child(n + 4) {
+  :is(.mv__base, .mv__conecta) li:nth-child(n + 4) {
     --orden: 3;
+  }
+
+  /* El boton de respuesta se toca un momento despues de aparecer: llega en blanco y se enciende. */
+  [data-fase="sigue"] .mv__botones [data-toca] {
+    animation: mv-toca 260ms var(--suave) calc(var(--mv-en, 0s) + 1100ms) both var(--mv-marcha);
   }
 
   /* La nota de voz se escucha: el azul la recorre. */
@@ -1125,15 +1455,6 @@ button.beneficio__boton {
 
   [data-fase="sigue"] .mv__luego {
     animation: mv-llega 320ms var(--suave) calc(var(--mv-cambia, 0s) + 160ms) both var(--mv-marcha);
-  }
-
-  /* El examen: su barra se llena y, al llenarse, gana su palomita. */
-  [data-fase="sigue"] .mv__raya i {
-    animation: mv-llena 800ms var(--suave) calc(var(--mv-en, 0s) + 300ms) both var(--mv-marcha);
-  }
-
-  [data-fase="sigue"] .mv__bien {
-    animation: mv-brota 380ms cubic-bezier(0.2, 1.4, 0.4, 1) calc(var(--mv-en, 0s) + 1000ms) both var(--mv-marcha);
   }
 }
 
@@ -1222,9 +1543,10 @@ button.beneficio__boton {
   }
 }
 
-@keyframes mv-brota {
+@keyframes mv-toca {
   from {
-    opacity: 0;
-    scale: 0.4;
+    background: var(--wa-entra);
+    box-shadow: var(--wa-sombra);
+    color: var(--wa-liga);
   }
 }

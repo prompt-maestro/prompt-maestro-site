@@ -134,31 +134,36 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   acepta valores de una lista cerrada; una prueba avisa si falta). La armada se detiene si a un ejemplo le falta un texto.
 - Los textos de las secciones viven en `fuente/datos/secciones.json` y `preguntas.json`. Ninguno promete algo que el
   producto no hace: se revisan contra la tabla de la verdad del PRD antes de cambiarse.
-- «Cómo funciona» cuenta una cita de punta a punta en nueve pasos y tres actos (`secciones.pasos.actos`: cada acto
-  con su nombre y sus pasos). Cada paso es una tarjeta: quién lo hace (`quien` y `papel`, que elige su icono), una
-  escena hecha con mensajes del WhatsApp de día (`escena`: globos que salen o entran, una nota, la cita con su sello y
-  botones de respuesta) y su rótulo. Los números (01 a 09) los pone la armada (`herramientas/pasos.mjs`), así que
-  sumar o quitar un paso es tocar los datos. Los pasos de ella (`papel: "tu"`) van encendidos en azul. En celular las
-  tarjetas van una debajo de otra, en tableta acostadas (la escena a la izquierda) y desde 900 de ancho, tres por
-  fila. «En una frase» conserva la frase que define el producto y sus tres palabras (de ahí leen los buscadores
-  y los asistentes con IA) y, en medio, un antes y un después (`secciones.enUnaFrase.lados`).
-- «Tu agente» es un menú de beneficios (hoy, nueve) y cada uno abre su mini video: una escena de unos segundos hecha con las
-  piezas del WhatsApp de día, no un archivo de video. En celular el menú es un acordeón y desde 900 de ancho lleva un
-  solo escenario a la derecha. Todo sale de `fuente/datos/agentes.json` (`hace`): el título, la oración, lo que dura
-  el mini video (`dura`, de 6 a 8 segundos) y sus pasos. Cada paso dice cuándo aparece (`en`, en segundos), si después
-  se va (`hasta`) y trae UNA pieza de las que sabe dibujar `fuente/plantillas/parciales/mini-video.html` (un globo,
-  la nota de voz, la base de conocimiento, la agenda, el pago, la cita, una insignia...). Sumar o quitar un beneficio es tocar esos datos, no
-  el código; la armada se detiene si a uno le falta algo o si su mini video no dura lo que debe. El movimiento es de
+- «En una frase» conserva la frase que define el producto y sus tres palabras (de ahí leen los buscadores y los
+  asistentes con IA) y, en medio, un antes y un después (`secciones.enUnaFrase.lados`).
+- «Tu agente» reúne lo que antes eran dos secciones («Cómo funciona» y «Tu agente»; el dueño pidió fusionarlas el
+  19-nov-2026). Son dos capítulos con el mismo menú (`fuente/datos/agentes.json`, `capitulos`): «Lo que hace», con
+  sus beneficios (hoy, diez; el primero cuenta una cita de principio a fin), y «Cómo empiezas», con los pasos para
+  contratarlo (hoy, cuatro, numerados: `numerado`) y el botón de empezar. Un selector de dos posiciones enseña un
+  capítulo y guarda el otro (son pestañas de verdad: flechas, Inicio y Fin). El enlace «Cómo funciona» de la barra
+  lleva aquí. La sección no habla de exámenes: lo pidió el dueño.
+- Cada renglón del menú abre su mini video: una escena de unos segundos hecha con las piezas del WhatsApp de día, no
+  un archivo de video. En celular el menú es un acordeón; desde 900 de ancho el título, el selector y el menú van a
+  la izquierda y un solo escenario a la derecha, que sube junto al título y se queda pegado bajo la barra mientras
+  se recorre el menú (`.mv__riel`). De los datos sale todo: el título, la oración, lo que dura el mini video (`dura`,
+  de 6 a 8 segundos; hasta 30 el que lleva `"largo": true`, que hoy es solo el de la cita completa) y sus pasos. Cada
+  paso dice cuándo aparece (`en`, en segundos), si después se va (`hasta`) y trae UNA pieza de las que sabe dibujar
+  `fuente/plantillas/parciales/mini-video.html` (un globo, la nota de voz, la base de conocimiento, la agenda, el
+  pago, la cita, los botones de respuesta, las cuentas conectadas, una insignia...). Sumar o quitar un renglón es
+  tocar esos datos, no el código; la armada se detiene (`herramientas/beneficios.mjs`) si a uno le falta algo o si su
+  mini video no dura lo que debe. El movimiento es de
   los estilos (`fuente/estilos/agentes.css`: lo que ahí está escrito es el último cuadro, y las animaciones llevan el
   retraso de los datos). `fuente/js/agente.js` decide sin tocar la pantalla cuál está abierto y si corre (se prueba
   sin navegador) y `fuente/js/agente-vista.js` abre, cierra, pausa y repite: el primero corre solo una vez al llegar
-  a la vista, solo corre uno y solo mientras se ve. La escena del beneficio que llega abierto viene en la página; las
-  demás viajan guardadas en un `<template>` y se sacan al abrirlas: así la página no carga con lo que nadie ha visto. La página llega con el menú ya armado; sin JavaScript, si su
-  pieza no arranca o al imprimir se lee como lista, y con movimiento reducido cada beneficio es su último cuadro.
+  a la vista, solo corre uno y solo mientras se ve (el del capítulo guardado espera). La escena del renglón que llega
+  abierto en cada capítulo viene en la página; las demás viajan guardadas en un `<template>` y se sacan al abrirlas:
+  así la página no carga con lo que nadie ha visto. La página llega con el menú ya armado; sin JavaScript, si su
+  pieza no arranca o al imprimir se leen los dos capítulos como lista, cada uno con su nombre, y con movimiento
+  reducido cada renglón es su último cuadro.
 - En `preguntas.json`, `principal` marca las cinco preguntas que se ven de entrada; las demás van dentro de un
   `<details>` («Ver más preguntas»), sin JavaScript. Los datos estructurados y `llms.txt` llevan todas.
-- Los pasos de «Cómo funciona», los retratos de «Para quién» y el antes y después se encienden al entrar a la vista,
-  una sola vez. La página llega con todo encendido: `fuente/js/encendido.js` apaga lo que todavía no se ve
+- Los retratos de «Para quién», el antes y después y la luz del botón de «Citas garantizadas» se encienden al entrar
+  a la vista, una sola vez. La página llega con todo encendido: `fuente/js/encendido.js` apaga lo que todavía no se ve
   (`data-enciende="espera"`) y lo enciende al llegar (`"ya"`); cómo se ve cada estado lo dicen los estilos. Sin ese
   archivo, sin JavaScript o con movimiento reducido, todo se queda encendido y quieto.
 - La hoja de estilos se publica achicada: `herramientas/achicar.mjs` le quita los comentarios y los espacios que

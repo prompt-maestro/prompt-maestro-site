@@ -13,7 +13,6 @@ import { problemasDeBeneficios } from './beneficios.mjs';
 import { datosEstructurados, jsonParaScript, llmsTxt, robots, sitemap, TOPES } from './buscadores.mjs';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
 import { medicionDe } from './medicion.mjs';
-import { numerarPasos, pasosConQuien } from './pasos.mjs';
 import { planesParaPagina, planesPublicos } from './planes.mjs';
 import { pintar } from './plantilla.mjs';
 
@@ -294,11 +293,8 @@ export async function armarSitio({ raiz, destino }) {
   const planes = planesPublicos(datos.planes);
   const sitio = /** @type {Record<string, unknown>} */ (datos.sitio);
   const demo = prepararDemo(datos, problemas);
-  // Los beneficios de "Tu agente" y sus mini videos: que la plantilla sepa dibujar cada paso y que duren lo que deben.
-  problemas.push(...problemasDeBeneficios(/** @type {any} */ (datos.agentes)?.hace));
-  // Los pasos de "Como funciona", numerados de corrido a traves de sus actos.
-  const ruta = numerarPasos(/** @type {any} */ (datos.secciones)?.pasos?.actos);
-  problemas.push(...ruta.problemas);
+  // Los capitulos de "Tu agente" y sus mini videos: que la plantilla sepa dibujar cada paso y que duren lo que deben.
+  problemas.push(...problemasDeBeneficios(/** @type {any} */ (datos.agentes)?.capitulos));
   if (planes.dePrueba) {
     avisos.push('Los planes traen PRECIOS DE PRUEBA: esta armada no se puede publicar en el dominio.');
   }
@@ -348,10 +344,8 @@ export async function armarSitio({ raiz, destino }) {
     propios: new Map(codigo),
   });
   problemas.push(...medicion.problemas);
-  const seccionesLeidas = /** @type {any} */ (datos.secciones);
   const contexto = {
     ...datos,
-    secciones: { ...seccionesLeidas, pasos: { ...seccionesLeidas?.pasos, actos: ruta.actos } },
     planes: planesParaPagina(planes, pesos),
     ejemplo: demo.ejemplo,
     conversacion: demo.conversacion,
@@ -397,6 +391,9 @@ export async function armarSitio({ raiz, destino }) {
     const secciones = /** @type {any} */ (datos.secciones);
     const agentes = /** @type {any} */ (datos.agentes);
     const textos = (/** @type {{ texto: string }[]} */ lista) => lista.map(({ texto }) => texto);
+    /** Los renglones de un capitulo de "Tu agente". */
+    const videosDe = (/** @type {string} */ clave) =>
+      agentes.capitulos.find((/** @type {{ clave: string }} */ capitulo) => capitulo.clave === clave)?.videos ?? [];
     archivos.set('robots.txt', Buffer.from(robots({ origen }), 'utf8'));
     archivos.set('sitemap.xml', Buffer.from(sitemap({ origen }), 'utf8'));
     archivos.set(
@@ -404,9 +401,11 @@ export async function armarSitio({ raiz, destino }) {
       Buffer.from(
         llmsTxt({
           ...paraBuscar,
-          // Cada paso, con quien lo hace: "Tu agente: Aparta el lugar y cobra el anticipo".
-          pasos: pasosConQuien(ruta.actos),
-          hace: agentes.hace,
+          hace: videosDe('hace'),
+          // Cada paso de como se empieza, con su explicacion: "Eliges tu plan: Lo contratas en linea...".
+          pasos: videosDe('empieza').map(
+            (/** @type {{ titulo: string, texto: string }} */ paso) => `${paso.titulo}: ${paso.texto}`,
+          ),
           noHace: textos([...agentes.noHace, ...secciones.confianza.noHaceMas]),
           requisitos: textos(secciones.planes.requisitos),
           paraQuien: `${secciones.paraQuien.titulo} ${secciones.paraQuien.tituloFuerte}`,

@@ -40,7 +40,7 @@
   <div class="barra__dentro">
     <a class="marca" href="{{armado.base}}" aria-label="{{sitio.nombre}}, inicio">{{> marca}}{{> nombre}}</a>
     <nav class="barra__nav" aria-label="Secciones">
-      <a class="barra__enlace" href="#como-funciona" data-lugar="barra">Cómo funciona</a>
+      <a class="barra__enlace" href="#agente" data-lugar="barra">Cómo funciona</a>
       <a class="barra__enlace" href="#planes" data-lugar="barra">Planes</a>
       <a class="barra__enlace" href="#preguntas" data-lugar="barra">Preguntas</a>
       <a class="boton boton--chico boton--contorno" href="{{sitio.alta}}" data-lugar="barra">Empieza ahora</a>
@@ -182,46 +182,29 @@
     </div>
   </section>
 
-  <section class="pasos" id="como-funciona" aria-labelledby="titulo-pasos">
-    <div class="seccion__cabeza">
-      <p class="sobre">{{secciones.pasos.sobre}}</p>
-      <h2 class="seccion__titulo" id="titulo-pasos">{{secciones.pasos.titulo}} <em>{{secciones.pasos.tituloFuerte}}</em></h2>
-    </div>
-    <div class="actos">
-{{#cada secciones.pasos.actos}}      <div class="acto">
-        <h3 class="acto__nombre">{{nombre}}</h3>
-        <ol class="acto__pasos" role="list">
-{{#cada pasos}}          <li class="paso" data-papel="{{papel}}" data-enciende>
-            <p class="paso__quien"><span class="paso__icono" aria-hidden="true"><svg focusable="false"><use href="#i-papel-{{papel}}"/></svg></span>{{quien}}</p>
-            <div class="paso__escena" aria-hidden="true">
-{{#cada escena}}{{#si sale}}              <p class="wa__m wa__m--sale">{{sale.texto}}<span class="wa__hora">{{sale.hora}} <svg class="wa__tics" focusable="false"><use href="#i-tics"/></svg></span></p>
-{{/si}}{{#si entra}}              <p class="wa__m wa__m--entra">{{#si entra.liga}}<span class="wa__liga"><span class="wa__liga-signo">$</span><span class="wa__liga-texto"><b class="wa__liga-titulo">{{entra.liga.titulo}}</b><span class="wa__liga-monto">{{entra.liga.monto}}</span><small class="wa__liga-sitio">{{entra.liga.sitio}}</small></span></span>{{/si}}{{entra.texto}}<span class="wa__hora">{{entra.hora}}</span></p>
-{{/si}}{{#si nota}}              <p class="mv__hizo{{#si nota.bien}} mv__hizo--bien{{/si}}"><i><svg focusable="false"><use href="#i-palomita"/></svg></i>{{nota.texto}}</p>
-{{/si}}{{#si cita}}              <p class="minicita"><span class="minicita__dia"><small>{{cita.dia}}</small><b>{{cita.fecha}}</b></span><span class="minicita__texto"><b>{{cita.hora}}</b><span>{{cita.detalle}}</span></span>{{> sello}}</p>
-{{/si}}{{#si botones}}              <p class="paso__botones">{{#cada botones}}<span{{#si toca}} data-toca{{/si}}>{{#si responde}}<svg focusable="false"><use href="#i-responder"/></svg>{{/si}}{{texto}}</span>{{/cada}}</p>
-{{/si}}{{/cada}}            </div>
-            <p class="paso__pie"><span class="paso__numero">{{numero}}</span> <span class="paso__rotulo">{{rotulo}}</span></p>
+  <section class="agentes" id="agente" aria-labelledby="titulo-agentes">
+    <div class="agentes__principal" data-agentes>
+      <div class="agentes__cabeza">
+        <p class="sobre">Tu agente</p>
+        <h2 class="agentes__titulo" id="titulo-agentes">Atiende como tú lo harías. <em>A cualquier hora.</em></h2>
+      </div>
+      <div class="capitulos" data-capitulos data-rotulo="{{agentes.rotulos.capitulos}}">
+{{#cada agentes.capitulos}}        <span class="capitulo" data-capitulo-boton="{{clave}}"{{#si @primero}} data-activo{{/si}}>{{nombre}}{{#si cuenta}} <small>{{cuenta}}</small>{{/si}}</span>
+{{/cada}}      </div>
+{{#cada agentes.capitulos}}      <div class="agentes__duo" id="capitulo-{{clave}}" data-agente data-capitulo="{{clave}}"{{#no @primero}} data-guardado{{/no}}{{#si numerado}} data-numerado{{/si}} data-pausar="{{agentes.rotulos.pausar}}" data-reproducir="{{agentes.rotulos.reproducir}}" data-ver-de-nuevo="{{agentes.rotulos.verDeNuevo}}">
+        <h3 class="agentes__capitulo">{{nombre}}</h3>
+        <ol class="beneficios" role="list">
+{{#cada videos}}          <li class="beneficio" data-beneficio{{#si @primero}} data-abierto data-fase="espera"{{/si}}>
+            <h3 class="beneficio__nombre"><span class="beneficio__boton" data-beneficio-boton><span class="beneficio__play" aria-hidden="true">{{#si numerado}}<b>{{@numero}}</b>{{/si}}{{#no numerado}}<svg focusable="false"><use href="#i-reproducir"/></svg>{{/no}}</span>{{titulo}}</span></h3>
+            <div class="beneficio__panel" id="beneficio-{{clave}}-{{@numero}}">
+              <div class="beneficio__dice"><p class="beneficio__texto">{{texto}}</p></div>
+{{> mini-video}}            </div>
           </li>
 {{/cada}}        </ol>
-      </div>
-{{/cada}}    </div>
-  </section>
-
-  <section class="agentes" id="agente" aria-labelledby="titulo-agentes">
-    <div class="agentes__cabeza">
-      <p class="sobre">Tu agente</p>
-      <h2 class="agentes__titulo" id="titulo-agentes">Atiende como tú lo harías. <em>A cualquier hora.</em></h2>
-    </div>
-    <div class="agentes__duo" data-agente data-pausar="{{agentes.rotulos.pausar}}" data-reproducir="{{agentes.rotulos.reproducir}}" data-ver-de-nuevo="{{agentes.rotulos.verDeNuevo}}">
-      <ol class="beneficios" role="list">
-{{#cada agentes.hace}}        <li class="beneficio" data-beneficio{{#si @primero}} data-abierto data-fase="espera"{{/si}}>
-          <h3 class="beneficio__nombre"><span class="beneficio__boton" data-beneficio-boton><span class="beneficio__play" aria-hidden="true"><svg focusable="false"><use href="#i-reproducir"/></svg></span>{{titulo}}</span></h3>
-          <div class="beneficio__panel" id="beneficio-{{@numero}}">
-            <div class="beneficio__dice"><p class="beneficio__texto">{{texto}}</p></div>
-{{> mini-video}}          </div>
-        </li>
-{{/cada}}      </ol>
-      <template data-mv-barra><div class="mv__barra"><button class="mv__pausa" type="button" data-mv-pausa data-estado="pausar" aria-label="{{agentes.rotulos.pausar}}"><svg class="mv__icono" data-de="pausar" aria-hidden="true" focusable="false"><use href="#i-pausa"/></svg><svg class="mv__icono" data-de="reproducir" aria-hidden="true" focusable="false"><use href="#i-reproducir"/></svg><svg class="mv__icono" data-de="verDeNuevo" aria-hidden="true" focusable="false"><use href="#i-repite"/></svg></button><span class="mv__linea" aria-hidden="true"><i class="mv__avance" data-mv-avance></i></span><span class="mv__dura" aria-hidden="true" data-mv-dura></span></div></template>
+{{#si sigue}}        <p class="agentes__sigue"><span class="agentes__ir" data-capitulo-sigue>{{sigue}}<svg aria-hidden="true" focusable="false"><use href="#i-flecha"/></svg></span></p>
+{{/si}}{{#si arranca}}        <p class="agentes__arranca"><a class="boton boton--luz" href="{{sitio.alta}}" data-lugar="agente">{{secciones.cierre.accion}}</a> <span>{{arranca}}</span></p>
+{{/si}}      </div>
+{{/cada}}      <template data-mv-barra><div class="mv__barra"><button class="mv__pausa" type="button" data-mv-pausa data-estado="pausar" aria-label="{{agentes.rotulos.pausar}}"><svg class="mv__icono" data-de="pausar" aria-hidden="true" focusable="false"><use href="#i-pausa"/></svg><svg class="mv__icono" data-de="reproducir" aria-hidden="true" focusable="false"><use href="#i-reproducir"/></svg><svg class="mv__icono" data-de="verDeNuevo" aria-hidden="true" focusable="false"><use href="#i-repite"/></svg></button><span class="mv__linea" aria-hidden="true"><i class="mv__avance" data-mv-avance></i></span><span class="mv__dura" aria-hidden="true" data-mv-dura></span></div></template>
     </div>
     <div class="agentes__confianza">
       <h3 class="agentes__subtitulo agentes__subtitulo--grande">{{secciones.confianza.titulo}} <em>{{secciones.confianza.tituloFuerte}}</em></h3>

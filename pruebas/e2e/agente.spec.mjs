@@ -1,18 +1,32 @@
 // @ts-check
-// "Tu agente": el menu de nueve beneficios y sus mini videos. El primero llega abierto y corre solo una vez al
-// llegar a la vista; elegir otro cierra el anterior y corre el suyo; la barra pausa, reanuda y lo repite. En celular
-// es un acordeon y en computadora, un menu con su escenario. Con movimiento reducido nada corre; sin JavaScript, o si
-// su pieza no llega, se lee como lista.
+// "Tu agente": dos capitulos con el mismo menu. "Lo que hace", con diez beneficios y sus mini videos (el primero
+// cuenta una cita de principio a fin), y "Como empiezas", con cuatro pasos numerados. El primer renglon llega abierto
+// y corre solo una vez al llegar a la vista; elegir otro cierra el anterior y corre el suyo; la barra pausa, reanuda y
+// lo repite. En celular es un acordeon y en computadora, un menu con su escenario, que sube junto al titulo y se
+// queda a la vista. Con movimiento reducido nada corre; sin JavaScript, o si su pieza no llega, se lee como lista.
 import { readFileSync } from 'node:fs';
 import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
-/** @type {{ hace: { titulo: string, texto: string, dura: number, alta?: boolean, pasos: any[] }[] }} */
-const { hace: HACE } = JSON.parse(readFileSync(new URL('../../fuente/datos/agentes.json', import.meta.url), 'utf8'));
+/** @typedef {{ titulo: string, texto: string, dura: number, alta?: boolean, largo?: boolean, pasos: any[] }} Video */
+/** @type {{ capitulos: { clave: string, nombre: string, cuenta?: string, sigue?: string, arranca?: string, videos: Video[] }[] }} */
+const { capitulos: CAPITULOS } = JSON.parse(
+  readFileSync(new URL('../../fuente/datos/agentes.json', import.meta.url), 'utf8'),
+);
+/** Los beneficios: los renglones de "Lo que hace", el capitulo que llega a la vista. */
+const HACE = CAPITULOS.find(({ clave }) => clave === 'hace')?.videos ?? [];
+/** Los pasos para contratarlo: los renglones de "Como empiezas". */
+const EMPIEZA = CAPITULOS.find(({ clave }) => clave === 'empieza')?.videos ?? [];
 const TITULOS = HACE.map(({ titulo }) => titulo);
 const ORACIONES = HACE.map(({ texto }) => texto);
 /** Los beneficios que hay. */
 const CUANTOS = HACE.length;
+/** Los titulos de los pasos como los trae la pagina: el numero de cada uno va escrito pegado, en su circulo. */
+const TITULOS_DE_PASOS = EMPIEZA.map(({ titulo }, lugar) => `${lugar + 1}${titulo}`);
+/** Como se llama cada capitulo, en su orden. */
+const NOMBRES = CAPITULOS.map(({ nombre }) => nombre);
+/** A donde lleva el boton de empezar. */
+const ALTA = 'https://alta.prompt-maestro.com/';
 /**
  * El lugar de un beneficio en el menu, del 1 en adelante, por su titulo: las pruebas no dependen del orden.
  * @param {string} titulo
@@ -23,9 +37,12 @@ const PAGO = numeroDe('Asegura el pago antes de agendar');
 const VOZ = numeroDe('Entiende notas de voz');
 const FOTO = numeroDe('Lee la foto de referencia');
 const RECADOS = numeroDe('Te pasa los recados');
-const EXAMEN = numeroDe('Pasa un examen antes de atender');
-/** Lo alto de un mini video en el acordeon: el de la base de conocimiento, que trae una ficha grande, es mas alto. */
+const BASE = numeroDe('Hecho solo para tu negocio');
+const CAMBIOS = numeroDe('Le pides cambios por WhatsApp');
+/** Lo alto de un mini video en el acordeon: el que trae una ficha grande o varios globos a la vez es mas alto. */
 const ALTO_EN_ACORDEON = HACE.map(({ alta }) => (alta ? 452 : 340));
+/** Lo que queda a la vista al terminar el mini video de la cita completa: solo las piezas de su ultimo momento. */
+const ULTIMO_CUADRO_DE_LA_CITA = (HACE[0]?.pasos ?? []).map((paso) => (paso.hasta === undefined ? 1 : 0));
 /** Los tamanos en que se revisa que nada se salga ni brinque: tres celulares o tabletas de pie y tres computadoras. */
 const TAMANOS = /** @type {const} */ ([
   [360, 740],
@@ -36,18 +53,31 @@ const TAMANOS = /** @type {const} */ ([
   [1440, 900],
 ]);
 
+/** El menu del capitulo que llega a la vista: "Lo que hace". */
+const MENU = '#capitulo-hace';
+/** El del otro capitulo, "Como empiezas", que llega guardado. */
+const MENU_DE_PASOS = '#capitulo-empieza';
+
 /**
- * Abre la pagina y espera a que el menu quede vivo.
+ * Abre la pagina y espera a que la seccion quede viva: sus dos menus y el selector de capitulos.
  * @param {import('@playwright/test').Page} page
  * @param {{ quieta?: boolean }} [opciones]  quieta: la visitante pidio menos movimiento
+ * @returns {Promise<import('@playwright/test').Locator>}  el menu de "Lo que hace"
  */
 async function abrir(page, { quieta = false } = {}) {
   if (quieta) await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
-  const menu = page.locator('[data-agente]');
+  const menu = page.locator(MENU);
   await expect(menu).toHaveAttribute('data-viva', '');
+  await expect(page.locator('[data-capitulos]')).toHaveAttribute('data-viva', '');
   return menu;
 }
+
+/**
+ * Lo alto del escenario en computadora: 600, o lo que quepa bajo la barra de la pagina en una pantalla bajita.
+ * @param {import('@playwright/test').Page} page
+ */
+const altoDelEscenario = (page) => page.evaluate(() => Math.min(600, Math.max(440, innerHeight - 136)));
 
 /**
  * @param {import('@playwright/test').Locator} menu
@@ -163,6 +193,56 @@ function marcha(menu) {
 }
 
 /**
+ * Lo que se sale de la pantalla por los lados dentro de una seccion, y cuanto se desborda la pagina a lo ancho.
+ * @param {import('@playwright/test').Locator} seccion
+ */
+function salidosDe(seccion) {
+  return seccion.evaluate((raiz) => {
+    const tope = document.documentElement.clientWidth;
+    /** @type {string[]} */
+    const salidos = [];
+    for (const pieza of raiz.querySelectorAll('*')) {
+      // Lo que vive dentro de un mini video lo recorta su pantalla: se revisa aparte, contra ella.
+      if (pieza.closest('.mv__escena')) continue;
+      const { left, right, width, height } = pieza.getBoundingClientRect();
+      if (width === 0 || height === 0) continue;
+      if (left < -0.5 || right > tope + 0.5)
+        salidos.push(`${pieza.tagName.toLowerCase()}.${pieza.getAttribute('class')}`);
+    }
+    return { salidos, desborde: document.documentElement.scrollWidth - tope };
+  });
+}
+
+/**
+ * Si la escena cabe en su pantalla: lo alto del mini video, cuantas piezas trae su ultimo cuadro y cuales no se ven
+ * enteras (tocan las orillas o quedan bajo el lugar de la barra).
+ * @param {import('@playwright/test').Locator} pantallaDelVideo
+ */
+function escenaMedida(pantallaDelVideo) {
+  return pantallaDelVideo.evaluate((pantalla) => {
+    const marco = pantalla.getBoundingClientRect();
+    const piezas = [...pantalla.querySelectorAll('.mv__cabe > *, .sello')].filter(
+      (pieza) => pieza.getBoundingClientRect().height > 0,
+    );
+    return {
+      alto: Math.round(marco.height),
+      piezas: piezas.length,
+      salidas: piezas
+        .filter((pieza) => {
+          const caja = pieza.getBoundingClientRect();
+          return (
+            caja.left < marco.left + 4 ||
+            caja.right > marco.right - 4 ||
+            caja.top < marco.top + 4 ||
+            caja.bottom > marco.bottom - 44
+          );
+        })
+        .map((pieza) => `${pieza.tagName.toLowerCase()}.${pieza.getAttribute('class')}`),
+    };
+  });
+}
+
+/**
  * Que tan a la vista esta cada paso de la escena abierta (de 0 a 1), en su orden. El que ya se fue no cuenta.
  * @param {import('@playwright/test').Locator} menu
  */
@@ -175,18 +255,18 @@ function pasosALaVista(menu) {
   );
 }
 
-test('el menu llega con sus nueve beneficios, cada uno un boton de verdad, y solo el primero abierto', async ({
+test('el menu llega con sus diez beneficios, cada uno un boton de verdad, y solo el primero abierto', async ({
   page,
 }) => {
-  // Mide los nueve renglones y al final pasa el revisor de accesibilidad: con cinco navegadores a la vez, tarda.
+  // Mide los diez renglones y al final pasa el revisor de accesibilidad: con cinco navegadores a la vez, tarda.
   test.slow();
   const fallas = vigilar(page);
   const menu = await abrir(page);
   const seccion = page.locator('#agente');
   await expect(seccion.getByRole('heading', { level: 2 })).toHaveText('Atiende como tú lo harías. A cualquier hora.');
-  // Una lista ordenada de nueve renglones: cada uno es un titulo que es, entero, un boton. El primero, el que llega
-  // abierto, es el de la base de conocimiento.
-  expect([CUANTOS, TITULOS[0]]).toEqual([9, 'Hecho solo para tu negocio']);
+  // Una lista ordenada de diez renglones: cada uno es un titulo que es, entero, un boton. El primero, el que llega
+  // abierto, es el que cuenta una cita de principio a fin; el de la base de conocimiento va enseguida.
+  expect([CUANTOS, TITULOS[0], TITULOS[1]]).toEqual([10, 'Una cita, de principio a fin', 'Hecho solo para tu negocio']);
   const renglones = menu.locator('ol.beneficios > li');
   await expect(renglones).toHaveCount(CUANTOS);
   await expect(menu.locator('h3 > button.beneficio__boton')).toHaveText(TITULOS);
@@ -235,14 +315,20 @@ test('al llegar a la vista el primero corre solo, una sola vez, y se queda en su
   await expect(menu).toHaveAttribute('data-anda', '');
   const barra = video(menu).getByRole('button');
   await expect(barra).toHaveAccessibleName('Pausar');
-  await expect(video(menu).locator('[data-mv-dura]')).toHaveText('0:08');
+  // Es el largo: la cita completa, en 26 segundos.
+  await expect(video(menu).locator('[data-mv-dura]')).toHaveText('0:26');
   await expect.poll(async () => (await marcha(menu)).corriendo).toBeGreaterThan(0);
-  // Corre hasta el final sin que nadie lo toque, y ahi se queda: su ultimo cuadro, con todo puesto.
-  await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/, { timeout: 20_000 });
+  // Empieza por el principio: el primer momento de la cita, con lo que escribe la clienta.
+  await expect(video(menu).getByText('Antes de la cita')).toBeVisible();
+  await expect(video(menu).getByText('Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?')).toBeVisible();
+  // Corre hasta el final sin que nadie lo toque, y ahi se queda: su ultimo cuadro, el de despues de la cita. Lo de
+  // los momentos anteriores ya se fue.
+  await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/, { timeout: 45_000 });
   await expect(barra).toHaveAccessibleName('Ver de nuevo');
   expect(await marcha(menu)).toEqual({ anda: false, fase: 'fin', corriendo: 0, detenidas: 0, va: 1 });
-  expect(await pasosALaVista(menu)).toEqual([1, 1, 1, 1]);
-  await expect(video(menu)).toContainText('Lo sabe porque es la política de tu negocio');
+  expect(await pasosALaVista(menu)).toEqual(ULTIMO_CUADRO_DE_LA_CITA);
+  await expect(video(menu)).toContainText('Cita garantizada, de principio a fin');
+  await expect(video(menu).getByText('Antes de la cita')).toBeHidden();
   // Ya terminado, ni una falta: el contraste de cada pieza de la escena y el nombre del boton.
   await sinFaltasDeAccesibilidad(page, '#agente');
   // Solo una vez: irse y regresar no lo vuelve a correr.
@@ -287,7 +373,7 @@ test('elegir otro beneficio cierra el anterior y corre el suyo; elegir el abiert
   await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/);
   expect(await marcha(menu)).toMatchObject({ anda: true, fase: 'sigue', detenidas: 0 });
   expect((await marcha(menu)).corriendo).toBeGreaterThan(0);
-  expect(await page.evaluate(() => document.querySelectorAll('.beneficio[data-fase]').length)).toBe(1);
+  await expect(menu.locator('.beneficio[data-fase]')).toHaveCount(1);
 
   // Ya terminado, tocar su renglon lo corre otra vez: sigue abierto y vuelve a empezar.
   await alFinal(menu);
@@ -484,9 +570,11 @@ test('en celular, si lo que se abre no cabe, la pagina baja con suavidad a ensen
   await expect(menu).toHaveAttribute('data-anda', '');
 });
 
-test('en computadora el menu va a la izquierda y un solo escenario a la derecha, que no se mueve ni cambia de alto', async ({
+test('en computadora el menu va a la izquierda y un solo escenario a la derecha, que sube junto al titulo y no cambia de alto', async ({
   page,
 }) => {
+  // Abre los diez beneficios y, en cada uno, espera a que la pagina se asiente y mide: se le da su tiempo.
+  test.slow();
   const menu = await abrir(page);
   test.skip(!(await esComputadora(page)), 'en celular el menu es un acordeon');
   await llegarA(menu);
@@ -499,32 +587,55 @@ test('en computadora el menu va a la izquierda y un solo escenario a la derecha,
         ).getBoundingClientRect();
         return [left + scrollX, top + scrollY, width, height].map((medida) => Math.round(medida));
       };
+      // El escenario se queda pegado bajo la barra de la pagina: de el se mide donde empieza a lo ancho y lo que
+      // mide, no su lugar a lo alto de la pagina, que cambia al recorrerla.
+      const [aLaIzquierda, , ancho, alto] = caja('.beneficio[data-abierto] .mv');
       return {
-        escenario: caja('.beneficio[data-abierto] .mv'),
+        escenario: [aLaIzquierda, ancho, alto],
         lista: caja('.beneficios'),
         debajo: caja('.agentes__confianza'),
         primero: caja('.beneficio:first-child button'),
+        titulo: caja('.agentes__titulo'),
         seccion: caja('#agente')[3],
       };
     });
   await asentado(page);
   const inicial = await medidas();
-  // El escenario, a la derecha del menu y de 500 de alto.
+  // El escenario, a la derecha del menu y del alto que le toca a esta pantalla.
   expect(inicial.escenario[0]).toBeGreaterThan((inicial.lista[0] ?? 0) + (inicial.lista[2] ?? 0));
-  expect(inicial.escenario[3]).toBe(500);
-  expect(inicial.escenario[2]).toBeGreaterThan(360);
-  // Y a la altura del menu: empieza un poco debajo de su primer renglon y termina antes que el.
-  const [, topeDelEscenario = 0, , altoDelEscenario = 0] = inicial.escenario;
-  const [, topeDelMenu = 0, , altoDelMenu = 0] = inicial.lista;
-  expect(topeDelEscenario - topeDelMenu).toBeGreaterThanOrEqual(0);
-  expect(topeDelEscenario - topeDelMenu).toBeLessThanOrEqual(80);
-  expect(topeDelEscenario + altoDelEscenario).toBeLessThanOrEqual(topeDelMenu + altoDelMenu);
+  expect(inicial.escenario[2]).toBe(await altoDelEscenario(page));
+  expect(inicial.escenario[1]).toBeGreaterThan(360);
+  // El titulo, el selector de capitulos y el menu comparten la columna de la izquierda: ninguno se mete al escenario.
+  for (const pieza of ['.agentes__titulo', '.capitulos', '.beneficios']) {
+    const derecha = await page
+      .locator(`#agente ${pieza}`)
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().right);
+    expect(derecha, pieza).toBeLessThan(inicial.escenario[0] ?? 0);
+  }
+  // Con la seccion recien llegada (su principio un poco debajo de la barra de la pagina), el escenario empieza donde
+  // empieza ella, a la altura del titulo: sube junto a el, no espera al menu.
+  await page
+    .locator('#agente .agentes__principal')
+    .evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY - 120, behavior: 'instant' }));
+  const alLlegar = await page.evaluate(() => {
+    const tope = (/** @type {string} */ que) =>
+      /** @type {Element} */ (document.querySelector(que)).getBoundingClientRect().top;
+    return { escenario: tope('.beneficio[data-abierto] .mv'), principal: tope('.agentes__principal') };
+  });
+  expect(Math.abs(alLlegar.escenario - alLlegar.principal)).toBeLessThanOrEqual(1);
+  await llegarA(menu);
   for (let numero = 2; numero <= CUANTOS; numero++) {
     await boton(menu, numero).click();
     await expect(boton(menu, numero)).toHaveAttribute('aria-expanded', 'true');
     await asentado(page);
-    // El escenario es el mismo, en el mismo lugar; el menu mide lo mismo y lo de abajo no brinco.
+    await quietaLaPagina(page);
+    // El escenario es el mismo y mide lo mismo; el menu mide lo mismo y lo de abajo no brinco.
     mismasMedidas(await medidas(), inicial, TITULOS[numero - 1]);
+    // Y se ve entero, pegado bajo la barra de la pagina: tambien con los ultimos renglones, donde ya iba de salida.
+    await expect(video(menu), TITULOS[numero - 1]).toBeInViewport({ ratio: 1 });
+    expect((await video(menu).boundingBox())?.y ?? 0, TITULOS[numero - 1]).toBeGreaterThanOrEqual(64);
+    await expect(boton(menu, numero), TITULOS[numero - 1]).toBeInViewport();
     await expect(video(menu)).toHaveCount(1);
     await expect(menu.locator('.beneficio__texto').filter({ visible: true })).toHaveText([ORACIONES[numero - 1] ?? '']);
   }
@@ -586,11 +697,25 @@ test('todo el menu se maneja con el teclado, se ve donde esta el foco y nunca se
   await sinFaltasDeAccesibilidad(page, '#agente');
 });
 
-test('los nueve beneficios: cada uno abre su oracion y su escena, con lo que dicen los datos', async ({ page }) => {
+test('los diez beneficios: cada uno abre su oracion y su escena, con lo que dicen los datos', async ({ page }) => {
   // Con menos movimiento cada escena se pinta completa de una vez: se revisa su ultimo cuadro.
   const menu = await abrir(page, { quieta: true });
   /** Lo que cada escena ensena al final, y lo que ya se fue. */
   const ESCENAS = [
+    {
+      // La cita completa: queda su ultimo momento. Lo de antes de la cita, el pago y la pregunta de si llego, ya se fue.
+      queda: [
+        'Después de la cita',
+        '¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita.',
+        'Cita garantizada, de principio a fin',
+      ],
+      seFue: [
+        'Antes de la cita',
+        'Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?',
+        'Pago aprobado · $150',
+        '¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm?',
+      ],
+    },
     {
       // La base de conocimiento del negocio de ejemplo y una respuesta que solo ese negocio daria.
       queda: [
@@ -655,8 +780,19 @@ test('los nueve beneficios: cada uno abre su oracion y su escena, con lo que dic
       ],
       seFue: [],
     },
-    { queda: ['Examen 1', 'Examen 2', 'Examen 3', 'Cero errores graves', 'Listo para atender'], seFue: [] },
+    {
+      // Los cambios: ella lo pide, el agente dice que va a cambiar y pregunta; ella ya toco que si.
+      queda: [
+        'Tu WhatsApp personal',
+        'Sube el gelish a $380',
+        'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
+        'Sí, aplícalo',
+        'Nada cambia sin tu sí',
+      ],
+      seFue: [],
+    },
   ];
+  expect(ESCENAS).toHaveLength(CUANTOS);
   for (const [lugar, { queda, seFue }] of ESCENAS.entries()) {
     const numero = lugar + 1;
     await llegarA(boton(menu, numero));
@@ -672,7 +808,7 @@ test('los nueve beneficios: cada uno abre su oracion y su escena, con lo que dic
     expect(new Set(await pasosALaVista(menu)), TITULOS[lugar]).toEqual(new Set(seFue.length > 0 ? [0, 1] : [1]));
   }
   // Dentro de las escenas la letra es la del sistema y los colores, los del WhatsApp de dia; la insignia, la de la pagina.
-  await boton(menu, 1).click();
+  await boton(menu, BASE).click();
   const escena = video(menu);
   expect(await escena.locator('.wa__m--sale').evaluate((globo) => getComputedStyle(globo).fontFamily)).toMatch(
     /^system-ui/,
@@ -715,7 +851,7 @@ test('con movimiento reducido nada corre solo ni hay transiciones: cada benefici
   };
   // El primero ya esta completo antes de que nadie llegue, y llegar no lo echa a andar.
   await quieto();
-  expect(await pasosALaVista(menu)).toEqual([1, 1, 1, 1]);
+  expect(await pasosALaVista(menu)).toEqual(ULTIMO_CUADRO_DE_LA_CITA);
   await llegarA(video(menu));
   await expect(video(menu)).toBeInViewport();
   await page.waitForTimeout(300);
@@ -724,7 +860,7 @@ test('con movimiento reducido nada corre solo ni hay transiciones: cada benefici
   await expect(menu.locator('.mv__barra')).toBeHidden();
   await expect(video(menu).getByRole('button')).toHaveCount(0);
   // Al elegir otro se pinta de golpe su ultimo cuadro.
-  for (const numero of [VOZ, EXAMEN, AGENDA]) {
+  for (const numero of [VOZ, CAMBIOS, AGENDA]) {
     await llegarA(boton(menu, numero));
     await boton(menu, numero).click();
     await expect(boton(menu, numero)).toHaveAttribute('aria-expanded', 'true');
@@ -733,20 +869,12 @@ test('con movimiento reducido nada corre solo ni hay transiciones: cada benefici
     await expect(video(menu)).toHaveCount(1);
     await expect(menu.locator('.mv__barra')).toBeHidden();
   }
-  // El examen, ya pasado: sus tres barras llenas y sus tres palomitas.
-  await boton(menu, EXAMEN).click();
-  const llenas = await video(menu)
-    .locator('.mv__raya')
-    .evaluateAll((rayas) =>
-      rayas.map((raya) =>
-        Math.round(
-          (100 * /** @type {Element} */ (raya.firstElementChild).getBoundingClientRect().width) /
-            raya.getBoundingClientRect().width,
-        ),
-      ),
-    );
-  expect(llenas).toEqual([100, 100, 100]);
-  await expect(video(menu).locator('.mv__bien').filter({ visible: true })).toHaveCount(3);
+  // Los cambios, ya contestados: de los dos botones de respuesta, el que ella toco va en el azul de la marca.
+  await boton(menu, CAMBIOS).click();
+  const respuestas = video(menu).locator('.mv__botones span');
+  await expect(respuestas).toHaveText(['Sí, aplícalo', 'No']);
+  await expect(respuestas.first()).toHaveCSS('background-color', 'rgb(63, 92, 245)');
+  await expect(respuestas.last()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   await sinFaltasDeAccesibilidad(page, '#agente');
   expect(fallas).toEqual([]);
 });
@@ -763,7 +891,7 @@ test('el menu llega con su aspecto de menu: cuando su pieza lo despierta, nada c
     await ruta.continue();
   });
   await page.goto('./');
-  const menu = page.locator('[data-agente]');
+  const menu = page.locator(MENU);
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
   await llegarA(menu);
   const aspecto = () =>
@@ -812,20 +940,79 @@ test('si la pieza del menu no llega, la seccion se lee como lista y lo demas sig
   await page.route('**/js/agente-vista.js', (ruta) => ruta.abort());
   await page.goto('./');
   await page.waitForFunction(() => /** @type {any} */ (window).__montada === true);
-  const menu = page.locator('[data-agente]');
+  const menu = page.locator(MENU);
   await expect(menu).toHaveAttribute('data-lista', '');
   await expect(menu).not.toHaveAttribute('data-viva', /.*/);
   await llegarA(menu);
-  // Los nueve beneficios con su titulo y su oracion a la vista; ni botones muertos ni escenarios vacios.
-  await expect(menu.getByRole('heading', { level: 3 })).toHaveText(TITULOS);
+  // Los diez beneficios con su titulo y su oracion a la vista; ni botones muertos ni escenarios vacios.
+  await expect(menu.getByRole('heading', { level: 3 })).toHaveText([NOMBRES[0] ?? '', ...TITULOS]);
   await expect(menu.locator('.beneficio__texto').filter({ visible: true })).toHaveText(ORACIONES);
   await expect(menu.getByRole('button')).toHaveCount(0);
+  // Y el otro capitulo, que llegaba guardado, tambien se lee: sin selector, cada uno dice su nombre arriba de su lista.
+  const pasos = page.locator(MENU_DE_PASOS);
+  await expect(pasos).toHaveAttribute('data-lista', '');
+  await expect(pasos.getByRole('heading', { level: 3 })).toHaveText([NOMBRES[1] ?? '', ...TITULOS_DE_PASOS]);
+  await expect(pasos.locator('.beneficio__texto').filter({ visible: true })).toHaveText(
+    EMPIEZA.map(({ texto }) => texto),
+  );
+  await expect(page.locator('#agente .capitulos')).toBeHidden();
+  await expect(page.locator('#agente .agentes__capitulo').filter({ visible: true })).toHaveText(NOMBRES);
+  await expect(page.locator('#agente .agentes__sigue')).toBeHidden();
+  await expect(page.locator('#agente button')).toHaveCount(0);
+  // El boton de empezar si se queda: es un enlace, y lleva al alta.
+  await expect(pasos.getByRole('link', { name: 'Empieza ahora' })).toHaveAttribute('href', ALTA);
   await expect(menu.locator('.mv').filter({ visible: true })).toHaveCount(0);
   await expect(menu.locator('.beneficio__play').filter({ visible: true })).toHaveCount(0);
   // Lo demas de la pagina no se entera.
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('[data-calculadora]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('html')).toHaveClass(/con-js/);
+  await sinFaltasDeAccesibilidad(page, '#agente');
+});
+
+test('si a un solo renglon le falta una pieza, la seccion ENTERA se lee como lista: ningun menu queda vivo a medias', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    document.addEventListener('pagina:montada', () => {
+      /** @type {any} */ (window).__montada = true;
+    });
+  });
+  // La pieza del menu llega tarde; mientras, a un paso del capitulo guardado se le pierde su mini video.
+  /** @type {(valor?: unknown) => void} */
+  let soltar = () => undefined;
+  const espera = new Promise((listo) => {
+    soltar = listo;
+  });
+  await page.route('**/js/agente-vista.js', async (ruta) => {
+    await espera;
+    await ruta.continue();
+  });
+  await page.goto('./');
+  await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
+  await page
+    .locator(`${MENU_DE_PASOS} .beneficio`)
+    .nth(2)
+    .locator('[data-mv]')
+    .evaluate((video) => video.removeAttribute('data-mv'));
+  soltar();
+  await page.waitForFunction(() => /** @type {any} */ (window).__montada === true);
+  // Ni el menu que estaba completo desperto: los dos capitulos quedan como lista, sin un solo boton que no haga nada.
+  const menu = page.locator(MENU);
+  const pasos = page.locator(MENU_DE_PASOS);
+  for (const uno of [menu, pasos]) {
+    await expect(uno).toHaveAttribute('data-lista', '');
+    await expect(uno).not.toHaveAttribute('data-viva', /.*/);
+    await expect(uno).toBeVisible();
+  }
+  await expect(page.locator('#agente button')).toHaveCount(0);
+  await expect(page.locator('#agente [role="tab"], #agente [role="tabpanel"], #agente [aria-expanded]')).toHaveCount(0);
+  await expect(page.locator('#agente .capitulos')).toBeHidden();
+  await expect(menu.locator('.beneficio__texto').filter({ visible: true })).toHaveText(ORACIONES);
+  await expect(pasos.locator('.beneficio__texto').filter({ visible: true })).toHaveText(
+    EMPIEZA.map(({ texto }) => texto),
+  );
+  await expect(page.locator('#agente .mv').filter({ visible: true })).toHaveCount(0);
   await sinFaltasDeAccesibilidad(page, '#agente');
 });
 
@@ -844,7 +1031,7 @@ test('si la pieza del menu llega cuando la seccion ya quedo como lista, asi se q
   });
   await page.clock.install();
   await page.goto('./');
-  const menu = page.locator('[data-agente]');
+  const menu = page.locator(MENU);
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
   await page.clock.fastForward(9000);
   await expect(menu).toHaveAttribute('data-lista', '');
@@ -885,7 +1072,7 @@ test('en una pantalla muy bajita (mucho zoom) el primer mini video tambien arran
   await expect.poll(async () => (await marcha(menu)).corriendo).toBeGreaterThan(0);
 });
 
-test('al imprimir o guardar en PDF la seccion sale completa: los nueve beneficios con su oracion, nada vacio', async ({
+test('al imprimir o guardar en PDF la seccion sale completa: los dos capitulos, cada renglon con su oracion, nada vacio', async ({
   page,
 }) => {
   const menu = await abrir(page);
@@ -894,8 +1081,19 @@ test('al imprimir o guardar en PDF la seccion sale completa: los nueve beneficio
   await page.emulateMedia({ media: 'print' });
   await expect(menu.locator('.beneficio__texto').filter({ visible: true })).toHaveText(ORACIONES);
   await expect(menu.locator('.beneficio__boton').filter({ visible: true })).toHaveText(TITULOS);
-  // En papel no hay nada que reproducir: ni escenarios ni circulos.
-  await expect(menu.locator('.mv').filter({ visible: true })).toHaveCount(0);
+  // El capitulo que en pantalla esta guardado tambien sale en papel, y cada uno dice su nombre: no hay selector.
+  const pasos = page.locator(MENU_DE_PASOS);
+  await expect(pasos.locator('.beneficio__boton').filter({ visible: true })).toHaveText(TITULOS_DE_PASOS);
+  // Y cada paso conserva su numero a la vista, escrito antes de su titulo.
+  await expect(pasos.locator('.beneficio__play').filter({ visible: true })).toHaveText(['1', '2', '3', '4']);
+  await expect(pasos.locator('.beneficio__texto').filter({ visible: true })).toHaveText(
+    EMPIEZA.map(({ texto }) => texto),
+  );
+  await expect(page.locator('#agente .capitulos')).toBeHidden();
+  await expect(page.locator('#agente .agentes__capitulo').filter({ visible: true })).toHaveText(NOMBRES);
+  await expect(page.locator('#agente .agentes__sigue')).toBeHidden();
+  // En papel no hay nada que reproducir: ni escenarios ni circulos de reproducir.
+  await expect(page.locator('#agente .mv').filter({ visible: true })).toHaveCount(0);
   await expect(menu.locator('.beneficio__play').filter({ visible: true })).toHaveCount(0);
   await expect(page.locator('#agente .agentes__cuidamos li').filter({ visible: true })).toHaveCount(3);
   await expect(page.locator('#agente .agentes__no li').filter({ visible: true })).toHaveCount(6);
@@ -970,14 +1168,14 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y lo
 test.describe('sin JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('los nueve beneficios se leen como lista, cada uno con su titulo y su oracion, sin botones ni escenarios', async ({
+  test('los dos capitulos se leen como lista, cada renglon con su titulo y su oracion, sin botones ni escenarios', async ({
     page,
   }) => {
     await page.goto('./');
-    const menu = page.locator('[data-agente]');
+    const menu = page.locator(MENU);
     await menu.scrollIntoViewIfNeeded();
     await expect(menu.locator('ol.beneficios > li')).toHaveCount(CUANTOS);
-    await expect(menu.getByRole('heading', { level: 3 })).toHaveText(TITULOS);
+    await expect(menu.getByRole('heading', { level: 3 })).toHaveText([NOMBRES[0] ?? '', ...TITULOS]);
     await expect(menu.locator('.beneficio__texto').filter({ visible: true })).toHaveText(ORACIONES);
     // Cada oracion va debajo de su titulo.
     const pares = await menu.locator('.beneficio').evaluateAll((lista) =>
@@ -988,11 +1186,23 @@ test.describe('sin JavaScript', () => {
       }),
     );
     expect(pares).toEqual(Array(CUANTOS).fill(true));
+    // El otro capitulo tambien se lee, debajo: sin selector, cada uno dice su nombre arriba de su lista.
+    const pasos = page.locator(MENU_DE_PASOS);
+    await expect(pasos.getByRole('heading', { level: 3 })).toHaveText([NOMBRES[1] ?? '', ...TITULOS_DE_PASOS]);
+    await expect(pasos.locator('.beneficio__texto').filter({ visible: true })).toHaveText(
+      EMPIEZA.map(({ texto }) => texto),
+    );
+    await expect(page.locator('#agente .capitulos')).toBeHidden();
+    await expect(page.locator('#agente .agentes__capitulo').filter({ visible: true })).toHaveText(NOMBRES);
+    await expect(page.locator('#agente .agentes__sigue')).toBeHidden();
+    await expect(pasos.getByRole('link', { name: 'Empieza ahora' })).toHaveAttribute('href', ALTA);
+    // Cada paso conserva su numero a la vista, escrito antes de su titulo.
+    await expect(pasos.locator('.beneficio__play').filter({ visible: true })).toHaveText(['1', '2', '3', '4']);
     // Ni un boton (tampoco uno muerto), ni un circulo de reproducir, ni un escenario vacio.
     await expect(page.locator('#agente button')).toHaveCount(0);
     await expect(menu.locator('.beneficio__play').filter({ visible: true })).toHaveCount(0);
-    await expect(menu.locator('.mv').filter({ visible: true })).toHaveCount(0);
-    await expect(menu.locator('.mv__barra')).toHaveCount(0);
+    await expect(page.locator('#agente .mv').filter({ visible: true })).toHaveCount(0);
+    await expect(page.locator('#agente .mv__barra')).toHaveCount(0);
     // Y lo de abajo, igual que siempre.
     await expect(page.locator('#agente .agentes__cuidamos li')).toHaveCount(3);
     await expect(page.locator('#agente .agentes__no li')).toHaveCount(6);
@@ -1006,15 +1216,16 @@ for (const [ancho, alto] of TAMANOS) {
   test(`a ${ancho} de ancho nada de "Tu agente" se sale de la pantalla, cada escena cabe en su mini video y nada brinca`, async ({
     page,
   }) => {
-    // Abre los nueve beneficios y mide cada pieza: con la maquina cargada se le da su tiempo.
+    // Abre los diez beneficios y mide cada pieza: con la maquina cargada se le da su tiempo.
     test.slow();
     await page.setViewportSize({ width: ancho, height: alto });
     const menu = await abrir(page, { quieta: true });
     const seccion = page.locator('#agente');
     const computadora = ancho >= 900;
     /**
-     * Donde quedo, en la pagina, lo que no tiene por que moverse al cambiar de beneficio. En computadora, ademas, el
-     * escenario y lo que sigue debajo del menu.
+     * Donde quedo, en la pagina, lo que no tiene por que moverse al cambiar de beneficio. En computadora, ademas, lo
+     * que sigue debajo del menu y, del escenario, donde empieza a lo ancho (a lo alto se queda pegado bajo la barra
+     * de la pagina, y su lugar en la pagina cambia al recorrerla).
      */
     const fijos = () =>
       page.evaluate((conEscenario) => {
@@ -1022,8 +1233,14 @@ for (const [ancho, alto] of TAMANOS) {
           Math.round(/** @type {Element} */ (document.querySelector(que)).getBoundingClientRect().top + scrollY);
         const quietos = { menu: tope('.beneficios'), primero: tope('.beneficio:first-child .beneficio__boton') };
         if (!conEscenario) return quietos;
-        return { ...quietos, escenario: tope('.beneficio[data-abierto] .mv'), debajo: tope('.agentes__confianza') };
+        const escenario = /** @type {Element} */ (document.querySelector('.beneficio[data-abierto] .mv'));
+        return {
+          ...quietos,
+          escenario: Math.round(escenario.getBoundingClientRect().left + scrollX),
+          debajo: tope('.agentes__confianza'),
+        };
       }, computadora);
+    const altoEnComputadora = await altoDelEscenario(page);
     // Se mide ya en la seccion: al dejar el inicio, la barra de arriba gana su raya y todo baja un punto.
     await llegarA(boton(menu, 1));
     const alPrincipio = await fijos();
@@ -1038,49 +1255,21 @@ for (const [ancho, alto] of TAMANOS) {
       const brinco = (await suBoton.evaluate((el) => el.getBoundingClientRect().top)) - antes;
       if (!computadora) expect(Math.abs(brinco), `${TITULOS[numero - 1]}: brinco`).toBeLessThanOrEqual(1);
       mismasMedidas(await fijos(), alPrincipio, TITULOS[numero - 1]);
-      const fuera = await seccion.evaluate((raiz) => {
-        const tope = document.documentElement.clientWidth;
-        /** @type {string[]} */
-        const salidos = [];
-        for (const pieza of raiz.querySelectorAll('*')) {
-          // Lo que vive dentro de un mini video lo recorta su pantalla: se revisa aparte, contra ella.
-          if (pieza.closest('.mv__escena')) continue;
-          const { left, right, width, height } = pieza.getBoundingClientRect();
-          if (width === 0 || height === 0) continue;
-          if (left < -0.5 || right > tope + 0.5)
-            salidos.push(`${pieza.tagName.toLowerCase()}.${pieza.getAttribute('class')}`);
-        }
-        return { salidos, desborde: document.documentElement.scrollWidth - tope };
-      });
-      expect(fuera, TITULOS[numero - 1]).toEqual({ salidos: [], desborde: 0 });
-      // La escena cabe en su pantalla: cada pieza del ultimo cuadro, entera, sin tocar las orillas ni quedar bajo
-      // el lugar de la barra.
-      const escena = await video(menu).evaluate((pantalla) => {
-        const marco = pantalla.getBoundingClientRect();
-        const piezas = [...pantalla.querySelectorAll('.mv__cabe > *, .sello')].filter(
-          (pieza) => pieza.getBoundingClientRect().height > 0,
-        );
-        return {
-          alto: Math.round(marco.height),
-          piezas: piezas.length,
-          salidas: piezas
-            .filter((pieza) => {
-              const caja = pieza.getBoundingClientRect();
-              return (
-                caja.left < marco.left + 4 ||
-                caja.right > marco.right - 4 ||
-                caja.top < marco.top + 4 ||
-                caja.bottom > marco.bottom - 44
-              );
-            })
-            .map((pieza) => `${pieza.tagName.toLowerCase()}.${pieza.getAttribute('class')}`),
-        };
-      });
+      // En computadora el escenario se ve entero despues de elegir, bajo la barra de la pagina: tambien con los
+      // ultimos renglones del menu, donde ya iba de salida.
+      if (computadora) {
+        await quietaLaPagina(page);
+        await expect(video(menu), TITULOS[numero - 1]).toBeInViewport({ ratio: 1 });
+        expect((await video(menu).boundingBox())?.y ?? 0, TITULOS[numero - 1]).toBeGreaterThanOrEqual(64);
+      }
+      expect(await salidosDe(seccion), TITULOS[numero - 1]).toEqual({ salidos: [], desborde: 0 });
+      const escena = await escenaMedida(video(menu));
+      // La de la cita completa termina con su ultimo momento, que trae tres piezas; las demas, tres o mas.
       expect(escena.piezas, TITULOS[numero - 1]).toBeGreaterThanOrEqual(3);
       expect(escena.salidas, TITULOS[numero - 1]).toEqual([]);
-      // El escenario no cambia de alto. En el acordeon todos los mini videos miden lo mismo, menos el de la base de
-      // conocimiento: su ficha necesita una pantalla mas alta.
-      expect(escena.alto, TITULOS[numero - 1]).toBe(computadora ? 500 : ALTO_EN_ACORDEON[numero - 1]);
+      // El escenario no cambia de alto. En el acordeon todos los mini videos miden lo mismo, menos los que traen una
+      // ficha grande o varios globos a la vez: necesitan una pantalla mas alta.
+      expect(escena.alto, TITULOS[numero - 1]).toBe(computadora ? altoEnComputadora : ALTO_EN_ACORDEON[numero - 1]);
     }
     // El sello no tapa el texto de la cita ni el del horario agendado.
     for (const [numero, texto] of /** @type {const} */ ([
@@ -1105,5 +1294,313 @@ for (const [ancho, alto] of TAMANOS) {
       const anterior = titulos[lugar - 1];
       if (anterior) expect(titulo.top).toBeGreaterThanOrEqual(anterior.bottom);
     }
+  });
+}
+
+// ---------- Los capitulos: "Lo que hace" y "Como empiezas" ----------
+
+/**
+ * El selector de capitulos.
+ * @param {import('@playwright/test').Page} page
+ */
+const selector = (page) => page.locator('#agente [data-capitulos]');
+/**
+ * Una de sus pestanas, por lo que dice.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} nombre
+ */
+const pestana = (page, nombre) => selector(page).getByRole('tab', { name: nombre });
+
+test('el selector de capitulos son dos pestanas de verdad: se ve un capitulo a la vez y el otro espera guardado', async ({
+  page,
+}) => {
+  test.slow();
+  const fallas = vigilar(page);
+  const menu = await abrir(page);
+  const pasos = page.locator(MENU_DE_PASOS);
+  await llegarA(selector(page));
+  await expect(selector(page)).toHaveRole('tablist');
+  await expect(selector(page)).toHaveAccessibleName('Lo que hace tu agente y cómo empiezas');
+  await expect(selector(page).getByRole('tab')).toHaveText(['Lo que hace', 'Cómo empiezas 4 pasos']);
+  const hace = pestana(page, 'Lo que hace');
+  const empieza = pestana(page, 'Cómo empiezas');
+  // Llega elegida la primera, en el azul de la marca, con su capitulo a la vista.
+  await expect(hace).toHaveAttribute('aria-selected', 'true');
+  await expect(empieza).toHaveAttribute('aria-selected', 'false');
+  await expect(hace).toHaveCSS('background-color', 'rgb(63, 92, 245)');
+  await expect(empieza).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(menu).toBeVisible();
+  await expect(pasos).toBeHidden();
+  // Cada pestana dice que controla, y eso existe: su panel, que a su vez dice de quien es. Y se toca con el dedo.
+  for (const [una, panel] of /** @type {const} */ ([
+    [hace, menu],
+    [empieza, pasos],
+  ])) {
+    await expect(panel).toHaveRole('tabpanel');
+    expect(await una.getAttribute('aria-controls')).toBe(await panel.getAttribute('id'));
+    expect(await panel.getAttribute('aria-labelledby')).toBe(await una.getAttribute('id'));
+    expect((await una.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
+  // El nombre de cada capitulo, escrito arriba de su lista, solo hace falta sin selector: aqui no se ve.
+  await expect(page.locator('#agente .agentes__capitulo').filter({ visible: true })).toHaveCount(0);
+
+  // Elegir la otra guarda un menu y ensena el otro: sus cuatro pasos, numerados, con el primero abierto.
+  await empieza.click();
+  await expect(empieza).toHaveAttribute('aria-selected', 'true');
+  await expect(hace).toHaveAttribute('aria-selected', 'false');
+  await expect(empieza).toHaveCSS('background-color', 'rgb(63, 92, 245)');
+  await expect(pasos).toBeVisible();
+  await expect(menu).toBeHidden();
+  await expect(pasos.locator('ol.beneficios > li')).toHaveCount(EMPIEZA.length);
+  await expect(pasos.locator('h3 > button.beneficio__boton')).toHaveText(TITULOS_DE_PASOS);
+  await expect(pasos.locator('.beneficio__play b')).toHaveText(['1', '2', '3', '4']);
+  await expect(pasos.locator('.beneficio__play svg')).toHaveCount(0);
+  for (const [lugar, { titulo, texto }] of EMPIEZA.entries()) {
+    // El numero es de adorno (el orden lo dice la lista): el boton se llama como su paso.
+    const suBoton = pasos.getByRole('button', { name: titulo, exact: true });
+    await expect(suBoton).toHaveAttribute('aria-expanded', String(lugar === 0));
+    await expect(page.locator(`#${await suBoton.getAttribute('aria-controls')} .beneficio__texto`)).toHaveText(texto);
+  }
+  await expect(pasos.locator('.beneficio__texto').filter({ visible: true })).toHaveText([EMPIEZA[0]?.texto ?? '']);
+  // En toda la seccion sigue habiendo un solo mini video a la vista.
+  await expect(page.locator('#agente .mv').filter({ visible: true })).toHaveCount(1);
+  // El capitulo termina con el boton de empezar, que lleva al alta y dice desde donde lo tocaron, y lo que se paga hoy.
+  const empezar = pasos.getByRole('link', { name: 'Empieza ahora' });
+  await expect(empezar).toHaveAttribute('href', ALTA);
+  await expect(empezar).toHaveAttribute('data-lugar', 'agente');
+  await expect(pasos.locator('.agentes__arranca')).toContainText('Hoy pagas solo la instalación.');
+  await expect(pasos.locator('.agentes__sigue')).toHaveCount(0);
+  await sinFaltasDeAccesibilidad(page, '#agente');
+
+  // Y de regreso: el primero vuelve como se quedo.
+  await hace.click();
+  await expect(menu).toBeVisible();
+  await expect(pasos).toBeHidden();
+  await expect(boton(menu, 1)).toHaveAttribute('aria-expanded', 'true');
+  expect(fallas).toEqual([]);
+});
+
+test('los capitulos se cambian con el teclado: las flechas pasan de una pestana a la otra y el foco va con ellas', async ({
+  page,
+}) => {
+  const menu = await abrir(page);
+  const pasos = page.locator(MENU_DE_PASOS);
+  const hace = pestana(page, 'Lo que hace');
+  const empieza = pestana(page, 'Cómo empiezas');
+  await llegarA(selector(page));
+  // Solo la pestana elegida esta en el camino del tabulador.
+  await expect(hace).toHaveAttribute('tabindex', '0');
+  await expect(empieza).toHaveAttribute('tabindex', '-1');
+  await hace.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(empieza).toBeFocused();
+  await expect(empieza).toHaveCSS('outline-style', 'solid');
+  await expect(empieza).toHaveAttribute('aria-selected', 'true');
+  await expect(empieza).toHaveAttribute('tabindex', '0');
+  await expect(hace).toHaveAttribute('tabindex', '-1');
+  await expect(pasos).toBeVisible();
+  await expect(menu).toBeHidden();
+  // Con el tabulador se entra a su capitulo: lo que sigue es su primer paso. Y hacia atras, de vuelta a la pestana.
+  await page.keyboard.press('Tab');
+  await expect(boton(pasos, 1)).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(empieza).toBeFocused();
+  // Las flechas de arriba y abajo no cambian de capitulo: las pestanas van en renglon.
+  await page.keyboard.press('ArrowDown');
+  await expect(empieza).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('ArrowUp');
+  await expect(empieza).toHaveAttribute('aria-selected', 'true');
+  await empieza.focus();
+  // Las flechas de lado dan la vuelta; Inicio y Fin van a las orillas.
+  await page.keyboard.press('ArrowRight');
+  await expect(hace).toBeFocused();
+  await expect(menu).toBeVisible();
+  await page.keyboard.press('ArrowLeft');
+  await expect(empieza).toBeFocused();
+  await expect(pasos).toBeVisible();
+  await page.keyboard.press('Home');
+  await expect(hace).toBeFocused();
+  await expect(hace).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('End');
+  await expect(empieza).toBeFocused();
+  await expect(empieza).toHaveAttribute('aria-selected', 'true');
+  // Con Enter y con Espacio, como cualquier boton: la que ya esta elegida se queda elegida.
+  await page.keyboard.press('Enter');
+  await expect(empieza).toHaveAttribute('aria-selected', 'true');
+  await expect(pasos).toBeVisible();
+});
+
+test('el mini video del capitulo guardado espera: el del primer paso arranca solo la primera vez que se ensena', async ({
+  page,
+}) => {
+  const menu = await abrir(page);
+  const pasos = page.locator(MENU_DE_PASOS);
+  await llegarA(video(menu));
+  await expect(menu).toHaveAttribute('data-anda', '');
+  // Mientras su capitulo esta guardado, el primer paso espera sin correr: no gasta nada.
+  await expect(pasos).not.toHaveAttribute('data-anda', /.*/);
+  await expect(beneficio(pasos, 1)).toHaveAttribute('data-fase', 'espera');
+  await llegarA(selector(page));
+  await pestana(page, 'Cómo empiezas').click();
+  await llegarA(video(pasos));
+  // Al ensenarse, corre solo. Y el del otro capitulo, que ya no se ve, se detiene donde iba.
+  await expect(pasos).toHaveAttribute('data-anda', '');
+  await expect(beneficio(pasos, 1)).toHaveAttribute('data-fase', 'sigue');
+  await expect.poll(async () => (await marcha(pasos)).corriendo).toBeGreaterThan(0);
+  await expect(video(pasos).locator('[data-mv-dura]')).toHaveText('0:07');
+  await expect(video(pasos).getByRole('button')).toHaveAccessibleName('Pausar');
+  await expect(menu).not.toHaveAttribute('data-anda', /.*/);
+  await expect(beneficio(menu, 1)).toHaveAttribute('data-fase', 'sigue');
+  // Ya terminado, ir y volver no lo corre otra vez: solo arranca solo la primera.
+  await alFinal(pasos);
+  await expect(beneficio(pasos, 1)).not.toHaveAttribute('data-fase', /.*/);
+  await llegarA(selector(page));
+  await pestana(page, 'Lo que hace').click();
+  await expect(menu).toBeVisible();
+  await pestana(page, 'Cómo empiezas').click();
+  await llegarA(video(pasos));
+  await expect(video(pasos).getByRole('button')).toHaveAccessibleName('Ver de nuevo');
+  await page.waitForTimeout(300);
+  await expect(pasos).not.toHaveAttribute('data-anda', /.*/);
+});
+
+test('al final de "Lo que hace", el paso al otro capitulo lo ensena y sube la pagina al principio de la seccion', async ({
+  page,
+}) => {
+  // Con menos movimiento la pagina sube de golpe: se mide donde quedo sin esperar a que termine de deslizarse.
+  const menu = await abrir(page, { quieta: true });
+  const pasos = page.locator(MENU_DE_PASOS);
+  const sigue = menu.getByRole('button', { name: 'Siguiente: cómo empiezas, en 4 pasos' });
+  await llegarA(sigue);
+  await expect(sigue).toBeVisible();
+  expect((await sigue.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+  await sigue.click();
+  await expect(pasos).toBeVisible();
+  await expect(menu).toBeHidden();
+  const empieza = pestana(page, 'Cómo empiezas');
+  await expect(empieza).toHaveAttribute('aria-selected', 'true');
+  // El foco no se pierde con el boton que se guardo: pasa a la pestana del capitulo que se abrio.
+  await expect(empieza).toBeFocused();
+  await quietaLaPagina(page);
+  // La seccion quedo arriba, bajo la barra de la pagina: se ven su titulo, el selector y el primer paso.
+  const arriba = await page.locator('#agente .agentes__principal').evaluate((el) => el.getBoundingClientRect().top);
+  expect(arriba).toBeGreaterThanOrEqual(0);
+  expect(arriba).toBeLessThanOrEqual(100);
+  await expect(page.locator('#agente .agentes__titulo')).toBeInViewport({ ratio: 1 });
+  await expect(selector(page)).toBeInViewport({ ratio: 1 });
+  await expect(boton(pasos, 1)).toBeInViewport();
+  // En computadora el escenario, que cuelga del titulo, queda entero a la vista.
+  if (await esComputadora(page)) await expect(video(pasos)).toBeInViewport({ ratio: 1 });
+});
+
+test('los cuatro pasos de "Como empiezas": cada uno abre su oracion y su escena, con lo que dicen los datos', async ({
+  page,
+}) => {
+  // Con menos movimiento cada escena se pinta completa de una vez: se revisa su ultimo cuadro.
+  await abrir(page, { quieta: true });
+  const pasos = page.locator(MENU_DE_PASOS);
+  await llegarA(selector(page));
+  await pestana(page, 'Cómo empiezas').click();
+  await expect(pasos).toBeVisible();
+  /** Lo que cada escena ensena al final. */
+  const ESCENAS = [
+    [
+      'Tu plan',
+      'Lo contratas en línea',
+      'Hoy pagas',
+      'Solo la instalación',
+      'Tu mensualidad',
+      'Empieza cuando tu agente esté activo',
+      'Pago con tarjeta aprobado',
+      'Sin comisión por cita',
+    ],
+    [
+      'Tu negocio',
+      'Studio Bella · lo llenas desde tu celular',
+      'Gelish $350 · Acrílicas $480',
+      'Martes a sábado, 10 am a 7 pm',
+      'Anticipo $150 · Retoque sin costo 3 días',
+      'Con esto se arma su base de conocimiento',
+    ],
+    ['Tus cuentas', 'WhatsApp de tu negocio', 'Google Calendar', 'Mercado Pago', 'Tu número personal no se toca'],
+    [
+      'Tu WhatsApp personal',
+      'Soy tu asistente virtual de Studio Bella y ya estoy funcionando.',
+      'Hola, ¿tienes lugar el sábado?',
+      'Tu agente ya atiende',
+    ],
+  ];
+  expect(ESCENAS).toHaveLength(EMPIEZA.length);
+  for (const [lugar, queda] of ESCENAS.entries()) {
+    const numero = lugar + 1;
+    await llegarA(boton(pasos, numero));
+    if (numero > 1) await boton(pasos, numero).click();
+    await expect(boton(pasos, numero)).toHaveAttribute('aria-expanded', 'true');
+    await expect(pasos.locator('.beneficio__texto').filter({ visible: true })).toHaveText([
+      EMPIEZA[lugar]?.texto ?? '',
+    ]);
+    const escena = video(pasos).locator('.mv__escena');
+    await expect(escena).toHaveCount(1);
+    await expect(escena).toHaveAttribute('aria-hidden', 'true');
+    for (const texto of queda) await expect(escena.getByText(texto, { exact: false }).first()).toBeVisible();
+    // Ninguna de estas escenas se lleva nada: cada pieza se queda hasta el final.
+    expect(new Set(await pasosALaVista(pasos)), EMPIEZA[lugar]?.titulo).toEqual(new Set([1]));
+  }
+  // Las cuentas conectadas: tres renglones, cada uno con su palomita verde. El numero exclusivo se dice en la oracion.
+  await boton(pasos, 3).click();
+  const cuentas = video(pasos).locator('.mv__conecta li');
+  await expect(cuentas.locator('span')).toHaveText(['WhatsApp de tu negocio', 'Google Calendar', 'Mercado Pago']);
+  await expect(cuentas.locator('b')).toHaveText(['Conectado', 'Conectado', 'Conectado']);
+  await expect(cuentas.locator('b i').first()).toHaveCSS('background-color', 'rgb(0, 166, 80)');
+  await expect(pasos.locator('.beneficio__texto').filter({ visible: true })).toContainText(
+    'un número exclusivo de tu negocio con WhatsApp Business',
+  );
+  await sinFaltasDeAccesibilidad(page, '#agente');
+});
+
+for (const [ancho, alto] of TAMANOS) {
+  test(`a ${ancho} de ancho nada de "Como empiezas" se sale de la pantalla y cada escena cabe en su mini video`, async ({
+    page,
+  }) => {
+    test.slow();
+    await page.setViewportSize({ width: ancho, height: alto });
+    await abrir(page, { quieta: true });
+    const pasos = page.locator(MENU_DE_PASOS);
+    const computadora = ancho >= 900;
+    await llegarA(selector(page));
+    await pestana(page, 'Cómo empiezas').click();
+    await expect(pasos).toBeVisible();
+    const altoEnComputadora = await altoDelEscenario(page);
+    // El selector cabe en su renglon: las dos pestanas, una junto a la otra, dentro de la pantalla.
+    const cajas = await selector(page)
+      .getByRole('tab')
+      .evaluateAll((lista) => lista.map((una) => una.getBoundingClientRect().toJSON()));
+    expect(cajas).toHaveLength(2);
+    expect(Math.abs((cajas[0]?.top ?? 0) - (cajas[1]?.top ?? 1))).toBeLessThanOrEqual(1);
+    expect(cajas[0]?.left ?? -1).toBeGreaterThanOrEqual(0);
+    expect(cajas[1]?.right ?? ancho + 1).toBeLessThanOrEqual(ancho);
+    for (const [lugar, paso] of EMPIEZA.entries()) {
+      const numero = lugar + 1;
+      await llegarA(boton(pasos, numero));
+      if (numero > 1) await boton(pasos, numero).click();
+      await expect(boton(pasos, numero)).toHaveAttribute('aria-expanded', 'true');
+      if (computadora) {
+        await quietaLaPagina(page);
+        await expect(video(pasos), paso.titulo).toBeInViewport({ ratio: 1 });
+      }
+      expect(await salidosDe(page.locator('#agente')), paso.titulo).toEqual({ salidos: [], desborde: 0 });
+      const escena = await escenaMedida(video(pasos));
+      expect(escena.piezas, paso.titulo).toBeGreaterThanOrEqual(2);
+      expect(escena.salidas, paso.titulo).toEqual([]);
+      expect(escena.alto, paso.titulo).toBe(computadora ? altoEnComputadora : paso.alta ? 452 : 340);
+    }
+    // El boton de empezar y lo que se paga hoy caben debajo de los pasos, sin encimarse con el ultimo.
+    const cierre = await pasos.evaluate((raiz) => {
+      const caja = (/** @type {string} */ que) =>
+        /** @type {Element} */ (raiz.querySelector(que)).getBoundingClientRect().toJSON();
+      return { lista: caja('.beneficios'), arranca: caja('.agentes__arranca'), boton: caja('.agentes__arranca a') };
+    });
+    expect(cierre.arranca.top).toBeGreaterThanOrEqual(cierre.lista.bottom);
+    expect(cierre.boton.height).toBeGreaterThanOrEqual(44);
   });
 }

@@ -59,193 +59,30 @@ before(async () => {
   preguntas = await leer('preguntas.json');
 });
 
-/** Los nueve pasos aprobados por Jose (18-nov-2026): acto, numero, quien, papel y rotulo. */
-const PASOS = [
-  ['Antes de la cita', '01', 'Tu clientela', 'clientela', 'Te escriben por WhatsApp'],
-  [
-    'Antes de la cita',
-    '02',
-    'Tu agente',
-    'agente',
-    'Contesta, resuelve dudas con tu base de conocimiento y gestiona tus citas',
-  ],
-  ['Antes de la cita', '03', 'Tu agente', 'agente', 'Aparta el lugar y cobra el anticipo'],
-  ['La cita, garantizada', '04', 'Tu agente', 'agente', 'Verifica el pago, agenda la cita y la agrega a tu calendario'],
-  [
-    'La cita, garantizada',
-    '05',
-    'Tu agente',
-    'agente',
-    'Recuerda la cita un día y una hora antes y, si hace falta, la reagenda según tu calendario',
-  ],
-  ['La cita, garantizada', '06', 'Tú', 'tu', 'Le confirmas a tu agente si tu clienta o paciente llegó'],
-  ['Después, y cuando tú quieras', '07', 'Tu agente', 'agente', 'Según si llegó o no, le da el seguimiento adecuado'],
-  [
-    'Después, y cuando tú quieras',
-    '08',
-    'Tú',
-    'tu',
-    'Intervienes cuando quieras; tu agente solo te busca si hace falta',
-  ],
-  ['Después, y cuando tú quieras', '09', 'Tú', 'tu', 'Le pides cambios por WhatsApp: nada se aplica sin tu sí'],
-];
-
-/**
- * Las tarjetas de "Como funciona" en la pagina armada, en orden: su acto, su papel y lo que dicen.
- * @returns {{ acto: string, papel: string, icono: string, quien: string, escena: string, adorno: boolean, numero: string, rotulo: string }[]}
- */
-function tarjetasDeLaRuta() {
-  const bloque = seccion('como-funciona');
-  return [...bloque.matchAll(/<div class="acto">\s*<h3 class="acto__nombre">([^<]+)<\/h3>([\s\S]*?)<\/ol>/g)].flatMap(
-    ([, acto, dentro]) =>
-      [
-        ...(dentro ?? '').matchAll(
-          /<li class="paso" data-papel="(\w+)" data-enciende>\s*<p class="paso__quien"><span class="paso__icono" aria-hidden="true"><svg focusable="false"><use href="#(i-[\w-]+)"\/><\/svg><\/span>([^<]+)<\/p>\s*<div class="paso__escena"( aria-hidden="true")?>([\s\S]*?)<\/div>\s*<p class="paso__pie"><span class="paso__numero">(\d\d)<\/span> <span class="paso__rotulo">([^<]+)<\/span><\/p>\s*<\/li>/g,
-        ),
-      ].map(([, papel, icono, quien, adorno, escena, numero, rotulo]) => ({
-        acto: acto ?? '',
-        papel: papel ?? '',
-        icono: icono ?? '',
-        quien: quien ?? '',
-        escena: escena ?? '',
-        adorno: Boolean(adorno),
-        numero: numero ?? '',
-        rotulo: rotulo ?? '',
-      })),
-  );
-}
-
-/**
- * Lo que se lee de una escena, sin etiquetas.
- * @param {string} escena
- */
-const textoDe = (escena) =>
-  escena
-    .replace(/<svg[\s\S]*?<\/svg>/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-test('como funciona: nueve pasos en tres actos, numerados de corrido, con su insignia, su numero y su rotulo', () => {
-  const bloque = seccion('como-funciona');
-  assert.ok(bloque.includes('>Desde el primer «hola» <em>hasta el seguimiento después de la cita.</em></h2>'));
-  // Tres actos, cada uno con su nombre de titulo y sus tres pasos en una lista ordenada.
-  assert.deepEqual(
-    [...bloque.matchAll(/<h3 class="acto__nombre">([^<]+)<\/h3>\s*<ol class="acto__pasos" role="list">/g)].map(
-      ([, nombre]) => nombre,
-    ),
-    ['Antes de la cita', 'La cita, garantizada', 'Después, y cuando tú quieras'],
-  );
-  const tarjetas = tarjetasDeLaRuta();
-  assert.deepEqual(
-    tarjetas.map(({ acto, numero, quien, papel, rotulo }) => [acto, numero, quien, papel, rotulo]),
-    PASOS,
-  );
-  // Cada insignia lleva el icono de su papel, y la escena es de adorno: lo que se lee es la insignia, el numero y el rotulo.
-  for (const { papel, icono, adorno } of tarjetas) {
-    assert.equal(icono, `i-papel-${papel}`);
-    assert.ok(adorno, 'una escena no es de adorno');
-  }
-  // Los datos dicen lo mismo, sin numeros: los pone la armada.
-  const enDatos = secciones.pasos.actos.flatMap((/** @type {any} */ acto) =>
-    acto.pasos.map((/** @type {any} */ paso) => [acto.nombre, paso.quien, paso.papel, paso.rotulo]),
-  );
-  assert.deepEqual(
-    enDatos,
-    PASOS.map(([acto, , quien, papel, rotulo]) => [acto, quien, papel, rotulo]),
-  );
-  assert.ok(!JSON.stringify(secciones.pasos).includes('"numero"'));
-  // La ruta de seis, sus fichas de hora, su aviso de app y la barra "Lo que haces tu" ya no van.
+test('la seccion "Como funciona" ya no existe: sus nueve pasos se cuentan en el primer mini video de "Tu agente"', () => {
+  // La decidio el dueno (19-nov-2026): las dos secciones decian lo mismo y se quedo la de "Tu agente".
+  assert.ok(!html.includes('id="como-funciona"'));
   for (const viejo of [
+    'class="pasos"',
+    'acto__',
+    'paso__',
     'ruta__',
     'mini__',
-    'pasos__tu',
-    'Lo que haces tú',
-    'Contesta y ofrece tus horarios libres',
-    'Tocas sí o no',
+    'i-papel-',
+    'i-responder',
     'i-campana',
     'i-toque',
   ]) {
     assert.ok(!html.includes(viejo), viejo);
   }
-  for (const viejo of ['lista', 'tu', 'tuTitulo']) assert.equal(viejo in secciones.pasos, false, viejo);
-  // Todo icono que la pagina pide esta dibujado en ella, una sola vez.
+  assert.equal('pasos' in secciones, false);
+  // El enlace de la barra conserva su nombre y ahora lleva a "Tu agente".
+  assert.ok(html.includes('<a class="barra__enlace" href="#agente" data-lugar="barra">Cómo funciona</a>'));
+  // Todo icono que la pagina pide esta dibujado en ella, una sola vez, y ninguno se queda dibujado sin que lo pidan.
   const pedidos = new Set([...html.matchAll(/<use href="#(i-[\w-]+)"/g)].map(([, id]) => id));
-  for (const id of ['i-papel-clientela', 'i-papel-agente', 'i-papel-tu', 'i-responder']) assert.ok(pedidos.has(id), id);
   for (const id of pedidos) assert.equal(html.split(`<symbol id="${id}"`).length - 1, 1, id);
-});
-
-test('como funciona: cada escena trae sus mensajes de WhatsApp, con los textos de los datos y nada que se toque', () => {
-  const tarjetas = tarjetasDeLaRuta();
-  assert.deepEqual(
-    tarjetas.map(({ escena }) => textoDe(escena)),
-    [
-      'Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves? 10:12 a. m.',
-      'El gelish cuesta $350 y dura de 2 a 3 semanas. El jueves tengo lugar a las 5:00 pm. ¿Te lo aparto? 10:12 a. m. Lo sabe por tu base de conocimiento',
-      '$ Anticipo Gelish semipermanente $150 mercadopago.com.mx Te aparté el jueves a las 5:00 pm. Se confirma con el anticipo de $150. 10:14 a. m.',
-      'Pago verificado · $150 JUE 19 5:00 pm Ana · Gelish',
-      '¡Hola Ana! Te recordamos tu cita de Gelish mañana jueves a las 5:00 pm. 5:00 p. m. Cambiar cita',
-      '¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm? 6:05 p. m. Sí No',
-      '¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita. 6:06 p. m. Si no llega, le ofrece reagendar',
-      'Hola Ana, soy Bella. Con gusto te lo reviso yo. 11:20 a. m. Tu agente se hace a un lado',
-      'Sube el gelish a $380 9:02 a. m. Cambio el precio del gelish de $350 a $380. ¿Lo aplico? 9:02 a. m. Sí, aplícalo No',
-    ],
-  );
-  const escena = (/** @type {number} */ lugar) => tarjetas[lugar]?.escena ?? '';
-  // Quien escribe: lo de la clienta (y lo de ella) sale en verde, con palomitas; lo de su agente entra en blanco.
-  const lados = tarjetas.map(({ escena: dentro }) =>
-    [...dentro.matchAll(/<p class="wa__m wa__m--(sale|entra)">/g)].map(([, lado]) => lado),
-  );
-  assert.deepEqual(lados, [
-    ['sale'],
-    ['entra'],
-    ['entra'],
-    [],
-    ['entra'],
-    ['entra'],
-    ['entra'],
-    ['sale'],
-    ['sale', 'entra'],
-  ]);
-  for (const dentro of tarjetas.map(({ escena: una }) => una)) {
-    const sale = [...dentro.matchAll(/<p class="wa__m wa__m--sale">[\s\S]*?<\/p>/g)];
-    for (const [globo] of sale) assert.match(globo, /<use href="#i-tics"\/>/);
-  }
-  // El link de pago va dentro del globo que lo trae, como en WhatsApp.
-  assert.match(escena(2), /<p class="wa__m wa__m--entra"><span class="wa__liga">/);
-  // La cita entra sellada, y solo en el paso 04; el pago verificado lleva la palomita verde.
-  assert.equal(tarjetas.filter(({ escena: dentro }) => dentro.includes('class="sello"')).length, 1);
-  assert.match(
-    escena(3),
-    /<p class="mv__hizo mv__hizo--bien"><i>[\s\S]*?<\/i>Pago verificado · \$150<\/p>\s*<p class="minicita">/,
-  );
-  // El recordatorio trae el boton de responder de WhatsApp; las respuestas tocadas son el "Si" y el "Si, aplicalo".
-  assert.match(
-    escena(4),
-    /<p class="paso__botones"><span><svg focusable="false"><use href="#i-responder"\/><\/svg>Cambiar cita<\/span><\/p>/,
-  );
-  assert.match(escena(5), /<p class="paso__botones"><span data-toca>Sí<\/span><span>No<\/span><\/p>/);
-  assert.match(escena(8), /<p class="paso__botones"><span data-toca>Sí, aplícalo<\/span><span>No<\/span><\/p>/);
-  // Son dibujos: dentro de las escenas no hay nada que se enfoque o se toque.
-  for (const { escena: dentro } of tarjetas) {
-    assert.doesNotMatch(dentro, /<(button|a|input|select|textarea)\b|tabindex|<svg(?![^>]*focusable="false")/);
-  }
-  // Ningun texto de las escenas vive en la plantilla: salen de secciones.json.
-  const plantilla = /<div class="actos">[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
-  assert.ok(plantilla);
-  const enDatos = JSON.stringify(secciones.pasos.actos);
-  for (const dicho of ['Lo sabe por tu base de conocimiento', 'Cambiar cita', 'Sí, aplícalo', 'mercadopago.com.mx']) {
-    assert.ok(enDatos.includes(dicho), dicho);
-  }
-});
-
-test('llms.txt cuenta los nueve pasos, numerados, con quien hace cada uno', () => {
-  const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
-  const pasos = /## Cómo funciona\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
-  assert.deepEqual(
-    pasos,
-    PASOS.map(([, numero, quien, , rotulo]) => `${Number(numero)}. ${quien}: ${rotulo}`),
-  );
+  const dibujados = [...html.matchAll(/<symbol id="(i-[\w-]+)"/g)].map(([, id]) => id);
+  for (const id of dibujados) assert.ok(pedidos.has(id ?? ''), `${id} esta dibujado y nadie lo pide`);
 });
 
 test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de siempre y un texto que describe la foto', async () => {

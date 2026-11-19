@@ -25,6 +25,7 @@ export const LUGARES = /** @type {const} */ ([
   'pelicula',
   'citas',
   'demo',
+  'agente',
   'para-quien',
   'planes',
   'cierre',

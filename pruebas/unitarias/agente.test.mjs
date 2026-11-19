@@ -6,7 +6,17 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { altoDelMenu, anda, avanzar, botonDe, cuantoBajar, estadoInicial, reloj } from '../../fuente/js/agente.js';
+import {
+  altoDelMenu,
+  anda,
+  avanzar,
+  botonDe,
+  capituloCon,
+  cuantoBajar,
+  cuantoRecorrer,
+  estadoInicial,
+  reloj,
+} from '../../fuente/js/agente.js';
 import { armarSitio } from '../../herramientas/armado.mjs';
 import { DURA, PIEZAS, problemasDeBeneficios } from '../../herramientas/beneficios.mjs';
 
@@ -17,8 +27,20 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const FUENTE = path.join(RAIZ, 'fuente');
 const agentes = JSON.parse(await readFile(path.join(FUENTE, 'datos', 'agentes.json'), 'utf8'));
 const secciones = JSON.parse(await readFile(path.join(FUENTE, 'datos', 'secciones.json'), 'utf8'));
-/** @type {any[]} */
-const hace = agentes.hace;
+/** Los dos capitulos de la seccion: lo que hace el agente y como se empieza. @type {any[]} */
+const capitulos = agentes.capitulos;
+/**
+ * Los renglones de un capitulo, por su clave.
+ * @param {string} clave
+ * @returns {any[]}
+ */
+const videosDe = (clave) => capitulos.find((capitulo) => capitulo.clave === clave)?.videos ?? [];
+/** Los beneficios: los renglones de "Lo que hace". */
+const hace = videosDe('hace');
+/** Los pasos para contratarlo: los renglones de "Como empiezas". */
+const empieza = videosDe('empieza');
+/** Todos los renglones de la seccion, en el orden de la pagina. */
+const todos = [...hace, ...empieza];
 /** Los beneficios que hay. */
 const CUANTOS = hace.length;
 /**
@@ -27,8 +49,12 @@ const CUANTOS = hace.length;
  */
 const lugarDe = (titulo) => hace.findIndex((beneficio) => beneficio.titulo === titulo);
 
-/** Los nueve beneficios, en su orden, con las palabras que aprobo el dueno. */
+/** Los diez beneficios, en su orden, con las palabras que aprobo el dueno. */
 const APROBADOS = [
+  [
+    'Una cita, de principio a fin',
+    'Desde el primer «hola» hasta el seguimiento después de la cita: contesta, cobra el anticipo, verifica el pago, agenda y recuerda. Tú solo le confirmas si llegó, con un toque.',
+  ],
   [
     'Hecho solo para tu negocio',
     'Trabaja con su propia base de conocimiento: tus servicios, tus precios, tus horarios y tus políticas. Por eso es un agente dedicado a ti, distinto al de cualquier otro profesional.',
@@ -49,9 +75,26 @@ const APROBADOS = [
   ],
   ['Habla de tú o de usted', 'Si tu clienta escribe de usted, le contesta de usted. Con el tono de tu negocio.'],
   ['Te pasa los recados', 'Cuando alguien necesita hablar contigo, toma el recado y te avisa a tu WhatsApp personal.'],
+  ['Le pides cambios por WhatsApp', 'Un precio o un horario: se lo escribes a tu agente y nada se aplica sin tu sí.'],
+];
+
+/** Los cuatro pasos para contratarlo, en su orden, con las palabras que aprobo el dueno. */
+const PASOS_APROBADOS = [
   [
-    'Pasa un examen antes de atender',
-    'Antes de su primera conversación real, lo examinamos tres veces seguidas. Si falla algo grave, no sale.',
+    'Eliges tu plan',
+    'Lo contratas en línea, con tarjeta. Hoy pagas solo la instalación: tu mensualidad empieza el día que tu agente queda activo.',
+  ],
+  [
+    'Nos cuentas de tu negocio',
+    'En una página hecha para tu celular, una cosa por pantalla: tus servicios, tus precios, tus horarios y tus políticas. Se guarda sola.',
+  ],
+  [
+    'Conectas tus cuentas',
+    'Tu agente vive en un número exclusivo de tu negocio con WhatsApp Business, que sigue en tu celular. Lo conectas junto con tu Google Calendar y tu Mercado Pago, con unos toques.',
+  ],
+  [
+    'Tu agente empieza a atender',
+    'Tocas «Genera tu agente» y, cuando queda listo, te escribe a tu WhatsApp personal para avisarte que ya está funcionando. Tú lo puedes probar antes que nadie.',
   ],
 ];
 
@@ -245,6 +288,20 @@ test('la pagina baja lo justo para ensenar lo que se abrio, sin esconder su reng
   assert.equal(cuantoBajar({ arriba: 20, abajo: 1400, techo: 80, piso: 760 }), 0);
 });
 
+test('en computadora la pagina se recorre lo justo para que el escenario elegido se vea entero, o no se toca', () => {
+  // Pegado bajo la barra de la pagina (a 88) y con lugar abajo: ya se ve entero, la pagina no se toca.
+  assert.equal(cuantoRecorrer({ arriba: 88, abajo: 688, techo: 88, piso: 768 }), 0);
+  // Al final del menu el escenario ya iba de salida: su orilla de arriba quedo escondida y la pagina sube lo que falta.
+  assert.equal(cuantoRecorrer({ arriba: -26, abajo: 574, techo: 88, piso: 768 }), -114);
+  assert.equal(cuantoRecorrer({ arriba: 87, abajo: 687, techo: 88, piso: 768 }), -1);
+  // Recien llegada a la seccion, el escenario empieza donde el titulo y su parte de abajo no cabe: la pagina baja lo
+  // que falta, sin esconderle la de arriba.
+  assert.equal(cuantoRecorrer({ arriba: 280, abajo: 896, techo: 88, piso: 768 }), 128);
+  assert.equal(cuantoRecorrer({ arriba: 120, abajo: 900, techo: 88, piso: 768 }), 32);
+  // Y si cabe con su principio debajo de la barra, tampoco se toca.
+  assert.equal(cuantoRecorrer({ arriba: 150, abajo: 760, techo: 88, piso: 768 }), 0);
+});
+
 test('en computadora el menu aparta lo alto de sus renglones y de su oracion mas larga', () => {
   assert.equal(altoDelMenu([61, 61, 61, 62], [39, 62, 85, 39]), 245 + 85);
   // Sin oraciones que medir (un menu de un solo renglon sin texto) no truena.
@@ -252,10 +309,49 @@ test('en computadora el menu aparta lo alto de sus renglones y de su oracion mas
   assert.equal(altoDelMenu([], []), 0);
 });
 
+test('en el selector de capitulos las flechas de lado pasan al de al lado y dan la vuelta; Inicio y Fin van a las orillas', () => {
+  assert.equal(capituloCon('ArrowRight', 0, 2), 1);
+  assert.equal(capituloCon('ArrowRight', 1, 2), 0);
+  assert.equal(capituloCon('ArrowLeft', 0, 2), 1);
+  assert.equal(capituloCon('ArrowLeft', 1, 2), 0);
+  assert.equal(capituloCon('ArrowRight', 2, 3), 0);
+  assert.equal(capituloCon('ArrowLeft', 0, 3), 2);
+  assert.equal(capituloCon('Home', 2, 3), 0);
+  assert.equal(capituloCon('End', 0, 3), 2);
+  // Cualquier otra tecla deja el capitulo donde esta: Tab sigue su camino y Enter lo hace el boton. Las flechas de
+  // arriba y abajo tampoco: las pestanas van en renglon y esas teclas siguen recorriendo la pagina.
+  for (const tecla of ['Tab', 'Enter', ' ', 'a', 'Escape', 'ArrowDown', 'ArrowUp', 'PageDown']) {
+    assert.equal(capituloCon(tecla, 1, 2), 1, tecla);
+  }
+  // Y sin capitulos que contar no truena.
+  assert.equal(capituloCon('ArrowRight', 0, 0), 0);
+  assert.equal(capituloCon('End', 0, Number.NaN), 0);
+});
+
 // ---------- Los datos ----------
 
-test('los nueve beneficios, en su orden, con el titulo y la oracion que aprobo el dueno', () => {
-  assert.equal(CUANTOS, 9);
+test('dos capitulos: lo que hace, con sus diez beneficios, y como empiezas, con sus cuatro pasos numerados', () => {
+  assert.deepEqual(
+    capitulos.map(({ clave, nombre, cuenta, numerado }) => ({ clave, nombre, cuenta, numerado })),
+    [
+      { clave: 'hace', nombre: 'Lo que hace', cuenta: undefined, numerado: undefined },
+      { clave: 'empieza', nombre: 'Cómo empiezas', cuenta: '4 pasos', numerado: true },
+    ],
+  );
+  // Al final del primero, el paso al segundo; al final del segundo, lo que se paga hoy junto al boton de empezar.
+  assert.equal(capitulos[0].sigue, 'Siguiente: cómo empiezas, en 4 pasos');
+  assert.equal(capitulos[1].arranca, 'Hoy pagas solo la instalación.');
+  assert.equal(empieza.length, 4);
+  assert.deepEqual(
+    empieza.map(({ titulo, texto }) => [titulo, texto]),
+    PASOS_APROBADOS,
+  );
+  // La lista vieja ya no existe: los beneficios viven dentro de su capitulo.
+  assert.equal('hace' in agentes, false);
+});
+
+test('los diez beneficios, en su orden, con el titulo y la oracion que aprobo el dueno', () => {
+  assert.equal(CUANTOS, 10);
   assert.deepEqual(
     hace.map(({ titulo, texto }) => [titulo, texto]),
     APROBADOS,
@@ -264,11 +360,39 @@ test('los nueve beneficios, en su orden, con el titulo y la oracion que aprobo e
   assert.ok(!JSON.stringify(agentes).includes('Recuerda la cita'));
 });
 
-test('cada mini video dura de 6 a 8 segundos y sus piezas aparecen en orden, antes de que termine', () => {
-  assert.deepEqual(problemasDeBeneficios(hace), []);
-  assert.deepEqual([DURA.minimo, DURA.maximo], [6, 8]);
-  for (const beneficio of hace) {
-    assert.ok(beneficio.dura >= 6 && beneficio.dura <= 8, beneficio.titulo);
+test('la seccion no habla de examenes: lo pidio el dueno', () => {
+  assert.doesNotMatch(JSON.stringify(agentes), /ex[aá]men|examin/i);
+});
+
+test('como empiezas no promete tiempos de alta ni probar antes de pagar', () => {
+  // Lo que se promete son los titulos y las oraciones; las escenas ensenan un negocio de ejemplo.
+  const dicho = empieza.map(({ titulo, texto }) => `${titulo}. ${texto}`).join(' ');
+  assert.doesNotMatch(dicho, /\d+\s*(minutos?|horas?|d[ií]as?)\b/i);
+  assert.doesNotMatch(dicho, /antes de pagar|gratis|al instante/i);
+  // Y dice lo que la tabla de la verdad pide decir: tarjeta, instalacion hoy, mensualidad al activar y numero exclusivo.
+  for (const frase of [
+    'con tarjeta',
+    'Hoy pagas solo la instalación',
+    'tu mensualidad empieza el día que tu agente queda activo',
+    'un número exclusivo de tu negocio con WhatsApp Business',
+    'sigue en tu celular',
+    'Tú lo puedes probar antes que nadie',
+  ]) {
+    assert.ok(dicho.includes(frase), frase);
+  }
+});
+
+test('cada mini video dura de 6 a 8 segundos (el de la cita completa, hasta 30) y sus piezas aparecen en orden', () => {
+  assert.deepEqual(problemasDeBeneficios(capitulos), []);
+  assert.deepEqual([DURA.minimo, DURA.maximo, DURA.largo], [6, 8, 30]);
+  // Solo uno es largo: el que cuenta la cita de principio a fin, que abre la seccion.
+  assert.deepEqual(
+    todos.filter((beneficio) => beneficio.largo).map((beneficio) => beneficio.titulo),
+    ['Una cita, de principio a fin'],
+  );
+  assert.equal(hace[0].dura, 26);
+  for (const beneficio of todos) {
+    assert.ok(beneficio.dura >= 6 && beneficio.dura <= (beneficio.largo ? 30 : 8), beneficio.titulo);
     /** @type {number[]} */
     const tiempos = beneficio.pasos.map((/** @type {{ en: number }} */ paso) => paso.en);
     assert.deepEqual(
@@ -282,9 +406,107 @@ test('cada mini video dura de 6 a 8 segundos y sus piezas aparecen en orden, ant
   }
 });
 
-test('las nueve escenas dicen lo que aprobo el dueno, pieza por pieza', () => {
-  const escenas = hace.map(dichos);
-  // La primera, la del beneficio nuevo: la base de conocimiento del negocio de ejemplo y una respuesta que sale de ella.
+test('la escena de la cita completa cuenta sus cuatro momentos: antes, garantizada, tu confirmas y despues', () => {
+  const cita = hace[0];
+  assert.equal(cita.titulo, 'Una cita, de principio a fin');
+  assert.deepEqual(
+    dichos(cita).filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
+    [
+      'Antes de la cita',
+      'Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?',
+      'El gelish cuesta $350. El jueves tengo lugar a las 5:00 pm. ¿Te lo aparto?',
+      'Lo sabe por tu base de conocimiento',
+      'Anticipo Gelish semipermanente',
+      '$150',
+      'mercadopago.com.mx',
+      'Te aparté el jueves a las 5:00 pm. Se confirma con el anticipo de $150.',
+      'La cita, garantizada',
+      'Pago aprobado · $150',
+      'JUE',
+      '19',
+      '5:00 pm · Ana',
+      'Gelish',
+      '¡Hola, Ana! Te recordamos tu cita de Gelish mañana jueves a las 5:00 pm.',
+      'Tu WhatsApp personal',
+      '¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm?',
+      'Sí',
+      'No',
+      'Después de la cita',
+      '¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita.',
+      'Cita garantizada, de principio a fin',
+    ],
+  );
+  // Cada momento limpia la pantalla del anterior: lo de un momento se va antes de que llegue el rotulo del siguiente.
+  const rotulos = cita.pasos.filter((/** @type {any} */ paso) => paso.etiqueta);
+  assert.equal(rotulos.length, 4);
+  for (const [lugar, rotulo] of rotulos.entries()) {
+    const siguiente = rotulos[lugar + 1];
+    if (!siguiente) continue;
+    for (const paso of cita.pasos.filter((/** @type {any} */ uno) => uno.en >= rotulo.en && uno.en < siguiente.en)) {
+      assert.ok(paso.hasta !== undefined && paso.hasta + 0.5 <= siguiente.en, JSON.stringify(paso));
+    }
+  }
+  // Lo que queda al final es el ultimo momento, con su insignia grande, y ella contesto con un toque.
+  assert.equal(cita.pasos.at(-1).hizo.grande, true);
+  assert.deepEqual(cita.pasos.find((/** @type {any} */ paso) => paso.botones).botones, [
+    { texto: 'Sí', toca: true },
+    { texto: 'No' },
+  ]);
+});
+
+test('las escenas de como empiezas dicen lo que aprobo el dueno, pieza por pieza', () => {
+  assert.deepEqual(empieza.map(dichos), [
+    [
+      'Tu plan',
+      'Lo contratas en línea',
+      'Hoy pagas',
+      'Solo la instalación',
+      'Tu mensualidad',
+      'Empieza cuando tu agente esté activo',
+      'Pago con tarjeta aprobado',
+      'Sin comisión por cita',
+    ],
+    [
+      'Tu negocio',
+      'Studio Bella · lo llenas desde tu celular',
+      'Servicios y precios',
+      'Gelish $350 · Acrílicas $480',
+      'Horarios',
+      'Martes a sábado, 10 am a 7 pm',
+      'Políticas',
+      'Anticipo $150 · Retoque sin costo 3 días',
+      'Con esto se arma su base de conocimiento',
+    ],
+    [
+      'Tus cuentas',
+      'WhatsApp de tu negocio',
+      'Conectado',
+      'Google Calendar',
+      'Conectado',
+      'Mercado Pago',
+      'Conectado',
+      'Tu número personal no se toca',
+    ],
+    [
+      'Tu WhatsApp personal',
+      'Soy tu asistente virtual de Studio Bella y ya estoy funcionando.',
+      'Hola, ¿tienes lugar el sábado?',
+      '10:12 a. m.',
+      '¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?',
+      '10:12 a. m.',
+      'Tu agente ya atiende',
+    ],
+  ]);
+  // Lo que ella llena en el alta es lo mismo que despues ensena la base de conocimiento de su agente.
+  const fichaDe = (/** @type {any} */ beneficio) =>
+    beneficio.pasos.find((/** @type {any} */ paso) => paso.base).base.renglones;
+  assert.deepEqual(fichaDe(empieza[1]), fichaDe(hace[lugarDe('Hecho solo para tu negocio')]));
+});
+
+test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por pieza', () => {
+  // La de la cita completa tiene su propia prueba: aqui van las demas, en su orden.
+  const escenas = hace.slice(1).map(dichos);
+  // La base de conocimiento del negocio de ejemplo y una respuesta que sale de ella.
   assert.deepEqual(escenas[0], [
     'Base de conocimiento',
     'Studio Bella · solo de este negocio',
@@ -375,9 +597,19 @@ test('las nueve escenas dicen lo que aprobo el dueno, pieza por pieza', () => {
       '📩 Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas.',
     ],
   );
-  assert.deepEqual(escenas[8], ['Examen 1', 'Examen 2', 'Examen 3', 'Cero errores graves', 'Listo para atender']);
-  // La insignia que cierra el examen es la grande.
-  assert.equal(hace[8].pasos.at(-1).hizo.grande, true);
+  // Los cambios: ella lo pide, el agente dice exactamente que va a cambiar y nada se aplica hasta que ella toca que si.
+  assert.deepEqual(
+    escenas[8]?.filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
+    [
+      'Tu WhatsApp personal',
+      'Sube el gelish a $380',
+      'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
+      'Sí, aplícalo',
+      'No',
+      'Nada cambia sin tu sí',
+    ],
+  );
+  assert.equal(escenas.length, 9);
 });
 
 test('en la escena de los recados el agente nunca le promete a la clienta que alguien le va a escribir', () => {
@@ -395,7 +627,8 @@ test('en la escena de los recados el agente nunca le promete a la clienta que al
 });
 
 test('las horas de los globos van como en el WhatsApp de la demostracion, y un mini video ocurre en un mismo rato', () => {
-  for (const beneficio of hace) {
+  // El de la cita completa es el unico que cuenta varios dias: sus rotulos dicen en que momento va.
+  for (const beneficio of todos.filter((uno) => !uno.largo)) {
     const horas = dichos(beneficio).filter((texto) => /^\d+:\d\d [ap]\. m\.$/.test(texto));
     // Quien escribe y quien contesta lo hacen en el mismo minuto, o en el siguiente.
     const minutos = horas.map((hora) => {
@@ -410,63 +643,115 @@ test('las horas de los globos van como en el WhatsApp de la demostracion, y un m
 });
 
 test('el armado se detiene si a un beneficio le falta algo o su mini video no dura lo que debe', () => {
-  /** @param {(copia: any[]) => void} cambio */
+  /** El de la base de conocimiento: un mini video corto, con cuatro pasos. */
+  const BASE = lugarDe('Hecho solo para tu negocio');
+  /** @param {(copia: any[]) => void} cambio  lo que se descompone en los beneficios de "Lo que hace" */
   const con = (cambio) => {
     const copia = structuredClone(hace);
     cambio(copia);
-    return problemasDeBeneficios(copia);
+    return problemasDeBeneficios([{ clave: 'hace', nombre: 'Lo que hace', videos: copia }]);
   };
-  assert.deepEqual(problemasDeBeneficios([]), ['agentes.json: no hay ningun beneficio']);
-  assert.deepEqual(problemasDeBeneficios(undefined), ['agentes.json: no hay ningun beneficio']);
+  assert.deepEqual(problemasDeBeneficios([]), ['agentes.json: no hay ningun capitulo']);
+  assert.deepEqual(problemasDeBeneficios(undefined), ['agentes.json: no hay ningun capitulo']);
+  // Un capitulo sin clave, con una clave repetida, sin nombre o sin renglones.
+  const uno = { clave: 'hace', nombre: 'Lo que hace', videos: structuredClone(hace) };
+  assert.deepEqual(problemasDeBeneficios([uno]), []);
+  assert.deepEqual(problemasDeBeneficios([{ ...uno, clave: 'Lo que hace' }]), [
+    'agentes.json, capitulo 1: su clave debe ser una palabra en minusculas',
+  ]);
+  assert.deepEqual(problemasDeBeneficios([uno, { ...uno }]), [
+    'agentes.json, capitulo 2: la clave "hace" ya la lleva otro capitulo',
+  ]);
+  assert.deepEqual(problemasDeBeneficios([{ ...uno, nombre: ' ' }]), ['agentes.json, capitulo 1: le falta el nombre']);
+  assert.deepEqual(problemasDeBeneficios([{ ...uno, videos: [] }]), [
+    'agentes.json, capitulo 1: no trae ningun renglon',
+  ]);
   assert.match(
     con((copia) => {
       copia[0].titulo = ' ';
     })[0] ?? '',
-    /beneficio 1: le falta el titulo/,
+    /capitulo 1, renglon 1: le falta el titulo/,
   );
   assert.match(
     con((copia) => {
       copia[2].texto = undefined;
     })[0] ?? '',
-    /beneficio 3: le falta la oracion/,
+    /renglon 3: le falta la oracion/,
   );
   for (const dura of [5, 9, 7.5, '7', undefined]) {
     assert.match(
       con((copia) => {
-        copia[1].dura = dura;
+        copia[BASE].dura = dura;
       })[0] ?? '',
-      /beneficio 2: su mini video debe durar de 6 a 8/,
+      /renglon 2: su mini video debe durar de 6 a 8/,
+    );
+  }
+  // El largo, solo quien lo pide: hasta 30 segundos y ni uno mas. Y se pide con true, no con otra cosa.
+  for (const dura of [5, 31, 26.5]) {
+    assert.match(
+      con((copia) => {
+        copia[0].dura = dura;
+      })[0] ?? '',
+      /renglon 1: su mini video debe durar de 6 a 30/,
     );
   }
   assert.match(
     con((copia) => {
+      delete copia[0].largo;
+    })[0] ?? '',
+    /renglon 1: su mini video debe durar de 6 a 8/,
+  );
+  assert.match(
+    con((copia) => {
+      copia[BASE].largo = 'si';
+    })[0] ?? '',
+    /renglon 2: "largo" solo puede ser true/,
+  );
+  assert.match(
+    con((copia) => {
       copia[3].pasos = [];
     })[0] ?? '',
-    /beneficio 4: su escena no tiene pasos/,
+    /renglon 4: su escena no tiene pasos/,
   );
   // Una pieza que la plantilla no sabe dibujar, o dos en un mismo paso.
   assert.match(
     con((copia) => {
-      copia[0].pasos[1] = { en: 1, globo: {} };
+      copia[BASE].pasos[1] = { en: 1, globo: {} };
     })[0] ?? '',
     /el paso 2 debe traer una sola pieza/,
   );
   assert.match(
     con((copia) => {
-      copia[0].pasos[1].hizo = { texto: 'x' };
+      copia[BASE].pasos[1].hizo = { texto: 'x' };
     })[0] ?? '',
     /el paso 2 debe traer una sola pieza/,
   );
+  // El examen ya no es una pieza: el dueno pidio no hablar de examenes.
+  assert.match(
+    con((copia) => {
+      copia[BASE].pasos[1] = { en: 1, examen: { nombre: 'Examen 1' } };
+    })[0] ?? '',
+    /el paso 2 debe traer una sola pieza/,
+  );
+  // Los botones de respuesta: una lista, cada uno con su texto.
+  for (const botones of [[], 'Sí', [{ toca: true }], [{ texto: ' ' }]]) {
+    assert.match(
+      con((copia) => {
+        copia[BASE].pasos[1] = { en: 1, botones };
+      })[0] ?? '',
+      /los botones de el paso 2 deben ser una lista, cada uno con su texto/,
+    );
+  }
   // Fuera de orden, o tan tarde que el video termina antes de que entre.
   assert.match(
     con((copia) => {
-      copia[0].pasos[2].en = 0.5;
+      copia[BASE].pasos[2].en = 0.5;
     })[0] ?? '',
     /el paso 3 debe aparecer despues del anterior/,
   );
   assert.match(
     con((copia) => {
-      copia[0].pasos[3].en = 7.8;
+      copia[BASE].pasos[3].en = 7.8;
     })[0] ?? '',
     /el paso 4 debe aparecer/,
   );
@@ -494,7 +779,7 @@ test('el armado se detiene si a un beneficio le falta algo o su mini video no du
     con((copia) => {
       for (const paso of copia[7].pasos) paso.hasta = paso.en + 1;
     }).at(-1) ?? '',
-    /beneficio 8: su ultimo cuadro queda vacio/,
+    /renglon 8: su ultimo cuadro queda vacio/,
   );
 });
 
@@ -504,17 +789,14 @@ test('las piezas que acepta la armada son las que la plantilla sabe dibujar, y l
   assert.deepEqual(dibujadas.toSorted(), [...PIEZAS].sort());
   // Y cada pieza de las escenas de hoy es una de esas.
   const usadas = new Set(
-    hace.flatMap((beneficio) =>
+    todos.flatMap((beneficio) =>
       beneficio.pasos.flatMap((/** @type {object} */ paso) =>
         Object.keys(paso).filter((clave) => clave !== 'en' && clave !== 'hasta'),
       ),
     ),
   );
-  for (const pieza of usadas)
-    assert.ok(
-      PIEZAS.some((una) => una === pieza),
-      pieza,
-    );
+  // Y al reves: ninguna pieza se queda dibujada sin que alguna escena la use.
+  assert.deepEqual([...usadas].sort(), [...PIEZAS].sort());
   // Lo que comprueba la armada se queda en la armada: la pagina no carga con ello.
   const codigo = await readFile(path.join(FUENTE, 'js', 'agente.js'), 'utf8');
   assert.ok(!codigo.includes('problemasDeBeneficios') && !codigo.includes('pastilla'));
@@ -562,25 +844,80 @@ before(async () => {
   seccion = /<section class="agentes" id="agente"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
 });
 
-test('la pagina trae el menu ya escrito: nueve renglones con su titulo y su oracion, y solo el primero abierto', () => {
+/**
+ * Lo que la pagina trae escrito de un capitulo: como llega su menu y sus renglones.
+ * @param {string} clave
+ */
+function capituloEscrito(clave) {
+  const [, guardado, numerado, dentro = ''] =
+    new RegExp(
+      `<div class="agentes__duo" id="capitulo-${clave}" data-agente data-capitulo="${clave}"( data-guardado)?( data-numerado)? data-pausar="Pausar" data-reproducir="Reproducir" data-ver-de-nuevo="Ver de nuevo">([\\s\\S]*?)\\n {6}</div>\\n`,
+    ).exec(seccion) ?? [];
+  const renglones = [
+    ...dentro.matchAll(
+      /<li class="beneficio" data-beneficio( data-abierto data-fase="espera")?>\s*<h3 class="beneficio__nombre"><span class="beneficio__boton" data-beneficio-boton><span class="beneficio__play" aria-hidden="true">(<svg focusable="false"><use href="#i-reproducir"\/><\/svg>|<b>\d+<\/b>)<\/span>([^<]+)<\/span><\/h3>\s*<div class="beneficio__panel" id="(beneficio-[a-z]+-\d+)">\s*<div class="beneficio__dice"><p class="beneficio__texto">([^<]+)<\/p><\/div>/g,
+    ),
+  ].map(([, abierto, marca, titulo, panel, texto]) => ({ abierto: Boolean(abierto), marca, titulo, panel, texto }));
+  return { guardado: Boolean(guardado), numerado: Boolean(numerado), dentro, renglones };
+}
+
+test('la pagina trae los dos menus ya escritos: cada renglon con su titulo y su oracion, y solo el primero abierto', () => {
   assert.ok(seccion, 'la pagina no trae la seccion #agente');
   assert.ok(seccion.includes('<p class="sobre">Tu agente</p>'));
   assert.ok(seccion.includes('>Atiende como tú lo harías. <em>A cualquier hora.</em></h2>'));
-  const renglones = [
-    ...seccion.matchAll(
-      /<li class="beneficio" data-beneficio( data-abierto data-fase="espera")?>\s*<h3 class="beneficio__nombre"><span class="beneficio__boton" data-beneficio-boton><span class="beneficio__play" aria-hidden="true"><svg focusable="false"><use href="#i-reproducir"\/><\/svg><\/span>([^<]+)<\/span><\/h3>\s*<div class="beneficio__panel" id="(beneficio-\d)">\s*<div class="beneficio__dice"><p class="beneficio__texto">([^<]+)<\/p><\/div>/g,
-    ),
-  ].map(([, abierto, titulo, panel, texto]) => ({ abierto: Boolean(abierto), titulo, panel, texto }));
+  // "Lo que hace" llega a la vista, con el triangulo de reproducir en cada renglon.
+  const loQueHace = capituloEscrito('hace');
+  assert.deepEqual([loQueHace.guardado, loQueHace.numerado], [false, false]);
   assert.deepEqual(
-    renglones,
+    loQueHace.renglones,
     APROBADOS.map(([titulo, texto], lugar) => ({
       abierto: lugar === 0,
+      marca: '<svg focusable="false"><use href="#i-reproducir"/></svg>',
       titulo,
-      panel: `beneficio-${lugar + 1}`,
+      panel: `beneficio-hace-${lugar + 1}`,
       texto,
     })),
   );
-  assert.match(seccion, /<ol class="beneficios" role="list">/);
+  // "Como empiezas" llega guardado, y en vez del triangulo cada renglon lleva el numero de su paso.
+  const comoEmpiezas = capituloEscrito('empieza');
+  assert.deepEqual([comoEmpiezas.guardado, comoEmpiezas.numerado], [true, true]);
+  assert.deepEqual(
+    comoEmpiezas.renglones,
+    PASOS_APROBADOS.map(([titulo, texto], lugar) => ({
+      abierto: lugar === 0,
+      marca: `<b>${lugar + 1}</b>`,
+      titulo,
+      panel: `beneficio-empieza-${lugar + 1}`,
+      texto,
+    })),
+  );
+  assert.equal(seccion.split('<ol class="beneficios" role="list">').length - 1, 2);
+  assert.equal(seccion.split(' data-agente ').length - 1, 2);
+});
+
+test('el selector de capitulos y lo que cierra cada uno vienen escritos, con los textos de los datos', () => {
+  // El selector llega como texto, con el primero marcado: la pieza del menu lo vuelve pestanas de verdad.
+  assert.match(
+    seccion,
+    /<div class="capitulos" data-capitulos data-rotulo="Lo que hace tu agente y cómo empiezas">\s*<span class="capitulo" data-capitulo-boton="hace" data-activo>Lo que hace<\/span>\s*<span class="capitulo" data-capitulo-boton="empieza">Cómo empiezas <small>4 pasos<\/small><\/span>\s*<\/div>/,
+  );
+  // Cada capitulo dice su nombre arriba de su lista: se lee cuando no hay selector (sin JavaScript, o en papel).
+  assert.match(capituloEscrito('hace').dentro, /^\s*<h3 class="agentes__capitulo">Lo que hace<\/h3>/);
+  assert.match(capituloEscrito('empieza').dentro, /^\s*<h3 class="agentes__capitulo">Cómo empiezas<\/h3>/);
+  // "Lo que hace" termina con el paso al otro capitulo; "Como empiezas", con el boton de empezar y lo que se paga hoy.
+  assert.match(
+    capituloEscrito('hace').dentro,
+    /<p class="agentes__sigue"><span class="agentes__ir" data-capitulo-sigue>Siguiente: cómo empiezas, en 4 pasos<svg aria-hidden="true" focusable="false"><use href="#i-flecha"\/><\/svg><\/span><\/p>\s*$/,
+  );
+  assert.doesNotMatch(capituloEscrito('hace').dentro, /agentes__arranca/);
+  assert.match(
+    capituloEscrito('empieza').dentro,
+    /<p class="agentes__arranca"><a class="boton boton--luz" href="https:\/\/alta\.prompt-maestro\.com\/" data-lugar="agente">Empieza ahora<\/a> <span>Hoy pagas solo la instalación\.<\/span><\/p>\s*$/,
+  );
+  assert.doesNotMatch(capituloEscrito('empieza').dentro, /agentes__sigue/);
+  // La seccion vieja ya no existe, y el enlace de la barra que llevaba a ella ahora trae a esta.
+  assert.ok(!html.includes('id="como-funciona"'));
+  assert.match(html, /<a class="barra__enlace" href="#agente" data-lugar="barra">Cómo funciona<\/a>/);
 });
 
 test('sin JavaScript no hay un solo boton en la seccion: los pone la pieza del menu cuando llega', () => {
@@ -594,29 +931,37 @@ test('sin JavaScript no hay un solo boton en la seccion: los pone la pieza del m
     barra,
     /<button class="mv__pausa" type="button" data-mv-pausa data-estado="pausar" aria-label="Pausar">/,
   );
-  assert.match(
-    seccion,
-    /<div class="agentes__duo" data-agente data-pausar="Pausar" data-reproducir="Reproducir" data-ver-de-nuevo="Ver de nuevo">/,
+  assert.equal(
+    seccion.split(' data-pausar="Pausar" data-reproducir="Reproducir" data-ver-de-nuevo="Ver de nuevo">').length - 1,
+    2,
   );
-  assert.deepEqual(agentes.rotulos, { pausar: 'Pausar', reproducir: 'Reproducir', verDeNuevo: 'Ver de nuevo' });
+  assert.deepEqual(agentes.rotulos, {
+    pausar: 'Pausar',
+    reproducir: 'Reproducir',
+    verDeNuevo: 'Ver de nuevo',
+    capitulos: 'Lo que hace tu agente y cómo empiezas',
+  });
+  // Tampoco hay pestanas ni paneles antes de tiempo: sin la pieza, el selector no promete lo que no puede hacer.
+  assert.doesNotMatch(sinPlantilla, /role="tab|aria-selected|aria-controls/);
 });
 
 test('cada beneficio trae su mini video escrito: una escena de adorno, con lo que dura y cada pieza a su tiempo', () => {
   const videos = [
     ...seccion.matchAll(
-      /<div class="mv( mv--alta)?" data-mv data-dura="(\d)">\s*(<template data-mv-guardada>)?\s*<div class="mv__escena" aria-hidden="true">([\s\S]*?)<\/div>\s*<\/div>\s*(?:<\/template>\s*)?<\/div>\s*<\/div>\s*<\/li>/g,
+      /<div class="mv__riel"><div class="mv( mv--alta)?" data-mv data-dura="(\d+)">\s*(<template data-mv-guardada>)?\s*<div class="mv__escena" aria-hidden="true">([\s\S]*?)<\/div>\s*<\/div>\s*(?:<\/template>\s*)?<\/div><\/div>\s*<\/div>\s*<\/li>/g,
     ),
   ];
-  assert.equal(videos.length, CUANTOS);
+  assert.equal(videos.length, todos.length);
+  /** El primer renglon de cada capitulo: el que llega abierto. */
+  const primeros = new Set([hace[0], empieza[0]]);
   for (const [lugar, [, alta, dura, guardada, escena = '']] of videos.entries()) {
-    const beneficio = hace[lugar];
-    // La escena del que llega abierto viene en la pagina, a la vista. Las demas viajan guardadas en una plantilla (el
-    // navegador no las pinta ni carga con ellas) y la pieza del menu las saca la primera vez que se abren.
-    assert.equal(Boolean(guardada), lugar !== 0, beneficio.titulo);
-    // Solo la escena de la base de conocimiento, que trae una ficha grande, pide una pantalla mas alta en celular. Es
-    // la primera, la que llega abierta: su alto viene escrito en la pagina y nada se mueve cuando el menu despierta.
-    assert.equal(Boolean(alta), lugar === 0, beneficio.titulo);
-    assert.equal(beneficio.alta === true, lugar === 0, beneficio.titulo);
+    const beneficio = todos[lugar];
+    // La escena del que llega abierto viene en la pagina. Las demas viajan guardadas en una plantilla (el navegador no
+    // las pinta ni carga con ellas) y la pieza del menu las saca la primera vez que se abren.
+    assert.equal(Boolean(guardada), !primeros.has(beneficio), beneficio.titulo);
+    // Las escenas que traen una ficha grande o varios globos a la vez piden una pantalla mas alta en el acordeon: su
+    // alto viene escrito en la pagina, con los datos.
+    assert.equal(Boolean(alta), beneficio.alta === true, beneficio.titulo);
     assert.equal(Number(dura), beneficio.dura, beneficio.titulo);
     const pasos = [...escena.matchAll(/<div class="mv__paso" data-en="([\d.]+)"(?: data-hasta="([\d.]+)")?>/g)].map(
       ([, en, hasta]) => (hasta ? { en: Number(en), hasta: Number(hasta) } : { en: Number(en) }),
@@ -644,11 +989,14 @@ test('cada beneficio trae su mini video escrito: una escena de adorno, con lo qu
     /<img class="mv__foto" src="\/r\/[0-9a-f]{10}\/comercial\/referencia-unas\.webp" alt="" width="336" height="336" loading="lazy" decoding="async">/,
   );
   assert.equal(seccion.split('<img ').length - 1, 1);
-  // Y los dos sellos: el de la agenda y el de la cita.
-  assert.equal(seccion.split('class="sello"').length - 1, 2);
-  // Cada plantilla guardada se cierra, y no hay una dentro de otra.
-  assert.equal(seccion.split('<template data-mv-guardada>').length - 1, CUANTOS - 1);
-  assert.equal(seccion.split('</template>').length - 1, CUANTOS);
+  // La primera de la seccion, la de la cita completa, llega con pantalla alta: es la que se ve al llegar y nada se
+  // mueve cuando el menu despierta.
+  assert.equal(hace[0].alta, true);
+  // Y los tres sellos: el de la cita completa, el de la agenda y el de la cita ya pagada.
+  assert.equal(seccion.split('class="sello"').length - 1, 3);
+  // Cada plantilla guardada se cierra, y no hay una dentro de otra: todas menos la primera de cada capitulo, y la barra.
+  assert.equal(seccion.split('<template data-mv-guardada>').length - 1, todos.length - 2);
+  assert.equal(seccion.split('</template>').length - 1, todos.length - 1);
 });
 
 test('ningun texto de la seccion vive en el codigo ni en los estilos: todo sale de los datos', async () => {
@@ -660,9 +1008,11 @@ test('ningun texto de la seccion vive en el codigo ni en los estilos: todo sale 
   ].join('\n');
   const textos = [
     ...Object.values(agentes.rotulos),
-    ...hace.flatMap((beneficio) => [beneficio.titulo, beneficio.texto, ...dichos(beneficio)]),
+    capitulos[0].sigue,
+    capitulos[1].arranca,
+    ...todos.flatMap((beneficio) => [beneficio.titulo, beneficio.texto, ...dichos(beneficio)]),
   ].filter((texto) => texto.length > 4 && !texto.includes('/'));
-  assert.ok(textos.length > 60);
+  assert.ok(textos.length > 100);
   for (const texto of textos) assert.ok(!codigo.includes(texto), texto);
 });
 
@@ -686,6 +1036,7 @@ test('las tres tarjetas de la confianza llevan su icono y los seis renglones de 
   const pedidos = new Set([...seccion.matchAll(/<use href="#(i-\w+)"/g)].map(([, id]) => id));
   assert.deepEqual([...pedidos].sort(), [
     'i-celular',
+    'i-flecha',
     'i-libreta',
     'i-luna',
     'i-moneda',
@@ -715,19 +1066,29 @@ test('las dos piezas del menu se adelantan solo en pantallas anchas, y pagina.js
   }
   const pagina = await readFile(path.join(FUENTE, 'js', 'pagina.js'), 'utf8');
   assert.ok(pagina.includes("import('./agente-vista.js')"));
-  // Y si no arranca, pagina.js lo anota para que los estilos lo ensenen como lista.
-  assert.ok(
-    pagina.includes("document.querySelector('[data-agente]:not([data-viva])')?.setAttribute('data-lista', '')"),
-  );
+  assert.ok(pagina.includes('montarAgentes(agentes)'));
+  // Y si no arranca completa (un menu o el selector), pagina.js anota toda la seccion para que los estilos la ensenen
+  // como lista: los dos capitulos a la vista, sin selector.
+  assert.ok(pagina.includes("document.querySelector(':is([data-agente], [data-capitulos]):not([data-viva])')"));
+  assert.ok(pagina.includes("for (const parte of document.querySelectorAll('[data-agente], [data-capitulos]'))"));
+  assert.ok(pagina.includes("parte.setAttribute('data-lista', '');"));
 });
 
-test('llms.txt cuenta los nueve beneficios y lo que el agente no hace, sin ofrecer pasarle a la clienta', () => {
+test('llms.txt cuenta los diez beneficios, los cuatro pasos para empezar y lo que el agente no hace', () => {
   const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
   const hechos = /## Lo que hace el agente\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
   assert.deepEqual(
     hechos,
     APROBADOS.map(([titulo, texto]) => `- ${titulo}: ${texto}`),
   );
+  const pasos = /## Cómo empiezas\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
+  assert.deepEqual(
+    pasos,
+    PASOS_APROBADOS.map(([titulo, texto], lugar) => `${lugar + 1}. ${titulo}: ${texto}`),
+  );
+  // La seccion vieja, con sus nueve pasos, ya no se cuenta. Ni se habla de examenes.
+  assert.ok(!llms.includes('## Cómo funciona'));
+  assert.doesNotMatch(/## Lo que hace el agente[\s\S]*?## Lo que no hace/.exec(llms)?.[0] ?? '', /ex[aá]men/i);
   const limites = /## Lo que no hace\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1] ?? '';
   assert.ok(limites.includes('- No se hace pasar por una persona: avisa que es un asistente virtual.'));
   assert.doesNotMatch(llms, /te la pasa|si tu clienta lo pide/i);

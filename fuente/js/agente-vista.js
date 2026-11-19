@@ -1,8 +1,19 @@
 // @ts-check
-// La vista de "Tu agente": vuelve boton cada renglon del menu, abre un beneficio a la vez y echa a andar su mini
-// video. Cada escena se mueve con los estilos (animaciones con el retraso de los datos); aqui solo se abre, se cierra,
-// se pausa y se vuelve a empezar. Lo que se decide sin tocar la pantalla vive en agente.js.
-import { altoDelMenu, anda, avanzar, botonDe, cuantoBajar, estadoInicial, reloj } from './agente.js';
+// La vista de "Tu agente": sus dos capitulos ("Lo que hace" y "Como empiezas") son dos menus iguales. En cada uno se
+// vuelve boton cada renglon, se abre uno a la vez y se echa a andar su mini video. Cada escena se mueve con los
+// estilos (animaciones con el retraso de los datos); aqui solo se abre, se cierra, se pausa y se vuelve a empezar. El
+// selector de capitulos ensena un menu y guarda el otro. Lo que se decide sin tocar la pantalla vive en agente.js.
+import {
+  altoDelMenu,
+  anda,
+  avanzar,
+  botonDe,
+  capituloCon,
+  cuantoBajar,
+  cuantoRecorrer,
+  estadoInicial,
+  reloj,
+} from './agente.js';
 import { yaLlego } from './encendido.js';
 
 /** @typedef {import('./agente.js').Estado} Estado */
@@ -25,19 +36,138 @@ function pieza(raiz, selector) {
 }
 
 /**
- * Da vida al menu de beneficios que ya viene escrito en la pagina.
- * @param {HTMLElement} raiz
+ * Vuelve boton de verdad una marca que la pagina trae escrita como texto: sin este archivo se queda como texto.
+ * @param {HTMLElement} marca
+ * @returns {HTMLButtonElement}
  */
-export function montarAgente(raiz) {
+function hacerBoton(marca) {
+  const boton = document.createElement('button');
+  boton.type = 'button';
+  boton.className = marca.className;
+  boton.append(...marca.childNodes);
+  marca.replaceWith(boton);
+  return boton;
+}
+
+/**
+ * Comprueba, sin tocar nada, que la seccion trae todo lo que se va a necesitar. Si falta una pieza truena aqui, antes
+ * de volver boton un solo renglon: asi una falla nunca deja la seccion a medias (un menu vivo y el otro no), y la
+ * pagina la deja entera como lista.
+ * @param {HTMLElement} seccion
+ * @param {HTMLElement[]} menus
+ */
+function comprobar(seccion, menus) {
+  if (menus.length === 0) throw new Error('Tu agente: no hay ningun menu');
+  const selector = pieza(seccion, '[data-capitulos]');
+  const barra = /** @type {HTMLTemplateElement} */ (pieza(seccion, '[data-mv-barra]')).content;
+  for (const parte of ['.mv__barra', '[data-mv-pausa]', '[data-mv-avance]', '[data-mv-dura]']) pieza(barra, parte);
+  for (const menu of menus) {
+    pieza(selector, `[data-capitulo-boton="${menu.dataset.capitulo ?? ''}"]`);
+    pieza(menu, '.beneficios');
+    const renglones = menu.querySelectorAll('[data-beneficio]');
+    if (renglones.length === 0) throw new Error('Tu agente: un menu no trae renglones');
+    for (const renglon of renglones) {
+      for (const parte of ['[data-mv]', '.beneficio__dice', '[data-beneficio-boton]', '.beneficio__panel']) {
+        pieza(renglon, parte);
+      }
+    }
+  }
+}
+
+/**
+ * Da vida a "Tu agente": a cada uno de sus menus y al selector de capitulos.
+ * @param {HTMLElement} seccion  lo que envuelve al selector y a los menus
+ */
+export function montarAgentes(seccion) {
+  const menus = /** @type {HTMLElement[]} */ ([...seccion.querySelectorAll('[data-agente]')]);
   // Si esta pieza llego tan tarde que la pagina ya dejo la seccion escrita como lista, asi se queda: despertarla ahora
   // moveria de lugar, con la pagina ya en uso, todo lo que hay debajo.
-  if (raiz.hasAttribute('data-lista')) return;
+  if (menus.some((menu) => menu.hasAttribute('data-lista'))) return;
+  comprobar(seccion, menus);
+  const medidas = menus.map((menu) => montarAgente(menu, seccion));
+  montarCapitulos(seccion, menus, medidas);
+}
+
+/**
+ * El selector de capitulos: cada marca se vuelve una pestana de verdad y cada menu, su panel. Se ve un capitulo a la
+ * vez; el mini video del que se guarda deja de verse, y con eso se detiene solo.
+ * @param {HTMLElement} seccion
+ * @param {HTMLElement[]} menus  un menu por capitulo, en su orden
+ * @param {(() => void)[]} medidas  lo que vuelve a medir cada menu cuando se ensena
+ */
+function montarCapitulos(seccion, menus, medidas) {
+  const selector = pieza(seccion, '[data-capitulos]');
+  const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
+  selector.setAttribute('role', 'tablist');
+  selector.setAttribute('aria-label', selector.dataset.rotulo ?? '');
+  const pestanas = menus.map((menu, lugar) => {
+    const clave = menu.dataset.capitulo ?? '';
+    const pestana = hacerBoton(pieza(selector, `[data-capitulo-boton="${clave}"]`));
+    pestana.id = `pestana-${clave}`;
+    pestana.setAttribute('role', 'tab');
+    pestana.setAttribute('aria-controls', menu.id);
+    menu.setAttribute('role', 'tabpanel');
+    menu.setAttribute('aria-labelledby', pestana.id);
+    pestana.addEventListener('click', () => mostrar(lugar));
+    // Con las flechas de lado se pasa de una pestana a la otra, como en cualquier juego de pestanas en renglon.
+    pestana.addEventListener('keydown', (evento) => {
+      const cual = capituloCon(evento.key, lugar, menus.length);
+      if (cual === lugar) return;
+      evento.preventDefault();
+      mostrar(cual);
+      pestanas[cual]?.focus();
+    });
+    return pestana;
+  });
+
+  /** @param {number} lugar  el capitulo que se ensena; los demas se guardan */
+  function mostrar(lugar) {
+    for (const [cual, menu] of menus.entries()) {
+      const es = cual === lugar;
+      const pestana = /** @type {HTMLButtonElement} */ (pestanas[cual]);
+      menu.toggleAttribute('data-guardado', !es);
+      pestana.toggleAttribute('data-activo', es);
+      pestana.setAttribute('aria-selected', String(es));
+      pestana.tabIndex = es ? 0 : -1;
+    }
+    // El menu que se ensena aparta su alto ahora que se puede medir.
+    medidas[lugar]?.();
+  }
+
+  // Al final de un capitulo, el paso al siguiente: lo ensena y sube la pagina al principio de la seccion (asi el
+  // escenario, que cuelga del titulo, queda entero a la vista), con el foco en su pestana.
+  for (const [lugar, menu] of menus.entries()) {
+    const marca = menu.querySelector('[data-capitulo-sigue]');
+    if (!(marca instanceof HTMLElement) || lugar + 1 >= menus.length) continue;
+    hacerBoton(marca).addEventListener('click', () => {
+      mostrar(lugar + 1);
+      pestanas[lugar + 1]?.focus({ preventScroll: true });
+      seccion.scrollIntoView({ block: 'start', behavior: sinMovimiento.matches ? 'instant' : 'smooth' });
+    });
+  }
+
+  mostrar(
+    Math.max(
+      0,
+      menus.findIndex((menu) => !menu.hasAttribute('data-guardado')),
+    ),
+  );
+  selector.dataset.viva = '';
+}
+
+/**
+ * Da vida a un menu que ya viene escrito en la pagina: el de un capitulo.
+ * @param {HTMLElement} raiz
+ * @param {HTMLElement} seccion  donde vive la barra del mini video, que comparten los menus
+ * @returns {() => void}  lo que vuelve a medir el menu: se llama cuando su capitulo se ensena
+ */
+function montarAgente(raiz, seccion) {
   const menu = pieza(raiz, '.beneficios');
   const beneficios = /** @type {HTMLElement[]} */ ([...raiz.querySelectorAll('[data-beneficio]')]);
   const videos = beneficios.map((beneficio) => pieza(beneficio, '[data-mv]'));
   const dichos = beneficios.map((beneficio) => pieza(beneficio, '.beneficio__dice'));
-  // La barra del mini video es una sola: se muda al que se abre.
-  const plantilla = /** @type {HTMLTemplateElement} */ (pieza(raiz, '[data-mv-barra]'));
+  // La barra del mini video es una sola por menu: se muda al que se abre.
+  const plantilla = /** @type {HTMLTemplateElement} */ (pieza(seccion, '[data-mv-barra]'));
   const barra = pieza(/** @type {DocumentFragment} */ (plantilla.content.cloneNode(true)), '.mv__barra');
   const pausa = pieza(barra, '[data-mv-pausa]');
   const avance = pieza(barra, '[data-mv-avance]');
@@ -150,8 +280,9 @@ export function montarAgente(raiz) {
 
   /**
    * La visitante eligio un beneficio. En el acordeon el que estaba abierto se cierra de golpe: si quedaba arriba, la
-   * pagina se recorre lo mismo, para que el renglon tocado no se mueva de donde esta el dedo. En computadora la
-   * pagina no se toca: el escenario esta a un lado y no tiene por que moverse.
+   * pagina se recorre lo mismo, para que el renglon tocado no se mueva de donde esta el dedo. En computadora el
+   * escenario esta a un lado, pegado bajo la barra de la pagina: la pagina solo se recorre si no se ve entero (al
+   * final del menu va de salida, y recien llegada a la seccion puede no caber su parte de abajo).
    * @param {number} lugar
    */
   function elegir(lugar) {
@@ -161,7 +292,18 @@ export function montarAgente(raiz) {
     const acordeon = !ancha.matches;
     const estaba = acordeon ? boton.getBoundingClientRect().top : 0;
     mover({ tipo: 'elige', cual: lugar });
-    if (!acordeon) return;
+    if (!acordeon) {
+      const escenario = /** @type {HTMLElement} */ (videos[lugar]);
+      const { top, bottom } = escenario.getBoundingClientRect();
+      const recorre = cuantoRecorrer({
+        arriba: top,
+        abajo: bottom + AIRE,
+        techo: Number.parseFloat(getComputedStyle(escenario).top) || 0,
+        piso: innerHeight,
+      });
+      if (Math.abs(recorre) >= 1) scrollBy({ top: recorre, behavior: estado.quieto ? 'instant' : 'smooth' });
+      return;
+    }
     const brinco = boton.getBoundingClientRect().top - estaba;
     if (brinco !== 0) scrollBy({ top: brinco, behavior: 'instant' });
     if (estado.quieto) return;
@@ -182,7 +324,8 @@ export function montarAgente(raiz) {
    * celular no hace falta (lo abierto se abre ahi mismo) y no se mide.
    */
   function medir() {
-    if (!ancha.matches) return;
+    // Un capitulo guardado no mide nada: se mide cuando se ensena.
+    if (!ancha.matches || raiz.hasAttribute('data-guardado')) return;
     const alto = (/** @type {Element | undefined} */ elemento) => elemento?.getBoundingClientRect().height ?? 0;
     const renglones = beneficios.map((beneficio, lugar) => alto(beneficio) - alto(dichos[lugar]));
     // Lo alto de una oracion guardada solo se sabe en puntos enteros: se le aparta uno de mas, y asi nunca le falta.
@@ -192,13 +335,8 @@ export function montarAgente(raiz) {
 
   // Cada renglon del menu se vuelve un boton de verdad. Sin este archivo se queda como titulo, con su oracion debajo.
   const botones = beneficios.map((beneficio, lugar) => {
-    const marca = pieza(beneficio, '[data-beneficio-boton]');
-    const boton = document.createElement('button');
-    boton.type = 'button';
-    boton.className = marca.className;
+    const boton = hacerBoton(pieza(beneficio, '[data-beneficio-boton]'));
     boton.setAttribute('aria-controls', pieza(beneficio, '.beneficio__panel').id);
-    boton.append(...marca.childNodes);
-    marca.replaceWith(boton);
     boton.addEventListener('click', () => elegir(lugar));
     return boton;
   });
@@ -213,4 +351,5 @@ export function montarAgente(raiz) {
   document.fonts?.ready.then(medir);
   // Hasta aqui todo salio bien: el menu queda vivo.
   raiz.dataset.viva = '';
+  return medir;
 }

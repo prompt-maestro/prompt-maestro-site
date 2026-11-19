@@ -156,8 +156,8 @@ export function sitemap({ origen }) {
 }
 
 /**
- * llms.txt: la pagina contada en texto llano para los modelos de lenguaje. Que es, para quien, como funciona, que
- * hace y que no, cuanto cuesta y a donde ir.
+ * llms.txt: la pagina contada en texto llano para los modelos de lenguaje. Que es, para quien, que hace, como se
+ * empieza, que no hace, cuanto cuesta y a donde ir.
  * @param {Entrada & {
  *   pasos: string[], hace: { titulo: string, texto: string }[], noHace: string[], requisitos: string[],
  *   paraQuien: string, preciosDePrueba: boolean, legales: { terminos: string, privacidad: string }
@@ -190,13 +190,13 @@ export function llmsTxt({
     '',
     paraQuien,
     '',
-    '## Cómo funciona',
-    '',
-    ...pasos.map((paso, i) => `${i + 1}. ${paso}`),
-    '',
     '## Lo que hace el agente',
     '',
     ...hace.map(({ titulo, texto }) => `- ${titulo}: ${texto}`),
+    '',
+    '## Cómo empiezas',
+    '',
+    ...pasos.map((paso, i) => `${i + 1}. ${paso}`),
     '',
     '## Lo que no hace',
     '',

@@ -1732,7 +1732,7 @@ test.describe('el corto, en pantallas anchas', () => {
   test('bajar la pagina a media pelicula la termina: al volver se ve el cartel', async ({ page }) => {
     const corto = await abrirCortoDetenido(page);
     await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
-    await page.evaluate(() => document.querySelector('#como-funciona')?.scrollIntoView({ block: 'start' }));
+    await page.locator('#agente').evaluate((seccion) => seccion.scrollIntoView({ block: 'start' }));
     await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
     await page.evaluate(() => window.scrollTo(0, 0));
     const titulo = corto.getByRole('heading', { level: 1 });

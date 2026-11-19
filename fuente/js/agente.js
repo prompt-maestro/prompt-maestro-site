@@ -101,6 +101,31 @@ export function reloj(segundos) {
 }
 
 /**
+ * El capitulo al que lleva una tecla desde una pestana del selector: las flechas de lado pasan al de al lado y dan la
+ * vuelta, Inicio y Fin van al primero y al ultimo. Cualquier otra tecla deja el mismo: las flechas de arriba y abajo
+ * no cambian de capitulo (las pestanas van en renglon), siguen recorriendo la pagina.
+ * @param {string} tecla  la tecla, como la nombra el navegador ("ArrowRight", "Home"...)
+ * @param {number} lugar  el capitulo de la pestana que tiene el foco, desde cero
+ * @param {number} cuantos  los capitulos que hay
+ * @returns {number}
+ */
+export function capituloCon(tecla, lugar, cuantos) {
+  if (!Number.isInteger(cuantos) || cuantos < 1) return lugar;
+  switch (tecla) {
+    case 'ArrowRight':
+      return (lugar + 1) % cuantos;
+    case 'ArrowLeft':
+      return (lugar - 1 + cuantos) % cuantos;
+    case 'Home':
+      return 0;
+    case 'End':
+      return cuantos - 1;
+    default:
+      return lugar;
+  }
+}
+
+/**
  * Cuanto hay que bajar la pagina para que quepa lo que se acaba de abrir, sin que su renglon se esconda por arriba.
  * @param {{ arriba: number, abajo: number, techo: number, piso: number }} medidas  donde empieza y termina lo
  *   abierto, y la parte de la pantalla que se ve (bajo la barra de arriba y sobre la de abajo)
@@ -108,6 +133,20 @@ export function reloj(segundos) {
  */
 export function cuantoBajar({ arriba, abajo, techo, piso }) {
   return Math.max(0, Math.min(abajo - piso, arriba - techo));
+}
+
+/**
+ * Cuanto hay que recorrer la pagina, en computadora, para que el escenario del mini video recien elegido se vea
+ * entero. Si su orilla de arriba quedo escondida (el menu se recorrio hasta sus ultimos renglones y el escenario ya
+ * iba de salida), la pagina sube lo que le falta: el numero es negativo. Si lo que no cabe es su parte de abajo, baja
+ * lo justo, sin esconderle la de arriba.
+ * @param {{ arriba: number, abajo: number, techo: number, piso: number }} medidas  donde empieza y termina el
+ *   escenario, donde se queda pegado bajo la barra de la pagina (techo) y donde acaba la pantalla (piso)
+ * @returns {number}
+ */
+export function cuantoRecorrer({ arriba, abajo, techo, piso }) {
+  if (arriba < techo) return arriba - techo;
+  return cuantoBajar({ arriba, abajo, techo, piso });
 }
 
 /**
