@@ -376,7 +376,7 @@ test('en una frase: la definicion, un antes y un despues en dos tarjetas, y las 
     'Si no llega, pierdes la hora.',
   ]);
   await expect(despues.getByRole('listitem')).toHaveText([
-    'Contesta en menos de un minuto, a cualquier hora.',
+    'Contesta a cualquier hora, con el tono de tu negocio.',
     'Agenda solo con el anticipo pagado.',
     'Si no llega, el anticipo se queda contigo, según tu política.',
   ]);

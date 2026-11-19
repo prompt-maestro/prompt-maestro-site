@@ -357,8 +357,9 @@ button.beneficio__boton {
   line-height: 19px;
 }
 
-/* La escena que trae una ficha grande (la base de conocimiento) necesita una pantalla mas alta en el acordeon. Su
-   alto viene escrito en la pagina: es la que llega abierta, y nada se mueve cuando el menu despierta. */
+/* La escena que trae una ficha grande (la base de conocimiento), una foto o varios globos a la vez (la cita completa)
+   necesita una pantalla mas alta en el acordeon. Su alto viene escrito en la pagina, con los datos: nada se mueve
+   cuando el menu despierta. */
 .mv--alta {
   height: 452px;
 }
@@ -428,20 +429,59 @@ button.beneficio__boton {
 }
 
 /* El rotulo de una charla: como le hablan a su agente. */
-.mv__etiqueta {
+.mv__quien {
+  display: flex;
+  align-items: center;
   align-self: center;
-  padding: 3px 11px;
-  border-radius: 8px;
+  gap: 9px;
+  max-width: 100%;
+  padding: 3px 12px 3px 3px;
+  border-radius: 999px;
   background: var(--wa-barra);
   box-shadow: var(--wa-sombra);
   color: var(--wa-2-fuerte);
-  font-size: 12px;
-  font-weight: 600;
+  font-family: var(--f-texto);
+  font-size: 12.5px;
+  font-weight: 500;
   line-height: 17px;
 }
 
-.mv__paso + .mv__paso .mv__etiqueta {
-  margin-top: 12px;
+/* De quien es el celular: oscuro el de ella, y en el azul de la marca el de la profesional. */
+.mv__de {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px 4px 8px;
+  border-radius: 999px;
+  background: #1f2c34;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Sin momento que decir, el rotulo es solo eso. */
+.mv__de:only-child {
+  margin-right: -9px;
+}
+
+.mv__quien svg {
+  width: 13px;
+  height: 13px;
+}
+
+.mv__quien[data-de="tu"] .mv__de {
+  background: var(--sello);
+  box-shadow: 0 0 14px rgb(63 92 245 / 0.45);
+}
+
+.mv__paso + .mv__paso .mv__quien {
+  margin-top: 10px;
+}
+
+/* La nota de voz con que contesta el agente: entra en blanco, con su inicial en el azul de la marca. */
+.mv .wa__m--entra .wa__voz-foto {
+  background: var(--sello);
+  color: #fff;
 }
 
 /* La foto que manda la clienta, arriba de su mensaje. */
@@ -862,14 +902,6 @@ p.mv__botones span {
   height: 10px;
 }
 
-.mv__avance {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--sello);
-  transform-origin: 0 50%;
-}
-
 /* La barra del mini video: pausar o reproducir, la linea de avance y lo que dura. Solo existe donde algo se mueve. */
 .mv__barra {
   position: absolute;
@@ -926,15 +958,62 @@ p.mv__botones span {
   visibility: visible;
 }
 
+/* La linea de avance se agarra: con el cursor, con el dedo o con las flechas se adelanta o se regresa el mini video.
+   Es un renglon alto, para atinarle, con la raya fina dibujada al centro, lo que ya corrio en blanco y una perilla
+   que marca por donde va. */
 .mv__linea {
+  position: relative;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  /* De lado la arrastra el dedo; hacia arriba o abajo la pagina se sigue recorriendo. */
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mv__linea:focus-visible {
+  outline-color: #fff;
+  outline-offset: 0;
+}
+
+.mv__linea::before {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
   height: 3px;
-  overflow: hidden;
+  margin-top: -1.5px;
   border-radius: 3px;
   background: rgb(255 255 255 / 0.35);
 }
 
 .mv__avance {
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 3px;
   background: #fff;
+  transform-origin: 0 50%;
+}
+
+/* La perilla viaja con una caja del ancho de la linea, que se recorre de izquierda a derecha: asi no mueve nada mas. */
+.mv__perilla {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mv__perilla::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
@@ -1389,6 +1468,10 @@ p.mv__botones span {
     transform: scaleX(0);
   }
 
+  [data-fase="espera"] .mv__perilla {
+    transform: translateX(-100%);
+  }
+
   [data-fase="sigue"] .mv__paso {
     animation: mv-entra 480ms var(--suave) var(--mv-en, 0s) both var(--mv-marcha);
   }
@@ -1403,6 +1486,10 @@ p.mv__botones span {
 
   [data-fase="sigue"] .mv__avance {
     animation: mv-llena var(--mv-dura, 7s) linear both var(--mv-marcha);
+  }
+
+  [data-fase="sigue"] .mv__perilla {
+    animation: mv-recorre var(--mv-dura, 7s) linear both var(--mv-marcha);
   }
 
   /* Los renglones de la base de conocimiento se escriben uno tras otro, ya con la ficha a la vista. */
@@ -1496,6 +1583,12 @@ p.mv__botones span {
   to {
     grid-template-rows: 0fr;
     opacity: 0;
+  }
+}
+
+@keyframes mv-recorre {
+  from {
+    transform: translateX(-100%);
   }
 }
 

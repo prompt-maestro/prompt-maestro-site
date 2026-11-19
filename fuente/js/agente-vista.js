@@ -12,7 +12,11 @@ import {
   cuantoBajar,
   cuantoRecorrer,
   estadoInicial,
+  instanteCon,
+  instanteEn,
   reloj,
+  segundoDicho,
+  yaArrastra,
 } from './agente.js';
 import { yaLlego } from './encendido.js';
 
@@ -60,7 +64,9 @@ function comprobar(seccion, menus) {
   if (menus.length === 0) throw new Error('Tu agente: no hay ningun menu');
   const selector = pieza(seccion, '[data-capitulos]');
   const barra = /** @type {HTMLTemplateElement} */ (pieza(seccion, '[data-mv-barra]')).content;
-  for (const parte of ['.mv__barra', '[data-mv-pausa]', '[data-mv-avance]', '[data-mv-dura]']) pieza(barra, parte);
+  for (const parte of ['.mv__barra', '[data-mv-pausa]', '[data-mv-linea]', '[data-mv-avance]', '[data-mv-dura]']) {
+    pieza(barra, parte);
+  }
   for (const menu of menus) {
     pieza(selector, `[data-capitulo-boton="${menu.dataset.capitulo ?? ''}"]`);
     pieza(menu, '.beneficios');
@@ -170,6 +176,7 @@ function montarAgente(raiz, seccion) {
   const plantilla = /** @type {HTMLTemplateElement} */ (pieza(seccion, '[data-mv-barra]'));
   const barra = pieza(/** @type {DocumentFragment} */ (plantilla.content.cloneNode(true)), '.mv__barra');
   const pausa = pieza(barra, '[data-mv-pausa]');
+  const linea = pieza(barra, '[data-mv-linea]');
   const avance = pieza(barra, '[data-mv-avance]');
   const duracion = pieza(barra, '[data-mv-dura]');
   const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
@@ -242,6 +249,8 @@ function montarAgente(raiz, seccion) {
       }
       video.append(barra);
       duracion.textContent = reloj(Number(video.dataset.dura));
+      linea.setAttribute('aria-valuemax', video.dataset.dura ?? '');
+      decir(0);
       vigilado = video;
       vigia.observe(video);
     }
@@ -253,6 +262,9 @@ function montarAgente(raiz, seccion) {
     // Ya terminado no lleva marca: lo que se ve es su ultimo cuadro, que es lo que los estilos traen escrito.
     if (estado.fase === 'fin') abierto.removeAttribute('data-fase');
     else abierto.dataset.fase = estado.fase;
+    // La linea de avance dice lo que se ve: completa al terminar y en cero al volver a empezar.
+    if (estado.fase === 'fin') decir(dura());
+    else if (antes && antes.vuelta !== estado.vuelta) decir(0);
     raiz.toggleAttribute('data-anda', anda(estado));
     const boton = botonDe(estado);
     pausa.dataset.estado = boton;
@@ -264,6 +276,49 @@ function montarAgente(raiz, seccion) {
     const antes = estado;
     estado = avanzar(estado, evento, beneficios.length);
     if (estado !== antes) pintar(antes);
+  }
+
+  /** Lo que dura el mini video abierto, en segundos. */
+  const dura = () => Number(videos[estado.abierto]?.dataset.dura);
+  /** Por donde va el mini video abierto, en segundos: al final si ya termino, y en cero si aun no empieza. */
+  const va = () => (estado.fase === 'fin' ? dura() : Number(avance.getAnimations()[0]?.currentTime ?? 0) / 1000);
+
+  /**
+   * La linea de avance dice por donde va, para quien no la ve.
+   * @param {number} segundos
+   */
+  function decir(segundos) {
+    const enteros = String(segundoDicho(segundos, dura(), estado.fase === 'fin'));
+    linea.setAttribute('aria-valuenow', enteros);
+    linea.setAttribute(
+      'aria-valuetext',
+      (raiz.dataset.vaEn ?? '').replace('{va}', enteros).replace('{total}', String(dura())),
+    );
+  }
+
+  /**
+   * La visitante movio la linea de avance: el mini video salta a ese instante, hacia adelante o hacia atras. Todas sus
+   * piezas corren con el mismo reloj (el retraso de cada una es su hora de entrada), asi que basta con mover ese reloj.
+   * En pausa no llega hasta el final: se queda en su ultimo cuadro, todavia en pausa.
+   * @param {number} segundos
+   */
+  function irA(segundos) {
+    mover({ tipo: 'busca' });
+    if (estado.fase !== 'sigue') return;
+    const instante = instanteEn(segundos, dura(), estado.pausado);
+    for (const animacion of /** @type {HTMLElement} */ (videos[estado.abierto]).getAnimations({ subtree: true })) {
+      if (animacion instanceof CSSAnimation) animacion.currentTime = instante * 1000;
+    }
+    decir(instante);
+  }
+
+  /**
+   * Lleva el mini video a donde apunta el cursor o el dedo sobre la linea.
+   * @param {PointerEvent} evento
+   */
+  function alPuntero(evento) {
+    const { left, width } = linea.getBoundingClientRect();
+    irA(((evento.clientX - left) / width) * dura());
   }
 
   /** La visitante llego al mini video, se fue de el o cambio de pestana. */
@@ -345,6 +400,45 @@ function montarAgente(raiz, seccion) {
   medir();
   pausa.addEventListener('click', () => mover({ tipo: 'boton' }));
   avance.addEventListener('animationend', () => mover({ tipo: 'termina' }));
+  // La linea de avance se agarra: con un toque salta, arrastrando se recorre y con las flechas va de segundo en segundo.
+  /**
+   * Donde toco un dedo que todavia no mueve nada: puede ser que solo vaya a recorrer la pagina.
+   * @type {number | null}
+   */
+  let toque = null;
+  linea.addEventListener('pointerdown', (evento) => {
+    // Solo el boton principal: el clic derecho abre su menu y no mueve nada.
+    if (evento.button !== 0) return;
+    linea.setPointerCapture(evento.pointerId);
+    if (evento.pointerType === 'touch') toque = evento.clientX;
+    else alPuntero(evento);
+  });
+  linea.addEventListener('pointermove', (evento) => {
+    if (!linea.hasPointerCapture(evento.pointerId)) return;
+    if (toque !== null && !yaArrastra(toque, evento.clientX)) return;
+    toque = null;
+    alPuntero(evento);
+  });
+  // El dedo que toco y solto sin arrastrar: salta ahi. Si la pagina se recorrio, el navegador cancela el toque.
+  linea.addEventListener('pointerup', (evento) => {
+    if (toque === null) return;
+    toque = null;
+    alPuntero(evento);
+  });
+  linea.addEventListener('pointercancel', () => {
+    toque = null;
+  });
+  linea.addEventListener('keydown', (evento) => {
+    // Con Alt, Ctrl o Cmd la tecla es un atajo del navegador, no de la linea.
+    if (evento.altKey || evento.ctrlKey || evento.metaKey) return;
+    const ahora = va();
+    const instante = instanteCon(evento.key, ahora, dura());
+    if (instante === null) return;
+    evento.preventDefault();
+    // En la orilla no hay a donde ir: el que ya termino no vuelve a empezar solo por eso.
+    if (instante !== ahora) irA(instante);
+  });
+  linea.addEventListener('focus', () => decir(va()));
   document.addEventListener('visibilitychange', alVer);
   sinMovimiento.addEventListener('change', () => mover({ tipo: 'quieto', quieto: sinMovimiento.matches }));
   addEventListener('resize', medir);

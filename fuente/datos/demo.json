@@ -1,10 +1,10 @@
 {
   "fijos": {
-    "horarios": "Te puedo ofrecer el {dia} {horas}. ¿Cuál te acomoda?",
+    "horarios": "Le puedo ofrecer el {dia} {horas}. ¿Cuál le acomoda?",
     "cobro": "Anticipo {servicio}",
-    "confirmacion": "¡Listo, {cliente}! Recibimos tu anticipo de {anticipo} y tu cita de {servicio} quedó confirmada para el {dia} {aLaHora}. Te esperamos en {direccion}. Si necesitas mover tu cita, escríbenos con gusto.",
-    "recordatorioDia": "¡Hola {cliente}! Te recordamos tu cita de {servicio} mañana {dia} {aLaHora}. Te esperamos en {direccion}. Si necesitas mover tu cita, toca el botón de abajo y te ayudamos.",
-    "recordatorioHora": "Ya casi es tu cita de {servicio}, hoy {aLaHora}. Te esperamos, llega 5 minutos antes por favor.",
+    "confirmacion": "¡Listo, {cliente}! Recibimos su anticipo de {anticipo} y su cita de {servicio} quedó confirmada para el {dia} {aLaHora}. Le esperamos en {direccion}. Si necesita mover su cita, escríbanos con gusto.",
+    "recordatorioDia": "¡Hola, {cliente}! Le recordamos su cita de {servicio} mañana {dia} {aLaHora}. Le esperamos en {direccion}. Si necesita mover su cita, toque el botón de abajo y con gusto le ayudamos.",
+    "recordatorioHora": "Ya casi es su cita de {servicio}, hoy {aLaHora}. Le esperamos; llegue 5 minutos antes, por favor.",
     "preguntaAsistencia": "¡Hola! ¿Asistió {cliente} a su cita de {servicio} hoy {aLaHora}? Toca un botón y lo dejo registrado.",
     "registroSi": "Listo, registré que {cliente} sí asistió a su cita de {servicio} hoy {aLaHora}. Le mandé las gracias y la invité a agendar su siguiente cita.",
     "registroNo": "Listo, registré que {cliente} no asistió a su cita de {servicio} hoy {aLaHora}. Su anticipo de {anticipo} queda retenido y le ofrecí reagendar."
@@ -12,7 +12,7 @@
   "momentos": [
     {
       "rotulo": "Contesta",
-      "letrero": "Escucha la nota de voz y contesta por escrito."
+      "letrero": "Escucha la nota de voz y le contesta."
     },
     {
       "rotulo": "Ofrece horarios",

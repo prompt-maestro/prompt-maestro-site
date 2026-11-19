@@ -2,7 +2,7 @@
   "charla": "10:12 am",
   "pregunta": "Hola, ¿cuánto cuesta el gelish?",
   "saludo": [
-    "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. El gelish semipermanente cuesta {precio} y dura de 2 a 3 semanas. Si te animas, te busco un horario."
+    "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. Con mucho gusto. El gelish semipermanente cuesta {precio} y dura de 2 a 3 semanas. Si gusta, le busco un horario."
   ],
   "pideDia": "Sí, ¿tienes lugar el jueves?",
   "dia": "jueves",
@@ -10,5 +10,5 @@
   "horas": ["10:00 am", "12:30 pm", "4:00 pm", "5:00 pm"],
   "horaSugerida": "5:00 pm",
   "eligeHora": "{ALaHora}, por favor.",
-  "apartado": "¡Listo! Te aparté el lugar para el {dia} {aLaHora}. Para confirmarla se paga el anticipo de {anticipo} con este link. Te lo guardo unos minutos; en cuanto pagues, te confirmo por aquí mismo."
+  "apartado": "¡Listo! Le aparté el lugar para el {dia} {aLaHora}. Para confirmar su cita se paga el anticipo de {anticipo} con este link. Se lo guardo unos minutos; en cuanto pague, le confirmo por aquí mismo."
 }

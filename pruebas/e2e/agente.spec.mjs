@@ -1,5 +1,5 @@
 // @ts-check
-// "Tu agente": dos capitulos con el mismo menu. "Lo que hace", con diez beneficios y sus mini videos (el primero
+// "Tu agente": dos capitulos con el mismo menu. "Lo que hace", con nueve beneficios y sus mini videos (el primero
 // cuenta una cita de principio a fin), y "Como empiezas", con cuatro pasos numerados. El primer renglon llega abierto
 // y corre solo una vez al llegar a la vista; elegir otro cierra el anterior y corre el suyo; la barra pausa, reanuda y
 // lo repite. En celular es un acordeon y en computadora, un menu con su escenario, que sube junto al titulo y se
@@ -32,13 +32,13 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  * @param {string} titulo
  */
 const numeroDe = (titulo) => TITULOS.indexOf(titulo) + 1;
-const AGENDA = numeroDe('Maneja tu agenda solo');
+const AGENDA = numeroDe('Maneja tu agenda por ti');
 const PAGO = numeroDe('Asegura el pago antes de agendar');
-const VOZ = numeroDe('Entiende notas de voz');
-const FOTO = numeroDe('Lee la foto de referencia');
-const RECADOS = numeroDe('Te pasa los recados');
-const BASE = numeroDe('Hecho solo para tu negocio');
-const CAMBIOS = numeroDe('Le pides cambios por WhatsApp');
+const VOZ = numeroDe('Entiende notas de voz y contesta con voz');
+const FOTO = numeroDe('Ve las imágenes de referencia que le mandan');
+const RECADOS = numeroDe('Solo te contacta cuando se requiere tu intervención');
+const BASE = numeroDe('Hecho a la medida de tu negocio');
+const CAMBIOS = numeroDe('Cambias tus precios y horarios con un mensaje');
 /** Lo alto de un mini video en el acordeon: el que trae una ficha grande o varios globos a la vez es mas alto. */
 const ALTO_EN_ACORDEON = HACE.map(({ alta }) => (alta ? 452 : 340));
 /** Lo que queda a la vista al terminar el mini video de la cita completa: solo las piezas de su ultimo momento. */
@@ -255,18 +255,22 @@ function pasosALaVista(menu) {
   );
 }
 
-test('el menu llega con sus diez beneficios, cada uno un boton de verdad, y solo el primero abierto', async ({
+test('el menu llega con sus nueve beneficios, cada uno un boton de verdad, y solo el primero abierto', async ({
   page,
 }) => {
-  // Mide los diez renglones y al final pasa el revisor de accesibilidad: con cinco navegadores a la vez, tarda.
+  // Mide los nueve renglones y al final pasa el revisor de accesibilidad: con cinco navegadores a la vez, tarda.
   test.slow();
   const fallas = vigilar(page);
   const menu = await abrir(page);
   const seccion = page.locator('#agente');
   await expect(seccion.getByRole('heading', { level: 2 })).toHaveText('Atiende como tú lo harías. A cualquier hora.');
-  // Una lista ordenada de diez renglones: cada uno es un titulo que es, entero, un boton. El primero, el que llega
+  // Una lista ordenada de nueve renglones: cada uno es un titulo que es, entero, un boton. El primero, el que llega
   // abierto, es el que cuenta una cita de principio a fin; el de la base de conocimiento va enseguida.
-  expect([CUANTOS, TITULOS[0], TITULOS[1]]).toEqual([10, 'Una cita, de principio a fin', 'Hecho solo para tu negocio']);
+  expect([CUANTOS, TITULOS[0], TITULOS[1]]).toEqual([
+    9,
+    'Gestiona tus citas de principio a fin',
+    'Hecho a la medida de tu negocio',
+  ]);
   const renglones = menu.locator('ol.beneficios > li');
   await expect(renglones).toHaveCount(CUANTOS);
   await expect(menu.locator('h3 > button.beneficio__boton')).toHaveText(TITULOS);
@@ -315,12 +319,16 @@ test('al llegar a la vista el primero corre solo, una sola vez, y se queda en su
   await expect(menu).toHaveAttribute('data-anda', '');
   const barra = video(menu).getByRole('button');
   await expect(barra).toHaveAccessibleName('Pausar');
-  // Es el largo: la cita completa, en 26 segundos.
-  await expect(video(menu).locator('[data-mv-dura]')).toHaveText('0:26');
+  // Es el largo: la cita completa, en 28 segundos.
+  await expect(video(menu).locator('[data-mv-dura]')).toHaveText('0:28');
   await expect.poll(async () => (await marcha(menu)).corriendo).toBeGreaterThan(0);
   // Empieza por el principio: el primer momento de la cita, con lo que escribe la clienta.
+  // Y dice de quien es el celular que se ve.
   await expect(video(menu).getByText('Antes de la cita')).toBeVisible();
-  await expect(video(menu).getByText('Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?')).toBeVisible();
+  await expect(video(menu).locator('.mv__de').first()).toHaveText('Lo ve tu clienta');
+  await expect(
+    video(menu).getByText('Hola, buenos días. ¿Cuánto cuesta el gelish? ¿Hay lugar el jueves?'),
+  ).toBeVisible();
   // Corre hasta el final sin que nadie lo toque, y ahi se queda: su ultimo cuadro, el de despues de la cita. Lo de
   // los momentos anteriores ya se fue.
   await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/, { timeout: 45_000 });
@@ -350,6 +358,19 @@ test('elegir otro beneficio cierra el anterior y corre el suyo; elegir el abiert
   await expect(boton(menu, PAGO)).toHaveAttribute('aria-expanded', 'true');
   await expect(boton(menu, 1)).toHaveAttribute('aria-expanded', 'false');
   await expect(menu.locator('button[aria-expanded="true"]')).toHaveCount(1);
+  // Y corre: solo el, desde el principio. Se comprueba enseguida, antes que lo demas: el mini video dura 8 segundos y
+  // con la maquina cargada podia terminar antes de que la prueba llegara a mirarlo.
+  await expect(beneficio(menu, PAGO)).toHaveAttribute('data-fase', 'sigue');
+  await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/);
+  await expect(menu.locator('.beneficio[data-fase]')).toHaveCount(1);
+  await expect(menu).toHaveAttribute('data-anda', '');
+  await expect.poll(async () => (await marcha(menu)).corriendo).toBeGreaterThan(0);
+  await expect(beneficio(menu, PAGO).locator('.mv__barra').getByRole('button')).toHaveAccessibleName('Pausar');
+  // Se pausa: lo que sigue se mira con el mini video detenido, sin que el reloj lo termine a media prueba.
+  await beneficio(menu, PAGO).locator('.mv__barra').getByRole('button').click();
+  await expect(menu).not.toHaveAttribute('data-anda', /.*/);
+  expect(await marcha(menu)).toMatchObject({ anda: false, fase: 'sigue', corriendo: 0 });
+  expect((await marcha(menu)).detenidas).toBeGreaterThan(0);
   // Se ve su oracion y se guarda la del anterior.
   await expect(menu.locator('.beneficio__texto').filter({ visible: true })).toHaveText([ORACIONES[PAGO - 1] ?? '']);
   await expect(beneficio(menu, 1).locator('.beneficio__texto')).toBeHidden();
@@ -359,7 +380,6 @@ test('elegir otro beneficio cierra el anterior y corre el suyo; elegir el abiert
   await expect(beneficio(menu, 1).locator('.mv')).toBeHidden();
   await expect(menu.locator('.mv__barra')).toHaveCount(1);
   await expect(beneficio(menu, PAGO).locator('.mv__barra [data-mv-dura]')).toHaveText('0:08');
-  await expect(beneficio(menu, PAGO).locator('.mv__barra').getByRole('button')).toHaveAccessibleName('Pausar');
   // Su escena, que viajaba guardada, se saco al abrirlo: ya hay dos en la pagina, y cada pieza de la suya sabe a que
   // hora le toca entrar.
   await expect(menu.locator('.mv__escena')).toHaveCount(2);
@@ -367,13 +387,7 @@ test('elegir otro beneficio cierra el anterior y corre el suyo; elegir el abiert
     .locator('.mv__paso')
     .evaluateAll((pasos) => pasos.map((paso) => /** @type {HTMLElement} */ (paso).style.getPropertyValue('--mv-en')));
   expect(tiempos).toEqual((HACE[PAGO - 1]?.pasos ?? []).map((paso) => `${paso.en}s`));
-  // Y corre: solo el, desde el principio.
   await quietaLaPagina(page);
-  await expect(menu).toHaveAttribute('data-anda', '');
-  await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/);
-  expect(await marcha(menu)).toMatchObject({ anda: true, fase: 'sigue', detenidas: 0 });
-  expect((await marcha(menu)).corriendo).toBeGreaterThan(0);
-  await expect(menu.locator('.beneficio[data-fase]')).toHaveCount(1);
 
   // Ya terminado, tocar su renglon lo corre otra vez: sigue abierto y vuelve a empezar.
   await alFinal(menu);
@@ -393,7 +407,7 @@ test('elegir otro beneficio cierra el anterior y corre el suyo; elegir el abiert
   await expect(boton(menu, RECADOS)).toHaveAttribute('aria-expanded', 'true');
   await expect(beneficio(menu, PAGO)).not.toHaveAttribute('data-fase', /.*/);
   await expect(beneficio(menu, RECADOS)).toHaveAttribute('data-fase', 'sigue');
-  await expect(beneficio(menu, RECADOS).locator('.mv__barra [data-mv-dura]')).toHaveText('0:07');
+  await expect(beneficio(menu, RECADOS).locator('.mv__barra [data-mv-dura]')).toHaveText('0:08');
   await expect(video(menu)).toHaveCount(1);
 });
 
@@ -430,7 +444,7 @@ test('la barra del mini video pausa, reanuda donde iba y, al terminar, lo repite
       );
   expect(await dibujos()).toEqual(['reproducir']);
 
-  // En pausa la escena se puede adelantar a mano: cada pieza aparece a su tiempo, en su orden, y dos se van.
+  // En pausa la escena se puede adelantar a mano: cada pieza aparece a su tiempo, en su orden, y tres se van.
   const escenaEn = (/** @type {number} */ ms) =>
     menu.evaluate((raiz, tiempo) => {
       for (const animacion of raiz.getAnimations({ subtree: true })) {
@@ -441,13 +455,13 @@ test('la barra del mini video pausa, reanuda donde iba y, al terminar, lo repite
       );
     }, ms);
   const pasos = HACE[AGENDA - 1]?.pasos ?? [];
-  expect(pasos.map((paso) => paso.en)).toEqual([0.3, 1.2, 2.8, 4.7, 6.4]);
-  expect(await escenaEn(100)).toEqual([0, 0, 0, 0, 0]);
-  expect(await escenaEn(1000)).toEqual([1, 0, 0, 0, 0]);
-  expect(await escenaEn(2500)).toEqual([1, 1, 0, 0, 0]);
-  expect(await escenaEn(4000)).toEqual([1, 1, 1, 0, 0]);
-  // El agente ofrecio, ella eligio, y sus dos globos se van: queda el pago.
-  expect(await escenaEn(5400)).toEqual([1, 0, 0, 1, 0]);
+  expect(pasos.map((paso) => paso.en)).toEqual([0.2, 0.6, 2.2, 4.4, 4.7, 6.5]);
+  expect(await escenaEn(100)).toEqual([0, 0, 0, 0, 0, 0]);
+  // Primero lo que ve la clienta: su rotulo, la oferta del agente y lo que ella elige.
+  expect(await escenaEn(1500)).toEqual([1, 1, 0, 0, 0, 0]);
+  expect(await escenaEn(3200)).toEqual([1, 1, 1, 0, 0, 0]);
+  // Lo de ella se va entero, y llega lo que ve la profesional: su rotulo y su calendario.
+  expect(await escenaEn(5500)).toEqual([0, 0, 0, 1, 1, 0]);
   // Antes de agendarse el horario dice que esta libre; despues, de quien es, y cae el sello.
   const horario = () =>
     menu.evaluate((raiz) => {
@@ -457,7 +471,7 @@ test('la barra del mini video pausa, reanuda donde iba y, al terminar, lo repite
       return { antes: se('.mv__antes'), luego: se('.mv__luego'), sello: se('.sello') };
     });
   expect(await horario()).toEqual({ antes: true, luego: false, sello: false });
-  expect(await escenaEn(7600)).toEqual([1, 0, 0, 1, 1]);
+  expect(await escenaEn(7600)).toEqual([0, 0, 0, 1, 1, 1]);
   expect(await horario()).toEqual({ antes: false, luego: true, sello: true });
 
   // Reanudar sigue donde iba: no regresa al principio.
@@ -474,7 +488,7 @@ test('la barra del mini video pausa, reanuda donde iba y, al terminar, lo repite
   await expect(barra).toHaveAccessibleName('Ver de nuevo');
   expect(await dibujos()).toEqual(['verDeNuevo']);
   expect(await marcha(menu)).toMatchObject({ anda: false, fase: 'fin', corriendo: 0, detenidas: 0 });
-  expect(await pasosALaVista(menu)).toEqual([1, 0, 0, 1, 1]);
+  expect(await pasosALaVista(menu)).toEqual([0, 0, 0, 1, 1, 1]);
   await expect(video(menu).locator('.sello')).toBeVisible();
   await barra.click();
   await expect(barra).toHaveAccessibleName('Pausar');
@@ -656,7 +670,7 @@ test('todo el menu se maneja con el teclado, se ve donde esta el foco y nunca se
   const menu = await abrir(page);
   await llegarA(video(menu));
   await expect(menu).toHaveAttribute('data-anda', '');
-  // Con el tabulador: el primer renglon, el boton de su mini video y el renglon siguiente.
+  // Con el tabulador: el primer renglon, el boton de su mini video, su linea de avance y el renglon siguiente.
   await boton(menu, 1).focus();
   await page.keyboard.press('Tab');
   const barra = video(menu).getByRole('button');
@@ -669,6 +683,12 @@ test('todo el menu se maneja con el teclado, se ve donde esta el foco y nunca se
   await page.keyboard.press('Enter');
   await expect(barra).toHaveAccessibleName('Pausar');
   await expect(barra).toBeFocused();
+  // Sigue la linea de avance: se ve donde esta el foco y dice que es.
+  await page.keyboard.press('Tab');
+  const linea = video(menu).getByRole('slider');
+  await expect(linea).toBeFocused();
+  await expect(linea).toHaveCSS('outline-style', 'solid');
+  await expect(linea).toHaveAccessibleName('Avance del video');
   await page.keyboard.press('Tab');
   await expect(boton(menu, 2)).toBeFocused();
   await expect(boton(menu, 2)).toHaveCSS('outline-style', 'solid');
@@ -681,6 +701,8 @@ test('todo el menu se maneja con el teclado, se ve donde esta el foco y nunca se
   // La barra se mudo a su mini video: es lo que sigue con el tabulador, y de ahi, el tercer renglon.
   await page.keyboard.press('Tab');
   await expect(beneficio(menu, 2).locator('[data-mv-pausa]')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(beneficio(menu, 2).getByRole('slider')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(boton(menu, 3)).toBeFocused();
   await page.keyboard.press('Space');
@@ -697,103 +719,121 @@ test('todo el menu se maneja con el teclado, se ve donde esta el foco y nunca se
   await sinFaltasDeAccesibilidad(page, '#agente');
 });
 
-test('los diez beneficios: cada uno abre su oracion y su escena, con lo que dicen los datos', async ({ page }) => {
+test('los nueve beneficios: cada uno abre su oracion y su escena, con lo que dicen los datos', async ({ page }) => {
   // Con menos movimiento cada escena se pinta completa de una vez: se revisa su ultimo cuadro.
   const menu = await abrir(page, { quieta: true });
-  /** Lo que cada escena ensena al final, y lo que ya se fue. */
+  /** Lo que cada escena ensena al final, lo que ya se fue y de quien es el celular que queda a la vista. */
   const ESCENAS = [
     {
       // La cita completa: queda su ultimo momento. Lo de antes de la cita, el pago y la pregunta de si llego, ya se fue.
       queda: [
         'Después de la cita',
-        '¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita.',
+        '¡Gracias por venir, Ana! Cuando guste, le agendo su siguiente cita.',
         'Cita garantizada, de principio a fin',
       ],
       seFue: [
         'Antes de la cita',
-        'Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?',
+        'Hola, buenos días. ¿Cuánto cuesta el gelish? ¿Hay lugar el jueves?',
         'Pago aprobado · $150',
         '¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm?',
       ],
+      quien: 'Lo ve tu clienta',
     },
     {
-      // La base de conocimiento del negocio de ejemplo y una respuesta que solo ese negocio daria.
+      // Una respuesta que solo ese negocio daria, amable y de usted. Su base de conocimiento (lo que define la
+      // profesional) salio primero y ya se fue: en el celular de la clienta solo queda su conversacion.
       queda: [
-        'Base de conocimiento',
-        'Studio Bella · solo de este negocio',
-        'Servicios y precios',
-        'Gelish $350 · Acrílicas $480',
-        'Horarios',
-        'Martes a sábado, 10 am a 7 pm',
-        'Políticas',
-        'Anticipo $150 · Retoque sin costo 3 días',
-        '¿Y si se me levanta el gelish?',
-        'Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándame una foto y te agendo.',
+        'Disculpe, ¿y si se me levanta el gelish?',
+        'No se preocupe, Ana. Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándeme una foto y con gusto la agendo.',
         'Lo sabe porque es la política de tu negocio',
       ],
-      seFue: [],
+      seFue: [
+        'Lo defines tú',
+        'Base de conocimiento',
+        'Studio Bella · solo de este negocio',
+        'Anticipo $150 · Retoque sin costo 3 días',
+      ],
+      quien: 'Lo ve tu clienta',
     },
     {
-      queda: ['Jueves · 11:48 p. m.', 'Hola, ¿tienes lugar el sábado?', 'Contestó en menos de un minuto'],
+      // A cualquier hora: ella escribe en tres mensajes y el agente contesta una sola vez.
+      queda: [
+        'Jueves · 11:48 p. m.',
+        'Buenas noches',
+        'Me gustaría saber el precio del gelish',
+        '¿Le gustaría agendar su cita?',
+        'Esperó a que terminara de escribir y contestó todo junto',
+      ],
       seFue: [],
+      quien: 'Lo ve tu clienta',
     },
     {
+      // La agenda: lo que vio ella ya se fue; queda el calendario de la profesional, con la cita puesta.
       queda: [
         'Tu Google Calendar · Sábado',
         '11:00 am · Libre',
         '1:00 pm · Ocupado',
         '4:30 pm ·',
-        'Pago aprobado · $150',
+        'Recordatorios: un día y una hora antes',
       ],
-      seFue: ['Te puedo ofrecer el sábado a las 11:00 am o 4:30 pm. ¿Cuál te acomoda?', 'A las 4:30 pm, por favor.'],
+      seFue: [
+        'Con mucho gusto. Para el sábado le puedo ofrecer 11:00 am o 4:30 pm. ¿Cuál le acomoda?',
+        'A las 4:30 pm, por favor.',
+      ],
+      quien: 'Lo ves tú',
     },
     {
-      queda: [
-        'Anticipo Consulta',
-        '$300',
-        'mercadopago.com.mx',
-        'Pago aprobado · $300',
-        '10:00 am · Elvira',
-        'Consulta',
-      ],
-      seFue: ['Sí, aparte el jueves a las 10, por favor.'],
+      queda: ['Pago aprobado · $300', '10:00 am · Elvira'],
+      seFue: ['Sí, aparte el jueves a las 10, por favor.', 'Anticipo Consulta'],
+      quien: 'Lo ves tú',
     },
     {
+      // La nota de voz de ella y la del agente, cada una con lo que dijo.
       queda: [
+        '0:07',
+        'Escuchó: «Hola, ¿tendrá lugar mañana para un gelish?»',
         '0:09',
-        'Escuchó: «Doctor, se me cayó una amalgama. ¿Me podría atender hoy?»',
-        'Buenas tardes, señor Medina.',
+        'Mañana tengo lugar a las cinco en punto. ¿Se lo aparto?',
       ],
       seFue: [],
+      quien: 'Lo ve tu clienta',
     },
-    {
-      queda: ['¿Cuánto por este diseño?', 'Vio la foto: francesas con decorado', 'Queda en $420. ¿Te aparto lugar?'],
-      seFue: [],
-    },
-    { queda: ['De tú', 'De usted', 'Buenas tardes, ¿me podría dar una cita?', '¿Se lo aparto?'], seFue: [] },
     {
       queda: [
-        '¿Me haces un descuento si voy con mi hermana?',
-        'Eso lo decide Bella. Ya le dejé tu recado.',
+        '¿Cuánto por este diseño?',
+        'Vio la foto: francesas con decorado',
+        'quedan en $420. ¿Le aparto un lugar?',
+      ],
+      seFue: [],
+      quien: 'Lo ve tu clienta',
+    },
+    {
+      // Cuando hace falta la profesional: lo de la clienta ya se fue y queda el recado, en su WhatsApp personal.
+      queda: [
         'Tu WhatsApp personal',
         'Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas.',
+        'Solo te busca cuando hace falta',
       ],
-      seFue: [],
+      seFue: [
+        'Disculpe, ¿me haría un descuento si voy con mi hermana?',
+        'Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.',
+      ],
+      quien: 'Lo ves tú',
     },
     {
       // Los cambios: ella lo pide, el agente dice que va a cambiar y pregunta; ella ya toco que si.
       queda: [
-        'Tu WhatsApp personal',
         'Sube el gelish a $380',
         'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
         'Sí, aplícalo',
         'Nada cambia sin tu sí',
       ],
       seFue: [],
+      quien: 'Lo ves tú',
     },
   ];
   expect(ESCENAS).toHaveLength(CUANTOS);
-  for (const [lugar, { queda, seFue }] of ESCENAS.entries()) {
+  for (const [lugar, { queda, seFue, quien }] of ESCENAS.entries()) {
     const numero = lugar + 1;
     await llegarA(boton(menu, numero));
     if (numero > 1) await boton(menu, numero).click();
@@ -804,6 +844,8 @@ test('los diez beneficios: cada uno abre su oracion y su escena, con lo que dice
     await expect(escena).toHaveAttribute('aria-hidden', 'true');
     for (const texto of queda) await expect(escena.getByText(texto, { exact: false }).first()).toBeVisible();
     for (const texto of seFue) await expect(escena.getByText(texto, { exact: true })).toBeHidden();
+    // Y dice de quien es el celular que queda a la vista: uno solo.
+    await expect(escena.locator('.mv__quien').filter({ visible: true }).locator('.mv__de')).toHaveText([quien]);
     // Cada pieza del ultimo cuadro se ve entera.
     expect(new Set(await pasosALaVista(menu)), TITULOS[lugar]).toEqual(new Set(seFue.length > 0 ? [0, 1] : [1]));
   }
@@ -1523,12 +1565,8 @@ test('los cuatro pasos de "Como empiezas": cada uno abre su oracion y su escena,
       'Con esto se arma su base de conocimiento',
     ],
     ['Tus cuentas', 'WhatsApp de tu negocio', 'Google Calendar', 'Mercado Pago', 'Tu número personal no se toca'],
-    [
-      'Tu WhatsApp personal',
-      'Soy tu asistente virtual de Studio Bella y ya estoy funcionando.',
-      'Hola, ¿tienes lugar el sábado?',
-      'Tu agente ya atiende',
-    ],
+    // El aviso que le llego a ella ya se fue: queda la primera clienta, atendida.
+    ['Hola, ¿tendrá lugar el sábado?', '¿Cuál le queda mejor?', 'Tu agente ya atiende'],
   ];
   expect(ESCENAS).toHaveLength(EMPIEZA.length);
   for (const [lugar, queda] of ESCENAS.entries()) {
@@ -1543,8 +1581,10 @@ test('los cuatro pasos de "Como empiezas": cada uno abre su oracion y su escena,
     await expect(escena).toHaveCount(1);
     await expect(escena).toHaveAttribute('aria-hidden', 'true');
     for (const texto of queda) await expect(escena.getByText(texto, { exact: false }).first()).toBeVisible();
-    // Ninguna de estas escenas se lleva nada: cada pieza se queda hasta el final.
-    expect(new Set(await pasosALaVista(pasos)), EMPIEZA[lugar]?.titulo).toEqual(new Set([1]));
+    // Solo la ultima se lleva algo: el aviso que le llego a la profesional, antes de ensenar a la primera clienta.
+    expect(new Set(await pasosALaVista(pasos)), EMPIEZA[lugar]?.titulo).toEqual(
+      new Set(numero === EMPIEZA.length ? [0, 1] : [1]),
+    );
   }
   // Las cuentas conectadas: tres renglones, cada uno con su palomita verde. El numero exclusivo se dice en la oracion.
   await boton(pasos, 3).click();
@@ -1604,3 +1644,173 @@ for (const [ancho, alto] of TAMANOS) {
     expect(cierre.boton.height).toBeGreaterThanOrEqual(44);
   });
 }
+
+// ---------- La linea de avance que se agarra, y quien ve cada conversacion ----------
+
+test('la linea de avance se agarra: un toque salta, arrastrar recorre el mini video hacia adelante y hacia atras', async ({
+  page,
+}) => {
+  test.slow();
+  const menu = await abrir(page);
+  await llegarA(video(menu));
+  await expect(menu).toHaveAttribute('data-anda', '');
+  const cita = HACE[0];
+  if (!cita) throw new Error('no hay primer beneficio');
+  const linea = video(menu).getByRole('slider');
+  const pausa = video(menu).getByRole('button');
+  await expect(linea).toHaveAccessibleName('Avance del video');
+  await expect(linea).toHaveAttribute('aria-valuemin', '0');
+  await expect(linea).toHaveAttribute('aria-valuemax', String(cita.dura));
+  // Se pausa para medir sin que el reloj se mueva.
+  await pausa.click();
+  await expect(pausa).toHaveAccessibleName('Reproducir');
+  const caja = await linea.boundingBox();
+  if (!caja) throw new Error('la linea de avance no se ve');
+  // Es un renglon alto: se le atina con el dedo.
+  expect(caja.height).toBeGreaterThanOrEqual(24);
+  /** @param {number} parte  de 0 a 1, a lo ancho de la linea */
+  const en = (parte) => /** @type {[number, number]} */ ([caja.x + caja.width * parte, caja.y + caja.height / 2]);
+  /**
+   * Lo que se ve de la escena en un instante: cada paso que ya entro y todavia no se va.
+   * @param {number} segundos
+   */
+  const cuadroEn = (segundos) =>
+    cita.pasos.map((paso) => (paso.en <= segundos && (paso.hasta === undefined || segundos < paso.hasta) ? 1 : 0));
+  const cuadro = async () => (await pasosALaVista(menu)).map((cuanto) => Math.round(cuanto));
+
+  // Un toque a tres cuartos: el mini video salta a ese instante, y sigue en pausa.
+  await page.mouse.click(...en(0.75));
+  await expect.poll(async () => Math.abs((await marcha(menu)).va - 0.75)).toBeLessThan(0.02);
+  expect(await marcha(menu)).toMatchObject({ anda: false, fase: 'sigue' });
+  await expect(linea).toHaveAttribute('aria-valuenow', String(Math.round(cita.dura * 0.75)));
+  await expect(linea).toHaveAttribute('aria-valuetext', `${Math.round(cita.dura * 0.75)} de ${cita.dura} segundos`);
+  // Se ve lo de ese instante y nada mas: lo de antes ya se fue y lo de despues no ha llegado.
+  expect(await cuadro()).toEqual(cuadroEn(cita.dura * 0.75));
+  expect(cuadroEn(cita.dura * 0.75).filter(Boolean).length).toBeGreaterThan(0);
+
+  // Arrastrando hacia atras: vuelve lo del principio, tal como estaba.
+  await page.mouse.move(...en(0.75));
+  await page.mouse.down();
+  await page.mouse.move(...en(0.5), { steps: 4 });
+  await page.mouse.move(...en(0.3), { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(async () => Math.abs((await marcha(menu)).va - 0.3)).toBeLessThan(0.02);
+  expect(await cuadro()).toEqual(cuadroEn(cita.dura * 0.3));
+  expect(await marcha(menu)).toMatchObject({ anda: false, fase: 'sigue' });
+  // Soltado el dedo, pasar el cursor por encima ya no mueve nada.
+  await page.mouse.move(...en(0.9));
+  await page.waitForTimeout(150);
+  expect(Math.abs((await marcha(menu)).va - 0.3)).toBeLessThan(0.02);
+
+  // Con el teclado: las flechas van de segundo en segundo; Inicio y Fin, a las orillas.
+  await linea.focus();
+  const antes = Number(await linea.getAttribute('aria-valuenow'));
+  await page.keyboard.press('ArrowRight');
+  await expect(linea).toHaveAttribute('aria-valuenow', String(antes + 1));
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await expect(linea).toHaveAttribute('aria-valuenow', String(antes - 1));
+  await page.keyboard.press('Home');
+  await expect(linea).toHaveAttribute('aria-valuenow', '0');
+  await expect.poll(async () => (await marcha(menu)).va).toBeLessThan(0.02);
+  // Fin, en pausa, lo deja en su ultimo cuadro sin quitarle la pausa: no termina solo, y todavia no dice el total.
+  await page.keyboard.press('End');
+  await expect.poll(async () => (await marcha(menu)).va).toBeGreaterThan(0.99);
+  expect(await marcha(menu)).toMatchObject({ anda: false, fase: 'sigue' });
+  await expect(pausa).toHaveAccessibleName('Reproducir');
+  await expect(linea).toHaveAttribute('aria-valuenow', String(cita.dura - 1));
+  await expect(linea).toBeFocused();
+  expect(await cuadro()).toEqual(cuadroEn(cita.dura));
+  // Con una tecla que es atajo del navegador la linea no se mueve.
+  await page.keyboard.press('Control+ArrowLeft');
+  expect((await marcha(menu)).va).toBeGreaterThan(0.99);
+  // El clic derecho tampoco la mueve.
+  await page.mouse.click(...en(0.2), { button: 'right' });
+  await page.keyboard.press('Escape');
+  expect((await marcha(menu)).va).toBeGreaterThan(0.99);
+  // Al reproducirlo termina enseguida: el boton ofrece verlo de nuevo y la linea dice el total.
+  await pausa.click();
+  await expect(pausa).toHaveAccessibleName('Ver de nuevo');
+  await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/);
+  await expect(linea).toHaveAttribute('aria-valuenow', String(cita.dura));
+  await expect(linea).toHaveAttribute('aria-valuetext', `${cita.dura} de ${cita.dura} segundos`);
+  // Ya terminado, Fin y la flecha de adelante no lo vuelven a empezar: no hay a donde ir.
+  await linea.focus();
+  await page.keyboard.press('End');
+  await page.keyboard.press('ArrowRight');
+  await expect(pausa).toHaveAccessibleName('Ver de nuevo');
+  await expect(beneficio(menu, 1)).not.toHaveAttribute('data-fase', /.*/);
+  // Y desde el final, regresar la linea lo echa a andar de nuevo, desde donde ella apunto.
+  await page.keyboard.press('ArrowLeft');
+  await expect(beneficio(menu, 1)).toHaveAttribute('data-fase', 'sigue');
+  await expect(linea).toHaveAttribute('aria-valuenow', String(cita.dura - 1));
+  await expect(pausa).toHaveAccessibleName('Pausar');
+  await sinFaltasDeAccesibilidad(page, '#agente');
+});
+
+test('con el dedo: un toque en la linea de avance salta a ese instante', async ({ page, hasTouch }) => {
+  test.skip(!hasTouch, 'solo donde la pantalla se toca');
+  const menu = await abrir(page);
+  await llegarA(video(menu));
+  await expect(menu).toHaveAttribute('data-anda', '');
+  const linea = video(menu).getByRole('slider');
+  const pausa = video(menu).getByRole('button');
+  // La pagina se sigue recorriendo con el dedo aunque empiece sobre la linea: solo de lado es de ella.
+  await expect(linea).toHaveCSS('touch-action', 'pan-y');
+  await pausa.click();
+  await expect(pausa).toHaveAccessibleName('Reproducir');
+  const caja = await linea.boundingBox();
+  if (!caja) throw new Error('la linea de avance no se ve');
+  await page.touchscreen.tap(caja.x + caja.width * 0.5, caja.y + caja.height / 2);
+  await expect.poll(async () => Math.abs((await marcha(menu)).va - 0.5)).toBeLessThan(0.02);
+  // Sigue en pausa, en ese instante.
+  expect(await marcha(menu)).toMatchObject({ anda: false, fase: 'sigue' });
+  await expect(pausa).toHaveAccessibleName('Reproducir');
+});
+
+test('cada conversacion dice quien la ve: oscuro lo de la clienta, y en el azul de la marca lo que le llega a la profesional', async ({
+  page,
+}) => {
+  // Con menos movimiento cada escena es su ultimo cuadro.
+  const menu = await abrir(page, { quieta: true });
+  /** El rotulo que se ve en la escena abierta. */
+  const rotulo = () => video(menu).locator('.mv__quien').filter({ visible: true });
+  await llegarA(video(menu));
+  // La cita completa termina con lo que ve la clienta, y dice en que momento va.
+  await expect(rotulo()).toHaveCount(1);
+  await expect(rotulo().locator('.mv__de')).toHaveText('Lo ve tu clienta');
+  await expect(rotulo().locator('.mv__de')).toHaveCSS('background-color', 'rgb(31, 44, 52)');
+  await expect(rotulo().locator('span')).toHaveText('Después de la cita');
+  // Lo que le llega a la profesional (aqui, sus cambios) va en azul, sin momento que decir.
+  await llegarA(boton(menu, CAMBIOS));
+  await boton(menu, CAMBIOS).click();
+  await expect(rotulo()).toHaveCount(1);
+  await expect(rotulo().locator('.mv__de')).toHaveText('Lo ves tú');
+  await expect(rotulo().locator('.mv__de')).toHaveCSS('background-color', 'rgb(63, 92, 245)');
+  await expect(rotulo().locator('span')).toHaveCount(0);
+  // En salud dice "paciente", y al final de esa escena lo que queda es lo de la profesional: la cita ya pagada.
+  await llegarA(boton(menu, PAGO));
+  await boton(menu, PAGO).click();
+  await expect(rotulo().locator('.mv__de')).toHaveText('Lo ves tú');
+  await expect(video(menu).locator('.mv__quien').locator('.mv__de')).toHaveText(['Lo ve tu paciente', 'Lo ves tú']);
+  // El rotulo va arriba de lo que nombra.
+  const orden = await video(menu).evaluate((pantalla) => {
+    const tope = (/** @type {string} */ que) =>
+      /** @type {Element} */ (
+        [...pantalla.querySelectorAll(que)].findLast((uno) => uno.getBoundingClientRect().height > 0)
+      ).getBoundingClientRect().top;
+    return tope('.mv__quien') < tope('.minicita');
+  });
+  expect(orden).toBe(true);
+  // La nota de voz del agente entra en blanco, sin palomitas de enviado, debajo de la de la clienta.
+  await llegarA(boton(menu, VOZ));
+  await boton(menu, VOZ).click();
+  const notas = video(menu).locator('.wa__m--voz');
+  await expect(notas).toHaveCount(2);
+  await expect(notas.first()).toHaveClass(/wa__m--sale/);
+  await expect(notas.last()).toHaveClass(/wa__m--entra/);
+  await expect(notas.last()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(notas.first().locator('.wa__tics')).toHaveCount(1);
+  await expect(notas.last().locator('.wa__tics')).toHaveCount(0);
+  await sinFaltasDeAccesibilidad(page, '#agente');
+});

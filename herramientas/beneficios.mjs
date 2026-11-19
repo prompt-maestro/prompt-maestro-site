@@ -13,7 +13,7 @@ const ENTRADA = 0.5;
 /** Las piezas que la plantilla (parciales/mini-video.html) sabe dibujar. Cada paso de una escena trae una, y solo una. */
 export const PIEZAS = /** @type {const} */ ([
   'pastilla',
-  'etiqueta',
+  'quien',
   'base',
   'sale',
   'voz',
@@ -26,6 +26,8 @@ export const PIEZAS = /** @type {const} */ ([
   'botones',
   'conecta',
 ]);
+/** De quien es el celular que ensena una escena: el de la clienta (o paciente) o el de la profesional. */
+export const QUIENES = /** @type {const} */ (['clienta', 'tu']);
 /** Como se llama un capitulo por dentro: con su clave se arman los id de la pagina. */
 const CLAVE = /^[a-z]+$/;
 
@@ -77,6 +79,17 @@ function problemasDeVideos(videos, capitulo) {
         (typeof cambia !== 'number' || cambia < en + ENTRADA || cambia + 2 * ENTRADA > dura)
       ) {
         falla(`la agenda de ${cual} debe cambiar despues de entrar y antes de que el video termine`);
+      }
+      // Quien ve lo que sigue: la clienta (o paciente) o la profesional, dicho con sus palabras.
+      const quien = /** @type {{ de?: unknown, texto?: unknown, momento?: unknown } | undefined} */ (resto.quien);
+      if (
+        'quien' in resto &&
+        (!QUIENES.some((uno) => uno === quien?.de) ||
+          typeof quien?.texto !== 'string' ||
+          !quien.texto.trim() ||
+          (quien.momento !== undefined && (typeof quien.momento !== 'string' || !quien.momento.trim())))
+      ) {
+        falla(`el rotulo de ${cual} debe decir de quien es (${QUIENES.join(' o ')}) y traer su texto`);
       }
       // Los botones de respuesta: por lo menos uno, cada uno con su texto.
       const botones = resto.botones;

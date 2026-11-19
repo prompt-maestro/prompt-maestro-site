@@ -2,7 +2,7 @@
   "charla": "10:12 am",
   "pregunta": "Hola, ¿cuánto cuesta la limpieza dental?",
   "saludo": [
-    "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. Con gusto te ayudo. La limpieza dental cuesta {precio} y la cita dura unos 45 minutos. Si quieres, te busco un horario."
+    "¡Hola! Soy {asistente}, la asistente virtual de {negocio}. Con gusto le ayudo. La limpieza dental cuesta {precio} y la cita dura unos 45 minutos. Si gusta, le busco un horario."
   ],
   "pideDia": "Sí, ¿tienes lugar el miércoles?",
   "dia": "miércoles",
@@ -10,5 +10,5 @@
   "horas": ["9:00 am", "11:30 am", "4:00 pm", "6:00 pm"],
   "horaSugerida": "4:00 pm",
   "eligeHora": "{ALaHora}, por favor.",
-  "apartado": "Listo, te aparté el lugar para el {dia} {aLaHora}. Para confirmar tu cita se paga el anticipo de {anticipo} con este link. Te guardo el lugar unos minutos y, en cuanto pagues, te confirmo por aquí mismo."
+  "apartado": "Listo, le aparté el lugar para el {dia} {aLaHora}. Para confirmar su cita se paga el anticipo de {anticipo} con este link. Le guardo el lugar unos minutos y, en cuanto pague, le confirmo por aquí mismo."
 }

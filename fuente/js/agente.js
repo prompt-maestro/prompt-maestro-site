@@ -15,7 +15,7 @@
  * @property {number} vuelta  las veces que ha empezado un mini video: cuando cambia, la vista lo arranca desde cero
  */
 /**
- * @typedef {{ tipo: 'elige', cual: number } | { tipo: 'boton' } | { tipo: 'termina' }
+ * @typedef {{ tipo: 'elige', cual: number } | { tipo: 'boton' } | { tipo: 'termina' } | { tipo: 'busca' }
  *   | { tipo: 'vista', aLaVista: boolean } | { tipo: 'quieto', quieto: boolean }} Evento
  */
 /** @typedef {'pausar' | 'reproducir' | 'verDeNuevo'} Boton */
@@ -63,6 +63,11 @@ export function avanzar(estado, evento, cuantos = Number.POSITIVE_INFINITY) {
       // El primero corre solo, una vez, cuando la seccion llega a la vista.
       return evento.aLaVista && estado.fase === 'espera' ? empezar(visto) : visto;
     }
+    case 'busca':
+      // La visitante movio la linea de avance. Si el mini video ya corre (o esta en pausa) sigue como estaba y solo
+      // cambia de instante; si esperaba o ya habia terminado, empieza, y la vista lo lleva a donde ella apunto.
+      if (estado.quieto) return estado;
+      return estado.fase === 'sigue' ? estado : empezar(estado);
     case 'quieto':
       if (evento.quieto === estado.quieto) return estado;
       return evento.quieto ? { ...estado, quieto: true, fase: 'fin', pausado: false } : { ...estado, quieto: false };
@@ -88,6 +93,69 @@ export function anda(estado) {
 export function botonDe(estado) {
   if (estado.fase === 'fin') return 'verDeNuevo';
   return estado.pausado ? 'reproducir' : 'pausar';
+}
+
+/**
+ * El instante del mini video, en segundos, al que lleva una tecla desde su linea de avance: las flechas adelantan o
+ * regresan un segundo, Inicio y Fin van a las orillas. Con cualquier otra tecla no hay a donde ir: null.
+ * @param {string} tecla  la tecla, como la nombra el navegador ("ArrowRight", "Home"...)
+ * @param {number} va  por donde va el mini video, en segundos
+ * @param {number} dura  lo que dura, en segundos
+ * @returns {number | null}
+ */
+export function instanteCon(tecla, va, dura) {
+  switch (tecla) {
+    case 'ArrowRight':
+    case 'ArrowUp':
+      return Math.min(dura, va + 1);
+    case 'ArrowLeft':
+    case 'ArrowDown':
+      return Math.max(0, va - 1);
+    case 'Home':
+      return 0;
+    case 'End':
+      return dura;
+    default:
+      return null;
+  }
+}
+
+/** En pausa la linea de avance no llega hasta el final: se queda este instante antes, en segundos. */
+const ORILLA = 0.05;
+/** Lo que un dedo se mueve de lado, en puntos, para que se entienda que arrastra la linea de avance. */
+const ARRASTRE = 8;
+
+/**
+ * El instante al que de veras se lleva el mini video: dentro de lo que dura, y en pausa nunca hasta el final (al
+ * llegar terminaria solo, y al regresar la linea ya no estaria en pausa).
+ * @param {number} segundos  a donde apunto la visitante
+ * @param {number} dura  lo que dura, en segundos
+ * @param {boolean} pausado
+ * @returns {number}
+ */
+export function instanteEn(segundos, dura, pausado) {
+  return Math.min(Math.max(segundos, 0), pausado ? dura - ORILLA : dura);
+}
+
+/**
+ * El segundo que dice la linea de avance a quien no la ve. El total solo lo dice cuando el mini video ya termino.
+ * @param {number} segundos  por donde va
+ * @param {number} dura  lo que dura, en segundos
+ * @param {boolean} termino
+ * @returns {number}
+ */
+export function segundoDicho(segundos, dura, termino) {
+  return termino ? dura : Math.min(Math.round(segundos), dura - 1);
+}
+
+/**
+ * El dedo que toco la linea de avance ya la arrastra? Mientras no, puede ser que solo vaya a recorrer la pagina.
+ * @param {number} desde  donde toco, a lo ancho
+ * @param {number} hasta  donde va
+ * @returns {boolean}
+ */
+export function yaArrastra(desde, hasta) {
+  return Math.abs(hasta - desde) >= ARRASTRE;
 }
 
 /**

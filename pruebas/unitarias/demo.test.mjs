@@ -171,7 +171,7 @@ test('cada momento dice su letrero; el tercero cambia cuando el pago se aprueba,
     ...new Set(historiaDe(unas, asistio).map((toma) => `${toma.cuadro.momento}: ${toma.cuadro.letrero}`)),
   ];
   const hastaLaAsistencia = [
-    '1: Escucha la nota de voz y contesta por escrito.',
+    '1: Escucha la nota de voz y le contesta.',
     '2: Solo los horarios libres de tu Google Calendar.',
     '3: Lugar apartado unos minutos, mientras paga.',
     '3: $150 de anticipo, directo en tu Mercado Pago.',
@@ -317,7 +317,8 @@ test('el link de pago va dentro del mensaje de apartado, y el recordatorio de un
   const tomas = historiaDe(unas);
   const conLiga = tomas.filter((toma) => toma.liga);
   assert.equal(conLiga.length, 1);
-  assert.match(conLiga[0]?.texto ?? '', /^¡Listo! Te aparté el lugar para el jueves a las 5:00 pm\./);
+  // El agente le habla de usted a la clienta (lo decidio el dueno el 19-nov-2026).
+  assert.match(conLiga[0]?.texto ?? '', /^¡Listo! Le aparté el lugar para el jueves a las 5:00 pm\./);
   assert.equal(conLiga[0]?.cuadro.paso, 'apartado');
   assert.deepEqual(conLiga[0]?.liga, {
     titulo: 'Anticipo Gelish semipermanente',
@@ -327,8 +328,8 @@ test('el link de pago va dentro del mensaje de apartado, y el recordatorio de un
   const conBoton = tomas.filter((toma) => toma.boton);
   assert.equal(conBoton.length, 1);
   assert.equal(conBoton[0]?.boton, 'Cambiar cita');
-  assert.match(conBoton[0]?.texto ?? '', /^¡Hola Ana! Te recordamos tu cita de Gelish semipermanente mañana jueves/);
-  assert.match(conBoton[0]?.texto ?? '', /toca el botón de abajo y te ayudamos\.$/);
+  assert.match(conBoton[0]?.texto ?? '', /^¡Hola, Ana! Le recordamos su cita de Gelish semipermanente mañana jueves/);
+  assert.match(conBoton[0]?.texto ?? '', /toque el botón de abajo y con gusto le ayudamos\.$/);
 });
 
 test('el pago aprobado es una hoja con el monto, que se queda unos dos segundos', () => {
@@ -530,7 +531,7 @@ test('de parada en parada: cada una pinta de un jalon hasta que cambia el letrer
     assert.notEqual(tomas[estado.van]?.cuadro.letrero, cuadro.letrero);
   }
   assert.deepEqual(paradas, [
-    'precio: Escucha la nota de voz y contesta por escrito.',
+    'precio: Escucha la nota de voz y le contesta.',
     'horarios: Solo los horarios libres de tu Google Calendar.',
     'apartado: Lugar apartado unos minutos, mientras paga.',
     'pagado: $150 de anticipo, directo en tu Mercado Pago.',
@@ -594,7 +595,7 @@ test('el reposo ensena el celular de quien pide la cita, el letrero del primer m
       { momento: 0, paso: 'reposo', telefono: 'cliente', turno: 'cita' },
     );
     assert.equal(reposo.rotulo, '01 · Contesta');
-    assert.equal(reposo.letrero, 'Escucha la nota de voz y contesta por escrito.');
+    assert.equal(reposo.letrero, 'Escucha la nota de voz y le contesta.');
     assert.equal(reposo.cita.estado, 'libre');
     assert.equal(reposo.cita.titulo, `${ejemplo.guion.horaSugerida} · Libre`);
     assert.equal(reposo.pago.llego, false);
@@ -770,7 +771,9 @@ for (const ejemplo of ejemplos) {
     assert.match(dicho, /asistente virtual/);
     assert.ok(dicho.includes(giro.asistente));
     assert.ok(dicho.includes(`cuesta ${pesos(giro.precio)}`), 'da el precio real');
-    assert.match(dicho, /te busco un horario/, 'invita a agendar');
+    assert.match(dicho, /le busco un horario/, 'invita a agendar');
+    // De usted, sin un solo tuteo.
+    assert.doesNotMatch(dicho, /\b(te|ti|tu|tus|quieres|deseas|animas)\b/i);
     const voz = tomaQue(delPrimerMomento, (toma) => toma.tipo === 'voz');
     assert.match(voz.texto, /¿cuánto cuesta/, 'la pregunta inicial es de precio');
     assert.equal(voz.lector, `Nota de voz de ${giro.cliente}: «${guion.pregunta}»`);
@@ -782,7 +785,8 @@ for (const ejemplo of ejemplos) {
     for (const hora of guion.horas) assert.match(hora, /^([1-9]|1[0-2]):[0-5]\d (am|pm)$/);
     assert.ok(guion.horas.includes(guion.horaSugerida));
     const oferta = tomaQue(tomas, (toma) => toma.tipo === 'entra' && toma.cuadro.paso === 'horarios');
-    assert.match(oferta.texto, new RegExp(`^Te puedo ofrecer el ${guion.dia} a las? `));
+    assert.match(oferta.texto, new RegExp(`^Le puedo ofrecer el ${guion.dia} a las? `));
+    assert.match(oferta.texto, /¿Cuál le acomoda\?$/);
     for (const hora of guion.horas) assert.ok(oferta.texto.includes(hora), hora);
     const pide = tomas.filter((toma) => toma.tipo === 'sale').map((toma) => toma.texto);
     assert.ok(pide[0]?.includes(guion.dia), 'pregunta por el dia que se ofrece');
@@ -817,7 +821,8 @@ for (const ejemplo of ejemplos) {
     assert.match(pagado[0]?.cuadro.letrero ?? '', /^\$\d+ de anticipo, directo en tu Mercado Pago\.$/);
     assert.equal(pagado[0]?.cuadro.pago.titulo, `Recibiste ${pesos(giro.anticipo)}`);
     const confirmacion = pagado.at(-1);
-    assert.match(confirmacion?.texto ?? '', /Recibimos tu anticipo de \$\d+ y tu cita de .+ quedó confirmada/);
+    assert.match(confirmacion?.texto ?? '', /Recibimos su anticipo de \$\d+ y su cita de .+ quedó confirmada/);
+    assert.doesNotMatch(confirmacion?.texto ?? '', /\b(te|tu|tus|necesitas|escríbenos)\b/i);
     assert.ok(confirmacion?.texto.includes(giro.direccion));
     assert.deepEqual(confirmacion?.cuadro.cita, {
       estado: 'garantizada',

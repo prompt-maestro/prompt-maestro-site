@@ -187,7 +187,7 @@
       <div class="capitulos" data-capitulos data-rotulo="{{agentes.rotulos.capitulos}}">
 {{#cada agentes.capitulos}}        <span class="capitulo" data-capitulo-boton="{{clave}}"{{#si @primero}} data-activo{{/si}}>{{nombre}}{{#si cuenta}} <small>{{cuenta}}</small>{{/si}}</span>
 {{/cada}}      </div>
-{{#cada agentes.capitulos}}      <div class="agentes__duo" id="capitulo-{{clave}}" data-agente data-capitulo="{{clave}}"{{#no @primero}} data-guardado{{/no}}{{#si numerado}} data-numerado{{/si}} data-pausar="{{agentes.rotulos.pausar}}" data-reproducir="{{agentes.rotulos.reproducir}}" data-ver-de-nuevo="{{agentes.rotulos.verDeNuevo}}">
+{{#cada agentes.capitulos}}      <div class="agentes__duo" id="capitulo-{{clave}}" data-agente data-capitulo="{{clave}}"{{#no @primero}} data-guardado{{/no}}{{#si numerado}} data-numerado{{/si}} data-pausar="{{agentes.rotulos.pausar}}" data-reproducir="{{agentes.rotulos.reproducir}}" data-ver-de-nuevo="{{agentes.rotulos.verDeNuevo}}" data-va-en="{{agentes.rotulos.vaEn}}">
         <h3 class="agentes__capitulo">{{nombre}}</h3>
         <ol class="beneficios" role="list">
 {{#cada videos}}          <li class="beneficio" data-beneficio{{#si @primero}} data-abierto data-fase="espera"{{/si}}>
@@ -200,7 +200,7 @@
 {{#si sigue}}        <p class="agentes__sigue"><span class="agentes__ir" data-capitulo-sigue>{{sigue}}<svg aria-hidden="true" focusable="false"><use href="#i-flecha"/></svg></span></p>
 {{/si}}{{#si arranca}}        <p class="agentes__arranca"><a class="boton boton--luz" href="{{sitio.alta}}" data-lugar="agente">{{secciones.cierre.accion}}</a> <span>{{arranca}}</span></p>
 {{/si}}      </div>
-{{/cada}}      <template data-mv-barra><div class="mv__barra"><button class="mv__pausa" type="button" data-mv-pausa data-estado="pausar" aria-label="{{agentes.rotulos.pausar}}"><svg class="mv__icono" data-de="pausar" aria-hidden="true" focusable="false"><use href="#i-pausa"/></svg><svg class="mv__icono" data-de="reproducir" aria-hidden="true" focusable="false"><use href="#i-reproducir"/></svg><svg class="mv__icono" data-de="verDeNuevo" aria-hidden="true" focusable="false"><use href="#i-repite"/></svg></button><span class="mv__linea" aria-hidden="true"><i class="mv__avance" data-mv-avance></i></span><span class="mv__dura" aria-hidden="true" data-mv-dura></span></div></template>
+{{/cada}}      <template data-mv-barra><div class="mv__barra"><button class="mv__pausa" type="button" data-mv-pausa data-estado="pausar" aria-label="{{agentes.rotulos.pausar}}"><svg class="mv__icono" data-de="pausar" aria-hidden="true" focusable="false"><use href="#i-pausa"/></svg><svg class="mv__icono" data-de="reproducir" aria-hidden="true" focusable="false"><use href="#i-reproducir"/></svg><svg class="mv__icono" data-de="verDeNuevo" aria-hidden="true" focusable="false"><use href="#i-repite"/></svg></button><span class="mv__linea" data-mv-linea role="slider" tabindex="0" aria-label="{{agentes.rotulos.avance}}" aria-valuemin="0" aria-valuenow="0"><i class="mv__avance" data-mv-avance></i><i class="mv__perilla"></i></span><span class="mv__dura" aria-hidden="true" data-mv-dura></span></div></template>
     </div>
     <div class="agentes__confianza">
       <h3 class="agentes__subtitulo agentes__subtitulo--grande">{{secciones.confianza.titulo}} <em>{{secciones.confianza.tituloFuerte}}</em></h3>

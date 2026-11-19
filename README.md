@@ -149,10 +149,16 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   asistentes con IA) y, en medio, un antes y un después (`secciones.enUnaFrase.lados`).
 - «Tu agente» reúne lo que antes eran dos secciones («Cómo funciona» y «Tu agente»; el dueño pidió fusionarlas el
   19-nov-2026). Son dos capítulos con el mismo menú (`fuente/datos/agentes.json`, `capitulos`): «Lo que hace», con
-  sus beneficios (hoy, diez; el primero cuenta una cita de principio a fin), y «Cómo empiezas», con los pasos para
+  sus beneficios (hoy, nueve; el primero cuenta una cita de principio a fin), y «Cómo empiezas», con los pasos para
   contratarlo (hoy, cuatro, numerados: `numerado`) y el botón de empezar. Un selector de dos posiciones enseña un
-  capítulo y guarda el otro (son pestañas de verdad: flechas, Inicio y Fin). El enlace «Cómo funciona» de la barra
-  lleva aquí. La sección no habla de exámenes: lo pidió el dueño.
+  capítulo y guarda el otro (son pestañas de verdad: flechas de lado, Inicio y Fin). El enlace «Cómo funciona» de la
+  barra lleva aquí. Decisiones del dueño (19-nov-2026) que cuidan las pruebas: la sección no habla de exámenes; el
+  agente saluda y le habla de usted a la clienta en todos los ejemplos (también en la demostración); no se promete
+  «menos de un minuto» (a veces espera a que ella termine de escribir); y una nota de voz se contesta con otra.
+- Cada escena de chat dice de quién es el celular que se ve, con la pieza `quien` (`de`: `clienta` o `tu`, su `texto`
+  y, en la cita completa, el `momento`): oscuro lo que ve la clienta o paciente, en el azul de la marca lo que le
+  llega a la profesional. Lo de una y lo de otra nunca salen en el mismo cuadro: lo anterior se va (`hasta`) antes
+  de que llegue el rótulo siguiente.
 - Cada renglón del menú abre su mini video: una escena de unos segundos hecha con las piezas del WhatsApp de día, no
   un archivo de video. En celular el menú es un acordeón; desde 900 de ancho el título, el selector y el menú van a
   la izquierda y un solo escenario a la derecha, que sube junto al título y se queda pegado bajo la barra mientras
@@ -166,7 +172,9 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   los estilos (`fuente/estilos/agentes.css`: lo que ahí está escrito es el último cuadro, y las animaciones llevan el
   retraso de los datos). `fuente/js/agente.js` decide sin tocar la pantalla cuál está abierto y si corre (se prueba
   sin navegador) y `fuente/js/agente-vista.js` abre, cierra, pausa y repite: el primero corre solo una vez al llegar
-  a la vista, solo corre uno y solo mientras se ve (el del capítulo guardado espera). La escena del renglón que llega
+  a la vista, solo corre uno y solo mientras se ve (el del capítulo guardado espera). La línea de avance se agarra
+  (un toque salta, arrastrar recorre y las flechas van de segundo en segundo): como todas las piezas de una escena
+  corren con el mismo reloj, adelantar o regresar es mover ese reloj. La escena del renglón que llega
   abierto en cada capítulo viene en la página; las demás viajan guardadas en un `<template>` y se sacan al abrirlas:
   así la página no carga con lo que nadie ha visto. La página llega con el menú ya armado; sin JavaScript, si su
   pieza no arranca o al imprimir se leen los dos capítulos como lista, cada uno con su nombre, y con movimiento

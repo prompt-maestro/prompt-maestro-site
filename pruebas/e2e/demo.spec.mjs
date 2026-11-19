@@ -38,7 +38,7 @@ const ESPERA_PARA_EMPEZAR = 1000;
 
 /** Las nueve paradas de la historia con menos movimiento: el paso y lo que dice el letrero en cada una. */
 const PARADAS = /** @type {const} */ ([
-  ['precio', '01 · Contesta', 'Escucha la nota de voz y contesta por escrito.'],
+  ['precio', '01 · Contesta', 'Escucha la nota de voz y le contesta.'],
   ['horarios', '02 · Ofrece horarios', 'Solo los horarios libres de tu Google Calendar.'],
   ['apartado', '03 · Cobra el anticipo', 'Lugar apartado unos minutos, mientras paga.'],
   ['pagado', '03 · Cobra el anticipo', '$150 de anticipo, directo en tu Mercado Pago.'],
@@ -195,7 +195,7 @@ test('en reposo: el celular del negocio en linea, el letrero del primer momento 
   await expect(demo.locator('[data-demo-reloj]')).toHaveText('10:12');
   await expect(demo.locator('[data-demo-borrador]')).toHaveText('Mensaje');
   await expect(chatDe(demo).locator('> *')).toHaveCount(0);
-  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y contesta por escrito.');
+  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y le contesta.');
   await rayitasVan(demo, 'ffffff');
   await expect(demo.getByRole('group', { name: 'Momentos de la cita' }).getByRole('button')).toHaveCount(6);
   await expect(page.locator('.llega__rotulo')).toHaveText('Mientras tanto, a ti te llega');
@@ -270,7 +270,7 @@ test('no arranca hasta estar a la vista; ya a la vista espera cerca de un segund
   await page.clock.runFor(hastaLaToma(4) - hastaLaToma(3));
   await expect(demo.locator('[data-demo-detalle]')).toHaveText('en línea');
   await expect(chatDe(demo).locator('.wa__m--entra')).toHaveText(
-    /^Marifer: ¡Hola! Soy Marifer, la asistente virtual de Studio Bella\. El gelish semipermanente cuesta \$350/,
+    /^Marifer: ¡Hola! Soy Marifer, la asistente virtual de Studio Bella\. Con mucho gusto\. El gelish semipermanente cuesta \$350/,
   );
   await expect(chatDe(demo)).not.toContainText('PERSONA');
   expect(fallas).toEqual([]);
@@ -353,7 +353,7 @@ test('al cobrar se ve, en este orden: el link, el pago aprobado, el dinero, la c
   // Apartada no es confirmada: el lugar se guarda mientras paga.
   await hastaQueAparece(page, chatDe(demo).locator('.wa__liga'));
   const apartado = chatDe(demo).locator('.wa__m--entra').last();
-  await expect(apartado).toContainText('¡Listo! Te aparté el lugar para el jueves a las 5:00 pm.');
+  await expect(apartado).toContainText('¡Listo! Le aparté el lugar para el jueves a las 5:00 pm.');
   await expect(apartado.locator('.wa__liga')).toHaveText(
     /Anticipo Gelish semipermanente\s*\$150\s*mercadopago\.com\.mx/,
   );
@@ -388,7 +388,7 @@ test('al cobrar se ve, en este orden: el link, el pago aprobado, el dinero, la c
   await expect(demo.getByRole('img', { name: 'Garantizada: anticipo pagado' })).toBeVisible();
   await hastaQueAparece(page, chatDe(demo).getByText('quedó confirmada'));
   await expect(chatDe(demo).locator('.wa__m--entra').last()).toContainText(
-    '¡Listo, Ana! Recibimos tu anticipo de $150 y tu cita de Gelish semipermanente quedó confirmada para el jueves a las 5:00 pm.',
+    '¡Listo, Ana! Recibimos su anticipo de $150 y su cita de Gelish semipermanente quedó confirmada para el jueves a las 5:00 pm.',
   );
   await expect(demo).toHaveAttribute('data-orden', 'link aprobado dinero cita sello confirmacion');
 });
@@ -409,7 +409,7 @@ test('la pausa detiene la historia donde va, y continuar la sigue desde ahi', as
   await page.clock.runFor(60_000);
   await expect(demo).toHaveAttribute('data-paso', 'precio');
   await expect(chatDe(demo).locator('> *')).toHaveCount(antes);
-  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y contesta por escrito.');
+  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y le contesta.');
   // Al continuar sigue donde iba: lo que faltaba del primer momento, y despues el segundo.
   await pausa.click();
   await expect(pausa).toHaveAccessibleName('Pausar');
@@ -475,7 +475,7 @@ test('una rayita brinca al principio de su momento, con lo anterior ya escrito, 
   await expect(chat.locator('.wa__m--voz')).toHaveCount(1);
   await expect(chat.locator('.wa__m')).toHaveCount(6);
   await expect(chat).toContainText(
-    'Te puedo ofrecer el jueves a las 10:00 am, 12:30 pm, 4:00 pm o 5:00 pm. ¿Cuál te acomoda?',
+    'Le puedo ofrecer el jueves a las 10:00 am, 12:30 pm, 4:00 pm o 5:00 pm. ¿Cuál le acomoda?',
   );
   await expect(chat).toContainText('Ana: A las 5:00 pm, por favor.');
   await expect(chat.locator('.wa__liga')).toHaveCount(1);
@@ -518,13 +518,13 @@ test('los recordatorios salen solos, cada uno a su hora, y el de un dia antes tr
     .then((todos) => todos.slice(-2));
   if (!diaAntes || !horaAntes) throw new Error('faltan los recordatorios');
   await expect(diaAntes).toContainText(
-    '¡Hola Ana! Te recordamos tu cita de Gelish semipermanente mañana jueves a las 5:00 pm. Te esperamos en Av. del Esmalte 234, colonia Bella Vista. Si necesitas mover tu cita, toca el botón de abajo y te ayudamos.',
+    '¡Hola, Ana! Le recordamos su cita de Gelish semipermanente mañana jueves a las 5:00 pm. Le esperamos en Av. del Esmalte 234, colonia Bella Vista. Si necesita mover su cita, toque el botón de abajo y con gusto le ayudamos.',
   );
   await expect(diaAntes.locator('.wa__hora')).toHaveText('5:00 p. m.');
   await expect(diaAntes.locator('.wa__boton')).toHaveText('Cambiar cita');
   // Ese boton es una muestra: en la conversacion no hay nada que tocar.
   await expect(chat.getByRole('button')).toHaveCount(0);
-  await expect(horaAntes).toContainText('Ya casi es tu cita de Gelish semipermanente, hoy a las 5:00 pm.');
+  await expect(horaAntes).toContainText('Ya casi es su cita de Gelish semipermanente, hoy a las 5:00 pm.');
   await expect(horaAntes.locator('.wa__hora')).toHaveText('4:00 p. m.');
   // La barra del celular ensena la hora del ultimo mensaje.
   await expect(demo.locator('[data-demo-reloj]')).toHaveText('4:00');
@@ -694,7 +694,7 @@ test('Ver otra vez vuelve a contar la historia desde el principio, limpia', asyn
   await expect(tarjeta(demo, 'cita')).toHaveAttribute('data-turno', '');
   await expect(tarjeta(demo, 'asistencia')).toHaveAttribute('data-estado', 'espera');
   await rayitasVan(demo, 'ffffff');
-  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y contesta por escrito.');
+  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y le contesta.');
   await expect(botonDePausa(demo)).toHaveAccessibleName('Pausar');
   // Y vuelve a correr sola.
   await hastaElPaso(page, demo, 'precio');
@@ -815,10 +815,10 @@ test('la historia de Dentista llega al pago de $200 y a su pregunta de asistenci
   await expect(chat).toContainText('Sofi: ¡Hola! Soy Sofi, la asistente virtual de Dental Sonría.');
   await expect(chat).toContainText('La limpieza dental cuesta $650');
   await expect(chat).toContainText(
-    'Te puedo ofrecer el miércoles a las 9:00 am, 11:30 am, 4:00 pm o 6:00 pm. ¿Cuál te acomoda?',
+    'Le puedo ofrecer el miércoles a las 9:00 am, 11:30 am, 4:00 pm o 6:00 pm. ¿Cuál le acomoda?',
   );
   await expect(chat).toContainText('Carla: A las 4:00 pm, por favor.');
-  await expect(chat).toContainText('te aparté el lugar para el miércoles a las 4:00 pm');
+  await expect(chat).toContainText('le aparté el lugar para el miércoles a las 4:00 pm');
   await expect(chat.locator('.wa__liga')).toHaveText(/Anticipo Limpieza dental\s*\$200\s*mercadopago\.com\.mx/);
   await expect(chat).not.toContainText(/PERSONA|prefieres hablar/);
   await avanzarParadas(demo, 1);
@@ -829,14 +829,14 @@ test('la historia de Dentista llega al pago de $200 y a su pregunta de asistenci
   await expect(tarjeta(demo, 'pago')).toHaveText(/Recibiste \$200\s*Anticipo de Carla · Limpieza/);
   await avanzarParadas(demo, 1);
   await expect(chat).toContainText(
-    '¡Listo, Carla! Recibimos tu anticipo de $200 y tu cita de Limpieza dental quedó confirmada para el miércoles a las 4:00 pm. Te esperamos en Av. de la Sonrisa 100, colonia Providencia.',
+    '¡Listo, Carla! Recibimos su anticipo de $200 y su cita de Limpieza dental quedó confirmada para el miércoles a las 4:00 pm. Le esperamos en Av. de la Sonrisa 100, colonia Providencia.',
   );
   await expect(tarjeta(demo, 'cita').locator('[data-demo-cita-titulo]')).toHaveText('4:00 pm · Carla');
   await expect(tarjeta(demo, 'cita').locator('[data-demo-cita-detalle]')).toHaveText('Limpieza dental');
   await expect(tarjeta(demo, 'cita').locator('.sello')).toBeVisible();
   await avanzarParadas(demo, 1);
   await expect(chat).toContainText(
-    '¡Hola Carla! Te recordamos tu cita de Limpieza dental mañana miércoles a las 4:00 pm.',
+    '¡Hola, Carla! Le recordamos su cita de Limpieza dental mañana miércoles a las 4:00 pm.',
   );
   await expect(chat.locator('.wa__m--entra .wa__hora').last()).toHaveText('3:00 p. m.');
   await avanzarParadas(demo, 1);
@@ -1323,7 +1323,7 @@ test.describe('sin JavaScript', () => {
     await expect(escrita).toContainText('Marifer: ¡Hola! Soy Marifer, la asistente virtual de Studio Bella');
     await expect(escrita).toContainText('Ana: A las 5:00 pm, por favor.');
     await expect(escrita).toContainText('Pago aprobado');
-    await expect(escrita).toContainText('Recibimos tu anticipo de $150');
+    await expect(escrita).toContainText('Recibimos su anticipo de $150');
     await expect(escrita).toContainText('Ahora eres tú. Al terminar la cita, tu agente te escribe.');
     await expect(escrita).toContainText('Marifer, a Bella: ¡Hola! ¿Asistió Ana a su cita');
     await expect(escrita).toContainText('Bella: Sí');

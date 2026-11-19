@@ -15,7 +15,11 @@ import {
   cuantoBajar,
   cuantoRecorrer,
   estadoInicial,
+  instanteCon,
+  instanteEn,
   reloj,
+  segundoDicho,
+  yaArrastra,
 } from '../../fuente/js/agente.js';
 import { armarSitio } from '../../herramientas/armado.mjs';
 import { DURA, PIEZAS, problemasDeBeneficios } from '../../herramientas/beneficios.mjs';
@@ -49,33 +53,44 @@ const CUANTOS = hace.length;
  */
 const lugarDe = (titulo) => hace.findIndex((beneficio) => beneficio.titulo === titulo);
 
-/** Los diez beneficios, en su orden, con las palabras que aprobo el dueno. */
+/** Los nueve beneficios, en su orden, con las palabras que aprobo el dueno (19-nov-2026). */
 const APROBADOS = [
   [
-    'Una cita, de principio a fin',
+    'Gestiona tus citas de principio a fin',
     'Desde el primer «hola» hasta el seguimiento después de la cita: contesta, cobra el anticipo, verifica el pago, agenda y recuerda. Tú solo le confirmas si llegó, con un toque.',
   ],
   [
-    'Hecho solo para tu negocio',
+    'Hecho a la medida de tu negocio',
     'Trabaja con su propia base de conocimiento: tus servicios, tus precios, tus horarios y tus políticas. Por eso es un agente dedicado a ti, distinto al de cualquier otro profesional.',
   ],
-  ['Contesta en menos de un minuto', 'Precios, horarios y dudas, a cualquier hora y con el tono de tu negocio.'],
   [
-    'Maneja tu agenda solo',
+    'Contesta a cualquier hora',
+    'Precios, horarios y dudas, con el tono de tu negocio. Si le escriben en varios mensajes, espera a que terminen y contesta todo junto.',
+  ],
+  [
+    'Maneja tu agenda por ti',
     'Ofrece solo los horarios libres de tu Google Calendar, agenda la cita y manda los recordatorios.',
   ],
   [
     'Asegura el pago antes de agendar',
     'La cita entra a tu calendario con el anticipo ya pagado, directo en tu Mercado Pago.',
   ],
-  ['Entiende notas de voz', 'Si tu clienta manda un audio, lo escucha y le contesta por escrito.'],
   [
-    'Lee la foto de referencia',
+    'Entiende notas de voz y contesta con voz',
+    'Si tu clienta manda una nota de voz, la escucha y le contesta con otra nota de voz. El enlace de pago y lo que hay que copiar, siempre por escrito.',
+  ],
+  [
+    'Ve las imágenes de referencia que le mandan',
     'En uñas, revisa el diseño que quiere tu clienta. Si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.',
   ],
-  ['Habla de tú o de usted', 'Si tu clienta escribe de usted, le contesta de usted. Con el tono de tu negocio.'],
-  ['Te pasa los recados', 'Cuando alguien necesita hablar contigo, toma el recado y te avisa a tu WhatsApp personal.'],
-  ['Le pides cambios por WhatsApp', 'Un precio o un horario: se lo escribes a tu agente y nada se aplica sin tu sí.'],
+  [
+    'Solo te contacta cuando se requiere tu intervención',
+    'Lo de todos los días lo resuelve tu agente. Cuando algo necesita tu decisión, toma el recado y te avisa a tu WhatsApp personal.',
+  ],
+  [
+    'Cambias tus precios y horarios con un mensaje',
+    '¿Subió un precio o cambió tu horario? Se lo escribes a tu agente por WhatsApp y lo actualiza. Nada se aplica sin tu sí.',
+  ],
 ];
 
 /** Los cuatro pasos para contratarlo, en su orden, con las palabras que aprobo el dueno. */
@@ -125,7 +140,9 @@ function dichos(beneficio) {
   const juntar = (/** @type {unknown} */ valor) => {
     if (typeof valor === 'string') textos.push(valor);
     else if (Array.isArray(valor)) valor.forEach(juntar);
-    else if (valor && typeof valor === 'object') Object.values(valor).forEach(juntar);
+    else if (valor && typeof valor === 'object') {
+      for (const [clave, dentro] of Object.entries(valor)) if (clave !== 'de') juntar(dentro);
+    }
   };
   for (const { en: _en, hasta: _hasta, ...pieza } of beneficio.pasos) juntar(pieza);
   return textos;
@@ -266,6 +283,83 @@ test('avanzar no cambia el estado que recibe', () => {
   assert.deepEqual(estado, copia);
 });
 
+test('mover la linea de avance: si el mini video corre o esta en pausa sigue como estaba; si no, empieza', () => {
+  /** @type {Evento} */
+  const BUSCA = { tipo: 'busca' };
+  // Corriendo: no cambia nada del estado (la vista solo le mueve el reloj), y es el mismo objeto.
+  const corriendo = tras(estadoInicial(), LLEGA);
+  assert.equal(corriendo.fase, 'sigue');
+  assert.equal(tras(corriendo, BUSCA), corriendo);
+  // En pausa: se queda en pausa, en el instante al que ella lo llevo.
+  const enPausa = tras(corriendo, BOTON);
+  assert.equal(enPausa.pausado, true);
+  assert.equal(tras(enPausa, BUSCA), enPausa);
+  // Ya terminado: vuelve a empezar (otra vuelta) y corre desde donde ella apunto.
+  const terminado = tras(corriendo, TERMINA);
+  assert.equal(terminado.fase, 'fin');
+  const deNuevo = tras(terminado, BUSCA);
+  assert.deepEqual(
+    [deNuevo.fase, deNuevo.pausado, deNuevo.vuelta, deNuevo.abierto],
+    ['sigue', false, terminado.vuelta + 1, terminado.abierto],
+  );
+  assert.equal(anda(deNuevo), true);
+  // Antes de empezar (nadie lo ha visto): tambien empieza.
+  assert.equal(tras(estadoInicial(), BUSCA).fase, 'sigue');
+  // Con menos movimiento no hay nada que mover: cada escena es su ultimo cuadro.
+  const quieto = estadoInicial({ quieto: true });
+  assert.equal(tras(quieto, BUSCA), quieto);
+});
+
+test('en la linea de avance las flechas van de segundo en segundo, sin salirse; Inicio y Fin van a las orillas', () => {
+  assert.equal(instanteCon('ArrowRight', 3, 8), 4);
+  assert.equal(instanteCon('ArrowUp', 3, 8), 4);
+  assert.equal(instanteCon('ArrowLeft', 3, 8), 2);
+  assert.equal(instanteCon('ArrowDown', 3, 8), 2);
+  // A medio segundo tambien avanza o regresa uno entero.
+  assert.equal(instanteCon('ArrowRight', 3.4, 8), 4.4);
+  // En las orillas no se sale.
+  assert.equal(instanteCon('ArrowRight', 7.6, 8), 8);
+  assert.equal(instanteCon('ArrowLeft', 0.3, 8), 0);
+  assert.equal(instanteCon('Home', 5, 28), 0);
+  assert.equal(instanteCon('End', 5, 28), 28);
+  // Cualquier otra tecla no es de la linea: Tab sigue su camino y Espacio no hace nada aqui.
+  for (const tecla of ['Tab', 'Enter', ' ', 'a', 'Escape', 'PageDown'])
+    assert.equal(instanteCon(tecla, 3, 8), null, tecla);
+});
+
+test('en pausa la linea de avance no llega hasta el final: se queda un instante antes y la pausa no se pierde', () => {
+  // Corriendo llega a donde ella apunte, sin salirse de lo que dura.
+  assert.equal(instanteEn(3, 8, false), 3);
+  assert.equal(instanteEn(-2, 8, false), 0);
+  assert.equal(instanteEn(11, 8, false), 8);
+  // En pausa el final queda un instante antes: no termina solo, y al regresar la linea sigue en pausa.
+  assert.equal(instanteEn(3, 8, true), 3);
+  assert.equal(instanteEn(-1, 8, true), 0);
+  assert.ok(instanteEn(8, 8, true) < 8);
+  assert.ok(instanteEn(8, 8, true) > 7.9);
+  assert.equal(instanteEn(30, 28, true), instanteEn(28, 28, true));
+});
+
+test('la linea de avance dice el total solo cuando el mini video de veras termino', () => {
+  assert.equal(segundoDicho(0, 8, false), 0);
+  assert.equal(segundoDicho(3.4, 8, false), 3);
+  assert.equal(segundoDicho(3.6, 8, false), 4);
+  // Casi al final (o en pausa, en la orilla) todavia no termina: dice el segundo anterior.
+  assert.equal(segundoDicho(7.95, 8, false), 7);
+  assert.equal(segundoDicho(8, 8, false), 7);
+  // Terminado dice el total, venga de donde venga.
+  assert.equal(segundoDicho(8, 8, true), 8);
+  assert.equal(segundoDicho(0, 28, true), 28);
+});
+
+test('el dedo arrastra la linea de avance solo cuando se mueve de lado lo suficiente', () => {
+  assert.equal(yaArrastra(100, 100), false);
+  assert.equal(yaArrastra(100, 107), false);
+  assert.equal(yaArrastra(100, 93), false);
+  assert.equal(yaArrastra(100, 108), true);
+  assert.equal(yaArrastra(100, 92), true);
+});
+
 test('lo que dura un mini video se dice como en un reproductor', () => {
   assert.equal(reloj(7), '0:07');
   assert.equal(reloj(8), '0:08');
@@ -330,7 +424,7 @@ test('en el selector de capitulos las flechas de lado pasan al de al lado y dan 
 
 // ---------- Los datos ----------
 
-test('dos capitulos: lo que hace, con sus diez beneficios, y como empiezas, con sus cuatro pasos numerados', () => {
+test('dos capitulos: lo que hace, con sus nueve beneficios, y como empiezas, con sus cuatro pasos numerados', () => {
   assert.deepEqual(
     capitulos.map(({ clave, nombre, cuenta, numerado }) => ({ clave, nombre, cuenta, numerado })),
     [
@@ -350,14 +444,18 @@ test('dos capitulos: lo que hace, con sus diez beneficios, y como empiezas, con 
   assert.equal('hace' in agentes, false);
 });
 
-test('los diez beneficios, en su orden, con el titulo y la oracion que aprobo el dueno', () => {
-  assert.equal(CUANTOS, 10);
+test('los nueve beneficios, en su orden, con el titulo y la oracion que aprobo el dueno', () => {
+  assert.equal(CUANTOS, 9);
   assert.deepEqual(
     hace.map(({ titulo, texto }) => [titulo, texto]),
     APROBADOS,
   );
-  // "Recuerda la cita" ya no es un renglon aparte: lo absorbio "Maneja tu agenda solo".
+  // "Recuerda la cita" ya no es un renglon aparte: lo absorbio el de la agenda. Y "Habla de tu o de usted" salio: el
+  // dueno decidio que el agente siempre habla de usted, asi que ya no es algo que presumir.
   assert.ok(!JSON.stringify(agentes).includes('Recuerda la cita'));
+  assert.doesNotMatch(JSON.stringify(agentes), /de tú o de usted|De usted|De tú/);
+  // Tampoco se promete "menos de un minuto": a veces el agente espera a proposito a que ella termine de escribir.
+  assert.doesNotMatch(JSON.stringify(agentes), /menos de un minuto/i);
 });
 
 test('la seccion no habla de examenes: lo pidio el dueno', () => {
@@ -388,9 +486,9 @@ test('cada mini video dura de 6 a 8 segundos (el de la cita completa, hasta 30) 
   // Solo uno es largo: el que cuenta la cita de principio a fin, que abre la seccion.
   assert.deepEqual(
     todos.filter((beneficio) => beneficio.largo).map((beneficio) => beneficio.titulo),
-    ['Una cita, de principio a fin'],
+    ['Gestiona tus citas de principio a fin'],
   );
-  assert.equal(hace[0].dura, 26);
+  assert.equal(hace[0].dura, 28);
   for (const beneficio of todos) {
     assert.ok(beneficio.dura >= 6 && beneficio.dura <= (beneficio.largo ? 30 : 8), beneficio.titulo);
     /** @type {number[]} */
@@ -406,39 +504,55 @@ test('cada mini video dura de 6 a 8 segundos (el de la cita completa, hasta 30) 
   }
 });
 
-test('la escena de la cita completa cuenta sus cuatro momentos: antes, garantizada, tu confirmas y despues', () => {
+test('la escena de la cita completa cuenta sus cinco momentos y dice quien ve cada uno', () => {
   const cita = hace[0];
-  assert.equal(cita.titulo, 'Una cita, de principio a fin');
+  assert.equal(cita.titulo, 'Gestiona tus citas de principio a fin');
   assert.deepEqual(
     dichos(cita).filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
     [
+      'Lo ve tu clienta',
       'Antes de la cita',
-      'Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?',
-      'El gelish cuesta $350. El jueves tengo lugar a las 5:00 pm. ¿Te lo aparto?',
+      'Hola, buenos días. ¿Cuánto cuesta el gelish? ¿Hay lugar el jueves?',
+      '¡Hola, Ana, buenos días! Con mucho gusto. El gelish cuesta $350 y el jueves tengo lugar a las 5:00 pm. ¿Se lo aparto?',
       'Lo sabe por tu base de conocimiento',
       'Anticipo Gelish semipermanente',
       '$150',
       'mercadopago.com.mx',
-      'Te aparté el jueves a las 5:00 pm. Se confirma con el anticipo de $150.',
+      'Listo, le aparté el jueves a las 5:00 pm. Su cita se confirma con el anticipo de $150.',
+      'Lo ves tú',
       'La cita, garantizada',
       'Pago aprobado · $150',
       'JUE',
       '19',
       '5:00 pm · Ana',
       'Gelish',
-      '¡Hola, Ana! Te recordamos tu cita de Gelish mañana jueves a las 5:00 pm.',
-      'Tu WhatsApp personal',
+      'Lo ve tu clienta',
+      'Un día antes',
+      'Hola, Ana. Le recordamos su cita de Gelish mañana jueves a las 5:00 pm. ¡Le esperamos!',
+      'Lo ves tú',
+      'Al terminar la cita',
       '¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm?',
       'Sí',
       'No',
+      'Lo ve tu clienta',
       'Después de la cita',
-      '¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita.',
+      '¡Gracias por venir, Ana! Cuando guste, le agendo su siguiente cita.',
       'Cita garantizada, de principio a fin',
     ],
   );
+  // Cinco momentos, y se van turnando: lo que ve la clienta y lo que ve la profesional nunca salen en el mismo cuadro.
+  const rotulos = cita.pasos.filter((/** @type {any} */ paso) => paso.quien);
+  assert.deepEqual(
+    rotulos.map((/** @type {any} */ paso) => [paso.quien.de, paso.quien.momento]),
+    [
+      ['clienta', 'Antes de la cita'],
+      ['tu', 'La cita, garantizada'],
+      ['clienta', 'Un día antes'],
+      ['tu', 'Al terminar la cita'],
+      ['clienta', 'Después de la cita'],
+    ],
+  );
   // Cada momento limpia la pantalla del anterior: lo de un momento se va antes de que llegue el rotulo del siguiente.
-  const rotulos = cita.pasos.filter((/** @type {any} */ paso) => paso.etiqueta);
-  assert.equal(rotulos.length, 4);
   for (const [lugar, rotulo] of rotulos.entries()) {
     const siguiente = rotulos[lugar + 1];
     if (!siguiente) continue;
@@ -452,6 +566,88 @@ test('la escena de la cita completa cuenta sus cuatro momentos: antes, garantiza
     { texto: 'Sí', toca: true },
     { texto: 'No' },
   ]);
+});
+
+test('cada escena de chat dice de quien es el celular, y nunca mezcla los dos en un mismo cuadro', () => {
+  for (const beneficio of todos) {
+    /** @type {any[]} */
+    const pasos = beneficio.pasos;
+    const conChat = pasos.some((paso) => paso.sale || paso.entra || paso.voz || paso.recado || paso.botones);
+    if (!conChat) continue;
+    // Antes del primer globo ya se dijo quien lo ve.
+    const primerGlobo = pasos.findIndex((paso) => paso.sale || paso.entra || paso.voz || paso.recado);
+    const primerRotulo = pasos.findIndex((paso) => paso.quien);
+    assert.ok(primerRotulo >= 0 && primerRotulo < primerGlobo, beneficio.titulo);
+    // Y cuando el celular cambia de manos, lo del anterior ya se fue: en el ultimo cuadro queda un solo rotulo.
+    const alFinal = pasos.filter((paso) => paso.quien && paso.hasta === undefined);
+    assert.equal(alFinal.length, 1, beneficio.titulo);
+    for (const [lugar, paso] of pasos.entries()) {
+      if (!paso.quien || paso.hasta !== undefined) continue;
+      // Tras el ultimo rotulo ya no queda a la vista ningun globo de antes.
+      for (const anterior of pasos.slice(0, lugar)) {
+        if (anterior.pastilla) continue;
+        assert.ok(
+          anterior.hasta !== undefined && anterior.hasta <= paso.en,
+          `${beneficio.titulo}: ${JSON.stringify(anterior)}`,
+        );
+      }
+    }
+  }
+  // Los mensajes que le llegan a la profesional (si asistio, el recado, los cambios) van con el rotulo de ella.
+  const deQuien = (/** @type {any} */ beneficio, /** @type {(paso: any) => boolean} */ cual) => {
+    const lugar = beneficio.pasos.findIndex(cual);
+    return beneficio.pasos.slice(0, lugar).findLast((/** @type {any} */ paso) => paso.quien)?.quien.de;
+  };
+  assert.equal(
+    deQuien(hace[0], (paso) => paso.botones),
+    'tu',
+  );
+  assert.equal(
+    deQuien(hace[lugarDe('Solo te contacta cuando se requiere tu intervención')], (paso) => paso.recado),
+    'tu',
+  );
+  assert.equal(
+    deQuien(hace[lugarDe('Cambias tus precios y horarios con un mensaje')], (paso) => paso.botones),
+    'tu',
+  );
+  assert.equal(
+    deQuien(hace[lugarDe('Maneja tu agenda por ti')], (paso) => paso.agenda),
+    'tu',
+  );
+  assert.equal(
+    deQuien(hace[lugarDe('Asegura el pago antes de agendar')], (paso) => paso.cita),
+    'tu',
+  );
+});
+
+test('el agente saluda y le habla de usted a la clienta en todas las escenas: lo pidio el dueno', () => {
+  /** Lo que el agente le escribe a la clienta o paciente: los globos que entran bajo un rotulo de ella. */
+  const delAgente = todos.flatMap((beneficio) => {
+    let de = '';
+    /** @type {string[]} */
+    const textos = [];
+    for (const paso of beneficio.pasos) {
+      if (paso.quien) de = paso.quien.de;
+      if (paso.entra && de === 'clienta') textos.push(paso.entra.texto);
+    }
+    return textos;
+  });
+  assert.ok(delAgente.length >= 10);
+  for (const texto of delAgente) {
+    // Ni un tuteo: ni "te", ni "tu cita", ni verbos en segunda persona.
+    assert.doesNotMatch(texto, /\b(te|ti|tu|tus|contigo)\b/i, texto);
+    assert.doesNotMatch(texto, /\b(quieres|puedes|tienes|gustas|prefieres|mándame|dime|avísame)\b/i, texto);
+  }
+  // La primera respuesta de cada conversacion saluda o atiende con cortesia.
+  const primeras = todos.flatMap((beneficio) => {
+    const primera = beneficio.pasos.find((/** @type {any} */ paso) => paso.entra)?.entra.texto;
+    const deElla = beneficio.pasos.find((/** @type {any} */ paso) => paso.quien)?.quien.de === 'clienta';
+    return primera && deElla ? [primera] : [];
+  });
+  assert.ok(primeras.length >= 6);
+  for (const texto of primeras) {
+    assert.match(texto, /hola|con (mucho )?gusto|no se preocupe|qué bonito/i, texto);
+  }
 });
 
 test('las escenas de como empiezas dicen lo que aprobo el dueno, pieza por pieza', () => {
@@ -488,11 +684,13 @@ test('las escenas de como empiezas dicen lo que aprobo el dueno, pieza por pieza
       'Tu número personal no se toca',
     ],
     [
+      'Lo ves tú',
       'Tu WhatsApp personal',
       'Soy tu asistente virtual de Studio Bella y ya estoy funcionando.',
-      'Hola, ¿tienes lugar el sábado?',
+      'Lo ve tu clienta',
+      'Hola, ¿tendrá lugar el sábado?',
       '10:12 a. m.',
-      '¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?',
+      '¡Hola, Ana! Con mucho gusto. El sábado tengo 11:00 am o 4:30 pm. ¿Cuál le queda mejor?',
       '10:12 a. m.',
       'Tu agente ya atiende',
     ],
@@ -500,14 +698,18 @@ test('las escenas de como empiezas dicen lo que aprobo el dueno, pieza por pieza
   // Lo que ella llena en el alta es lo mismo que despues ensena la base de conocimiento de su agente.
   const fichaDe = (/** @type {any} */ beneficio) =>
     beneficio.pasos.find((/** @type {any} */ paso) => paso.base).base.renglones;
-  assert.deepEqual(fichaDe(empieza[1]), fichaDe(hace[lugarDe('Hecho solo para tu negocio')]));
+  assert.deepEqual(fichaDe(empieza[1]), fichaDe(hace[lugarDe('Hecho a la medida de tu negocio')]));
 });
 
 test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por pieza', () => {
   // La de la cita completa tiene su propia prueba: aqui van las demas, en su orden.
-  const escenas = hace.slice(1).map(dichos);
+  const sinHoras = (/** @type {any} */ beneficio) =>
+    dichos(beneficio).filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto));
+  const escenas = hace.slice(1).map(sinHoras);
+  assert.equal(escenas.length, 8);
   // La base de conocimiento del negocio de ejemplo y una respuesta que sale de ella.
   assert.deepEqual(escenas[0], [
+    'Lo defines tú',
     'Base de conocimiento',
     'Studio Bella · solo de este negocio',
     'Servicios y precios',
@@ -516,114 +718,114 @@ test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por piez
     'Martes a sábado, 10 am a 7 pm',
     'Políticas',
     'Anticipo $150 · Retoque sin costo 3 días',
-    '¿Y si se me levanta el gelish?',
-    '10:12 a. m.',
-    'Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándame una foto y te agendo.',
-    '10:12 a. m.',
+    'Lo ve tu clienta',
+    'Disculpe, ¿y si se me levanta el gelish?',
+    'No se preocupe, Ana. Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándeme una foto y con gusto la agendo.',
     'Lo sabe porque es la política de tu negocio',
   ]);
+  // A cualquier hora: ella escribe en tres mensajes seguidos y el agente contesta una sola vez, todo junto.
   assert.deepEqual(escenas[1], [
+    'Lo ve tu clienta',
     'Jueves · 11:48 p. m.',
-    'Hola, ¿tienes lugar el sábado?',
-    '11:48 p. m.',
-    '¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?',
-    '11:48 p. m.',
-    'Contestó en menos de un minuto',
+    'Hola',
+    'Buenas noches',
+    'Me gustaría saber el precio del gelish',
+    '¡Hola, buenas noches! Con mucho gusto. El gelish cuesta $350 y dura de 2 a 3 semanas. ¿Le gustaría agendar su cita?',
+    'Esperó a que terminara de escribir y contestó todo junto',
   ]);
-  assert.deepEqual(
-    escenas[2]?.filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
-    [
-      'Tu Google Calendar · Sábado',
-      '11:00 am',
-      'Libre',
-      '1:00 pm',
-      'Ocupado',
-      '4:30 pm',
-      'Libre',
-      'Ana',
-      'Te puedo ofrecer el sábado a las 11:00 am o 4:30 pm. ¿Cuál te acomoda?',
-      'A las 4:30 pm, por favor.',
-      'Pago aprobado · $150',
-      'Recordatorios: un día y una hora antes',
-    ],
+  const rafaga = hace[lugarDe('Contesta a cualquier hora')].pasos;
+  assert.equal(rafaga.filter((/** @type {any} */ paso) => paso.sale).length, 3);
+  assert.equal(rafaga.filter((/** @type {any} */ paso) => paso.entra).length, 1);
+  // La agenda: primero lo que ve ella (la oferta y lo que elige) y despues lo que ve la profesional en su calendario.
+  assert.deepEqual(escenas[2], [
+    'Lo ve tu clienta',
+    'Con mucho gusto. Para el sábado le puedo ofrecer 11:00 am o 4:30 pm. ¿Cuál le acomoda?',
+    'A las 4:30 pm, por favor.',
+    'Lo ves tú',
+    'Tu Google Calendar · Sábado',
+    '11:00 am',
+    'Libre',
+    '1:00 pm',
+    'Ocupado',
+    '4:30 pm',
+    'Libre',
+    'Ana',
+    'Recordatorios: un día y una hora antes',
+  ]);
+  assert.deepEqual(escenas[3], [
+    'Lo ve tu paciente',
+    'Sí, aparte el jueves a las 10, por favor.',
+    'Anticipo Consulta',
+    '$300',
+    'mercadopago.com.mx',
+    'Con mucho gusto, señora Elvira. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.',
+    'Lo ves tú',
+    'Pago aprobado · $300',
+    'JUE',
+    '19',
+    '10:00 am · Elvira',
+    'Consulta',
+  ]);
+  // La nota de voz: ella manda una y el agente contesta con otra. Es de un salon de unas (en salud la voz no esta
+  // encendida), y la hora se dice como se oye: "las cinco en punto".
+  assert.deepEqual(escenas[4], [
+    'Lo ve tu clienta',
+    'A',
+    '0:07',
+    'Escuchó: «Hola, ¿tendrá lugar mañana para un gelish?»',
+    'B',
+    '0:09',
+    'Le contestó con nota de voz: «¡Hola, Ana! Con mucho gusto. Mañana tengo lugar a las cinco en punto. ¿Se lo aparto?»',
+  ]);
+  const notas = hace[lugarDe('Entiende notas de voz y contesta con voz')].pasos.filter(
+    (/** @type {any} */ paso) => paso.voz,
   );
   assert.deepEqual(
-    escenas[3]?.filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
-    [
-      'Sí, aparte el jueves a las 10, por favor.',
-      'Anticipo Consulta',
-      '$300',
-      'mercadopago.com.mx',
-      'Con gusto. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.',
-      'Pago aprobado · $300',
-      'JUE',
-      '19',
-      '10:00 am · Elvira',
-      'Consulta',
-    ],
+    notas.map((/** @type {any} */ paso) => Boolean(paso.voz.entra)),
+    [false, true],
   );
-  assert.deepEqual(
-    escenas[4]?.filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
-    [
-      'M',
-      '0:09',
-      'Escuchó: «Doctor, se me cayó una amalgama. ¿Me podría atender hoy?»',
-      'Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?',
-    ],
-  );
-  assert.deepEqual(
-    escenas[5]?.filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
-    [
-      'comercial/referencia-unas.webp',
-      '¿Cuánto por este diseño?',
-      'Vio la foto: francesas con decorado',
-      'Ya vi tu diseño: francesas con decorado. Queda en $420. ¿Te aparto lugar?',
-    ],
-  );
+  assert.deepEqual(escenas[5], [
+    'Lo ve tu clienta',
+    'comercial/referencia-unas.webp',
+    '¿Cuánto por este diseño?',
+    'Vio la foto: francesas con decorado',
+    '¡Qué bonito diseño, Ana! Son francesas con decorado y quedan en $420. ¿Le aparto un lugar?',
+  ]);
+  // Cuando hace falta ella: primero lo que ve la clienta y despues, aparte, el recado que le llega a la profesional.
   assert.deepEqual(escenas[6], [
-    'De tú',
-    'Hola, ¿tienes lugar el sábado?',
-    '¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?',
-    'De usted',
-    'Buenas tardes, ¿me podría dar una cita?',
-    'Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?',
+    'Lo ve tu clienta',
+    'Disculpe, ¿me haría un descuento si voy con mi hermana?',
+    'Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.',
+    'Lo ves tú',
+    'Tu WhatsApp personal',
+    '📩 Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas.',
+    'Solo te busca cuando hace falta',
   ]);
-  assert.deepEqual(
-    escenas[7]?.filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
-    [
-      '¿Me haces un descuento si voy con mi hermana?',
-      'Eso lo decide Bella. Ya le dejé tu recado.',
-      'Tu WhatsApp personal',
-      '📩 Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas.',
-    ],
-  );
   // Los cambios: ella lo pide, el agente dice exactamente que va a cambiar y nada se aplica hasta que ella toca que si.
-  assert.deepEqual(
-    escenas[8]?.filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto)),
-    [
-      'Tu WhatsApp personal',
-      'Sube el gelish a $380',
-      'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
-      'Sí, aplícalo',
-      'No',
-      'Nada cambia sin tu sí',
-    ],
-  );
-  assert.equal(escenas.length, 9);
+  assert.deepEqual(escenas[7], [
+    'Lo ves tú',
+    'Sube el gelish a $380',
+    'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
+    'Sí, aplícalo',
+    'No',
+    'Nada cambia sin tu sí',
+  ]);
 });
 
-test('en la escena de los recados el agente nunca le promete a la clienta que alguien le va a escribir', () => {
-  const [, delAgente = ''] = dichos(hace[lugarDe('Te pasa los recados')]).filter(
-    (texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto),
-  );
-  assert.equal(delAgente, 'Eso lo decide Bella. Ya le dejé tu recado.');
+test('cuando hace falta la profesional, el agente nunca le promete a la clienta que alguien le va a escribir', () => {
+  const escena = hace[lugarDe('Solo te contacta cuando se requiere tu intervención')];
+  const delAgente = escena.pasos.find((/** @type {any} */ paso) => paso.entra).entra.texto;
+  assert.equal(delAgente, 'Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.');
   for (const promesa of [
-    /te (va a )?(escrib|contest|llam|busc)/i,
+    /\b(te|le|la) (va a |van a )?(escrib|contest|llam|busc)/i,
     /en (un momento|breve|seguida)/i,
-    /te (aviso|confirmo)/i,
+    /\b(te|le) (aviso|confirmo|consulto|pregunto)/i,
+    /se lo (consulto|pregunto)/i,
   ]) {
     assert.doesNotMatch(delAgente, promesa);
   }
+  // Y lo de todos los dias no la molesta: el titulo dice justo eso.
+  assert.match(escena.texto, /Lo de todos los días lo resuelve tu agente/);
 });
 
 test('las horas de los globos van como en el WhatsApp de la demostracion, y un mini video ocurre en un mismo rato', () => {
@@ -643,8 +845,8 @@ test('las horas de los globos van como en el WhatsApp de la demostracion, y un m
 });
 
 test('el armado se detiene si a un beneficio le falta algo o su mini video no dura lo que debe', () => {
-  /** El de la base de conocimiento: un mini video corto, con cuatro pasos. */
-  const BASE = lugarDe('Hecho solo para tu negocio');
+  /** El de la base de conocimiento: un mini video corto, con seis pasos. */
+  const BASE = lugarDe('Hecho a la medida de tu negocio');
   /** @param {(copia: any[]) => void} cambio  lo que se descompone en los beneficios de "Lo que hace" */
   const con = (cambio) => {
     const copia = structuredClone(hace);
@@ -745,7 +947,7 @@ test('el armado se detiene si a un beneficio le falta algo o su mini video no du
   // Fuera de orden, o tan tarde que el video termina antes de que entre.
   assert.match(
     con((copia) => {
-      copia[BASE].pasos[2].en = 0.5;
+      copia[BASE].pasos[2].en = 0.3;
     })[0] ?? '',
     /el paso 3 debe aparecer despues del anterior/,
   );
@@ -756,23 +958,48 @@ test('el armado se detiene si a un beneficio le falta algo o su mini video no du
     /el paso 4 debe aparecer/,
   );
   // Lo que se va: despues de entrar y antes del final. Y la agenda cambia cuando ya esta a la vista.
+  const AGENDA = lugarDe('Maneja tu agenda por ti');
+  const pasoDeLaAgenda = hace[AGENDA].pasos.findIndex((/** @type {any} */ paso) => paso.agenda);
   assert.match(
     con((copia) => {
-      copia[lugarDe('Maneja tu agenda solo')].pasos[1].hasta = 1.3;
+      copia[AGENDA].pasos[1].hasta = copia[AGENDA].pasos[1].en + 0.1;
     })[0] ?? '',
     /el paso 2 debe irse despues de entrar/,
   );
   assert.match(
     con((copia) => {
-      copia[lugarDe('Maneja tu agenda solo')].pasos[1].hasta = 7.9;
+      copia[AGENDA].pasos[1].hasta = 7.9;
     })[0] ?? '',
     /el paso 2 debe irse/,
   );
   assert.match(
     con((copia) => {
-      copia[lugarDe('Maneja tu agenda solo')].pasos[0].agenda.cambia = 0.4;
+      copia[AGENDA].pasos[pasoDeLaAgenda].agenda.cambia = copia[AGENDA].pasos[pasoDeLaAgenda].en;
     })[0] ?? '',
-    /la agenda de el paso 1 debe cambiar/,
+    new RegExp(`la agenda de el paso ${pasoDeLaAgenda + 1} debe cambiar`),
+  );
+  // El rotulo de quien lo ve: de la clienta o de la profesional, con su texto; el momento, si viene, tambien.
+  for (const quien of [
+    { de: 'agente', texto: 'Lo ve el agente' },
+    { de: 'clienta' },
+    { de: 'tu', texto: ' ' },
+    { de: 'tu', texto: 'Lo ves tú', momento: '' },
+    'Lo ves tú',
+  ]) {
+    assert.match(
+      con((copia) => {
+        copia[BASE].pasos[1] = { en: 1, quien };
+      })[0] ?? '',
+      /el rotulo de el paso 2 debe decir de quien es \(clienta o tu\) y traer su texto/,
+      JSON.stringify(quien),
+    );
+  }
+  // El rotulo suelto de antes ("etiqueta") ya no es una pieza: lo reemplazo el de quien lo ve.
+  assert.match(
+    con((copia) => {
+      copia[BASE].pasos[1] = { en: 1, etiqueta: { texto: 'De usted' } };
+    })[0] ?? '',
+    /el paso 2 debe traer una sola pieza/,
   );
   // Y el ultimo cuadro nunca queda vacio.
   assert.match(
@@ -851,7 +1078,7 @@ before(async () => {
 function capituloEscrito(clave) {
   const [, guardado, numerado, dentro = ''] =
     new RegExp(
-      `<div class="agentes__duo" id="capitulo-${clave}" data-agente data-capitulo="${clave}"( data-guardado)?( data-numerado)? data-pausar="Pausar" data-reproducir="Reproducir" data-ver-de-nuevo="Ver de nuevo">([\\s\\S]*?)\\n {6}</div>\\n`,
+      `<div class="agentes__duo" id="capitulo-${clave}" data-agente data-capitulo="${clave}"( data-guardado)?( data-numerado)? data-pausar="Pausar" data-reproducir="Reproducir" data-ver-de-nuevo="Ver de nuevo" data-va-en="\\{va\\} de \\{total\\} segundos">([\\s\\S]*?)\\n {6}</div>\\n`,
     ).exec(seccion) ?? [];
   const renglones = [
     ...dentro.matchAll(
@@ -932,7 +1159,9 @@ test('sin JavaScript no hay un solo boton en la seccion: los pone la pieza del m
     /<button class="mv__pausa" type="button" data-mv-pausa data-estado="pausar" aria-label="Pausar">/,
   );
   assert.equal(
-    seccion.split(' data-pausar="Pausar" data-reproducir="Reproducir" data-ver-de-nuevo="Ver de nuevo">').length - 1,
+    seccion.split(
+      ' data-pausar="Pausar" data-reproducir="Reproducir" data-ver-de-nuevo="Ver de nuevo" data-va-en="{va} de {total} segundos">',
+    ).length - 1,
     2,
   );
   assert.deepEqual(agentes.rotulos, {
@@ -940,7 +1169,15 @@ test('sin JavaScript no hay un solo boton en la seccion: los pone la pieza del m
     reproducir: 'Reproducir',
     verDeNuevo: 'Ver de nuevo',
     capitulos: 'Lo que hace tu agente y cómo empiezas',
+    avance: 'Avance del video',
+    vaEn: '{va} de {total} segundos',
   });
+  // La linea de avance nace como un control que se agarra: dice que es y desde donde cuenta. Lo demas (hasta donde
+  // llega y por donde va) lo pone la pieza del menu, que sabe cuanto dura cada mini video.
+  assert.match(
+    barra,
+    /<span class="mv__linea" data-mv-linea role="slider" tabindex="0" aria-label="Avance del video" aria-valuemin="0" aria-valuenow="0"><i class="mv__avance" data-mv-avance><\/i><i class="mv__perilla"><\/i><\/span>/,
+  );
   // Tampoco hay pestanas ni paneles antes de tiempo: sin la pieza, el selector no promete lo que no puede hacer.
   assert.doesNotMatch(sinPlantilla, /role="tab|aria-selected|aria-controls/);
 });
@@ -992,7 +1229,7 @@ test('cada beneficio trae su mini video escrito: una escena de adorno, con lo qu
   // La primera de la seccion, la de la cita completa, llega con pantalla alta: es la que se ve al llegar y nada se
   // mueve cuando el menu despierta.
   assert.equal(hace[0].alta, true);
-  // Y los tres sellos: el de la cita completa, el de la agenda y el de la cita ya pagada.
+  // Y los tres sellos: el de la cita completa, el de la agenda y el de la consulta ya pagada.
   assert.equal(seccion.split('class="sello"').length - 1, 3);
   // Cada plantilla guardada se cierra, y no hay una dentro de otra: todas menos la primera de cada capitulo, y la barra.
   assert.equal(seccion.split('<template data-mv-guardada>').length - 1, todos.length - 2);

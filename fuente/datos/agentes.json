@@ -3,7 +3,9 @@
     "pausar": "Pausar",
     "reproducir": "Reproducir",
     "verDeNuevo": "Ver de nuevo",
-    "capitulos": "Lo que hace tu agente y cómo empiezas"
+    "capitulos": "Lo que hace tu agente y cómo empiezas",
+    "avance": "Avance del video",
+    "vaEn": "{va} de {total} segundos"
   },
   "capitulos": [
     {
@@ -12,77 +14,99 @@
       "sigue": "Siguiente: cómo empiezas, en 4 pasos",
       "videos": [
         {
-          "titulo": "Una cita, de principio a fin",
+          "titulo": "Gestiona tus citas de principio a fin",
           "texto": "Desde el primer «hola» hasta el seguimiento después de la cita: contesta, cobra el anticipo, verifica el pago, agenda y recuerda. Tú solo le confirmas si llegó, con un toque.",
-          "dura": 26,
+          "dura": 28,
           "largo": true,
           "alta": true,
           "pasos": [
-            { "en": 0.3, "hasta": 8.6, "etiqueta": { "texto": "Antes de la cita" } },
             {
-              "en": 0.7,
-              "hasta": 8.6,
-              "sale": { "texto": "Hola, ¿cuánto cuesta el gelish? ¿Tienes lugar el jueves?", "hora": "10:12 a. m." }
+              "en": 0.3,
+              "hasta": 9,
+              "quien": { "de": "clienta", "texto": "Lo ve tu clienta", "momento": "Antes de la cita" }
             },
             {
-              "en": 2.5,
-              "hasta": 8.6,
-              "entra": {
-                "texto": "El gelish cuesta $350. El jueves tengo lugar a las 5:00 pm. ¿Te lo aparto?",
+              "en": 0.7,
+              "hasta": 9,
+              "sale": {
+                "texto": "Hola, buenos días. ¿Cuánto cuesta el gelish? ¿Hay lugar el jueves?",
                 "hora": "10:12 a. m."
               }
             },
-            { "en": 4.2, "hasta": 5.7, "hizo": { "texto": "Lo sabe por tu base de conocimiento" } },
             {
-              "en": 6.2,
-              "hasta": 8.6,
+              "en": 2.5,
+              "hasta": 9,
+              "entra": {
+                "texto": "¡Hola, Ana, buenos días! Con mucho gusto. El gelish cuesta $350 y el jueves tengo lugar a las 5:00 pm. ¿Se lo aparto?",
+                "hora": "10:12 a. m."
+              }
+            },
+            { "en": 4.4, "hasta": 5.9, "hizo": { "texto": "Lo sabe por tu base de conocimiento" } },
+            {
+              "en": 6.4,
+              "hasta": 9,
               "entra": {
                 "liga": { "titulo": "Anticipo Gelish semipermanente", "monto": "$150", "sitio": "mercadopago.com.mx" },
-                "texto": "Te aparté el jueves a las 5:00 pm. Se confirma con el anticipo de $150.",
+                "texto": "Listo, le aparté el jueves a las 5:00 pm. Su cita se confirma con el anticipo de $150.",
                 "hora": "10:14 a. m."
               }
             },
-            { "en": 9.2, "hasta": 16.6, "etiqueta": { "texto": "La cita, garantizada" } },
-            { "en": 9.6, "hasta": 16.6, "aprobado": { "texto": "Pago aprobado · $150" } },
             {
-              "en": 10.8,
-              "hasta": 16.6,
+              "en": 9.6,
+              "hasta": 13.4,
+              "quien": { "de": "tu", "texto": "Lo ves tú", "momento": "La cita, garantizada" }
+            },
+            { "en": 10, "hasta": 13.4, "aprobado": { "texto": "Pago aprobado · $150" } },
+            {
+              "en": 11.1,
+              "hasta": 13.4,
               "cita": { "dia": "JUE", "fecha": "19", "hora": "5:00 pm · Ana", "detalle": "Gelish" }
             },
             {
-              "en": 13.2,
-              "hasta": 16.6,
+              "en": 14,
+              "hasta": 17.6,
+              "quien": { "de": "clienta", "texto": "Lo ve tu clienta", "momento": "Un día antes" }
+            },
+            {
+              "en": 14.4,
+              "hasta": 17.6,
               "entra": {
-                "texto": "¡Hola, Ana! Te recordamos tu cita de Gelish mañana jueves a las 5:00 pm.",
+                "texto": "Hola, Ana. Le recordamos su cita de Gelish mañana jueves a las 5:00 pm. ¡Le esperamos!",
                 "hora": "5:00 p. m."
               }
             },
-            { "en": 17.2, "hasta": 21, "etiqueta": { "texto": "Tu WhatsApp personal" } },
             {
-              "en": 17.6,
-              "hasta": 21,
+              "en": 18.2,
+              "hasta": 22.2,
+              "quien": { "de": "tu", "texto": "Lo ves tú", "momento": "Al terminar la cita" }
+            },
+            {
+              "en": 18.6,
+              "hasta": 22.2,
               "entra": { "texto": "¿Asistió Ana a su cita de Gelish hoy a las 5:00 pm?", "hora": "6:05 p. m." }
             },
-            { "en": 18.4, "hasta": 21, "botones": [{ "texto": "Sí", "toca": true }, { "texto": "No" }] },
-            { "en": 21.6, "etiqueta": { "texto": "Después de la cita" } },
+            { "en": 19.4, "hasta": 22.2, "botones": [{ "texto": "Sí", "toca": true }, { "texto": "No" }] },
+            { "en": 22.8, "quien": { "de": "clienta", "texto": "Lo ve tu clienta", "momento": "Después de la cita" } },
             {
-              "en": 22,
+              "en": 23.2,
               "entra": {
-                "texto": "¡Gracias por venir, Ana! Cuando quieras te agendo tu siguiente cita.",
+                "texto": "¡Gracias por venir, Ana! Cuando guste, le agendo su siguiente cita.",
                 "hora": "6:06 p. m."
               }
             },
-            { "en": 23.8, "hizo": { "texto": "Cita garantizada, de principio a fin", "grande": true } }
+            { "en": 25.4, "hizo": { "texto": "Cita garantizada, de principio a fin", "grande": true } }
           ]
         },
         {
-          "titulo": "Hecho solo para tu negocio",
+          "titulo": "Hecho a la medida de tu negocio",
           "texto": "Trabaja con su propia base de conocimiento: tus servicios, tus precios, tus horarios y tus políticas. Por eso es un agente dedicado a ti, distinto al de cualquier otro profesional.",
           "dura": 8,
           "alta": true,
           "pasos": [
+            { "en": 0.2, "hasta": 4.2, "quien": { "de": "tu", "texto": "Lo defines tú" } },
             {
               "en": 0.4,
+              "hasta": 4.2,
               "base": {
                 "titulo": "Base de conocimiento",
                 "detalle": "Studio Bella · solo de este negocio",
@@ -93,44 +117,60 @@
                 ]
               }
             },
-            { "en": 3.2, "sale": { "texto": "¿Y si se me levanta el gelish?", "hora": "10:12 a. m." } },
+            { "en": 4.6, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
+            { "en": 4.8, "sale": { "texto": "Disculpe, ¿y si se me levanta el gelish?", "hora": "10:12 a. m." } },
             {
-              "en": 4.4,
+              "en": 5.6,
               "entra": {
-                "texto": "Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándame una foto y te agendo.",
+                "texto": "No se preocupe, Ana. Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándeme una foto y con gusto la agendo.",
                 "hora": "10:12 a. m."
               }
             },
-            { "en": 6.4, "hizo": { "texto": "Lo sabe porque es la política de tu negocio" } }
+            { "en": 6.6, "hizo": { "texto": "Lo sabe porque es la política de tu negocio" } }
           ]
         },
         {
-          "titulo": "Contesta en menos de un minuto",
-          "texto": "Precios, horarios y dudas, a cualquier hora y con el tono de tu negocio.",
-          "dura": 7,
+          "titulo": "Contesta a cualquier hora",
+          "texto": "Precios, horarios y dudas, con el tono de tu negocio. Si le escriben en varios mensajes, espera a que terminen y contesta todo junto.",
+          "dura": 8,
+          "alta": true,
           "pasos": [
-            { "en": 0.3, "pastilla": { "texto": "Jueves · 11:48 p. m." } },
-            { "en": 1.1, "sale": { "texto": "Hola, ¿tienes lugar el sábado?", "hora": "11:48 p. m." } },
+            { "en": 0.2, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
+            { "en": 0.4, "pastilla": { "texto": "Jueves · 11:48 p. m." } },
+            { "en": 0.9, "sale": { "texto": "Hola", "hora": "11:48 p. m." } },
+            { "en": 1.7, "sale": { "texto": "Buenas noches", "hora": "11:48 p. m." } },
+            { "en": 2.6, "sale": { "texto": "Me gustaría saber el precio del gelish", "hora": "11:48 p. m." } },
             {
-              "en": 2.9,
+              "en": 4.2,
               "entra": {
-                "texto": "¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?",
-                "hora": "11:48 p. m."
+                "texto": "¡Hola, buenas noches! Con mucho gusto. El gelish cuesta $350 y dura de 2 a 3 semanas. ¿Le gustaría agendar su cita?",
+                "hora": "11:49 p. m."
               }
             },
-            { "en": 4.9, "hizo": { "texto": "Contestó en menos de un minuto" } }
+            { "en": 6.2, "hizo": { "texto": "Esperó a que terminara de escribir y contestó todo junto" } }
           ]
         },
         {
-          "titulo": "Maneja tu agenda solo",
+          "titulo": "Maneja tu agenda por ti",
           "texto": "Ofrece solo los horarios libres de tu Google Calendar, agenda la cita y manda los recordatorios.",
           "dura": 8,
           "pasos": [
+            { "en": 0.2, "hasta": 4, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
             {
-              "en": 0.3,
+              "en": 0.6,
+              "hasta": 4,
+              "entra": {
+                "texto": "Con mucho gusto. Para el sábado le puedo ofrecer 11:00 am o 4:30 pm. ¿Cuál le acomoda?",
+                "hora": "10:14 a. m."
+              }
+            },
+            { "en": 2.2, "hasta": 4, "sale": { "texto": "A las 4:30 pm, por favor.", "hora": "10:15 a. m." } },
+            { "en": 4.4, "quien": { "de": "tu", "texto": "Lo ves tú" } },
+            {
+              "en": 4.7,
               "agenda": {
                 "rotulo": "Tu Google Calendar · Sábado",
-                "cambia": 5.6,
+                "cambia": 5.8,
                 "renglones": [
                   { "hora": "11:00 am", "estado": "Libre" },
                   { "hora": "1:00 pm", "estado": "Ocupado", "ocupado": true },
@@ -138,17 +178,7 @@
                 ]
               }
             },
-            {
-              "en": 1.2,
-              "hasta": 4.5,
-              "entra": {
-                "texto": "Te puedo ofrecer el sábado a las 11:00 am o 4:30 pm. ¿Cuál te acomoda?",
-                "hora": "10:14 a. m."
-              }
-            },
-            { "en": 2.8, "hasta": 4.5, "sale": { "texto": "A las 4:30 pm, por favor.", "hora": "10:15 a. m." } },
-            { "en": 4.7, "aprobado": { "texto": "Pago aprobado · $150" } },
-            { "en": 6.4, "hizo": { "texto": "Recordatorios: un día y una hora antes" } }
+            { "en": 6.5, "hizo": { "texto": "Recordatorios: un día y una hora antes" } }
           ]
         },
         {
@@ -156,46 +186,53 @@
           "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo en tu Mercado Pago.",
           "dura": 8,
           "pasos": [
+            { "en": 0.2, "hasta": 4.4, "quien": { "de": "clienta", "texto": "Lo ve tu paciente" } },
             {
-              "en": 0.3,
+              "en": 0.5,
               "hasta": 4.4,
               "sale": { "texto": "Sí, aparte el jueves a las 10, por favor.", "hora": "9:41 a. m." }
             },
             {
               "en": 1.6,
+              "hasta": 4.4,
               "entra": {
                 "liga": { "titulo": "Anticipo Consulta", "monto": "$300", "sitio": "mercadopago.com.mx" },
-                "texto": "Con gusto. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.",
+                "texto": "Con mucho gusto, señora Elvira. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.",
                 "hora": "9:41 a. m."
               }
             },
-            { "en": 4.6, "aprobado": { "texto": "Pago aprobado · $300" } },
-            { "en": 5.9, "cita": { "dia": "JUE", "fecha": "19", "hora": "10:00 am · Elvira", "detalle": "Consulta" } }
+            { "en": 4.8, "quien": { "de": "tu", "texto": "Lo ves tú" } },
+            { "en": 5.1, "aprobado": { "texto": "Pago aprobado · $300" } },
+            { "en": 6.1, "cita": { "dia": "JUE", "fecha": "19", "hora": "10:00 am · Elvira", "detalle": "Consulta" } }
           ]
         },
         {
-          "titulo": "Entiende notas de voz",
-          "texto": "Si tu clienta manda un audio, lo escucha y le contesta por escrito.",
-          "dura": 7,
+          "titulo": "Entiende notas de voz y contesta con voz",
+          "texto": "Si tu clienta manda una nota de voz, la escucha y le contesta con otra nota de voz. El enlace de pago y lo que hay que copiar, siempre por escrito.",
+          "dura": 8,
+          "alta": true,
           "pasos": [
-            { "en": 0.3, "voz": { "inicial": "M", "dura": "0:09", "hora": "4:12 p. m." } },
-            { "en": 2.6, "hizo": { "texto": "Escuchó: «Doctor, se me cayó una amalgama. ¿Me podría atender hoy?»" } },
+            { "en": 0.2, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
+            { "en": 0.5, "voz": { "inicial": "A", "dura": "0:07", "hora": "4:12 p. m." } },
+            { "en": 2.2, "hizo": { "texto": "Escuchó: «Hola, ¿tendrá lugar mañana para un gelish?»" } },
+            { "en": 3.9, "voz": { "inicial": "B", "dura": "0:09", "hora": "4:13 p. m.", "entra": true } },
             {
-              "en": 4.6,
-              "entra": {
-                "texto": "Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?",
-                "hora": "4:12 p. m."
+              "en": 5.6,
+              "hizo": {
+                "texto": "Le contestó con nota de voz: «¡Hola, Ana! Con mucho gusto. Mañana tengo lugar a las cinco en punto. ¿Se lo aparto?»"
               }
             }
           ]
         },
         {
-          "titulo": "Lee la foto de referencia",
+          "titulo": "Ve las imágenes de referencia que le mandan",
           "texto": "En uñas, revisa el diseño que quiere tu clienta. Si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.",
           "dura": 7,
+          "alta": true,
           "pasos": [
+            { "en": 0.2, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
             {
-              "en": 0.3,
+              "en": 0.5,
               "sale": {
                 "foto": { "archivo": "comercial/referencia-unas.webp", "ancho": 336, "alto": 336 },
                 "texto": "¿Cuánto por este diseño?",
@@ -204,55 +241,50 @@
             },
             { "en": 2.4, "hizo": { "texto": "Vio la foto: francesas con decorado" } },
             {
-              "en": 4.3,
+              "en": 4.2,
               "entra": {
-                "texto": "Ya vi tu diseño: francesas con decorado. Queda en $420. ¿Te aparto lugar?",
+                "texto": "¡Qué bonito diseño, Ana! Son francesas con decorado y quedan en $420. ¿Le aparto un lugar?",
                 "hora": "1:07 p. m."
               }
             }
           ]
         },
         {
-          "titulo": "Habla de tú o de usted",
-          "texto": "Si tu clienta escribe de usted, le contesta de usted. Con el tono de tu negocio.",
+          "titulo": "Solo te contacta cuando se requiere tu intervención",
+          "texto": "Lo de todos los días lo resuelve tu agente. Cuando algo necesita tu decisión, toma el recado y te avisa a tu WhatsApp personal.",
           "dura": 8,
           "pasos": [
-            { "en": 0.3, "etiqueta": { "texto": "De tú" } },
-            { "en": 0.7, "sale": { "texto": "Hola, ¿tienes lugar el sábado?" } },
+            { "en": 0.2, "hasta": 4.2, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
             {
-              "en": 1.9,
-              "entra": { "texto": "¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?" }
+              "en": 0.5,
+              "hasta": 4.2,
+              "sale": { "texto": "Disculpe, ¿me haría un descuento si voy con mi hermana?", "hora": "6:30 p. m." }
             },
-            { "en": 3.8, "etiqueta": { "texto": "De usted" } },
-            { "en": 4.2, "sale": { "texto": "Buenas tardes, ¿me podría dar una cita?" } },
             {
-              "en": 5.4,
-              "entra": { "texto": "Buenas tardes, señor Medina. Hoy tengo lugar a las 5:30 pm. ¿Se lo aparto?" }
-            }
-          ]
-        },
-        {
-          "titulo": "Te pasa los recados",
-          "texto": "Cuando alguien necesita hablar contigo, toma el recado y te avisa a tu WhatsApp personal.",
-          "dura": 7,
-          "pasos": [
-            { "en": 0.3, "sale": { "texto": "¿Me haces un descuento si voy con mi hermana?", "hora": "6:30 p. m." } },
-            { "en": 2.1, "entra": { "texto": "Eso lo decide Bella. Ya le dejé tu recado.", "hora": "6:30 p. m." } },
+              "en": 2.1,
+              "hasta": 4.2,
+              "entra": {
+                "texto": "Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.",
+                "hora": "6:30 p. m."
+              }
+            },
+            { "en": 4.6, "quien": { "de": "tu", "texto": "Lo ves tú" } },
             {
-              "en": 4.3,
+              "en": 5,
               "recado": {
                 "rotulo": "Tu WhatsApp personal",
                 "texto": "📩 Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas."
               }
-            }
+            },
+            { "en": 6.5, "hizo": { "texto": "Solo te busca cuando hace falta" } }
           ]
         },
         {
-          "titulo": "Le pides cambios por WhatsApp",
-          "texto": "Un precio o un horario: se lo escribes a tu agente y nada se aplica sin tu sí.",
+          "titulo": "Cambias tus precios y horarios con un mensaje",
+          "texto": "¿Subió un precio o cambió tu horario? Se lo escribes a tu agente por WhatsApp y lo actualiza. Nada se aplica sin tu sí.",
           "dura": 8,
           "pasos": [
-            { "en": 0.3, "etiqueta": { "texto": "Tu WhatsApp personal" } },
+            { "en": 0.2, "quien": { "de": "tu", "texto": "Lo ves tú" } },
             { "en": 0.8, "sale": { "texto": "Sube el gelish a $380", "hora": "9:02 a. m." } },
             {
               "en": 2.4,
@@ -336,22 +368,25 @@
           "texto": "Tocas «Genera tu agente» y, cuando queda listo, te escribe a tu WhatsApp personal para avisarte que ya está funcionando. Tú lo puedes probar antes que nadie.",
           "dura": 8,
           "pasos": [
+            { "en": 0.2, "hasta": 3, "quien": { "de": "tu", "texto": "Lo ves tú" } },
             {
-              "en": 0.4,
+              "en": 0.5,
+              "hasta": 3,
               "recado": {
                 "rotulo": "Tu WhatsApp personal",
                 "texto": "Soy tu asistente virtual de Studio Bella y ya estoy funcionando."
               }
             },
-            { "en": 3, "sale": { "texto": "Hola, ¿tienes lugar el sábado?", "hora": "10:12 a. m." } },
+            { "en": 3.4, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
+            { "en": 3.7, "sale": { "texto": "Hola, ¿tendrá lugar el sábado?", "hora": "10:12 a. m." } },
             {
-              "en": 4.4,
+              "en": 4.9,
               "entra": {
-                "texto": "¡Hola, Ana! Sí, el sábado tengo 11:00 am o 4:30 pm. ¿Cuál te queda mejor?",
+                "texto": "¡Hola, Ana! Con mucho gusto. El sábado tengo 11:00 am o 4:30 pm. ¿Cuál le queda mejor?",
                 "hora": "10:12 a. m."
               }
             },
-            { "en": 6.4, "hizo": { "texto": "Tu agente ya atiende", "grande": true } }
+            { "en": 6.5, "hizo": { "texto": "Tu agente ya atiende", "grande": true } }
           ]
         }
       ]

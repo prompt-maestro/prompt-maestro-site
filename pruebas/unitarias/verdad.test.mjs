@@ -11,7 +11,11 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 
 /** Lo prohibido, como se diria en la pagina. Cada una con su porque. */
 const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
-  [/al instante/, 'el agente contesta en menos de un minuto, nunca "al instante"'],
+  [/al instante/, 'el agente no contesta "al instante": a veces espera a que la clienta termine de escribir'],
+  // El dueno (19-nov-2026): a veces tarda a proposito, para juntar los mensajes seguidos de la clienta. No se promete.
+  [/menos de un minuto/, 'ya no se promete contestar en menos de un minuto'],
+  // Una nota de voz la contesta con otra nota de voz: la pagina no puede decir tambien que la contesta por escrito.
+  [/(contesta|responde) por escrito/, 'a una nota de voz le contesta con voz, no por escrito'],
   [/\d+\s?segundos?/, 'no se promete un numero de segundos'],
   [/sin intervenci[oó]n humana/, 'la profesional siempre puede entrar'],
   // Ni siquiera en un ejemplo: la politica del salon de muestra (su retoque de garantia) se dice "sin costo".
@@ -20,10 +24,11 @@ const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
   [/testimoni|nuestr[oa]s client[ea]s dicen|casos? de [eé]xito/, 'no hay testimonios de clientes que no existen'],
   // Se vale preguntarlo ("¿Me trae clientela nueva?") y negarlo; nunca afirmarlo.
   [/(?<!no te |¿me )trae client/, 'no trae clientela nueva: solo se puede decir en negativo'],
-  // Quien manda audios es la clienta; el agente los entiende y contesta por escrito.
+  // El agente contesta una nota de voz con otra (desde el 16-nov-2026). Lo que no hace es mandarle audios a la
+  // profesional, ni llamar por telefono.
   [
-    /(contesta|responde) (con|por) (voz|audios?|notas? de voz)|te (manda|env[ií]a) (audios?|notas? de voz)/,
-    'sin audios',
+    /te (manda|env[ií]a) (audios?|notas? de voz)|te llama por tel[eé]fono|llamadas? de voz/,
+    'a ella no le manda audios ni la llama',
   ],
   [/expediente cl[ií]nico/, 'no es un expediente clinico'],
   [/\boxxo\b|\bspei\b/, 'a Prompt Maestro se le paga solo con tarjeta'],
@@ -109,11 +114,13 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'asistente virtual',
     'no te trae clientela nueva',
     'no diagnostica ni recomienda medicamentos',
-    // "Tu agente": cada uno trabaja con la base de conocimiento de su negocio, y contesta en menos de un minuto
-    // (nunca "al instante").
-    'hecho solo para tu negocio',
+    // "Tu agente": cada uno trabaja con la base de conocimiento de su negocio, contesta a cualquier hora (sin
+    // prometer tiempos) y una nota de voz la contesta con otra; lo que hay que copiar va siempre por escrito.
+    'hecho a la medida de tu negocio',
     'base de conocimiento',
-    'menos de un minuto',
+    'contesta a cualquier hora',
+    'le contesta con otra nota de voz',
+    'siempre por escrito',
     'hoy, para uñas, dentistas y médicos',
     // Los mensajes son buenos: con el agente siguen llegando, y la comision de cada anticipo la fija Mercado Pago.
     'te siguen escribiendo, y tu agente contesta por ti',

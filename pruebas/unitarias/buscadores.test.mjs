@@ -340,7 +340,7 @@ test('en lugar de la tabla que comparaba con otras opciones va un antes y un des
     [
       ['Contestas cuando puedes.', 'Apartas la hora sin anticipo.', 'Si no llega, pierdes la hora.'],
       [
-        'Contesta en menos de un minuto, a cualquier hora.',
+        'Contesta a cualquier hora, con el tono de tu negocio.',
         'Agenda solo con el anticipo pagado.',
         'Si no llega, el anticipo se queda contigo, según tu política.',
       ],
