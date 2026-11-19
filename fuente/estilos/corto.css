@@ -187,8 +187,9 @@
   }
 }
 
-/* Las tarjetas de "su tiempo" solo van en pantallas anchas: mas abajo se les da su lugar. */
-.vidas {
+/* La agente solo va donde corre el corto (pantallas anchas y no muy bajitas): mas abajo se le da su lugar. En las
+   demas ni se pinta ni se pide su foto. */
+.agente {
   display: none;
 }
 
@@ -2391,14 +2392,14 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     padding: var(--barra-alto) var(--margen) 0;
   }
 
-  /* Detras de las tarjetas, un resto de la luz calida. */
+  /* Detras de la agente, la luz de la marca: el mismo halo que la presenta en el corto. */
   .cartel::before {
-    background: radial-gradient(
-      50% 70% at 76% 46%,
-      rgb(255 205 150 / 0.13),
-      rgb(63 92 245 / 0.1) 46%,
-      rgb(63 92 245 / 0) 76%
-    );
+    background: radial-gradient(42% 60% at 80% 44%, rgb(79 93 255 / 0.2), rgb(63 92 245 / 0) 72%);
+  }
+
+  /* El texto va encima de su retrato, que se funde por debajo. */
+  .cartel__texto {
+    z-index: 1;
   }
 
   .cartel__texto {
@@ -2410,7 +2411,9 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     font-size: clamp(0.6875rem, 0.97vw, 0.875rem);
   }
 
+  /* Su caja mide lo que su texto: a su derecha va la agente, y nada que no se ve debe quedarle encima. */
   .cartel__titulo {
+    width: fit-content;
     margin-top: 18px;
     font-size: clamp(2rem, min(8.2vw - 2.2rem, 12 * var(--svh)), 5.2rem);
   }
@@ -2442,73 +2445,94 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     display: none;
   }
 
-  /* Las tarjetas: altas y angostas; las pares, un poco mas grandes. Su alto sale del alto de la pantalla. */
-  .vidas {
-    --tarjeta: min(55.6 * var(--svh), 36vw, 500px);
-    position: relative;
-    z-index: 0;
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: clamp(10px, 1.25vw, 18px);
-    min-height: 0;
-    margin: 0 0 30px;
-  }
-
-  .vida__marco {
-    position: relative;
-    width: calc(var(--tarjeta) * 0.416);
-    height: var(--tarjeta);
-    margin: 0;
-    overflow: hidden;
-    border-radius: 22px;
-    box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
-  }
-
-  .vida:nth-child(even) .vida__marco {
-    width: calc(var(--tarjeta) * 0.456);
-    height: calc(var(--tarjeta) * 1.16);
-  }
-
-  .vida__foto {
+  /* La agente que ilustra al agente virtual: su retrato va a la derecha, tan alto como el cartel y un poco mas abajo
+     que la barra, sin marco: se funde con el fondo de la pagina por la izquierda y por abajo. */
+  .agente {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 7%;
+    right: -2%;
+    z-index: 0;
+    height: 100%;
+    aspect-ratio: 1;
+    margin: 0;
+  }
+
+  .agente__foto {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    --funde:
+      linear-gradient(to right, transparent 4%, rgb(0 0 0 / 0.38) 24%, #000 50%),
+      linear-gradient(to top, transparent 7%, #000 26%), linear-gradient(to bottom, transparent 0, #000 16%);
+
+    -webkit-mask-image: var(--funde);
+    mask-image: var(--funde);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
   }
 
-  .vida__marco::after {
+  /* Quien es y lo que hace, a su izquierda, con la cita que ya garantizo. */
+  .agente__datos {
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgb(var(--papel-rgb) / 0) 62%, rgb(var(--papel-rgb) / 0.72) 100%);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
-    content: "";
+    bottom: 27%;
+    left: 4%;
+    display: grid;
+    justify-items: start;
+    gap: 14px;
   }
 
-  .vida__nombre {
-    position: absolute;
-    bottom: 14px;
-    left: 16px;
-    z-index: 1;
-    font-size: 0.75rem;
+  .agente__rotulo {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+  }
+
+  .agente__rotulo span {
+    color: var(--luz);
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
   }
 
-  /* La cita del primer oficio se asoma debajo de las tarjetas, a la derecha. */
-  .vida__flota {
-    position: absolute;
-    top: calc(100% - 15px);
-    right: 0;
-    z-index: 2;
+  /* El punto verde: esta en linea. */
+  .agente__rotulo span::before {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--wa-verde);
+    box-shadow: 0 0 0 4px rgb(29 170 97 / 0.18);
+    vertical-align: 1px;
+    content: "";
   }
 
-  .vida:not([data-activo]) .vida__flota {
-    display: none;
+  .agente__rotulo b {
+    font-size: 1.02rem;
+    font-weight: 500;
+  }
+
+  /* Donde no hay hueco entre el texto y ella (una ventana menos ancha, o casi cuadrada) sus datos se guardan y queda
+     solo su rotulo, abajo y a su izquierda. */
+  @media (max-width: 999px), (max-aspect-ratio: 3 / 2) {
+    .agente__datos {
+      bottom: 13%;
+      left: 16%;
+    }
+
+    .agente__rotulo b,
+    .agente__datos .cita {
+      display: none;
+    }
+  }
+
+  /* En una ventana ancha pero bajita ella queda chica: sus datos se recorren un poco para no tocarla. */
+  @media (max-height: 559px) and (min-aspect-ratio: 3 / 2) {
+    .agente__datos {
+      left: -2%;
+    }
   }
 
   .cita {
@@ -2536,6 +2560,10 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
   .otra {
     display: inline-flex;
+  }
+
+  .agente {
+    display: block;
   }
 
   html.con-corto .corto__cine {
@@ -2568,9 +2596,11 @@ html[data-ahorro] .corto:not([data-pedido]) .corto__cine {
     display: none;
   }
 
-  /* Ni sus controles ni el boton que lo corre: aqui el corto no existe (tampoco en un celular que se acuesta). */
+  /* Ni sus controles, ni el boton que lo corre, ni la agente: aqui el corto no existe (tampoco en un celular que se
+     acuesta) y el cartel va solo con su texto. */
   .control,
-  .otra {
+  .otra,
+  .agente {
     display: none;
   }
 }

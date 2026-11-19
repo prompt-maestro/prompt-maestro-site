@@ -79,9 +79,13 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
 - En pantallas anchas lo más grande es la foto de esa escena: `arranque.js` la adelanta (solo la del oficio elegido)
   y el video, uno solo, se pide cuando la página ya se pintó. Con ahorro de datos o con una conexión lenta el corto
   no corre solo ni se pide nada suyo: queda el cartel con su botón «Ver el video».
-- El cartel no depende del corto, y su imagen cambia con la pantalla. En pantallas más anchas que altas son las tres
-  fotos de «su tiempo» como tarjetas (`cartel.tarjeta` de cada oficio, sin tamaño ni extensión), con la cita del
-  primer oficio debajo (`fuente/plantillas/parciales/cartel-flota.html`). En celular y en tableta de pie es «Tú y tu
+- El cartel no depende del corto, y su imagen cambia con la pantalla. Donde corre el corto (900 o más de ancho, más
+  ancha que alta y con 480 o más de alto) es la agente: un retrato sin marco a la derecha, tan alto como el cartel,
+  que se funde con el fondo (`cartel.agenteFoto`, la misma para todos los oficios; en `originales/cartel/agente.png`).
+  Es una persona que ilustra a un agente que no lo es: por eso lleva a un lado el rótulo «Tu agente virtual»
+  (`cartel.agenteVirtual`) y su texto alternativo también lo dice; con ella va la cita del primer oficio
+  (`fuente/plantillas/parciales/cartel-flota.html`). En ventanas menos anchas o casi cuadradas queda solo su rótulo.
+  En las demás pantallas más anchas que altas el cartel va solo con su texto. En celular y en tableta de pie es «Tú y tu
   agente»: la foto de quien trabaja (`cartel.tu`) y un celular dibujado con HTML y CSS donde su agente contesta,
   cobra el anticipo y agenda (`cartel.charla`, más la cita del oficio). Todo se dibuja con una sola unidad, el ancho
   de la imagen entre 350, así que es la misma composición en un celular angosto y en una tableta.
@@ -109,7 +113,7 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   audio.
 - Sumar un oficio no toca el diseño ni el código: sus originales en `originales/comercial/` (`<oficio>-escena.png`,
   su escena acostada, de 16 por 9; si tiene toma viva, `<oficio>-escena-viva.mp4`, ese mismo cuadro en movimiento; y
-  `<oficio>-trabajo.png`, de pie) y en `originales/cartel/` (`<oficio>-vida.png`), su entrada en
+  `<oficio>-trabajo.png`, de pie), su entrada en
   `fuente/datos/corto.json` (su cuenta de mensajes sin contestar, sus avisos, lo que hizo el agente en `trato`: el
   mensaje, lo que contestó, de dónde lo sacó, el pago, la frase con el anticipo que cobró y la cita en la agenda; a
   dónde mira la cámara en `mira` y, para el cartel, sus fotos, el recorte de su retrato y su conversación) y correr

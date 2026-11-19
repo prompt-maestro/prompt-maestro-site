@@ -32,10 +32,13 @@ const TOMA = { avif: 31, webp: 76 };
  */
 const ESCENA = { avif: 10, webp: 80 };
 const ESCENA_GRANDE = { avif: 16, webp: 76 };
-/** Las fotos de "su tiempo" del cartel: con luz de dia y mucho detalle, piden un poco mas de compresion. */
-const VIDA = { avif: 35, webp: 58 };
-/** Que parte del ancho de la foto entra en una tarjeta del cartel. */
-const PARTE_DE_TARJETA = 0.72;
+/**
+ * La agente del cartel en pantallas anchas: un retrato sobre fondo oscuro, tan alto como la pantalla. El fondo se
+ * comprime casi sin peso; lo que se cuida es su cara.
+ */
+const AGENTE = { avif: 24, webp: 78 };
+/** Sus anchos: una laptop, una pantalla grande y una densa. */
+const ANCHOS_DE_LA_AGENTE = [900, 1400, 2000];
 /** El retrato del cartel en celular: chico y lo mas grande de esa pantalla, asi que se cuida mas que una toma. */
 const RETRATO = { avif: 30, webp: 74 };
 /** Los anchos del retrato: el del celular y el de la tableta de pie. Mide tres de ancho por cuatro de alto. */
@@ -106,22 +109,6 @@ function imagen(de, a, filtro, calidad) {
  */
 function foto(de, nombre, ancho, calidad) {
   return imagen(de, `${nombre}-${ancho}`, `scale=${ancho}:-2:flags=lanczos`, calidad);
-}
-
-/**
- * La misma foto recortada para una tarjeta alta y angosta (las del cartel en pantallas anchas): todo el alto y, de lo
- * ancho, la parte que dice "encuadre" (de 0, pegada a la izquierda, a 100, pegada a la derecha). Asi la persona queda
- * dentro de la tarjeta sin que la pagina tenga que acomodarla.
- * @param {string} de
- * @param {string} nombre
- * @param {number} ancho
- * @param {number} encuadre
- * @param {Calidad} calidad
- * @returns {Trabajo[]}
- */
-function tarjeta(de, nombre, ancho, encuadre, calidad) {
-  const recorte = `crop=iw*${PARTE_DE_TARJETA}:ih:(iw-ow)*${(encuadre / 100).toFixed(2)}:0`;
-  return imagen(de, `${nombre}-tarjeta-${ancho}`, `${recorte},scale=${ancho}:-2:flags=lanczos`, calidad);
 }
 
 /**
@@ -203,7 +190,7 @@ function viva({ de, a, zona: escrita }) {
  * @property {string} clave
  * @property {boolean} video
  * @property {{ viva: string }} mira
- * @property {{ encuadre: number, tu: { recorte: { x: number, y: number, ancho: number } } }} cartel
+ * @property {{ tu: { recorte: { x: number, y: number, ancho: number } } }} cartel
  */
 /** @type {{ oficios: Oficio[] }} */
 const corto = JSON.parse(await readFile(path.join(raiz, 'fuente', 'datos', 'corto.json'), 'utf8'));
@@ -222,13 +209,13 @@ const TRABAJOS = [
     // El final del corto, con los oficios lado a lado: cada uno de pie, trabajando.
     ...foto(`comercial/${clave}-trabajo.png`, `comercial/${clave}-trabajo`, 720, TOMA),
     ...foto(`comercial/${clave}-trabajo.png`, `comercial/${clave}-trabajo`, 1080, TOMA),
-    // El cartel en pantallas anchas: la misma persona, ya en su tiempo, recortada para su tarjeta.
-    ...tarjeta(`cartel/${clave}-vida.png`, `cartel/${clave}-vida`, 600, cartel.encuadre, VIDA),
     // El cartel en celular: su retrato trabajando, sacado de su foto de pie.
     ...ANCHOS_DEL_RETRATO.flatMap((ancho) =>
       retrato(`comercial/${clave}-trabajo.png`, `cartel/${clave}-tu`, ancho, cartel.tu.recorte),
     ),
   ]),
+  // El cartel en pantallas anchas: la agente que ilustra al agente virtual, la misma para todos los oficios.
+  ...ANCHOS_DE_LA_AGENTE.flatMap((ancho) => foto('cartel/agente.png', 'cartel/agente', ancho, AGENTE)),
   // "Para quien": el retrato de cada oficio, entero (cuatro de ancho por cinco de alto) y sin recorte.
   ...giros.flatMap(({ clave }) =>
     ANCHOS_DEL_OFICIO.flatMap((ancho) =>

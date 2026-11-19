@@ -333,7 +333,7 @@ test.describe('en una pantalla diminuta (zoom de 400 %, o un celular acostado)',
     await expect(page.locator('[data-corto-ver]')).toBeHidden();
     await expect(page.locator('[data-corto] button').filter({ visible: true })).toHaveCount(0);
     await expect(page.locator('[data-corto] .duo')).toBeHidden();
-    await expect(page.locator('[data-corto] .vidas')).toBeHidden();
+    await expect(page.locator('[data-corto] .agente')).toBeHidden();
     const empieza = page.locator('.corto').getByRole('link', { name: 'Empieza ahora' });
     await empieza.scrollIntoViewIfNeeded();
     await expect(empieza).toBeVisible();

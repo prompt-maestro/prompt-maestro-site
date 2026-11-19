@@ -238,16 +238,16 @@ test('el cartel trae el titulo, la frase, el boton al alta, el enlace a la demos
   await expect(cita).toContainText('Sábado · 11:00 am');
   await expect(cita).toContainText('Ana · Gelish');
   await expect(cita.getByRole('img', { name: 'Garantizada: anticipo pagado' })).toBeVisible();
-  // Y su imagen: en pantallas anchas, las fotos de "su tiempo"; en las demas, "Tu y tu agente".
+  // Y su imagen: en pantallas anchas, la agente que ilustra al agente virtual; en las demas, "Tu y tu agente".
   if (esAncho(info)) {
-    const foto = corto.locator('.vida[data-activo] img');
-    await expect(foto).toHaveAttribute('alt', /manicurista/);
+    const foto = corto.locator('.agente__foto');
+    await expect(foto).toHaveAttribute('alt', /agente virtual/);
     await expect(foto).toHaveJSProperty('complete', true);
     await expect(cita).toBeInViewport({ ratio: 0.9 });
     await expect(corto.locator('.duo')).toBeHidden();
   } else {
     await expect(corto.getByRole('figure', { name: CORTO.cartel.ejemplo ?? '' })).toBeVisible();
-    await expect(corto.locator('.vidas')).toBeHidden();
+    await expect(corto.locator('.agente')).toBeHidden();
   }
   // El cartel ocupa justo una pantalla (tambien en la previa, que lleva su cinta arriba) y nada se sale a lo ancho.
   const { abajo, alto } = await corto.evaluate((el) => ({
@@ -266,17 +266,54 @@ test('el cartel trae el titulo, la frase, el boton al alta, el enlace a la demos
   expect(fallas).toEqual([]);
 });
 
-test('en pantallas anchas el cartel ensena las tres fotos de "su tiempo", y de "Tu y tu agente" no pide nada', async ({
+test('en pantallas anchas el cartel ensena a la agente, sin marco, con su rotulo de agente virtual; y de "Tu y tu agente" no pide nada', async ({
   page,
 }, info) => {
   test.skip(!esAncho(info), 'en celular el cartel ensena "Tu y tu agente"');
   const corto = await abrirCortoDetenido(page, { quieta: true });
-  for (const oficio of CORTO.oficios) {
-    await expect(corto.locator(`.vida[data-vida="${oficio.clave}"] img`)).toBeInViewport({ ratio: 0.9 });
-  }
-  await expect(corto.locator('.vida__nombre').filter({ visible: true })).toHaveText(
-    CORTO.oficios.map((oficio) => oficio.nombre),
+  const foto = corto.locator('.agente__foto');
+  await expect(foto).toBeVisible();
+  await expect(foto).toHaveJSProperty('complete', true);
+  // Una sola foto, del ancho que le toca a esta pantalla (se ve tan alta como el cartel).
+  expect(await foto.evaluate((img) => (img instanceof HTMLImageElement ? img.currentSrc : ''))).toMatch(
+    /\/cartel\/agente-(900|1400|2000)\.(avif|webp)$/,
   );
+  // Es una persona que ilustra a un agente que no lo es: a su lado se lee "Tu agente virtual", completo.
+  const rotulo = corto.locator('.agente__rotulo span');
+  await expect(rotulo).toHaveText(CORTO.cartel.agenteVirtual ?? '');
+  await expect(rotulo).toHaveText(/virtual/i);
+  await expect(rotulo).toBeInViewport({ ratio: 1 });
+  await expect(corto.locator('.agente__rotulo b')).toHaveText(CORTO.cartel.agenteHace ?? '');
+  // Su cara (la mitad derecha de su retrato, arriba) queda libre: ni el titulo, ni la frase, ni los botones, ni sus
+  // propios datos la tocan. Y sus datos tampoco se enciman con el texto del cartel.
+  const retrato = await caja(corto.locator('.agente'));
+  const lado = retrato.derecha - retrato.izquierda;
+  const cara = {
+    izquierda: retrato.izquierda + lado * 0.5,
+    arriba: retrato.arriba + lado * 0.08,
+    derecha: retrato.izquierda + lado * 0.82,
+    abajo: retrato.arriba + lado * 0.45,
+  };
+  /**
+   * @param {{ izquierda: number, arriba: number, derecha: number, abajo: number }} una
+   * @param {{ izquierda: number, arriba: number, derecha: number, abajo: number }} otra
+   */
+  const seTocan = (una, otra) =>
+    una.izquierda < otra.derecha && otra.izquierda < una.derecha && una.arriba < otra.abajo && otra.arriba < una.abajo;
+  const datos = await caja(corto.locator('.agente__datos'));
+  expect(seTocan(datos, cara), 'sus datos tapan su cara').toBe(false);
+  for (const pieza of [
+    corto.getByRole('heading', { level: 1 }),
+    corto.locator('.cartel__frase'),
+    corto.getByRole('link', { name: 'Empieza ahora' }),
+    corto.getByRole('link', { name: 'Míralo en acción' }),
+  ]) {
+    const suya = await caja(pieza);
+    expect(seTocan(suya, cara), 'el texto del cartel tapa su cara').toBe(false);
+    expect(seTocan(suya, datos), 'sus datos se enciman con el texto del cartel').toBe(false);
+  }
+  // Y queda debajo de la barra: su cabeza no se mete bajo los enlaces de arriba.
+  expect(cara.arriba).toBeGreaterThanOrEqual((await caja(page.locator('[data-barra]'))).abajo - 4);
   // Ahi "Tu y tu agente" no existe: no se pinta y sus fotos no viajan.
   await expect(corto.locator('.duo')).toBeHidden();
   await page.waitForLoadState('load');
@@ -342,11 +379,11 @@ for (const [lugar, oficio] of CORTO.oficios.entries()) {
     await expect(cita).toContainText(oficio.cartel.cuando);
     await expect(cita).toContainText(oficio.cartel.quien);
     await expect(cita.getByRole('img', { name: 'Garantizada: anticipo pagado' })).toBeVisible();
-    // Ya no van: ni botones para cambiar de oficio, ni el contador en ceros, ni las fotos de "su tiempo". Y nada de
-    // la imagen es una parada del teclado.
+    // Ya no van: ni botones para cambiar de oficio, ni el contador en ceros, ni la agente de las pantallas anchas. Y
+    // nada de la imagen es una parada del teclado.
     await expect(corto.locator('button').filter({ visible: true })).toHaveCount(0);
     await expect(corto.getByText('sin contestar').filter({ visible: true })).toHaveCount(0);
-    await expect(corto.locator('.vidas')).toBeHidden();
+    await expect(corto.locator('.agente')).toBeHidden();
     expect(await corto.locator('.duo').locator('a, button, input, video, [tabindex]').count()).toBe(0);
     // Es uno por visita: pasa el tiempo y no cambia solo.
     await page.clock.runFor(20_000);
@@ -557,12 +594,12 @@ test('en celular y en tableta de pie el corto no existe: solo el cartel, sin con
   await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
   expect(videos).toEqual([]);
   for (const video of await corto.locator('video').all()) await expect(video).not.toHaveAttribute('src', /.*/);
-  // Tampoco viajan las fotos del corto ni las de "su tiempo" de las pantallas anchas: aqui no se pintan.
+  // Tampoco viajan las fotos del corto ni la de la agente de las pantallas anchas: aqui no se pintan.
   const fotos = await page.evaluate(() =>
     performance
       .getEntriesByType('resource')
       .map((recurso) => recurso.name)
-      .filter((nombre) => /-(escena-\d+|trabajo-\d+|vida-tarjeta-\d+)\.(avif|webp)$/.test(nombre)),
+      .filter((nombre) => /(-(escena|trabajo)-\d+|\/agente-\d+)\.(avif|webp)$/.test(nombre)),
   );
   expect(fotos).toEqual([]);
 });
@@ -625,7 +662,7 @@ test.describe('sin JavaScript', () => {
     await expect(corto.getByRole('link', { name: 'Míralo en acción' })).toHaveAttribute('href', '#citas');
     const [primero] = CORTO.oficios;
     if (esAncho(info)) {
-      await expect(corto.locator('.vida').first().locator('img')).toBeVisible();
+      await expect(corto.locator('.agente__foto')).toBeVisible();
     } else if (primero) {
       // Sin nadie que elija, "Tu y tu agente" ensena el primer oficio, completo; los demas no se pintan.
       const escena = corto.locator('.duo__escena').filter({ visible: true });

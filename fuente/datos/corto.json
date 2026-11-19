@@ -69,6 +69,9 @@
     "enLoTuyo": "En lo tuyo",
     "tuAgente": "Tu agente",
     "agenteHace": "Contesta, cobra el anticipo y agenda",
+    "agenteVirtual": "Tu agente virtual",
+    "agenteFoto": "cartel/agente",
+    "agenteAlt": "Una profesional de atención a clientes, de saco y con diadema, sonríe a la cámara: así ilustramos a tu agente virtual.",
     "whatsapp": "WhatsApp Business",
     "teEscriben": "Te escriben:",
     "contesta": "Tu agente contesta:"
@@ -173,9 +176,6 @@
         "agenda": "En tu calendario: viernes, 5:00 pm"
       },
       "cartel": {
-        "tarjeta": "cartel/unas-vida-tarjeta",
-        "alt": "La manicurista pasea por un parque de la mano de su hija; las dos sonríen.",
-        "encuadre": 72,
         "cuando": "Sábado · 11:00 am",
         "quien": "Ana · Gelish",
         "tu": {
@@ -300,9 +300,6 @@
         "agenda": "En tu calendario: hoy, 5:30 pm"
       },
       "cartel": {
-        "tarjeta": "cartel/dentista-vida-tarjeta",
-        "alt": "El dentista llega a casa y su hijo lo recibe con un abrazo en la entrada.",
-        "encuadre": 58,
         "cuando": "Miércoles · 4:00 pm",
         "quien": "Carla · Limpieza",
         "tu": {
@@ -427,9 +424,6 @@
         "agenda": "En tu calendario: mañana, 10:00 am"
       },
       "cartel": {
-        "tarjeta": "cartel/medico-vida-tarjeta",
-        "alt": "La doctora lee con calma en la mesa de su casa, con una taza de café al lado.",
-        "encuadre": 100,
         "cuando": "Jueves · 10:00 am",
         "quien": "Doña Elvira · Consulta",
         "tu": {

@@ -457,9 +457,7 @@ test('cada oficio trae lo suyo completo: a donde mira la camara, su cuenta, sus 
       `${oficio.clave}: la pagina dice "agente"`,
     );
     const { cartel } = oficio;
-    assert.ok(cartel.tarjeta, `${oficio.clave}: la foto de su tarjeta`);
-    assert.ok(cartel.alt && cartel.cuando && cartel.quien, `${oficio.clave}: el cartel`);
-    assert.ok(cartel.encuadre >= 0 && cartel.encuadre <= 100, `${oficio.clave}: encuadre`);
+    assert.ok(cartel.cuando && cartel.quien, `${oficio.clave}: el cartel`);
   }
 });
 
@@ -627,12 +625,9 @@ test('cada oficio tiene en el repo sus fotos, y su toma viva si dice tenerla: si
       const { length } = await readFile(path.join(comercial, `${oficio.clave}-${foto}`));
       assert.ok(length <= tope * 1024, `${oficio.clave}-${foto}: ${Math.round(length / 1024)} KB`);
     }
-    // Las del cartel las dice el dato de cada oficio: su retrato para el celular, a dos anchos, y la de la tarjeta.
+    // La del cartel la dice el dato de cada oficio: su retrato para el celular, a dos anchos.
     for (const foto of ['540.avif', '540.webp', '840.avif', '840.webp']) {
       await access(path.join(FUENTE, 'recursos', `${oficio.cartel.tu.foto}-${foto}`));
-    }
-    for (const foto of ['600.avif', '600.webp']) {
-      await access(path.join(FUENTE, 'recursos', `${oficio.cartel.tarjeta}-${foto}`));
     }
     if (!oficio.video) continue;
     const video = await readFile(path.join(comercial, `${oficio.clave}-escena.mp4`));
@@ -693,6 +688,14 @@ test('las fotos del cartel pesan poco en celular: 60 KB o menos cada una, y la q
   }
 });
 
+test('la agente del cartel esta en el repo a tres anchos y en dos formatos, y pesa poco', async () => {
+  // Es una sola, la misma para todos los oficios, y solo se pide en pantallas anchas: 90 KB o menos cada archivo.
+  for (const foto of ['900.avif', '900.webp', '1400.avif', '1400.webp', '2000.avif', '2000.webp']) {
+    const { length } = await readFile(path.join(FUENTE, 'recursos', `${corto.cartel.agenteFoto}-${foto}`));
+    assert.ok(length <= 90 * 1024, `agente-${foto}: ${Math.round(length / 1024)} KB`);
+  }
+});
+
 test('en las carpetas del corto no queda nada que la pagina ya no use', async () => {
   const claves = new Set(corto.oficios.map((/** @type {{ clave: string }} */ oficio) => oficio.clave));
   const deOficio = /^([a-z]+)-((trabajo-(720|1080)|escena-(1600|2560))\.(avif|webp)|escena\.mp4)$/;
@@ -701,9 +704,12 @@ test('en las carpetas del corto no queda nada que la pagina ya no use', async ()
     const [, clave = ''] = deOficio.exec(archivo) ?? [];
     assert.ok(claves.has(clave), `comercial/${archivo} no es de ningun oficio`);
   }
-  const deVida = /^([a-z]+)-(vida-tarjeta-600|tu-(540|840))\.(avif|webp)$/;
+  // En la del cartel: el retrato de cada oficio para el celular y la agente de las pantallas anchas.
+  const deTu = /^([a-z]+)-tu-(540|840)\.(avif|webp)$/;
+  const deLaAgente = /^agente-(900|1400|2000)\.(avif|webp)$/;
   for (const archivo of await readdir(path.join(FUENTE, 'recursos', 'cartel'))) {
-    const [, clave = ''] = deVida.exec(archivo) ?? [];
+    if (deLaAgente.test(archivo)) continue;
+    const [, clave = ''] = deTu.exec(archivo) ?? [];
     assert.ok(claves.has(clave), `cartel/${archivo} no es de ningun oficio`);
   }
 });
@@ -755,10 +761,23 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
     assert.match(seccion, new RegExp(`<[^>]* ${guardado}[^>]* hidden[ >]`), guardado);
   }
   assert.equal(delCartel.match(/<button\b/g)?.length, 1, 'el unico boton del cartel es el del corto');
-  // Las tarjetas de "su tiempo" son de las pantallas anchas: esperan, asi un celular (que no las pinta) no las pide.
-  const tarjetas = delCartel.match(/<img class="vida__foto"[^>]*>/g) ?? [];
-  assert.equal(tarjetas.length, corto.oficios.length);
-  for (const tarjeta of tarjetas) assert.match(tarjeta, / loading="lazy"/);
+  // La agente es de las pantallas anchas: su foto espera, asi un celular (que no la pinta) no la pide. Es una persona
+  // que ilustra a un agente que no lo es: lo dicen su texto alternativo y el rotulo que lleva a un lado.
+  const agente = delCartel.match(/<img class="agente__foto"[^>]*>/g) ?? [];
+  assert.equal(agente.length, 1, 'una sola foto de la agente');
+  assert.match(agente[0] ?? '', / loading="lazy"/);
+  assert.match(agente[0] ?? '', / alt="[^"]*agente virtual[^"]*"/);
+  assert.match(corto.cartel.agenteVirtual, /virtual/i, 'junto a una persona, la pagina dice que el agente es virtual');
+  assert.ok(delCartel.includes(`<span>${corto.cartel.agenteVirtual}</span> <b>${corto.cartel.agenteHace}</b>`));
+  // Con ella va una sola cita garantizada: la del primer oficio.
+  assert.equal(
+    delCartel
+      .split('<figcaption class="agente__datos">')[1]
+      ?.split('</figcaption>')[0]
+      ?.match(/class="cita"/g)?.length,
+    1,
+  );
+  assert.doesNotMatch(delCartel, /vida__|class="vidas"/);
   // La pagina no adelanta ninguna foto: en celular no hace falta, y en pantallas anchas la del corto la adelanta
   // arranque.js, que es quien sabe a que oficio le toco. Su etiqueta le dice que archivos son (con un asterisco en el
   // lugar del oficio) y cuanto miden en la pantalla: lo mismo que dice la foto de cada escena.

@@ -61,20 +61,16 @@
         <p class="cartel__frase">{{corto.cartel.frase}}</p>
         <p class="cartel__acciones"><a class="boton boton--sello boton--luz" href="{{sitio.alta}}" data-lugar="pelicula">{{corto.cartel.accion}}</a> <a class="enlace" href="#citas" data-lugar="pelicula">{{corto.cartel.otra}}</a></p>
       </div>
-      <ul class="vidas" role="list">
-{{#cada corto.oficios}}        <li class="vida" data-vida="{{clave}}"{{#si @primero}} data-activo{{/si}}>
-          <figure class="vida__marco">
-            <picture>
-              <source type="image/avif" srcset="{{armado.recursos}}{{cartel.tarjeta}}-600.avif">
-              <img class="vida__foto" src="{{armado.recursos}}{{cartel.tarjeta}}-600.webp" alt="{{cartel.alt}}" width="600" height="1492" loading="lazy" decoding="async">
-            </picture>
-            <figcaption class="vida__nombre">{{nombre}}</figcaption>
-          </figure>
-          <div class="vida__flota">
-            {{> cartel-flota}}
-          </div>
-        </li>
-{{/cada}}      </ul>
+      <figure class="agente">
+        <picture>
+          <source type="image/avif" srcset="{{armado.recursos}}{{corto.cartel.agenteFoto}}-900.avif 900w, {{armado.recursos}}{{corto.cartel.agenteFoto}}-1400.avif 1400w, {{armado.recursos}}{{corto.cartel.agenteFoto}}-2000.avif 2000w" sizes="100vh">
+          <img class="agente__foto" src="{{armado.recursos}}{{corto.cartel.agenteFoto}}-1400.webp" srcset="{{armado.recursos}}{{corto.cartel.agenteFoto}}-900.webp 900w, {{armado.recursos}}{{corto.cartel.agenteFoto}}-1400.webp 1400w, {{armado.recursos}}{{corto.cartel.agenteFoto}}-2000.webp 2000w" sizes="100vh" alt="{{corto.cartel.agenteAlt}}" width="1400" height="1400" loading="lazy" decoding="async">
+        </picture>
+        <figcaption class="agente__datos">
+          <p class="agente__rotulo"><span>{{corto.cartel.agenteVirtual}}</span> <b>{{corto.cartel.agenteHace}}</b></p>
+{{#cada corto.oficios}}{{#si @primero}}          {{> cartel-flota}}
+{{/si}}{{/cada}}        </figcaption>
+      </figure>
       <div class="duo">
 {{#cada corto.oficios}}        <figure class="duo__escena" data-duo="{{clave}}" aria-label="{{corto.cartel.ejemplo}}"{{#no @primero}} hidden{{/no}}>
           <div class="duo__lado">
