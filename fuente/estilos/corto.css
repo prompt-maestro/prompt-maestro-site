@@ -165,6 +165,28 @@
   box-shadow: 0 10px 34px rgb(63 92 245 / 0.45);
 }
 
+/* "Míralo en acción" es largo: en los celulares mas angostos el hueco se acorta y el boton se arrima, para que los
+   dos sigan en un renglon y el cartel quepa en la pantalla. */
+@media (max-width: 389px) {
+  .cartel__acciones {
+    column-gap: 16px;
+  }
+}
+
+@media (max-width: 359px) {
+  .cartel__acciones {
+    column-gap: 10px;
+  }
+
+  .cartel__acciones .boton {
+    padding: 0 14px;
+  }
+
+  .cartel__acciones .enlace {
+    font-size: 1rem;
+  }
+}
+
 /* Las tarjetas de "su tiempo" solo van en pantallas anchas: mas abajo se les da su lugar. */
 .vidas {
   display: none;
