@@ -150,6 +150,14 @@
   text-wrap: balance;
 }
 
+/* En los celulares angostos la frase va un punto mas chica: cabe en tres renglones en vez de cuatro, y ese renglon
+   es alto que gana la imagen de abajo. */
+@media (max-width: 379px) {
+  .cartel__frase {
+    font-size: 1rem;
+  }
+}
+
 .cartel__acciones {
   display: flex;
   flex-wrap: wrap;
@@ -308,7 +316,8 @@
 
    Todo se dibuja con una sola unidad, --u: el ancho de la imagen entre 350, que es lo que mide su boceto. Asi es la
    misma composicion en un celular angosto y en una tableta. A lo alto se acomoda sola: en una pantalla bajita la
-   tarjeta se acorta y el celular sube, para que la respuesta del agente y el pago se alcancen a ver.
+   tarjeta se acorta y el celular sube, para que la respuesta del agente y el pago se alcancen a ver y, donde el alto
+   da (casi todos los celulares de hoy), tambien la cita entera con su sello.
    --------------------------------------------------------------------------------------------------------------- */
 .duo {
   position: relative;
@@ -317,7 +326,7 @@
   /* Lo menos que mide: lo que ocupa el celular hasta su pago. Si la pantalla no da, el cartel crece hacia abajo. */
   min-height: min(calc((100vw - 2 * var(--margen)) * 0.835), 634px);
   /* El aire de arriba se da con el alto de la pantalla: en una bajita, casi nada. */
-  margin: clamp(12px, calc(13.5 * var(--svh) - 68px), 46px) var(--margen) 0;
+  margin: clamp(12px, calc(16 * var(--svh) - 92px), 46px) var(--margen) 0;
   container-type: size;
 }
 
@@ -442,8 +451,9 @@
   content: "";
 }
 
-/* El celular. Su columna mide lo que la imagen; arriba lleva un aire que se encoge hasta cero cuando la pantalla
-   es bajita, y lo que nunca cede es su parte de arriba, hasta el pago. De ahi para abajo se sale de la pantalla. */
+/* El celular. Su columna mide lo que la imagen. Arriba lleva un aire, que es lo primero que cede: se encoge hasta
+   cero antes de que la cita se corte. Despues cede la cita, y lo que nunca cede es su parte de arriba, hasta el
+   pago. De ahi para abajo se sale de la pantalla. */
 .cel {
   position: absolute;
   top: 0;
@@ -455,16 +465,18 @@
   width: calc(214 * var(--u));
 }
 
+/* Cede mil veces mas que el celular: mientras quede aire, lo que falte de alto sale de aqui. */
 .cel::before {
-  flex: 0 1 calc(72 * var(--u));
+  flex: 0 1000 calc(72 * var(--u));
   content: "";
 }
 
 .cel__marco {
   position: relative;
-  flex: 0 0 calc(294 * var(--u));
-  /* Su caja no crece con lo que lleva dentro: el celular se sale de ella a proposito. */
-  min-height: 0;
+  /* Lo que quiere medir: hasta la cita con su sello (la del oficio de nombre mas largo) y un poco de aire. Lo menos:
+     hasta el pago. Su caja no crece con lo que lleva dentro: el celular se sale de ella a proposito. */
+  flex: 0 1 calc(332 * var(--u));
+  min-height: calc(276 * var(--u));
   transform: rotate(-2deg);
   transform-origin: 50% calc(243 * var(--u));
 }
@@ -485,13 +497,13 @@
   content: "";
 }
 
-/* La camara. */
+/* La camara: delgada y pegada arriba, para que la conversacion empiece pronto. */
 .cel__marco::after {
   position: absolute;
-  top: calc(18 * var(--u));
-  left: calc(71 * var(--u));
-  width: calc(72 * var(--u));
-  height: calc(20 * var(--u));
+  top: calc(11 * var(--u));
+  left: calc(75 * var(--u));
+  width: calc(64 * var(--u));
+  height: calc(16 * var(--u));
   border-radius: calc(20 * var(--u));
   background: #000;
   content: "";
@@ -521,7 +533,7 @@
   display: flex;
   align-items: center;
   gap: calc(9 * var(--u));
-  padding: calc(44 * var(--u)) calc(13 * var(--u)) calc(10 * var(--u));
+  padding: calc(32 * var(--u)) calc(13 * var(--u)) calc(8 * var(--u));
   border-bottom: 1px solid rgb(255 255 255 / 0.08);
   background: rgb(20 26 62 / 0.9);
 }
@@ -560,8 +572,8 @@
   /* Su columna mide lo que la pantalla: un texto largo no la ensancha. */
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: calc(7 * var(--u));
-  padding: calc(10 * var(--u)) calc(8 * var(--u));
+  gap: calc(6 * var(--u));
+  padding: calc(8 * var(--u));
   font-size: calc(12.5 * var(--u));
   line-height: 1.32;
 }
@@ -571,7 +583,7 @@
   position: relative;
   justify-self: start;
   max-width: 86%;
-  padding: calc(7 * var(--u)) calc(10 * var(--u));
+  padding: calc(6 * var(--u)) calc(10 * var(--u));
   border-radius: calc(13 * var(--u)) calc(13 * var(--u)) calc(13 * var(--u)) calc(4 * var(--u));
   background: #1b2250;
 }
@@ -587,7 +599,7 @@
 .globo .palomitas {
   position: absolute;
   right: calc(8 * var(--u));
-  bottom: calc(7 * var(--u));
+  bottom: calc(6 * var(--u));
   width: calc(16 * var(--u));
   height: calc(10 * var(--u));
   color: #c9d3ff;
@@ -611,8 +623,8 @@
   grid-auto-flow: column;
   align-items: center;
   column-gap: calc(3 * var(--u));
-  margin: calc(2 * var(--u)) calc(8 * var(--u)) 0 0;
-  padding: calc(9 * var(--u)) 0 calc(9 * var(--u)) calc(11 * var(--u));
+  margin: 0 calc(8 * var(--u)) 0 0;
+  padding: calc(8 * var(--u)) 0 calc(8 * var(--u)) calc(11 * var(--u));
   border-radius: calc(13 * var(--u));
   font-size: calc(12 * var(--u));
 }
@@ -629,6 +641,18 @@
   width: min(calc(78 * var(--u)), calc(100% + 18 * var(--u)));
   margin-right: calc(-18 * var(--u));
   transform: rotate(-7deg);
+}
+
+/* Celulares de alto medio (los mas comunes, con las barras del navegador a la vista): el texto del cartel cede unos
+   puntos, para que la cita del celular dibujado se vea entera. */
+@media (max-height: 700px) and (max-aspect-ratio: 999 / 1000) {
+  .cartel__texto {
+    padding-top: 8px;
+  }
+
+  .cartel__acciones {
+    margin-top: 18px;
+  }
 }
 
 /* Celulares bajitos: el texto del cartel se aprieta para dejarle alto a la imagen. */
@@ -648,18 +672,6 @@
 
   .cartel__acciones .boton {
     min-height: 50px;
-  }
-}
-
-/* En pantallas bajitas el celular dibujado gana unos puntos arriba: su pago queda mas lejos del borde. */
-@media (max-height: 700px) and (max-aspect-ratio: 999 / 1000) {
-  .cel__marco::after {
-    top: calc(14 * var(--u));
-    height: calc(18 * var(--u));
-  }
-
-  .cel__cabeza {
-    padding-top: calc(38 * var(--u));
   }
 }
 

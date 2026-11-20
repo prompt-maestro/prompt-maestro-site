@@ -93,7 +93,10 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   pantallas más anchas que altas el cartel va solo con su texto. En celular y en tableta de pie es «Tú y tu
   agente»: la foto de quien trabaja (`cartel.tu`) y un celular dibujado con HTML y CSS donde su agente contesta,
   cobra el anticipo y agenda (`cartel.charla`, más la cita del oficio). Todo se dibuja con una sola unidad, el ancho
-  de la imagen entre 350, así que es la misma composición en un celular angosto y en una tableta.
+  de la imagen entre 350, así que es la misma composición en un celular angosto y en una tableta. A lo alto se
+  acomoda sola: el celular dibujado sube (su aire de arriba es lo primero que cede) para que la cita se vea entera,
+  con su sello, en la primera pantalla; en los celulares más bajitos (menos de 640 de alto) se asoma, y lo que
+  nunca se pierde es la respuesta del agente y el pago.
 - En celular se ve UN oficio, al azar en cada visita. La página trae escrita una escena por oficio y solo la primera
   a la vista (es la que se ve sin JavaScript); `fuente/js/arranque.js`, que corre en el `<head>` antes del primer
   pintado, elige uno, lo deja escrito en `<html data-oficio>` y guarda o enseña cada escena en cuanto el navegador la

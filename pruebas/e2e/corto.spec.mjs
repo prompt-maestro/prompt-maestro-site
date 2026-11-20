@@ -439,6 +439,14 @@ for (const [lugar, oficio] of CORTO.oficios.entries()) {
     await expect(cita).toContainText(oficio.cartel.cuando);
     await expect(cita).toContainText(oficio.cartel.quien);
     await expect(cita.getByRole('img', { name: 'Garantizada: anticipo pagado' })).toBeVisible();
+    // Y la cita se ve entera en la primera pantalla, con su sello: es la prueba de lo que vende la pagina. (Va
+    // girada: su caja se compara con la pantalla, que es mas exacto que la cuenta del navegador.)
+    const alto = page.viewportSize()?.height ?? 0;
+    for (const pieza of [cita, cita.locator('.sello')]) {
+      const suCaja = await caja(pieza);
+      expect(suCaja.arriba).toBeGreaterThanOrEqual(0);
+      expect(suCaja.abajo, 'la cita o su sello se cortan').toBeLessThanOrEqual(alto - 4);
+    }
     // Ya no van: ni botones para cambiar de oficio, ni el contador en ceros, ni la agente de las pantallas anchas. Y
     // nada de la imagen es una parada del teclado.
     await expect(corto.locator('button').filter({ visible: true })).toHaveCount(0);
@@ -542,6 +550,8 @@ test.describe('"Tu y tu agente" en cada tamano', () => {
   const TAMANOS = /** @type {[number, number, string][]} */ ([
     [320, 568, 'medico'],
     [360, 640, 'medico'],
+    // El iPhone mas comun con las barras de Safari a la vista.
+    [390, 664, 'medico'],
     [390, 844, 'unas'],
     [412, 915, 'dentista'],
     [430, 932, 'medico'],
@@ -627,6 +637,12 @@ test.describe('"Tu y tu agente" en cada tamano', () => {
       const sello = await caja(hoja.locator('.sello'));
       for (const renglon of [hoja.locator('small'), hoja.locator('span')]) {
         expect((await caja(renglon)).derecha).toBeLessThanOrEqual(sello.izquierda + 4);
+      }
+      // Y en un celular de 640 de alto o mas la cita se ve entera, con su sello y con aire abajo: el celular
+      // dibujado sube lo que haga falta. (En el mas bajito y en la tableta de pie se asoma, como antes.)
+      if (ancho < 600 && alto >= 640) {
+        expect((await caja(hoja)).abajo, 'la cita se corta').toBeLessThanOrEqual(alto - 4);
+        expect(sello.abajo, 'el sello se corta').toBeLessThanOrEqual(alto - 4);
       }
     });
   }
