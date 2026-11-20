@@ -782,6 +782,10 @@ test.describe('el corto, en pantallas anchas', () => {
   test('al abrir corre solo: pasa por sus momentos en orden, cada uno con su letrero, y termina en el cartel', async ({
     page,
   }) => {
+    // Es la prueba mas larga del inicio (recorre el corto entero). Sola tarda unos 20 segundos, pero con los cinco
+    // navegadores a la vez a veces no le alcanza el minuto, sobre todo en Firefox: se le da el triple. No cambia lo
+    // que revisa.
+    test.slow();
     const fallas = vigilar(page);
     const corto = await abrirCortoDetenido(page);
     const titulo = corto.getByRole('heading', { level: 1 });
