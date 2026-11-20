@@ -390,7 +390,6 @@ export async function armarSitio({ raiz, destino }) {
     // Y lo que leen los buscadores en la raiz del dominio. En la previa no van: no se indexa.
     const secciones = /** @type {any} */ (datos.secciones);
     const agentes = /** @type {any} */ (datos.agentes);
-    const textos = (/** @type {{ texto: string }[]} */ lista) => lista.map(({ texto }) => texto);
     /** Los renglones de un capitulo de "Tu agente". */
     const videosDe = (/** @type {string} */ clave) =>
       agentes.capitulos.find((/** @type {{ clave: string }} */ capitulo) => capitulo.clave === clave)?.videos ?? [];
@@ -409,7 +408,13 @@ export async function armarSitio({ raiz, destino }) {
           cuida: agentes.cuida.lista.map(
             (/** @type {{ titulo: string, texto: string }} */ uno) => `${uno.titulo}. ${uno.texto}`,
           ),
-          requisitos: textos(secciones.planes.requisitos),
+          // Lo que hace falta para empezar, cada cosa con para que es; y la cedula, que solo aplica en salud.
+          requisitos: [
+            ...secciones.planes.requisitos.map(
+              (/** @type {{ titulo: string, texto: string }} */ uno) => `${uno.titulo}. ${uno.texto}`,
+            ),
+            secciones.planes.requisitosNota,
+          ],
           glosario: secciones.glosario,
           paraQuien: `${secciones.paraQuien.titulo} ${secciones.paraQuien.tituloFuerte}`,
           preciosDePrueba: planes.dePrueba,

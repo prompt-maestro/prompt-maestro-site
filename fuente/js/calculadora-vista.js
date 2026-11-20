@@ -72,15 +72,18 @@ export function montarCalculadora(raiz) {
       mensualidad: pesos(plan.mensual),
       citas: String(cuenta.citasParaPagar),
     };
-    // Si con lo que hoy le plantan no alcanza para pagar el plan, no se le dice que "ya se pago": solo lo que cuesta.
-    const pago = !cuenta.sePaga ? textos.soloCosto : cuenta.citasParaPagar === 1 ? textos.unaCita : textos.variasCitas;
+    // Si con lo que hoy le plantan no alcanza para pagar el plan, no se le dice que "ya se pago" ni se compara contra
+    // sus plantones: el titular dice cuanto es el plan en citas suyas y, abajo, lo demas que hace el agente.
+    const [titular, pago] = cuenta.sePaga
+      ? [textos.perdido, cuenta.citasParaPagar === 1 ? textos.unaCita : textos.variasCitas]
+      : [textos.equivale, textos.tiempo];
     escribir([
       ...(deEjemplo
         ? /** @type {[string, string | undefined, Record<string, string>][]} */ ([
             ['calculadora__ejemplo', textos.ejemplo, datos],
           ])
         : []),
-      ['calculadora__perdido', textos.perdido, datos],
+      ['calculadora__perdido', titular, datos],
       ['calculadora__pago', pago, datos],
     ]);
   };

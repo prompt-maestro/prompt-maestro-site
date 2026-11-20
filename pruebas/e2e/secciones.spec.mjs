@@ -74,20 +74,43 @@ test('al escribir sus numeros la calculadora rehace la cuenta y ya no habla del 
   await expect(salida).toContainText('Hoy se te van cerca de $12,000 al mes.');
   await expect(salida).not.toContainText('Un ejemplo');
   if (BARATO.mensual <= 1200) await expect(salida).toContainText('con 1 cita que sí llegue, ya se pagó.');
-  // Con centavos, y con coma: son 350 pesos con 50 centavos (no treinta y cinco mil), y dos citas son $701 exactos.
-  await citas.fill('2');
+  // Con centavos, y con coma: son 350 pesos con 50 centavos (no treinta y cinco mil), y cuatro citas son $1,402
+  // exactos (no $1,404: primero se multiplica y luego se cierra al peso). Cuatro, para que alcance a pagar el plan:
+  // con menos, el titular ya no dice lo que se le va (lo cuida la prueba de abajo).
+  await citas.fill('4');
   await precio.fill('350,50');
-  await expect(salida).toContainText('Hoy se te van cerca de $701 al mes.');
+  await expect(salida).toContainText('Hoy se te van cerca de $1,402 al mes.');
+  // Y los mismos centavos con coma se leen igual cuando no alcanza: $350.50 piden 3 citas para pagar el plan de $990.
+  await citas.fill('2');
+  if (BARATO.mensual === 990) {
+    await expect(salida).toContainText(`El plan ${BARATO.nombre} equivale a 3 de tus citas al mes.`);
+  }
 });
 
-test('si pierde menos de lo que cuesta el plan, la calculadora no le dice que ya se pago', async ({ page }) => {
+test('si pierde menos de lo que cuesta el plan, la calculadora no le dice que ya se pago: le dice cuanto es el plan en citas suyas', async ({
+  page,
+}) => {
   test.skip(BARATO.mensual <= 100, 'con un plan de 100 pesos o menos este caso no existe');
-  const { salida, citas, precio } = await abrirCalculadora(page);
+  const { calculadora, salida, citas, precio } = await abrirCalculadora(page);
   await citas.fill('1');
   await precio.fill('100');
-  await expect(salida).toContainText('Hoy se te van cerca de $100 al mes.');
-  await expect(salida).toContainText(`El plan ${BARATO.nombre} cuesta ${pesos(BARATO.mensual)} al mes.`);
+  await expect(calculadora).toHaveAttribute('data-estado', 'lista');
+  // El titular ya no ensena la perdida chica contra el precio del plan: dice el plan en citas suyas.
+  const hacenFalta = Math.ceil(BARATO.mensual / 100);
+  await expect(salida.locator('.calculadora__perdido')).toHaveText(
+    `El plan ${BARATO.nombre} equivale a ${hacenFalta} de tus citas al mes.`,
+  );
+  await expect(salida.locator('.calculadora__pago')).toHaveText(
+    'Si te plantan poco, qué bueno. Tu agente también te regresa tiempo: contesta a cualquier hora, agenda y manda los recordatorios por ti.',
+  );
   await expect(salida).not.toContainText('ya se pagó');
+  await expect(salida).not.toContainText('Hoy se te van');
+  // En cuanto lo que le plantan alcanza para pagar el plan, regresa la cuenta de siempre.
+  await citas.fill(String(hacenFalta));
+  await expect(salida.locator('.calculadora__perdido')).toHaveText(
+    `Hoy se te van cerca de ${pesos(hacenFalta * 100)} al mes.`,
+  );
+  await expect(salida.locator('.calculadora__pago')).toContainText('ya se pagó.');
 });
 
 test('la calculadora avisa con amabilidad si el numero no sirve y espera si falta uno', async ({ page }) => {
@@ -121,6 +144,132 @@ test('los planes ensenan sus precios, uno solo va recomendado y todos llevan al 
   await expect(planes).toContainText(`Instalación única de ${pesos(PRIMERO?.instalacion ?? 0)}.`);
   await expect(planes.getByRole('heading', { name: 'Qué necesitas para empezar' })).toBeVisible();
   await sinFaltasDeAccesibilidad(page, '#planes');
+});
+
+test('que necesitas para empezar: cuatro fichas con su icono en joya, y la cedula aparte, en un renglon chico', async ({
+  page,
+}) => {
+  const planes = await abrirEn(page, 'planes');
+  const bloque = planes.locator('.planes__requisitos');
+  await bloque.scrollIntoViewIfNeeded();
+  await expect(bloque.getByRole('heading', { level: 3 })).toHaveText('Qué necesitas para empezar');
+  await expect(bloque.locator('.planes__requisitos-cabeza p')).toHaveText(
+    'Cuatro cosas sencillas. Casi todas ya las tienes.',
+  );
+  const fichas = bloque.locator('.requisito');
+  await expect(fichas.getByRole('heading', { level: 4 })).toHaveText([
+    'Un número solo para tu negocio',
+    'Tu cuenta de Google',
+    'Tu cuenta de Mercado Pago',
+    'Tu lista de precios',
+  ]);
+  await expect(fichas.locator('p')).toHaveText([
+    'Con WhatsApp Business. Puede ser un chip aparte en tu mismo celular.',
+    'Para tu calendario.',
+    'Para recibir tus anticipos.',
+    'Con una foto basta.',
+  ]);
+  // Cada icono va en su joya azul, es de adorno y de verdad se dibuja: su figura existe en la pagina.
+  const joyas = await fichas.locator('.requisito__icono').evaluateAll((lista) =>
+    lista.map((joya) => {
+      const dibujo = /** @type {Element} */ (joya.querySelector('svg'));
+      const figura = /** @type {Element} */ (dibujo.querySelector('use'));
+      const marco = joya.getBoundingClientRect();
+      const trazo = dibujo.getBoundingClientRect();
+      return {
+        adorno: joya.getAttribute('aria-hidden'),
+        cual: figura.getAttribute('href'),
+        existe: document.querySelector(figura.getAttribute('href') ?? 'nada') instanceof SVGSymbolElement,
+        lado: [Math.round(marco.width), Math.round(marco.height)],
+        dibujo: [Math.round(trazo.width), Math.round(trazo.height)],
+        color: getComputedStyle(joya).color,
+      };
+    }),
+  );
+  expect(joyas).toEqual(
+    ['#i-celular', '#i-calendario', '#i-cuenta', '#i-libreta'].map((cual) => ({
+      adorno: 'true',
+      cual,
+      existe: true,
+      lado: [54, 54],
+      dibujo: [26, 26],
+      color: 'rgb(255, 255, 255)',
+    })),
+  );
+  // En computadora, las cuatro en fila, parejas y con el icono arriba; en celular, una debajo de otra y el icono a
+  // un lado de su texto.
+  const cajas = await fichas.evaluateAll((lista) =>
+    lista.map((ficha) => {
+      const caja = ficha.getBoundingClientRect();
+      const joya = /** @type {Element} */ (ficha.querySelector('.requisito__icono')).getBoundingClientRect();
+      const titulo = /** @type {Element} */ (ficha.querySelector('h4')).getBoundingClientRect();
+      return {
+        top: Math.round(caja.top),
+        alto: Math.round(caja.height),
+        iconoArriba: titulo.top >= joya.bottom,
+        iconoAUnLado: titulo.left >= joya.right && titulo.top < joya.bottom,
+      };
+    }),
+  );
+  if (await page.evaluate(() => matchMedia('(min-width: 900px)').matches)) {
+    expect(new Set(cajas.map(({ top }) => top)).size).toBe(1);
+    expect(new Set(cajas.map(({ alto }) => alto)).size).toBe(1);
+    expect(cajas.map(({ iconoArriba }) => iconoArriba)).toEqual([true, true, true, true]);
+  } else if (await page.evaluate(() => matchMedia('(max-width: 719px)').matches)) {
+    expect(new Set(cajas.map(({ top }) => top)).size).toBe(4);
+    expect(cajas.map(({ iconoAUnLado }) => iconoAUnLado)).toEqual([true, true, true, true]);
+  }
+  // La cedula va aparte y en chico: solo aplica a dentistas y medicos.
+  const cedula = bloque.locator('.planes__cedula');
+  await expect(cedula).toHaveText('Si eres dentista o médico, una más: tu cédula profesional.');
+  await expect(cedula).toHaveCSS('font-size', '15px');
+  await expect(cedula.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  await expect(cedula.locator('use')).toHaveAttribute('href', '#i-cedula');
+  expect(await page.evaluate(() => document.querySelector('#i-cedula') instanceof SVGSymbolElement)).toBe(true);
+  const abajo = await cedula.evaluate((nota) => {
+    const lista = /** @type {Element} */ (document.querySelector('.requisitos')).getBoundingClientRect();
+    return nota.getBoundingClientRect().top >= lista.bottom;
+  });
+  expect(abajo).toBe(true);
+  // Y nada se sale de la pantalla.
+  const desborde = () =>
+    page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(await desborde()).toBe(0);
+
+  // En una tableta de pie (ningun navegador de las pruebas mide eso) van de dos en dos, con el icono a un lado, y el
+  // renglon de la ficha corta se queda pegado a su titulo aunque su vecina sea mas alta.
+  await page.setViewportSize({ width: 800, height: 900 });
+  const enTableta = await fichas.evaluateAll((lista) =>
+    lista.map((ficha) => {
+      const caja = ficha.getBoundingClientRect();
+      const joya = /** @type {Element} */ (ficha.querySelector('.requisito__icono')).getBoundingClientRect();
+      const titulo = /** @type {Element} */ (ficha.querySelector('h4')).getBoundingClientRect();
+      const renglon = /** @type {Element} */ (ficha.querySelector('p')).getBoundingClientRect();
+      return {
+        top: Math.round(caja.top),
+        left: Math.round(caja.left),
+        alto: Math.round(caja.height),
+        iconoAUnLado: titulo.left >= joya.right && titulo.top < joya.bottom,
+        pegado: renglon.top - titulo.bottom,
+      };
+    }),
+  );
+  expect(new Set(enTableta.map(({ top }) => top)).size).toBe(2);
+  expect(new Set(enTableta.map(({ left }) => left)).size).toBe(2);
+  expect(enTableta.map(({ iconoAUnLado }) => iconoAUnLado)).toEqual([true, true, true, true]);
+  // Las dos de cada renglon miden lo mismo de alto.
+  expect(enTableta[0]?.alto).toBe(enTableta[1]?.alto);
+  expect(enTableta[2]?.alto).toBe(enTableta[3]?.alto);
+  for (const { pegado } of enTableta) expect(pegado).toBeLessThanOrEqual(6);
+  expect(await desborde()).toBe(0);
+
+  // Y en el celular mas angosto, una debajo de otra y sin salirse.
+  await page.setViewportSize({ width: 320, height: 640 });
+  const enAngosto = await fichas.evaluateAll((lista) =>
+    lista.map((ficha) => Math.round(ficha.getBoundingClientRect().top)),
+  );
+  expect(new Set(enAngosto).size).toBe(4);
+  expect(await desborde()).toBe(0);
 });
 
 test('en pantalla ancha los botones de los tres planes quedan a la misma altura', async ({ page }) => {

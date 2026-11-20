@@ -249,7 +249,7 @@
       <p class="sobre">{{secciones.planes.sobre}}</p>
       <h2 class="seccion__titulo" id="titulo-planes">{{secciones.planes.titulo}} <em>{{secciones.planes.tituloFuerte}}</em></h2>
     </div>
-    <div class="calculadora" data-calculadora data-vacia="{{secciones.planes.calculadora.vacia}}" data-fuera-citas="{{secciones.planes.calculadora.fueraCitas}}" data-fuera-precio="{{secciones.planes.calculadora.fueraPrecio}}" data-perdido="{{secciones.planes.calculadora.perdido}}" data-una-cita="{{secciones.planes.calculadora.unaCita}}" data-varias-citas="{{secciones.planes.calculadora.variasCitas}}" data-ejemplo="{{secciones.planes.calculadora.ejemplo}}" data-solo-costo="{{secciones.planes.calculadora.soloCosto}}">
+    <div class="calculadora" data-calculadora data-vacia="{{secciones.planes.calculadora.vacia}}" data-fuera-citas="{{secciones.planes.calculadora.fueraCitas}}" data-fuera-precio="{{secciones.planes.calculadora.fueraPrecio}}" data-perdido="{{secciones.planes.calculadora.perdido}}" data-una-cita="{{secciones.planes.calculadora.unaCita}}" data-varias-citas="{{secciones.planes.calculadora.variasCitas}}" data-ejemplo="{{secciones.planes.calculadora.ejemplo}}" data-equivale="{{secciones.planes.calculadora.equivale}}" data-tiempo="{{secciones.planes.calculadora.tiempo}}">
       <div class="calculadora__casillas">
         <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.citas}}</span><input class="calculadora__numero" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="{{secciones.planes.calculadora.ejemploCitas}}" data-calculadora-citas></label>
         <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.precio}}</span><span class="calculadora__pesos"><span aria-hidden="true">$</span><input class="calculadora__numero" type="text" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="{{secciones.planes.calculadora.ejemploPrecio}}" data-calculadora-precio></span></label>
@@ -273,10 +273,14 @@
       <p class="planes__nota">{{secciones.planes.notaMercadoPago}}</p>
     </div>
     <div class="planes__requisitos">
-      <h3 class="planes__subtitulo">{{secciones.planes.requisitosTitulo}}</h3>
-      <ul role="list">
-{{#cada secciones.planes.requisitos}}        <li>{{texto}}</li>
+      <div class="planes__requisitos-cabeza">
+        <h3 class="planes__subtitulo">{{secciones.planes.requisitosTitulo}}</h3>
+        <p>{{secciones.planes.requisitosBajada}}</p>
+      </div>
+      <ul class="requisitos" role="list">
+{{#cada secciones.planes.requisitos}}        <li class="requisito"><span class="requisito__icono" aria-hidden="true"><svg class="requisito__trazo" focusable="false"><use href="#i-{{icono}}"/></svg></span><h4>{{titulo}}</h4><p>{{texto}}</p></li>
 {{/cada}}      </ul>
+      <p class="planes__cedula"><svg class="planes__cedula-icono" aria-hidden="true" focusable="false"><use href="#i-cedula"/></svg>{{secciones.planes.requisitosNota}}</p>
     </div>
   </section>
 

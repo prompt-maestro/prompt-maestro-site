@@ -84,7 +84,8 @@
       "perdido": "Hoy se te van cerca de {perdido} al mes.",
       "unaCita": "El plan {plan} cuesta {mensualidad} al mes: con 1 cita que sí llegue, ya se pagó.",
       "variasCitas": "El plan {plan} cuesta {mensualidad} al mes: con {citas} citas que sí lleguen, ya se pagó.",
-      "soloCosto": "El plan {plan} cuesta {mensualidad} al mes.",
+      "equivale": "El plan {plan} equivale a {citas} de tus citas al mes.",
+      "tiempo": "Si te plantan poco, qué bueno. Tu agente también te regresa tiempo: contesta a cualquier hora, agenda y manda los recordatorios por ti.",
       "ejemplo": "Un ejemplo: te plantan {plantones} citas de {precio} al mes.",
       "ejemploCitas": "6",
       "ejemploPrecio": "400"
@@ -94,23 +95,30 @@
     "alAnio": "al año",
     "elegir": "Empieza con",
     "requisitosTitulo": "Qué necesitas para empezar",
+    "requisitosBajada": "Cuatro cosas sencillas. Casi todas ya las tienes.",
     "requisitos": [
       {
-        "texto": "Un número solo para tu negocio con WhatsApp Business. Puede ser un chip aparte en tu mismo celular."
+        "icono": "celular",
+        "titulo": "Un número solo para tu negocio",
+        "texto": "Con WhatsApp Business. Puede ser un chip aparte en tu mismo celular."
       },
       {
-        "texto": "Una cuenta de Google, para tu calendario."
+        "icono": "calendario",
+        "titulo": "Tu cuenta de Google",
+        "texto": "Para tu calendario."
       },
       {
-        "texto": "Una cuenta de Mercado Pago, para recibir tus anticipos."
+        "icono": "cuenta",
+        "titulo": "Tu cuenta de Mercado Pago",
+        "texto": "Para recibir tus anticipos."
       },
       {
-        "texto": "Tu lista de precios: con una foto basta."
-      },
-      {
-        "texto": "Si eres dentista o médico, tu cédula profesional."
+        "icono": "libreta",
+        "titulo": "Tu lista de precios",
+        "texto": "Con una foto basta."
       }
     ],
+    "requisitosNota": "Si eres dentista o médico, una más: tu cédula profesional.",
     "recomendado": "Recomendado",
     "notaInstalacion": "Instalación única de",
     "notaResto": "Hoy pagas la instalación y tu primer mes; ese mes empieza a contar el día que tu agente queda activo. Pago con tarjeta. No cobramos comisión por cita.",

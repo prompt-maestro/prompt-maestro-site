@@ -317,3 +317,52 @@ test('el trato de la profesional de ejemplo concuerda con su foto y con su guion
     for (const ajeno of ajenos) assert.ok(!guion.includes(ajeno), `${giro.clave}: "${ajeno}" no concuerda`);
   }
 });
+
+test('planes: lo que hace falta para empezar va en cuatro fichas con su icono, y la cedula aparte', () => {
+  // El dueno (20-nov-2026): "que la seccion 'Qué necesitas para empezar' sea mas visual y que de la impresion que es
+  // super facil". Eligio las cuatro fichas del boceto.
+  const { planes } = secciones;
+  assert.equal(planes.requisitosTitulo, 'Qué necesitas para empezar');
+  assert.equal(planes.requisitosBajada, 'Cuatro cosas sencillas. Casi todas ya las tienes.');
+  assert.deepEqual(
+    planes.requisitos.map((/** @type {any} */ uno) => [uno.icono, uno.titulo, uno.texto]),
+    [
+      [
+        'celular',
+        'Un número solo para tu negocio',
+        'Con WhatsApp Business. Puede ser un chip aparte en tu mismo celular.',
+      ],
+      ['calendario', 'Tu cuenta de Google', 'Para tu calendario.'],
+      ['cuenta', 'Tu cuenta de Mercado Pago', 'Para recibir tus anticipos.'],
+      ['libreta', 'Tu lista de precios', 'Con una foto basta.'],
+    ],
+  );
+  assert.equal(planes.requisitosNota, 'Si eres dentista o médico, una más: tu cédula profesional.');
+  // La pagina las ensena tal cual: cada ficha con su icono de adorno, su titulo y su renglon.
+  const bloque = seccion('planes');
+  const fichas = [
+    ...bloque.matchAll(
+      /<li class="requisito"><span class="requisito__icono" aria-hidden="true"><svg class="requisito__trazo" focusable="false"><use href="#i-(\w+)"\/><\/svg><\/span><h4>([^<]+)<\/h4><p>([^<]+)<\/p><\/li>/g,
+    ),
+  ].map(([, icono, titulo, texto]) => ({ icono, titulo, texto }));
+  assert.deepEqual(fichas, planes.requisitos);
+  assert.ok(bloque.includes(`<p>${planes.requisitosBajada}</p>`));
+  assert.ok(
+    bloque.includes(
+      `<p class="planes__cedula"><svg class="planes__cedula-icono" aria-hidden="true" focusable="false"><use href="#i-cedula"/></svg>${planes.requisitosNota}</p>`,
+    ),
+  );
+  // Cada icono que piden esta dibujado en la pagina, una sola vez.
+  for (const id of ['i-celular', 'i-calendario', 'i-cuenta', 'i-libreta', 'i-cedula']) {
+    assert.equal(html.split(`<symbol id="${id}"`).length - 1, 1, id);
+  }
+  // Ninguna ficha promete un tiempo de alta ni dice que algo es gratis.
+  assert.doesNotMatch(JSON.stringify([planes.requisitos, planes.requisitosBajada]), /minutos|hoy mismo|gratis/i);
+  // Y llms.txt las cuenta con para que es cada una, y la cedula al final.
+  const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
+  const lista = /## Qué se necesita para empezar\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
+  assert.deepEqual(lista, [
+    ...planes.requisitos.map((/** @type {any} */ uno) => `- ${uno.titulo}. ${uno.texto}`),
+    `- ${planes.requisitosNota}`,
+  ]);
+});

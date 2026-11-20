@@ -142,7 +142,8 @@ test('cada texto de la calculadora usa los datos que la pagina le da, y ninguno 
     perdido: ['perdido'],
     unaCita: ['plan', 'mensualidad'],
     variasCitas: ['plan', 'mensualidad', 'citas'],
-    soloCosto: ['plan', 'mensualidad'],
+    equivale: ['plan', 'citas'],
+    tiempo: [],
   };
   for (const [clave, esperados] of Object.entries(huecos)) {
     const usados = [...calculadora[clave].matchAll(/\{(\w+)\}/g)].map(([, hueco]) => hueco).sort();
@@ -153,7 +154,33 @@ test('cada texto de la calculadora usa los datos que la pagina le da, y ninguno 
   assert.equal(rellenar(calculadora.perdido, datos), 'Hoy se te van cerca de $2,400 al mes.');
   // Solo cuando alcanza se dice que el plan "ya se pago".
   assert.match(calculadora.variasCitas, /ya se pagó/);
-  assert.doesNotMatch(calculadora.soloCosto, /pag[oó]/);
+  // Cuando no alcanza (el dueno, 20-nov-2026: "como le hacemos para mantener el atractivo"), el titular ya no ensena
+  // la perdida chica: dice cuanto es el plan en citas suyas y, abajo, lo demas que hace el agente. Sin "ya se pago",
+  // sin prometer ahorro y sin afirmar cuanto le plantan (puede ser poco dinero con muchas citas baratas).
+  assert.equal('soloCosto' in calculadora, false);
+  assert.equal(rellenar(calculadora.equivale, datos), 'El plan Bronce equivale a 3 de tus citas al mes.');
+  assert.equal(
+    calculadora.tiempo,
+    'Si te plantan poco, qué bueno. Tu agente también te regresa tiempo: contesta a cualquier hora, agenda y manda los recordatorios por ti.',
+  );
+  assert.doesNotMatch(`${calculadora.equivale} ${calculadora.tiempo}`, /pag[oó]|ahorr|gana|recuper/i);
+});
+
+test('cuando no alcanza para pagar el plan, el plan siempre equivale a dos citas o mas: "de tus citas" va en plural', () => {
+  // Si una sola cita pagara el plan, con una que le planten ya alcanza: ese caso nunca cae en el titular "equivale".
+  let vistos = 0;
+  for (const precio of [1, 50, 99.5, 100, 329, 330, 494, 495, 989, 990, 991, 5000]) {
+    for (const citas of [1, 2, 3, 9, 10, 19, 20, 500]) {
+      const cuenta = /** @type {any} */ (hacerLaCuenta({ citas, precio, mensualidad: 990 }));
+      if (cuenta.sePaga) continue;
+      vistos++;
+      assert.ok(cuenta.citasParaPagar >= 2, `${citas} citas de $${precio}`);
+      assert.ok(cuenta.citasParaPagar > citas, `${citas} citas de $${precio}`);
+      // Y lo que pierde es, de verdad, menos que el plan.
+      assert.ok(citas * precio < 990, `${citas} citas de $${precio}`);
+    }
+  }
+  assert.ok(vistos >= 20, 'la prueba esta viendo casos que no alcanzan');
 });
 
 test('el ejemplo que sugieren las casillas es una cuenta valida y que si paga el plan', async () => {

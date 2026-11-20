@@ -1045,8 +1045,10 @@ p.mv__botones span {
   gap: var(--e-4);
 }
 
-/* Cada pilar, una tarjeta con borde de luz: el filo azul nace arriba a la izquierda y se apaga hacia abajo. */
-.agentes__cuidamos li {
+/* Cada pilar, una tarjeta con borde de luz: el filo azul nace arriba a la izquierda y se apaga hacia abajo. El mismo
+   marco llevan las fichas de lo que hace falta para empezar (su relleno lo pone secciones.css, que va despues). */
+.agentes__cuidamos li,
+.requisito {
   padding: 28px 26px 30px;
   border: 1px solid transparent;
   border-radius: 24px;
@@ -1056,8 +1058,10 @@ p.mv__botones span {
   box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
 }
 
-/* Su icono, como una joya: en el azul de la marca, con su brillo. */
-.agentes__icono {
+/* Su icono, como una joya: en el azul de la marca, con su brillo. La llevan tambien las fichas de lo que hace falta
+   para empezar, en "Planes". */
+.agentes__icono,
+.requisito__icono {
   display: block;
   width: 54px;
   height: 54px;
@@ -1071,7 +1075,8 @@ p.mv__botones span {
 }
 
 /* El dibujo de dentro, del icono y de la palomita: llena su marco. */
-.agentes__trazo {
+.agentes__trazo,
+.requisito__trazo {
   display: block;
   width: 100%;
   height: 100%;
@@ -1478,6 +1483,8 @@ p.mv__botones span {
   /* En papel los fondos no se imprimen: el icono y la palomita, que van en blanco sobre su joya azul, se pintan de
      azul para que no desaparezcan. */
   .agentes__icono,
+  .requisito__icono,
+  .planes__cedula-icono,
   .agentes__palomita {
     box-shadow: none;
     background: none;
