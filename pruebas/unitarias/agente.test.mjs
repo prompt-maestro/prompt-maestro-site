@@ -1054,17 +1054,62 @@ test('las piezas que acepta la armada son las que la plantilla sabe dibujar, y l
   assert.ok(!codigo.includes('problemasDeBeneficios') && !codigo.includes('pastilla'));
 });
 
-test('lo que tu agente no hace: ya no ofrece pasarle a la clienta, y sus seis renglones siguen completos', () => {
-  const renglones = [...agentes.noHace, ...secciones.confianza.noHaceMas].map(({ texto }) => texto);
-  assert.deepEqual(renglones, [
-    'No confirma una cita sin su anticipo, salvo que tú lo decidas.',
-    'No inventa precios: los toma de tu catálogo.',
-    'No se hace pasar por una persona: avisa que es un asistente virtual.',
-    'No cobra el resto del servicio. Solo el anticipo que garantiza la cita.',
-    'No diagnostica ni recomienda medicamentos. Una urgencia te llega a ti.',
-    'No te trae clientela nueva: atiende de maravilla a quien ya te escribe.',
-  ]);
-  // Los tres puntos de la confianza no cambiaron de texto: solo ganaron su icono.
+test('asi cuida tu negocio: seis compromisos dichos en positivo, y ya sin la lista de lo que no hace', () => {
+  // El dueno (20-nov-2026): "cambiemos los taches rojos y el lenguaje del texto por algo que denote valor agregado y
+  // creacion de valor para el negocio". Dicen lo mismo que los seis de antes, como lo que el agente si hace por ella.
+  assert.equal(agentes.cuida.titulo, 'Así cuida tu negocio');
+  assert.equal(agentes.cuida.bajada, 'Seis cosas que tu agente hace siempre, para que tú no tengas que vigilarlo.');
+  assert.deepEqual(
+    agentes.cuida.lista.map((/** @type {any} */ uno) => [uno.titulo, uno.texto]),
+    [
+      ['Cada cita, con su anticipo', 'Confirma solo con el pago aprobado. Las excepciones las decides tú.'],
+      ['Tus precios, tal cual', 'Cotiza con tu catálogo y, si algo no está ahí, no lo inventa: te avisa.'],
+      ['Siempre con transparencia', 'Desde el primer mensaje se presenta como asistente virtual.'],
+      ['Cobra solo el anticipo', 'El resto del servicio lo cobras tú, como siempre.'],
+      [
+        'Lo clínico es tuyo',
+        'No diagnostica ni recomienda medicamentos: agenda y, si hay una urgencia, te llega a ti.',
+      ],
+      [
+        'Cuida a quien ya te escribe',
+        'No busca clientela nueva: hace que quien ya te escribe sí llegue a su cita, con su anticipo pagado.',
+      ],
+    ],
+  );
+  // Ningun titulo empieza con "No", y ninguno ofrece pasarle a la clienta.
+  for (const { titulo, texto } of agentes.cuida.lista) {
+    assert.doesNotMatch(titulo, /^no\b/i, titulo);
+    assert.doesNotMatch(`${titulo} ${texto}`, /te la pasa|si tu clienta lo pide/i, titulo);
+  }
+  // Lo que antes decia la lista de lo que no hace sigue a la vista, en su oracion: que no trae clientela nueva, que
+  // no diagnostica y que lo que no esta en el catalogo no lo inventa (revision independiente del 20-nov-2026: en la
+  // pagina, las preguntas que lo dicen van guardadas dentro de "Ver mas preguntas").
+  const oraciones = agentes.cuida.lista.map((/** @type {any} */ uno) => uno.texto).join(' ');
+  for (const hecho of [
+    'No busca clientela nueva',
+    'No diagnostica ni recomienda medicamentos',
+    'no lo inventa: te avisa',
+    'Confirma solo con el pago aprobado',
+    'se presenta como asistente virtual',
+  ]) {
+    assert.ok(oraciones.includes(hecho), hecho);
+    assert.ok(seccion.includes(hecho), `a la vista en la seccion: ${hecho}`);
+  }
+  // La lista vieja y sus dos renglones de mas ya no existen en los datos.
+  assert.equal('noHace' in agentes, false);
+  assert.equal('limitesTitulo' in agentes, false);
+  assert.equal('noHaceMas' in secciones.confianza, false);
+  // El del dinero lleva, en letra chica, lo que cobra Mercado Pago por cada pago y de cuando es la tarifa (la leimos
+  // en su ayuda el 20-nov-2026: Checkout, de 2.95% a 3.49% + $4 segun el plazo). Los otros dos no llevan letra chica.
+  assert.deepEqual(
+    secciones.confianza.lista.map((/** @type {any} */ punto) => punto.nota ?? null),
+    [
+      null,
+      'Mercado Pago cobra su comisión por cada pago: de 2.95% a 3.49% + $4, más impuestos y, si aplican, retenciones, según el plazo que elijas para disponer de tu dinero. Tarifa de Mercado Pago a noviembre de 2026.',
+      null,
+    ],
+  );
+  // Los tres puntos de la confianza no cambiaron de texto.
   assert.deepEqual(
     secciones.confianza.lista.map((/** @type {any} */ punto) => [punto.icono, punto.titulo, punto.texto]),
     [
@@ -1278,22 +1323,27 @@ test('ningun texto de la seccion vive en el codigo ni en los estilos: todo sale 
   for (const texto of textos) assert.ok(!codigo.includes(texto), texto);
 });
 
-test('las tres tarjetas de la confianza llevan su icono y los seis renglones de lo que no hace, su tacha', () => {
+test('las tres tarjetas de la confianza llevan su icono (y la del dinero, su letra chica), y los seis compromisos, su palomita', () => {
   const tarjetas = [
     ...seccion.matchAll(
-      /<li><svg class="agentes__icono" aria-hidden="true" focusable="false"><use href="#i-(\w+)"\/><\/svg><div><h4>([^<]+)<\/h4><p>([^<]+)<\/p><\/div><\/li>/g,
+      /<li><span class="agentes__icono" aria-hidden="true"><svg class="agentes__trazo" focusable="false"><use href="#i-(\w+)"\/><\/svg><\/span><h4>([^<]+)<\/h4><p>([^<]+)<\/p>(?:<p class="agentes__letra">([^<]+)<\/p>)?<\/li>/g,
     ),
-  ].map(([, icono, titulo, texto]) => ({ icono, titulo, texto }));
+  ].map(([, icono, titulo, texto, nota]) => (nota ? { icono, titulo, texto, nota } : { icono, titulo, texto }));
   assert.deepEqual(tarjetas, secciones.confianza.lista);
   assert.ok(seccion.includes('>Tu número, tu dinero, <em>tus reglas.</em></h3>'));
   const renglones = [
     ...seccion.matchAll(
-      /<li><svg class="agentes__tacha" aria-hidden="true" focusable="false"><use href="#i-tacha"\/><\/svg>([^<]+)<\/li>/g,
+      /<li><span class="agentes__palomita" aria-hidden="true"><svg class="agentes__trazo" focusable="false"><use href="#i-palomita"\/><\/svg><\/span><div><h4>([^<]+)<\/h4><p>([^<]+)<\/p><\/div><\/li>/g,
     ),
-  ].map(([, texto]) => texto);
+  ].map(([, titulo, texto]) => ({ titulo, texto }));
+  assert.deepEqual(renglones, agentes.cuida.lista);
   assert.equal(renglones.length, 6);
-  assert.equal(renglones[2], 'No se hace pasar por una persona: avisa que es un asistente virtual.');
-  assert.ok(seccion.includes('<h3 class="agentes__subtitulo">Lo que tu agente no hace</h3>'));
+  assert.ok(seccion.includes('<h3 class="agentes__subtitulo">Así cuida tu negocio</h3>'));
+  assert.ok(seccion.includes(agentes.cuida.bajada));
+  // Ya sin taches en esta seccion: ni la lista ni su titulo de antes.
+  for (const viejo of ['agentes__tacha', '#i-tacha', 'agentes__limites', 'Lo que tu agente no hace']) {
+    assert.ok(!seccion.includes(viejo), viejo);
+  }
   // Cada icono que la seccion pide esta dibujado en la pagina, una sola vez.
   const pedidos = new Set([...seccion.matchAll(/<use href="#(i-\w+)"/g)].map(([, id]) => id));
   assert.deepEqual([...pedidos].sort(), [
@@ -1307,7 +1357,6 @@ test('las tres tarjetas de la confianza llevan su icono y los seis renglones de 
     'i-perillas',
     'i-repite',
     'i-reproducir',
-    'i-tacha',
     'i-tics',
   ]);
   for (const id of pedidos) assert.equal(html.split(`<symbol id="${id}"`).length - 1, 1, id);
@@ -1336,7 +1385,7 @@ test('las dos piezas del menu se adelantan solo en pantallas anchas, y pagina.js
   assert.ok(pagina.includes("parte.setAttribute('data-lista', '');"));
 });
 
-test('llms.txt cuenta los diez beneficios, los cuatro pasos para empezar y lo que el agente no hace', () => {
+test('llms.txt cuenta los nueve beneficios, los cuatro pasos para empezar y como cuida el negocio', () => {
   const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
   const hechos = /## Lo que hace el agente\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
   assert.deepEqual(
@@ -1350,9 +1399,17 @@ test('llms.txt cuenta los diez beneficios, los cuatro pasos para empezar y lo qu
   );
   // La seccion vieja, con sus nueve pasos, ya no se cuenta. Ni se habla de examenes.
   assert.ok(!llms.includes('## Cómo funciona'));
-  assert.doesNotMatch(/## Lo que hace el agente[\s\S]*?## Lo que no hace/.exec(llms)?.[0] ?? '', /ex[aá]men/i);
-  const limites = /## Lo que no hace\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1] ?? '';
-  assert.ok(limites.includes('- No se hace pasar por una persona: avisa que es un asistente virtual.'));
+  assert.doesNotMatch(/## Lo que hace el agente[\s\S]*?## Así cuida tu negocio/.exec(llms)?.[0] ?? '', /ex[aá]men/i);
+  // Los seis compromisos, cada uno con su titulo y su oracion; el titulo viejo ya no esta.
+  const cuida = /## Así cuida tu negocio\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
+  assert.deepEqual(
+    cuida,
+    agentes.cuida.lista.map((/** @type {any} */ uno) => `- ${uno.titulo}. ${uno.texto}`),
+  );
+  assert.ok(
+    cuida?.includes('- Siempre con transparencia. Desde el primer mensaje se presenta como asistente virtual.'),
+  );
+  assert.ok(!llms.includes('## Lo que no hace'));
   assert.doesNotMatch(llms, /te la pasa|si tu clienta lo pide/i);
   // Lo que viaja a los modelos de lenguaje es el titulo y la oracion: de la escena, nada.
   assert.ok(!llms.includes('señor Medina'));

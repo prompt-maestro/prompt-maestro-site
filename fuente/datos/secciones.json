@@ -37,20 +37,13 @@
       {
         "icono": "moneda",
         "titulo": "Tu dinero no pasa por nosotros",
-        "texto": "Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita."
+        "texto": "Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.",
+        "nota": "Mercado Pago cobra su comisión por cada pago: de 2.95% a 3.49% + $4, más impuestos y, si aplican, retenciones, según el plazo que elijas para disponer de tu dinero. Tarifa de Mercado Pago a noviembre de 2026."
       },
       {
         "icono": "perillas",
         "titulo": "Tus reglas",
         "texto": "Tú pones los precios, los horarios, el anticipo y lo que no haces."
-      }
-    ],
-    "noHaceMas": [
-      {
-        "texto": "No diagnostica ni recomienda medicamentos. Una urgencia te llega a ti."
-      },
-      {
-        "texto": "No te trae clientela nueva: atiende de maravilla a quien ya te escribe."
       }
     ]
   },

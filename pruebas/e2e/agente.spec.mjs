@@ -1145,10 +1145,16 @@ test('al imprimir o guardar en PDF la seccion sale completa: los dos capitulos, 
   await expect(page.locator('#agente .mv').filter({ visible: true })).toHaveCount(0);
   await expect(menu.locator('.beneficio__play').filter({ visible: true })).toHaveCount(0);
   await expect(page.locator('#agente .agentes__cuidamos li').filter({ visible: true })).toHaveCount(3);
-  await expect(page.locator('#agente .agentes__no li').filter({ visible: true })).toHaveCount(6);
+  await expect(page.locator('#agente .agentes__si li').filter({ visible: true })).toHaveCount(6);
+  // En papel los fondos no se imprimen: el icono y la palomita dejan su joya y se pintan de azul, para no perderse.
+  for (const adorno of ['.agentes__icono', '.agentes__palomita']) {
+    const primero = page.locator(`#agente ${adorno}`).first();
+    await expect(primero).toHaveCSS('color', 'rgb(63, 92, 245)');
+    await expect(primero).toHaveCSS('background-image', 'none');
+  }
 });
 
-test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y lo que tu agente no hace', async ({
+test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y como cuida tu negocio', async ({
   page,
 }) => {
   await abrir(page, { quieta: true });
@@ -1161,56 +1167,112 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y lo
     'Tu dinero no pasa por nosotros',
     'Tus reglas',
   ]);
-  await expect(tarjetas.locator('p')).toHaveText([
+  await expect(tarjetas.locator('p:not(.agentes__letra)')).toHaveText([
     'Puedes entrar a cualquier conversación cuando quieras; tu agente se hace a un lado.',
     'Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.',
     'Tú pones los precios, los horarios, el anticipo y lo que no haces.',
   ]);
-  // Cada icono es de adorno, mide lo mismo y de verdad se dibuja: su figura existe en la pagina.
-  const iconos = await tarjetas.locator('svg').evaluateAll((lista) =>
-    lista.map((icono) => {
-      const figura = /** @type {Element} */ (icono.querySelector('use'));
-      const { width, height } = icono.getBoundingClientRect();
+  // La del dinero lleva, en letra chica y bajo su raya, lo que cobra Mercado Pago por cada pago y de cuando es.
+  const letra = tarjetas.locator('.agentes__letra');
+  await expect(letra).toHaveCount(1);
+  await expect(tarjetas.nth(1).locator('.agentes__letra')).toHaveText(
+    'Mercado Pago cobra su comisión por cada pago: de 2.95% a 3.49% + $4, más impuestos y, si aplican, retenciones, según el plazo que elijas para disponer de tu dinero. Tarifa de Mercado Pago a noviembre de 2026.',
+  );
+  await expect(letra).toHaveCSS('font-size', '13px');
+  await expect(letra).toHaveCSS('border-top-width', '1px');
+  // Cada icono va en su joya azul: es de adorno, mide lo mismo y de verdad se dibuja (su figura existe en la pagina).
+  const iconos = await tarjetas.locator('.agentes__icono').evaluateAll((lista) =>
+    lista.map((joya) => {
+      const dibujo = /** @type {Element} */ (joya.querySelector('svg'));
+      const figura = /** @type {Element} */ (dibujo.querySelector('use'));
+      const marco = joya.getBoundingClientRect();
+      const trazo = dibujo.getBoundingClientRect();
       return {
-        adorno: icono.getAttribute('aria-hidden'),
+        adorno: joya.getAttribute('aria-hidden'),
         cual: figura.getAttribute('href'),
         existe: document.querySelector(figura.getAttribute('href') ?? 'nada') instanceof SVGSymbolElement,
-        lado: [Math.round(width), Math.round(height)],
+        lado: [Math.round(marco.width), Math.round(marco.height)],
+        dibujo: [Math.round(trazo.width), Math.round(trazo.height)],
+        color: getComputedStyle(joya).color,
       };
     }),
   );
   expect(iconos).toEqual(
-    ['#i-celular', '#i-moneda', '#i-perillas'].map((cual) => ({ adorno: 'true', cual, existe: true, lado: [46, 46] })),
+    ['#i-celular', '#i-moneda', '#i-perillas'].map((cual) => ({
+      adorno: 'true',
+      cual,
+      existe: true,
+      lado: [54, 54],
+      dibujo: [26, 26],
+      color: 'rgb(255, 255, 255)',
+    })),
   );
-  // En fila donde caben las tres; si no, una debajo de otra.
+  // En fila donde caben las tres (y entonces miden lo mismo de alto); si no, una debajo de otra.
   const cajas = await tarjetas.evaluateAll((lista) => lista.map((tarjeta) => tarjeta.getBoundingClientRect().toJSON()));
   const filas = new Set(cajas.map(({ top }) => Math.round(top))).size;
-  expect(filas).toBe((await esComputadora(page)) ? 1 : 3);
+  const computadora = await esComputadora(page);
+  expect(filas).toBe(computadora ? 1 : 3);
+  if (computadora) expect(new Set(cajas.map(({ height }) => Math.round(height))).size).toBe(1);
 
-  // Lo que no hace: seis renglones, cada uno con su tacha en rojo suave. Ya no ofrece pasarle a la clienta.
-  const limites = seccion.locator('.agentes__limites');
-  await limites.scrollIntoViewIfNeeded();
-  await expect(limites.getByRole('heading', { level: 3 })).toHaveText('Lo que tu agente no hace');
-  await expect(limites.getByRole('listitem')).toHaveText([
-    'No confirma una cita sin su anticipo, salvo que tú lo decidas.',
-    'No inventa precios: los toma de tu catálogo.',
-    'No se hace pasar por una persona: avisa que es un asistente virtual.',
-    'No cobra el resto del servicio. Solo el anticipo que garantiza la cita.',
-    'No diagnostica ni recomienda medicamentos. Una urgencia te llega a ti.',
-    'No te trae clientela nueva: atiende de maravilla a quien ya te escribe.',
+  // Como cuida el negocio: seis compromisos en positivo, cada uno con su palomita encendida. Ya sin taches.
+  const cuida = seccion.locator('.agentes__cuida');
+  await cuida.scrollIntoViewIfNeeded();
+  await expect(cuida.getByRole('heading', { level: 3 })).toHaveText('Así cuida tu negocio');
+  // Su titulo manda: es mas grande que los de las tarjetas de arriba.
+  await expect(cuida.getByRole('heading', { level: 3 })).toHaveCSS('font-size', '24px');
+  await expect(tarjetas.getByRole('heading', { level: 4 }).first()).toHaveCSS('font-size', '20px');
+  await expect(cuida.locator('.agentes__cuida-cabeza p')).toHaveText(
+    'Seis cosas que tu agente hace siempre, para que tú no tengas que vigilarlo.',
+  );
+  const renglones = cuida.getByRole('listitem');
+  await expect(renglones.getByRole('heading', { level: 4 })).toHaveText([
+    'Cada cita, con su anticipo',
+    'Tus precios, tal cual',
+    'Siempre con transparencia',
+    'Cobra solo el anticipo',
+    'Lo clínico es tuyo',
+    'Cuida a quien ya te escribe',
   ]);
-  await expect(limites).not.toContainText('te la pasa');
-  await expect(limites).not.toContainText('si tu clienta lo pide');
-  const tachas = limites.locator('svg.agentes__tacha');
-  await expect(tachas).toHaveCount(6);
-  await expect(tachas.first()).toHaveCSS('color', 'rgb(255, 143, 128)');
-  await expect(tachas.first()).toHaveAttribute('aria-hidden', 'true');
+  await expect(renglones.locator('p')).toHaveText([
+    'Confirma solo con el pago aprobado. Las excepciones las decides tú.',
+    'Cotiza con tu catálogo y, si algo no está ahí, no lo inventa: te avisa.',
+    'Desde el primer mensaje se presenta como asistente virtual.',
+    'El resto del servicio lo cobras tú, como siempre.',
+    'No diagnostica ni recomienda medicamentos: agenda y, si hay una urgencia, te llega a ti.',
+    'No busca clientela nueva: hace que quien ya te escribe sí llegue a su cita, con su anticipo pagado.',
+  ]);
+  await expect(cuida).not.toContainText('te la pasa');
+  await expect(cuida).not.toContainText('si tu clienta lo pide');
+  await expect(seccion.locator('.agentes__tacha, .agentes__limites, .agentes__no')).toHaveCount(0);
+  const palomitas = cuida.locator('.agentes__palomita');
+  await expect(palomitas).toHaveCount(6);
+  await expect(palomitas.first()).toHaveAttribute('aria-hidden', 'true');
+  await expect(palomitas.first()).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(palomitas.first().locator('use')).toHaveAttribute('href', '#i-palomita');
+  const sellos = await palomitas.evaluateAll((lista) =>
+    lista.map((sello) => {
+      const { width, height } = sello.getBoundingClientRect();
+      const fila = /** @type {Element} */ (sello.closest('li'));
+      const renglon = fila.getBoundingClientRect();
+      const titulo = /** @type {Element} */ (fila.querySelector('h4')).getBoundingClientRect();
+      // Redonda, del mismo lado, y a la izquierda de su titulo sin encimarse.
+      return [Math.round(width), Math.round(height), titulo.left >= renglon.left + width + 8];
+    }),
+  );
+  expect(sellos).toEqual(Array(6).fill([30, 30, true]));
+  // En dos columnas donde caben, con su titulo a la izquierda; en celular, todo en una.
   const columnas = new Set(
-    await limites
-      .getByRole('listitem')
-      .evaluateAll((lista) => lista.map((renglon) => Math.round(renglon.getBoundingClientRect().left))),
+    await renglones.evaluateAll((lista) => lista.map((renglon) => Math.round(renglon.getBoundingClientRect().left))),
   ).size;
-  expect(columnas).toBe((await esComputadora(page)) ? 3 : 1);
+  expect(columnas).toBe(computadora ? 2 : 1);
+  if (computadora) {
+    const [cabeza, lista] = await Promise.all(
+      ['.agentes__cuida-cabeza', '.agentes__si'].map((que) =>
+        cuida.locator(que).evaluate((parte) => parte.getBoundingClientRect().toJSON()),
+      ),
+    );
+    expect(cabeza.right).toBeLessThanOrEqual(lista.left);
+  }
   await sinFaltasDeAccesibilidad(page, '#agente');
 });
 
@@ -1254,10 +1316,11 @@ test.describe('sin JavaScript', () => {
     await expect(page.locator('#agente .mv__barra')).toHaveCount(0);
     // Y lo de abajo, igual que siempre.
     await expect(page.locator('#agente .agentes__cuidamos li')).toHaveCount(3);
-    await expect(page.locator('#agente .agentes__no li')).toHaveCount(6);
-    await expect(page.locator('#agente .agentes__no')).toContainText(
-      'No se hace pasar por una persona: avisa que es un asistente virtual.',
+    await expect(page.locator('#agente .agentes__si li')).toHaveCount(6);
+    await expect(page.locator('#agente .agentes__si')).toContainText(
+      'Desde el primer mensaje se presenta como asistente virtual.',
     );
+    await expect(page.locator('#agente .agentes__letra')).toContainText('Tarifa de Mercado Pago a noviembre de 2026.');
   });
 });
 

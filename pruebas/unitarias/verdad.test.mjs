@@ -9,8 +9,17 @@ import { armarSitio } from '../../herramientas/armado.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-/** Lo prohibido, como se diria en la pagina. Cada una con su porque. */
-const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
+/**
+ * La unica oracion de la pagina que puede llevar un porcentaje: lo que cobra Mercado Pago por cada pago, dicho como
+ * tarifa suya y con su fecha (el dueno la pidio en letra chica el 20-nov-2026). Cualquier otro porcentaje sigue
+ * prohibido: se quita esta oracion, y solo esta, antes de buscar. Va letra por letra, con sus cifras y su mes: si
+ * Mercado Pago cambia la tarifa, se corrige aqui a la vez que en los datos, despues de leerla en su ayuda.
+ */
+const TARIFA_DE_MERCADO_PAGO =
+  /mercado pago cobra su comisión por cada pago: de 2\.95% a 3\.49% \+ \$4, más impuestos y, si aplican, retenciones, según el plazo que elijas para disponer de tu dinero\. tarifa de mercado pago a noviembre de 2026\./g;
+
+/** Lo prohibido, como se diria en la pagina. Cada una con su porque (y, si la hay, la unica oracion que se salva). */
+const PROHIBIDO = /** @type {[RegExp, string, RegExp?][]} */ ([
   [/al instante/, 'el agente no contesta "al instante": a veces espera a que la clienta termine de escribir'],
   // El dueno (19-nov-2026): a veces tarda a proposito, para juntar los mensajes seguidos de la clienta. No se promete.
   [/menos de un minuto/, 'ya no se promete contestar en menos de un minuto'],
@@ -27,7 +36,7 @@ const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
   [/sin intervenci[oó]n humana/, 'la profesional siempre puede entrar'],
   // Ni siquiera en un ejemplo: la politica del salon de muestra (su retoque de garantia) se dice "sin costo".
   [/prueba(lo)? antes de pagar|prueba gratis|gratis/, 'no hay prueba antes de pagar ni nada gratis'],
-  [/\d\s?%|por ciento/, 'ningun porcentaje de plantones o de mejora como hecho'],
+  [/\d\s?%|por ciento/, 'ningun porcentaje de plantones o de mejora como hecho', TARIFA_DE_MERCADO_PAGO],
   [/testimoni|nuestr[oa]s client[ea]s dicen|casos? de [eé]xito/, 'no hay testimonios de clientes que no existen'],
   // Se vale preguntarlo ("¿Me trae clientela nueva?") y negarlo; nunca afirmarlo.
   [/(?<!no te |¿me )trae client/, 'no trae clientela nueva: solo se puede decir en negativo'],
@@ -98,13 +107,26 @@ test('la pagina armada trae sus secciones (si no, esta prueba no estaria leyendo
   assert.ok(visible.length > 8000);
 });
 
-for (const [patron, porque] of PROHIBIDO) {
+for (const [patron, porque, salvo] of PROHIBIDO) {
   test(`nunca dice ${patron.source}: ${porque}`, () => {
-    const hallado = patron.exec(visible);
-    const donde = hallado ? visible.slice(Math.max(0, hallado.index - 60), hallado.index + 80) : '';
-    assert.equal(hallado, null, `aparece en: ...${donde}...`);
+    const donde = salvo ? visible.replace(salvo, ' ') : visible;
+    const hallado = patron.exec(donde);
+    const cerca = hallado ? donde.slice(Math.max(0, hallado.index - 60), hallado.index + 80) : '';
+    assert.equal(hallado, null, `aparece en: ...${cerca}...`);
   });
 }
+
+test('el unico porcentaje de la pagina es la tarifa de Mercado Pago, dicha como suya y con su fecha', () => {
+  const veces = visible.match(TARIFA_DE_MERCADO_PAGO) ?? [];
+  // Una vez, en la letra chica de «Tu dinero no pasa por nosotros».
+  assert.equal(veces.length, 1);
+  assert.match(veces[0] ?? '', /^mercado pago cobra su comisión/);
+  assert.match(veces[0] ?? '', /tarifa de mercado pago a noviembre de 2026\.$/);
+  // Y fuera de esa oracion no queda ni un signo de porcentaje.
+  assert.ok(!visible.replace(TARIFA_DE_MERCADO_PAGO, ' ').includes('%'));
+  // Va pegada a lo que si es nuestro: nosotros no cobramos comision por cita.
+  assert.ok(visible.includes('no cobramos comisión por cita. mercado pago cobra su comisión por cada pago'));
+});
 
 test('nunca dice PERSONA: la palabra clave con que se pedia hablar con alguien mas ya no existe', () => {
   // En minusculas "persona" es una palabra cualquiera ("si la persona asistio"); en mayusculas era la salida.
@@ -119,8 +141,15 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'tu mercado pago',
     'según la política que tú pones',
     'asistente virtual',
-    'no te trae clientela nueva',
+    // No trae clientela nueva: lo dice la pregunta que lo pregunta, y la seccion lo dice en positivo.
+    '¿me trae clientela nueva?',
+    'no. hace que quienes ya te escriben sí lleguen',
+    'cuida a quien ya te escribe',
+    'no busca clientela nueva',
     'no diagnostica ni recomienda medicamentos',
+    // Los compromisos del agente, en positivo: confirma solo con el pago aprobado y se presenta como asistente virtual.
+    'confirma solo con el pago aprobado',
+    'desde el primer mensaje se presenta como asistente virtual',
     // "Tu agente": cada uno trabaja con la base de conocimiento de su negocio, contesta a cualquier hora (sin
     // prometer tiempos) y una nota de voz la contesta con otra; lo que hay que copiar va siempre por escrito.
     'hecho a la medida de tu negocio',

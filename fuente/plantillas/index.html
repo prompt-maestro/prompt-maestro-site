@@ -211,14 +211,16 @@
     <div class="agentes__confianza">
       <h3 class="agentes__subtitulo agentes__subtitulo--grande">{{secciones.confianza.titulo}} <em>{{secciones.confianza.tituloFuerte}}</em></h3>
       <ul class="agentes__cuidamos" role="list">
-{{#cada secciones.confianza.lista}}        <li><svg class="agentes__icono" aria-hidden="true" focusable="false"><use href="#i-{{icono}}"/></svg><div><h4>{{titulo}}</h4><p>{{texto}}</p></div></li>
+{{#cada secciones.confianza.lista}}        <li><span class="agentes__icono" aria-hidden="true"><svg class="agentes__trazo" focusable="false"><use href="#i-{{icono}}"/></svg></span><h4>{{titulo}}</h4><p>{{texto}}</p>{{#si nota}}<p class="agentes__letra">{{nota}}</p>{{/si}}</li>
 {{/cada}}      </ul>
     </div>
-    <div class="agentes__limites">
-      <h3 class="agentes__subtitulo">{{agentes.limitesTitulo}}</h3>
-      <ul class="agentes__no" role="list">
-{{#cada agentes.noHace}}        <li><svg class="agentes__tacha" aria-hidden="true" focusable="false"><use href="#i-tacha"/></svg>{{texto}}</li>
-{{/cada}}{{#cada secciones.confianza.noHaceMas}}        <li><svg class="agentes__tacha" aria-hidden="true" focusable="false"><use href="#i-tacha"/></svg>{{texto}}</li>
+    <div class="agentes__cuida">
+      <div class="agentes__cuida-cabeza">
+        <h3 class="agentes__subtitulo">{{agentes.cuida.titulo}}</h3>
+        <p>{{agentes.cuida.bajada}}</p>
+      </div>
+      <ul class="agentes__si" role="list">
+{{#cada agentes.cuida.lista}}        <li><span class="agentes__palomita" aria-hidden="true"><svg class="agentes__trazo" focusable="false"><use href="#i-palomita"/></svg></span><div><h4>{{titulo}}</h4><p>{{texto}}</p></div></li>
 {{/cada}}      </ul>
     </div>
   </section>

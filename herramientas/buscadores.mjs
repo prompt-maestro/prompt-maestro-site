@@ -157,9 +157,9 @@ export function sitemap({ origen }) {
 
 /**
  * llms.txt: la pagina contada en texto llano para los modelos de lenguaje. Que es, para quien, que hace, como se
- * empieza, que no hace, cuanto cuesta y a donde ir.
+ * empieza, como cuida el negocio, cuanto cuesta y a donde ir.
  * @param {Entrada & {
- *   pasos: string[], hace: { titulo: string, texto: string }[], noHace: string[], requisitos: string[],
+ *   pasos: string[], hace: { titulo: string, texto: string }[], cuida: string[], requisitos: string[],
  *   paraQuien: string, preciosDePrueba: boolean, legales: { terminos: string, privacidad: string }
  * }} entrada
  * @returns {string}
@@ -172,7 +172,7 @@ export function llmsTxt({
   preguntas,
   pasos,
   hace,
-  noHace,
+  cuida,
   requisitos,
   paraQuien,
   preciosDePrueba,
@@ -198,9 +198,9 @@ export function llmsTxt({
     '',
     ...pasos.map((paso, i) => `${i + 1}. ${paso}`),
     '',
-    '## Lo que no hace',
+    '## Así cuida tu negocio',
     '',
-    ...noHace.map((texto) => `- ${texto}`),
+    ...cuida.map((texto) => `- ${texto}`),
     '',
     '## Planes',
     '',

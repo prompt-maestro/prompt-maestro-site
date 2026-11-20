@@ -191,6 +191,15 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   así la página no carga con lo que nadie ha visto. La página llega con el menú ya armado; sin JavaScript, si su
   pieza no arranca o al imprimir se leen los dos capítulos como lista, cada uno con su nombre, y con movimiento
   reducido cada renglón es su último cuadro.
+- Debajo de «Tu agente» van los tres pilares («Tu número, tu dinero, tus reglas»: `secciones.confianza.lista`, cada
+  uno con su icono en una joya azul) y «Así cuida tu negocio» (`agentes.cuida`: seis compromisos dichos en positivo,
+  cada uno con su palomita). Antes era la lista de lo que el agente no hace, con taches; el dueño pidió decirlo como
+  valor para el negocio (20-nov-2026), así que aquí ningún título empieza con «No»; la oración de cada uno sí dice,
+  a la vista, los hechos de la tabla de la verdad (no trae clientela nueva, no diagnostica, no inventa lo que no
+  está en el catálogo). Un pilar puede llevar letra
+  chica (`nota`): hoy, lo que cobra Mercado Pago por cada pago, leído de su ayuda y con el mes en que se leyó. Es el
+  único porcentaje que la página puede decir (`pruebas/unitarias/verdad.test.mjs`); si Mercado Pago cambia su
+  tarifa, se corrigen la cifra y la fecha juntas.
 - En `preguntas.json`, `principal` marca las cinco preguntas que se ven de entrada; las demás van dentro de un
   `<details>` («Ver más preguntas»), sin JavaScript. Los datos estructurados y `llms.txt` llevan todas.
 - Los retratos de «Para quién», el antes y después y la luz del botón de «Citas garantizadas» se encienden al entrar

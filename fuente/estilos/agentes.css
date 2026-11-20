@@ -3,7 +3,7 @@
    escena hecha con las piezas del WhatsApp de dia que corre sola unos segundos, como un video. En celular el menu es
    un acordeon (lo elegido se abre ahi mismo); desde 900 de ancho, el titulo, el selector de capitulos y el menu van a
    la izquierda y un solo escenario a la derecha, que sube junto al titulo y se queda a la vista mientras se recorre
-   el menu. Debajo, lo que cuidamos (su numero, su dinero y sus reglas) y lo que el agente no hace.
+   el menu. Debajo, lo que cuidamos (su numero, su dinero y sus reglas) y como cuida el agente su negocio.
 
    La pagina llega con el menu armado, el primer capitulo a la vista y su primer renglon abierto. Sin JavaScript, si
    su pieza no arranca o al imprimir, se lee como lista: los dos capitulos, cada renglon con su oracion. */
@@ -1017,7 +1017,7 @@ p.mv__botones span {
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
-   Lo que cuidamos: su numero, su dinero y sus reglas, en tres tarjetas con su icono. Y lo que el agente no hace.
+   Lo que cuidamos: su numero, su dinero y sus reglas, en tres tarjetas con su icono. Y como cuida su negocio.
    --------------------------------------------------------------------------------------------------------------- */
 .agentes__confianza {
   display: grid;
@@ -1042,76 +1042,125 @@ p.mv__botones span {
 
 .agentes__cuidamos {
   display: grid;
-  gap: var(--e-3);
-}
-
-.agentes__cuidamos li {
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  align-content: start;
-  align-items: start;
   gap: var(--e-4);
-  padding: 20px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgb(26 33 80 / 0.5), rgb(12 16 40 / 0.5));
-  box-shadow: inset 0 0 0 1px var(--linea);
 }
 
+/* Cada pilar, una tarjeta con borde de luz: el filo azul nace arriba a la izquierda y se apaga hacia abajo. */
+.agentes__cuidamos li {
+  padding: 28px 26px 30px;
+  border: 1px solid transparent;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, #151826, #101219) padding-box,
+    linear-gradient(150deg, rgb(132 151 255 / 0.75), rgb(132 151 255 / 0.1) 38%, rgb(255 255 255 / 0.07)) border-box;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
+}
+
+/* Su icono, como una joya: en el azul de la marca, con su brillo. */
 .agentes__icono {
-  width: 46px;
-  height: 46px;
-  padding: 11.5px;
-  border-radius: 13px;
-  background: rgb(132 151 255 / 0.14);
-  color: var(--luz);
+  display: block;
+  width: 54px;
+  height: 54px;
+  padding: 14px;
+  border-radius: 17px;
+  background: linear-gradient(145deg, var(--sello-2), #2b3fc0);
+  box-shadow:
+    0 12px 32px rgb(63 92 245 / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.4);
+  color: #fff;
+}
+
+/* El dibujo de dentro, del icono y de la palomita: llena su marco. */
+.agentes__trazo {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .agentes__cuidamos h4 {
-  font-size: 1.125rem;
+  margin-top: var(--e-6);
+  font-size: 1.25rem;
   font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
 }
 
 .agentes__cuidamos p,
-.agentes__no li {
+.agentes__cuida p {
   color: var(--tinta-2);
-  font-size: 0.9688rem;
+  font-size: 1rem;
   font-weight: 300;
-  line-height: 1.45;
+  line-height: 1.5;
   text-wrap: pretty;
 }
 
 .agentes__cuidamos p {
-  margin-top: var(--e-1);
+  margin-top: var(--e-2);
 }
 
-.agentes__limites {
+/* La letra chica de un pilar (hoy, la tarifa del cobro con su fecha). Va aparte, bajo una raya. */
+.agentes__cuidamos p.agentes__letra {
+  margin-top: 14px;
+  padding-top: var(--e-3);
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  color: var(--tinta-3);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+/* Como cuida el negocio: seis compromisos, cada uno con su palomita encendida, separados por una raya fina. Antes
+   era la lista de lo que el agente no hace, con taches; el dueno pidio decirlo como lo que si hace por ella. */
+.agentes__cuida {
   display: grid;
+  gap: 28px;
+  margin-top: 56px;
+}
+
+/* Su titulo manda sobre los de las tarjetas de arriba y los de sus renglones. */
+.agentes__cuida-cabeza .agentes__subtitulo {
+  font-size: 1.5rem;
+}
+
+.agentes__cuida-cabeza p {
+  max-width: 34ch;
+  margin-top: 10px;
+}
+
+.agentes__si {
+  display: grid;
+}
+
+.agentes__si li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
   gap: var(--e-4);
-  margin-top: 36px;
+  padding: 20px 0;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
 }
 
-.agentes__no {
-  display: grid;
-  gap: 10px;
-}
-
-.agentes__no li {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  gap: var(--e-3);
-}
-
-/* La tacha, chica y en rojo suave. */
-.agentes__tacha {
-  width: 22px;
-  height: 22px;
-  margin-top: 1px;
-  padding: 5.5px;
+.agentes__palomita {
+  width: 30px;
+  height: 30px;
+  padding: 8px;
   border-radius: 50%;
-  background: rgb(255 143 128 / 0.14);
-  color: var(--error);
+  background: linear-gradient(145deg, var(--sello-2), var(--sello));
+  box-shadow:
+    0 0 20px rgb(63 92 245 / 0.6),
+    inset 0 1px 0 rgb(255 255 255 / 0.35);
+  color: #fff;
+}
+
+.agentes__si h4 {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.agentes__si p {
+  margin-top: var(--e-1);
+  font-size: 0.9375rem;
 }
 
 /* En el acordeon la escena se achica un poco, toda junta, como un video en una pantalla mas chica: asi sus globos
@@ -1248,24 +1297,23 @@ p.mv__botones span {
 
   .agentes__cuidamos {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
+    gap: 20px;
   }
 
   .agentes__cuidamos li {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 26px;
+    padding: 34px 32px 38px;
   }
 
-  .agentes__limites {
-    margin-top: var(--e-12);
-    padding: 30px 34px;
-    border-radius: 20px;
-    box-shadow: inset 0 0 0 1px var(--linea);
+  .agentes__cuida {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr);
+    align-items: start;
+    gap: 56px;
+    margin-top: var(--e-16);
   }
 
-  .agentes__no {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--e-4) 36px;
+  .agentes__si {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 44px;
   }
 }
 
@@ -1425,6 +1473,15 @@ p.mv__botones span {
 
   .agentes__duo[data-numerado] .beneficio__play b::after {
     content: ". ";
+  }
+
+  /* En papel los fondos no se imprimen: el icono y la palomita, que van en blanco sobre su joya azul, se pintan de
+     azul para que no desaparezcan. */
+  .agentes__icono,
+  .agentes__palomita {
+    box-shadow: none;
+    background: none;
+    color: var(--sello);
   }
 }
 

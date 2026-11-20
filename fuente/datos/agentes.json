@@ -407,11 +407,28 @@
       ]
     }
   ],
-  "limitesTitulo": "Lo que tu agente no hace",
-  "noHace": [
-    { "texto": "No confirma una cita sin su anticipo, salvo que tú lo decidas." },
-    { "texto": "No inventa precios: los toma de tu catálogo." },
-    { "texto": "No se hace pasar por una persona: avisa que es un asistente virtual." },
-    { "texto": "No cobra el resto del servicio. Solo el anticipo que garantiza la cita." }
-  ]
+  "cuida": {
+    "titulo": "Así cuida tu negocio",
+    "bajada": "Seis cosas que tu agente hace siempre, para que tú no tengas que vigilarlo.",
+    "lista": [
+      {
+        "titulo": "Cada cita, con su anticipo",
+        "texto": "Confirma solo con el pago aprobado. Las excepciones las decides tú."
+      },
+      {
+        "titulo": "Tus precios, tal cual",
+        "texto": "Cotiza con tu catálogo y, si algo no está ahí, no lo inventa: te avisa."
+      },
+      { "titulo": "Siempre con transparencia", "texto": "Desde el primer mensaje se presenta como asistente virtual." },
+      { "titulo": "Cobra solo el anticipo", "texto": "El resto del servicio lo cobras tú, como siempre." },
+      {
+        "titulo": "Lo clínico es tuyo",
+        "texto": "No diagnostica ni recomienda medicamentos: agenda y, si hay una urgencia, te llega a ti."
+      },
+      {
+        "titulo": "Cuida a quien ya te escribe",
+        "texto": "No busca clientela nueva: hace que quien ya te escribe sí llegue a su cita, con su anticipo pagado."
+      }
+    ]
+  }
 }

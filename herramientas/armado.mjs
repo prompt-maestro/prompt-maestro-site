@@ -406,7 +406,9 @@ export async function armarSitio({ raiz, destino }) {
           pasos: videosDe('empieza').map(
             (/** @type {{ titulo: string, texto: string }} */ paso) => `${paso.titulo}: ${paso.texto}`,
           ),
-          noHace: textos([...agentes.noHace, ...secciones.confianza.noHaceMas]),
+          cuida: agentes.cuida.lista.map(
+            (/** @type {{ titulo: string, texto: string }} */ uno) => `${uno.titulo}. ${uno.texto}`,
+          ),
           requisitos: textos(secciones.planes.requisitos),
           paraQuien: `${secciones.paraQuien.titulo} ${secciones.paraQuien.tituloFuerte}`,
           preciosDePrueba: planes.dePrueba,
