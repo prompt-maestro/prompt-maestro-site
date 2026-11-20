@@ -94,9 +94,9 @@ test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de 
   assert.deepEqual(
     giros.map((giro) => giro.tarjeta.texto),
     [
-      'Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta.',
-      'Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.',
-      'Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.',
+      'Más tiempo para tus clientas: tu agente cotiza tus diseños con tu catálogo y agenda solo con el anticipo pagado.',
+      'Más orden en tu agenda: limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.',
+      'Más tranquilidad en tu consulta: agenda con respeto y discreción, y lo clínico siempre queda en tus manos.',
     ],
   );
   for (const giro of giros) {
@@ -106,7 +106,7 @@ test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de 
     );
   }
   const bloque = seccion('para-quien');
-  assert.ok(bloque.includes('>Hoy, para uñas, dentistas y médicos. <em>Pronto, más oficios.</em></h2>'));
+  assert.ok(bloque.includes('>Hoy, para uñas, dentistas y médicos. <em>Pronto, más oficios y profesiones.</em></h2>'));
   const tarjetas = [...bloque.matchAll(/<li class="oficio__tarjeta" data-enciende>([\s\S]*?)<\/li>/g)].map(
     ([, dentro]) => dentro ?? '',
   );
@@ -137,7 +137,7 @@ test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de 
   const { sitio } = { sitio: await leer('sitio.json') };
   assert.ok(
     bloque.includes(
-      `<a class="oficio__otro" href="${sitio.contactoOficio}" data-lugar="para-quien"><span><b>¿El tuyo no está?</b> Escríbenos y te avisamos.</span>`,
+      `<a class="oficio__otro" href="${sitio.contactoOficio}" data-lugar="para-quien"><span><b>¿No está tu negocio?</b> Escríbenos y lo platicamos.</span>`,
     ),
   );
 });

@@ -15,7 +15,7 @@
     "direccion": "Av. del Esmalte 234, colonia Bella Vista",
     "tarjeta": {
       "nombre": "Uñas",
-      "texto": "Cotiza diseños con tu catálogo y agenda con el anticipo pagado, mientras tú sigues con tu clienta.",
+      "texto": "Más tiempo para tus clientas: tu agente cotiza tus diseños con tu catálogo y agenda solo con el anticipo pagado.",
       "alt": "Manicurista pintando las uñas de una clienta"
     }
   },
@@ -35,7 +35,7 @@
     "direccion": "Av. de la Sonrisa 100, colonia Providencia",
     "tarjeta": {
       "nombre": "Dentistas",
-      "texto": "Agenda limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.",
+      "texto": "Más orden en tu agenda: limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.",
       "alt": "Dentista atendiendo a un paciente"
     }
   },
@@ -55,7 +55,7 @@
     "direccion": "Av. del Bienestar 200, colonia Chapalita",
     "tarjeta": {
       "nombre": "Médicos generales y especialistas",
-      "texto": "Agenda consultas con respeto y discreción. Nunca opina de salud: una urgencia te llega a ti.",
+      "texto": "Más tranquilidad en tu consulta: agenda con respeto y discreción, y lo clínico siempre queda en tus manos.",
       "alt": "Doctora auscultando a un paciente"
     }
   }

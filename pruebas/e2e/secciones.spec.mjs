@@ -337,9 +337,17 @@ test('para quien: tres retratos enmarcados, con la foto completa y nitida y, deb
     expect(medidas.textoEncima).toBe('static');
     expect(medidas.velo).toBe('none');
   }
-  await expect(tarjetas.first()).toContainText('Cotiza diseños con tu catálogo y agenda con el anticipo pagado');
+  // Cada renglon dice lo que gana el negocio (el dueno, 20-nov-2026: "con un angulo de crear valor").
+  await expect(tarjetas.locator('.oficio__texto p')).toHaveText([
+    'Más tiempo para tus clientas: tu agente cotiza tus diseños con tu catálogo y agenda solo con el anticipo pagado.',
+    'Más orden en tu agenda: limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.',
+    'Más tranquilidad en tu consulta: agenda con respeto y discreción, y lo clínico siempre queda en tus manos.',
+  ]);
+  await expect(seccion.getByRole('heading', { level: 2 })).toHaveText(
+    'Hoy, para uñas, dentistas y médicos. Pronto, más oficios y profesiones.',
+  );
   // Pedir un oficio nuevo lleva su propio asunto (no el de "quiero que me acompanen"), y el renglon entero es el enlace.
-  const otro = seccion.getByRole('link', { name: '¿El tuyo no está? Escríbenos y te avisamos.' });
+  const otro = seccion.getByRole('link', { name: '¿No está tu negocio? Escríbenos y lo platicamos.' });
   await expect(otro).toHaveAttribute('href', /^mailto:.*subject=.*oficio/);
   await expect(otro.locator('svg')).toHaveAttribute('aria-hidden', 'true');
   const renglon = await otro.boundingBox();
@@ -532,7 +540,9 @@ test('en celular, lo que recibe el foco no se queda escondido detras de la barra
   await page.locator('#para-quien').scrollIntoViewIfNeeded();
   const abajo = page.locator('[data-barra-movil]');
   await expect(abajo).toBeVisible();
-  const enlace = page.locator('#para-quien').getByRole('link', { name: '¿El tuyo no está? Escríbenos y te avisamos.' });
+  const enlace = page
+    .locator('#para-quien')
+    .getByRole('link', { name: '¿No está tu negocio? Escríbenos y lo platicamos.' });
   // Se manda al fondo de la pantalla, como lo deja el navegador al llegar con el teclado.
   await enlace.evaluate((el) => {
     el.scrollIntoView({ block: 'end' });
