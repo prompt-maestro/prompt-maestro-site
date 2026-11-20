@@ -1,7 +1,6 @@
-/* Las secciones de despues del inicio, la demostracion y "Tu agente": para quien, en una frase, planes, preguntas y
+/* Las secciones de despues del inicio, la demostracion y "Tu agente": para quien, planes, preguntas y
    el cierre. Todas comparten el mismo marco: un renglon chico encendido, un titulo grande y aire. */
 .oficio,
-.frase,
 .planes,
 .preguntas {
   display: grid;
@@ -43,18 +42,7 @@
   display: block;
 }
 
-/* Los rotulos mas chicos, en mayusculas: el antes y el despues, y las tres palabras. */
-.frase__rotulo,
-.frase__definicion dt {
-  color: var(--quien, var(--tinta-3));
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-/* La cita, como una ficha de calendario: la comparten el mini video de "Tu agente" y el antes y despues. */
+/* La cita, como una ficha de calendario: la usa el mini video de "Tu agente". */
 .minicita {
   position: relative;
   display: grid;
@@ -235,314 +223,18 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.34);
 }
 
-.oficio__flecha,
-.frase__flecha {
+.oficio__flecha {
   flex: none;
+  width: 38px;
+  height: 38px;
+  padding: 10px;
   border-radius: 50%;
   background: var(--tinta);
   color: #0a0c1c;
 }
 
-.oficio__flecha {
-  width: 38px;
-  height: 38px;
-  padding: 10px;
-}
-
 .oficio__otro:hover .oficio__flecha {
   translate: 3px;
-}
-
-/* ---------------------------------------------------------------------------------------------------------------
-   En una frase: que es (de ahi leen los buscadores y los asistentes con IA), el antes y el despues en dos tarjetas,
-   y abajo, discretas, las tres palabras definidas.
-   --------------------------------------------------------------------------------------------------------------- */
-.frase__cambio {
-  position: relative;
-  display: grid;
-  gap: 18px;
-}
-
-/* La tarjeta de antes va apagada y gris. */
-.frase__lado {
-  /* Lo que cambia de un lado al otro: el foco de la pantalla y el color de lo que se lee. */
-  --foco: var(--error);
-  --dicho: var(--tinta-2);
-
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  align-content: start;
-  gap: 18px;
-  padding: 22px 20px var(--e-6);
-  border-radius: 24px;
-  background: linear-gradient(180deg, rgb(20 23 40 / 0.9), rgb(12 14 26 / 0.9));
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
-}
-
-/* La de despues, encendida: su luz es una capa aparte, para poder prenderla. */
-.frase__lado--despues {
-  --foco: var(--bien);
-  --quien: var(--luz);
-  --dicho: var(--tinta);
-  --renglon: var(--tinta);
-  --peso: 400;
-}
-
-.frase__lado--despues::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgb(30 40 104 / 0.92), rgb(14 19 52 / 0.92));
-  box-shadow:
-    inset 0 0 0 1px rgb(132 151 255 / 0.75),
-    0 30px 70px rgb(0 0 0 / 0.5),
-    0 0 90px rgb(63 92 245 / 0.3);
-}
-
-.frase__dice {
-  margin-top: var(--e-1);
-  color: var(--dicho);
-  font-size: 1.5rem;
-  font-weight: 500;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-
-/* La pantalla de cada lado: los mismos tres mensajes y la misma cita, antes sin contestar y despues atendidos. */
-.frase__pantalla {
-  display: grid;
-  align-content: start;
-  gap: 7px;
-  padding: 14px var(--e-3);
-  border-radius: 18px;
-  background: #0b0d18;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
-  font-size: 0.8125rem;
-  filter: saturate(0.5);
-  container-type: inline-size;
-}
-
-.frase__lado--despues .frase__pantalla {
-  background: linear-gradient(180deg, #0f1540, #0a0e2a);
-  box-shadow: inset 0 0 0 1px rgb(132 151 255 / 0.3);
-  filter: none;
-}
-
-.frase__cuenta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 3px;
-}
-
-.frase__cuenta b {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 600;
-}
-
-.frase__cuenta b::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--foco);
-  box-shadow: 0 0 10px var(--foco);
-}
-
-.frase__cuenta span,
-.frase__msj small {
-  color: var(--tinta-3);
-}
-
-.frase__msj {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 11px;
-  border-radius: 12px;
-  background: rgb(255 255 255 / 0.07);
-  color: var(--dicho);
-  font-size: 0.8438rem;
-  line-height: 1.25;
-}
-
-.frase__msj b {
-  display: grid;
-  place-items: center;
-  height: 28px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.14);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.frase__msj span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.frase__msj small {
-  font-size: 0.6875rem;
-  white-space: nowrap;
-}
-
-.frase__lado--despues .frase__msj {
-  background: rgb(132 151 255 / 0.13);
-}
-
-.frase__lado--despues .frase__msj small {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--bien);
-  font-weight: 600;
-}
-
-.frase__bien {
-  width: 11px;
-  height: 11px;
-}
-
-.frase__pantalla .minicita {
-  margin-top: 3px;
-  box-shadow: none;
-  font-size: 0.8125rem;
-}
-
-/* Antes, la cita esta en duda: sin anticipo, quien sabe si llegue. La ficha va apagada, como lo demas. */
-.minicita--duda {
-  --dia: rgb(255 255 255 / 0.12);
-  --detalle: var(--tinta-3);
-
-  background: rgb(255 255 255 / 0.07);
-  color: var(--tinta-2);
-}
-
-.frase__duda {
-  position: absolute;
-  top: 50%;
-  right: var(--e-3);
-  padding: 3px 10px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgb(255 143 128 / 0.6);
-  color: var(--error);
-  font-size: 0.75rem;
-  font-weight: 500;
-  translate: 0 -50%;
-}
-
-/* Despues, la misma cita lleva el sello: tinta azul sobre la ficha clara. */
-.frase__pantalla .sello {
-  position: absolute;
-  top: 50%;
-  right: var(--e-2);
-  width: 84px;
-  color: var(--wa-verde-texto);
-  transform: translateY(-50%) rotate(var(--giro, -7deg));
-}
-
-/* Donde la pantalla es ancha el sello crece, y en la mas angosta se achica tambien la ficha: asi el sello nunca
-   le quita lugar al texto de la cita. */
-@container (min-width: 280.02px) {
-  .frase__pantalla .sello {
-    width: 108px;
-  }
-}
-
-@container (max-width: 240px) {
-  /* Sin la inicial, el mensaje se lee un poco mas. */
-  .frase__msj {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .frase__msj b {
-    display: none;
-  }
-
-  .frase__pantalla .minicita {
-    font-size: 0.75rem;
-  }
-
-  .frase__duda {
-    right: var(--e-2);
-    padding: 2px 7px;
-    font-size: 0.6875rem;
-  }
-
-  .frase__pantalla .sello {
-    right: 5px;
-    width: 70px;
-  }
-}
-
-.frase__puntos {
-  display: grid;
-  gap: 11px;
-  color: var(--renglon, var(--tinta-3));
-  font-weight: var(--peso, 300);
-}
-
-.frase__puntos li {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  gap: var(--e-3);
-  font-size: 1rem;
-  line-height: 1.4;
-  text-wrap: pretty;
-}
-
-/* La tacha gris de antes y la palomita azul de despues. */
-.frase__marca {
-  width: 22px;
-  height: 22px;
-  margin-top: 1px;
-  padding: 5px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.08);
-}
-
-.frase__lado--despues .frase__marca {
-  background: var(--sello);
-  box-shadow: 0 0 14px rgb(63 92 245 / 0.7);
-}
-
-/* La flecha entre las dos tarjetas solo va cuando estan lado a lado. */
-.frase__flecha {
-  display: none;
-}
-
-.frase__definiciones {
-  display: grid;
-  gap: var(--e-4) 40px;
-  margin: 0;
-  padding-top: 28px;
-  border-top: 1px solid var(--linea);
-}
-
-.frase__definicion {
-  --quien: var(--luz);
-
-  display: grid;
-  align-content: start;
-  gap: var(--e-1);
-}
-
-.frase__definicion dd {
-  max-width: 30rem;
-  margin: 0;
-  color: var(--tinta-2);
-  font-size: 0.9688rem;
-  font-weight: 300;
-  line-height: 1.45;
-  text-wrap: pretty;
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
@@ -957,30 +649,6 @@ html:not(.con-cuenta) .calculadora {
   }
 }
 
-/* El antes y el despues, lado a lado, con la flecha en medio. */
-@media (min-width: 760px) {
-  .frase__cambio {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(18px, 2.2vw, 28px);
-  }
-
-  .frase__flecha {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 1;
-    display: block;
-    /* Cabe en el aire de las dos tarjetas: no toca sus pantallas. */
-    width: 44px;
-    height: 44px;
-    padding: 12px;
-    box-shadow:
-      0 0 0 6px var(--papel),
-      0 0 40px rgb(63 92 245 / 0.6);
-    translate: -50% -50%;
-  }
-}
-
 /* Con la barra de abajo a la vista, lo que recibe el foco no se queda escondido detras de ella. */
 /* Solo mientras la barra de abajo se ve: si no, el navegador moveria la pagina al enfocar los controles del
    inicio, que viven pegados al fondo de la pantalla. */
@@ -993,29 +661,6 @@ html:not(.con-cuenta) .calculadora {
 @media (min-width: 900px) {
   .barra-movil {
     display: none;
-  }
-
-  .frase__lado {
-    gap: 22px;
-    padding: 30px 30px var(--e-8);
-  }
-
-  .frase__flecha {
-    width: 52px;
-    height: 52px;
-    padding: 15px;
-    box-shadow:
-      0 0 0 8px var(--papel),
-      0 0 40px rgb(63 92 245 / 0.6);
-  }
-
-  .frase__puntos li {
-    font-size: 1.0625rem;
-  }
-
-  .frase__definiciones {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding-top: var(--e-8);
   }
 
   .oficio__lista {
@@ -1039,7 +684,6 @@ html:not(.con-cuenta) .calculadora {
 
 @media (min-width: 1100px) {
   .oficio,
-  .frase,
   .planes,
   .preguntas {
     padding-block: var(--e-24) var(--e-40);
@@ -1117,29 +761,6 @@ html:not(.con-cuenta) .calculadora {
 
   [data-enciende="ya"] .oficio__marco::after {
     animation: oficio-brillo 1100ms var(--suave) calc(var(--orden, 0) * 150ms + 300ms);
-  }
-
-  /* El antes y el despues suben a su lugar, y la tarjeta de despues se enciende un instante despues de la de antes:
-     primero su luz y, al final, su sello. */
-  .frase__lado[data-enciende="espera"] {
-    translate: 0 18px;
-  }
-
-  .frase__lado[data-enciende="espera"]::before,
-  .frase__lado[data-enciende="espera"] .sello {
-    opacity: 0;
-  }
-
-  .frase__lado[data-enciende="ya"] {
-    transition: translate 700ms var(--suave) calc(var(--orden, 0) * 180ms);
-  }
-
-  .frase__lado[data-enciende="ya"]::before {
-    transition: opacity 900ms var(--suave) calc(var(--orden, 0) * 180ms + 200ms);
-  }
-
-  .frase__lado[data-enciende="ya"] .sello {
-    animation: sello-cae 220ms cubic-bezier(0.55, 0, 0.9, 0.35) calc(var(--orden, 0) * 180ms + 920ms) backwards;
   }
 }
 

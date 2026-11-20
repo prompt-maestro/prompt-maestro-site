@@ -72,6 +72,11 @@ const PROHIBIDO = /** @type {[RegExp, string, RegExp?][]} */ ([
 let visible = '';
 /** Lo mismo, con sus mayusculas: para lo que solo esta prohibido como palabra clave. */
 let leido = '';
+/**
+ * Solo lo que viaja en la pagina, sin llms.txt: ahi se busca lo que la pagina TIENE que decir. (llms.txt lleva cosas
+ * que la pagina ya no ensena, como el glosario: una frase obligada no se cumple con que este solo ahi.)
+ */
+let enLaPagina = '';
 let html = '';
 
 before(async () => {
@@ -94,6 +99,7 @@ before(async () => {
   const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
   leido = [texto, ...atributos, ...datos, llms].join(' ').replace(/\s+/g, ' ');
   visible = leido.toLowerCase();
+  enLaPagina = [texto, ...atributos, ...datos].join(' ').replace(/\s+/g, ' ').toLowerCase();
 });
 
 test('la pagina armada trae sus secciones (si no, esta prueba no estaria leyendo nada)', () => {
@@ -162,8 +168,8 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'le contesta con otra nota de voz',
     'siempre por escrito',
     'hoy, para uñas, dentistas y médicos',
-    // Los mensajes son buenos: con el agente siguen llegando, y la comision de cada anticipo la fija Mercado Pago.
-    'te siguen escribiendo, y tu agente contesta por ti',
+    // La comision de cada anticipo la fija Mercado Pago. (La frase del antes y despues, "te siguen escribiendo, y tu
+    // agente contesta por ti", se fue con la seccion "En una frase", que el dueno quito el 20-nov-2026.)
     'la fija mercado pago, no nosotros',
     'médicos generales y especialistas',
     // "Como funciona", desde el primer mensaje hasta despues de la cita: el pago se verifica antes de agendar y ella
@@ -173,8 +179,11 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'verifica el pago',
     'nada se aplica sin tu sí',
     'atiende por whatsapp',
+    // La promesa central, que antes decia el titulo de "En una frase": sigue dicha en la pagina.
+    'agenda solo con el anticipo pagado',
+    'solo entonces agenda',
   ]) {
-    assert.ok(visible.includes(frase), frase);
+    assert.ok(enLaPagina.includes(frase), frase);
   }
 });
 

@@ -54,73 +54,9 @@
     "otro": "¿No está tu negocio?",
     "otroAccion": "Escríbenos y lo platicamos."
   },
-  "enUnaFrase": {
-    "sobre": "En una frase",
-    "titulo": "Citas Garantizadas es un agente de WhatsApp",
-    "tituloFuerte": "que agenda solo con el anticipo pagado.",
-    "hora": "4:12 pm",
-    "mensajes": [
-      {
-        "inicial": "A",
-        "texto": "Hola, ¿tienes lugar el jueves?",
-        "hace": "hace 2 h"
-      },
-      {
-        "inicial": "R",
-        "texto": "Nota de voz · 0:14",
-        "hace": "hace 1 h"
-      },
-      {
-        "inicial": "L",
-        "texto": "¿Cuánto por este diseño?",
-        "hace": "hace 40 min"
-      }
-    ],
-    "cita": {
-      "dia": "JUE",
-      "fecha": "19",
-      "titulo": "5:00 pm · Ana"
-    },
-    "lados": [
-      {
-        "rotulo": "Antes",
-        "frase": "Tú trabajas y tu celular no para de sonar.",
-        "cuenta": "7 sin contestar",
-        "anticipo": "Sin anticipo",
-        "marca": "¿Llegará?",
-        "renglones": [
-          {
-            "texto": "Contestas cuando puedes."
-          },
-          {
-            "texto": "Apartas la hora sin anticipo."
-          },
-          {
-            "texto": "Si no llega, pierdes la hora."
-          }
-        ]
-      },
-      {
-        "encendido": true,
-        "rotulo": "Con Citas Garantizadas",
-        "frase": "Te siguen escribiendo, y tu agente contesta por ti.",
-        "cuenta": "0 sin contestar",
-        "contestado": "Contestado",
-        "anticipo": "Anticipo $150",
-        "renglones": [
-          {
-            "texto": "Contesta a cualquier hora, con el tono de tu negocio."
-          },
-          {
-            "texto": "Agenda solo con el anticipo pagado."
-          },
-          {
-            "texto": "Si no llega, el anticipo se queda contigo, según tu política."
-          }
-        ]
-      }
-    ],
-    "definiciones": [
+  "glosario": {
+    "frase": "Citas Garantizadas es un agente de WhatsApp que agenda solo con el anticipo pagado.",
+    "palabras": [
       {
         "termino": "Cita garantizada",
         "texto": "Una cita que entra a tu calendario con su anticipo ya pagado. Garantizada quiere decir pagada."

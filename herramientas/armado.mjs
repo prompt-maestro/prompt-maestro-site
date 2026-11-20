@@ -410,6 +410,7 @@ export async function armarSitio({ raiz, destino }) {
             (/** @type {{ titulo: string, texto: string }} */ uno) => `${uno.titulo}. ${uno.texto}`,
           ),
           requisitos: textos(secciones.planes.requisitos),
+          glosario: secciones.glosario,
           paraQuien: `${secciones.paraQuien.titulo} ${secciones.paraQuien.tituloFuerte}`,
           preciosDePrueba: planes.dePrueba,
           legales: { terminos: secciones.pie.terminosUrl, privacidad: secciones.pie.privacidadUrl },

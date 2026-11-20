@@ -1,6 +1,8 @@
 // @ts-check
 // Lo que leen los buscadores, los de siempre y los que contestan con IA: datos estructurados, robots.txt, sitemap.xml
 // y llms.txt. Todo es puro y sale de los mismos datos que arman la pagina: asi nunca dicen algo distinto a ella.
+// (Una sola cosa va en llms.txt y no en la pagina: la frase que define el producto y sus tres palabras, que la pagina
+// dejo de ensenar cuando se quito la seccion "En una frase".)
 import { pesos } from '../fuente/js/redaccion.js';
 
 /** @typedef {{ nombre: string, mensual: number, anual: number, instalacion: number, incluye: string[] }} Plan */
@@ -156,10 +158,12 @@ export function sitemap({ origen }) {
 }
 
 /**
- * llms.txt: la pagina contada en texto llano para los modelos de lenguaje. Que es, para quien, que hace, como se
- * empieza, como cuida el negocio, cuanto cuesta y a donde ir.
+ * llms.txt: la pagina contada en texto llano para los modelos de lenguaje. Que es (en una frase, con sus tres
+ * palabras definidas: la pagina ya no lleva esa seccion, y aqui se conserva para quien cita), para quien, que hace,
+ * como se empieza, como cuida el negocio, cuanto cuesta y a donde ir.
  * @param {Entrada & {
  *   pasos: string[], hace: { titulo: string, texto: string }[], cuida: string[], requisitos: string[],
+ *   glosario: { frase: string, palabras: { termino: string, texto: string }[] },
  *   paraQuien: string, preciosDePrueba: boolean, legales: { terminos: string, privacidad: string }
  * }} entrada
  * @returns {string}
@@ -174,6 +178,7 @@ export function llmsTxt({
   hace,
   cuida,
   requisitos,
+  glosario,
   paraQuien,
   preciosDePrueba,
   legales,
@@ -185,6 +190,12 @@ export function llmsTxt({
     `> ${sitio.descripcion}`,
     '',
     `${sitio.producto} es un producto de ${sitio.nombre} (${sitio.ciudad}, México). Es un agente virtual con inteligencia artificial que atiende el WhatsApp de un negocio con agenda: contesta, ofrece horarios reales, cobra el anticipo y solo entonces agenda la cita.`,
+    '',
+    '## En una frase',
+    '',
+    glosario.frase,
+    '',
+    ...glosario.palabras.map(({ termino, texto }) => `- ${termino}: ${texto}`),
     '',
     '## Para quién',
     '',

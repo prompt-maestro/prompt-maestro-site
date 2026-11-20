@@ -296,7 +296,8 @@ test('ninguna hoja pisa una animacion de otra: cada @keyframes de la pagina llev
   // Y toda animacion que se usa en las secciones existe.
   const secciones = await readFile(path.join(FUENTE, 'estilos', 'secciones.css'), 'utf8');
   const usadas = [...secciones.matchAll(/\banimation:\s*([\w-]+)/g)].map(([, nombre]) => nombre ?? '');
-  assert.ok(usadas.length >= 4);
+  // (Eran cuatro: la del sello del antes y despues se fue con la seccion "En una frase".)
+  assert.deepEqual(usadas, ['resto-entra', 'oficio-enciende', 'oficio-brillo']);
   for (const nombre of usadas) assert.ok(vistas.has(nombre), `no existe la animacion "${nombre}"`);
 });
 

@@ -157,8 +157,10 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   por escrito. Hoy: uñas a media conversación, médico al inicio y dentista por escrito, para que no empiecen igual.
 - Los textos de las secciones viven en `fuente/datos/secciones.json` y `preguntas.json`. Ninguno promete algo que el
   producto no hace: se revisan contra la tabla de la verdad del PRD antes de cambiarse.
-- «En una frase» conserva la frase que define el producto y sus tres palabras (de ahí leen los buscadores y los
-  asistentes con IA) y, en medio, un antes y un después (`secciones.enUnaFrase.lados`).
+- La sección «En una frase» (la frase que define el producto, un antes y un después y tres palabras definidas) ya no
+  está en la página: el dueño la quitó el 20-nov-2026 porque repetía lo de otras secciones. Después de «Para quién»
+  siguen los planes. La frase y sus tres palabras se conservan en `llms.txt` (`secciones.glosario`), para los
+  asistentes con IA que citan una definición.
 - «Tu agente» reúne lo que antes eran dos secciones («Cómo funciona» y «Tu agente»; el dueño pidió fusionarlas el
   19-nov-2026). Son dos capítulos con el mismo menú (`fuente/datos/agentes.json`, `capitulos`): «Lo que hace», con
   sus beneficios (hoy, nueve; el primero cuenta una cita de principio a fin), y «Cómo empiezas», con los pasos para
@@ -202,7 +204,7 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   tarifa, se corrigen la cifra y la fecha juntas.
 - En `preguntas.json`, `principal` marca las cinco preguntas que se ven de entrada; las demás van dentro de un
   `<details>` («Ver más preguntas»), sin JavaScript. Los datos estructurados y `llms.txt` llevan todas.
-- Los retratos de «Para quién», el antes y después y la luz del botón de «Citas garantizadas» se encienden al entrar
+- Los retratos de «Para quién» y la luz del botón de «Citas garantizadas» se encienden al entrar
   a la vista, una sola vez. La página llega con todo encendido: `fuente/js/encendido.js` apaga lo que todavía no se ve
   (`data-enciende="espera"`) y lo enciende al llegar (`"ya"`); cómo se ve cada estado lo dicen los estilos. Sin ese
   archivo, sin JavaScript o con movimiento reducido, todo se queda encendido y quieto.

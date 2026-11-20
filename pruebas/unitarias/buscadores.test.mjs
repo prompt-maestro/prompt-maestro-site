@@ -143,12 +143,15 @@ test('llms.txt cuenta la pagina en texto llano: que es, para quien, pasos, plane
     hace: [{ titulo: 'Entiende', texto: 'Todo.' }],
     cuida: ['Tus precios, tal cual. Cotiza con tu catálogo.'],
     requisitos: ['Un numero.'],
+    glosario: { frase: 'Es una cosa.', palabras: [{ termino: 'Palabra', texto: 'Lo que es.' }] },
     paraQuien: 'Hoy, para tres oficios.',
     preciosDePrueba: true,
     legales: { terminos: 'https://ejemplo.mx/terminos', privacidad: 'https://ejemplo.mx/privacidad' },
   });
   assert.match(texto, /^# Citas Garantizadas\n\n> Una descripcion\.\n/);
   assert.match(texto, /producto de Prompt Maestro \(Guadalajara, México\)/);
+  // Primero que es, en una frase y con sus palabras definidas; luego para quien.
+  assert.ok(texto.includes('## En una frase\n\nEs una cosa.\n\n- Palabra: Lo que es.\n\n## Para quién\n'));
   assert.ok(texto.includes('1. Primero.\n2. Segundo.'));
   assert.ok(texto.includes('- Entiende: Todo.'));
   assert.ok(texto.includes('## Así cuidamos de tu negocio\n\n- Tus precios, tal cual. Cotiza con tu catálogo.\n'));
@@ -259,111 +262,43 @@ test('cada direccion del mapa existe: o la arma la pagina o es una legal que la 
   }
 });
 
-test('la pagina trae el bloque "en una frase": la frase que define el producto y sus tres palabras definidas', async () => {
-  const { enUnaFrase } = await leer('secciones.json');
-  const bloque = /<section class="frase" id="en-una-frase"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
-  // De aqui leen los buscadores y los asistentes con IA: la frase y las definiciones no cambian.
-  assert.ok(
-    bloque.includes(
-      '>Citas Garantizadas es un agente de WhatsApp <em>que agenda solo con el anticipo pagado.</em></h2>',
-    ),
+test('la seccion "en una frase" ya no va en la pagina; su frase y sus tres palabras se conservan en llms.txt', async () => {
+  // El dueno (20-nov-2026): "eliminamos toda la seccion 'En una frase', toda esa info ya la tenemos disponible en
+  // otras secciones". De la pagina se fue entera: la seccion, su antes y despues, sus definiciones y sus estilos.
+  for (const resto of ['en-una-frase', 'class="frase', 'frase__', '#i-tacha', 'id="i-tacha"', 'minicita--duda']) {
+    assert.ok(!html.includes(resto), resto);
+  }
+  assert.doesNotMatch(html, /Con Citas Garantizadas|celular no para de sonar|Te siguen escribiendo|¿Llegará\?/);
+  const estilos = [...publica.entries()].find(([ruta]) => ruta.endsWith('pagina.css'))?.[1].toString() ?? '';
+  assert.ok(estilos.length > 10_000, 'la prueba esta leyendo la hoja de estilos');
+  assert.doesNotMatch(estilos, /\.frase\b|frase__|minicita--duda/);
+  // De los datos solo queda lo que cuenta llms.txt, para quien cita: la frase que define el producto y sus palabras.
+  const secciones = await leer('secciones.json');
+  assert.equal('enUnaFrase' in secciones, false);
+  assert.deepEqual(Object.keys(secciones.glosario), ['frase', 'palabras']);
+  assert.equal(
+    secciones.glosario.frase,
+    'Citas Garantizadas es un agente de WhatsApp que agenda solo con el anticipo pagado.',
   );
   assert.deepEqual(
-    enUnaFrase.definiciones.map((/** @type {any} */ palabra) => palabra.termino),
+    secciones.glosario.palabras.map((/** @type {any} */ palabra) => palabra.termino),
     ['Cita garantizada', 'Anticipo', 'Agente'],
   );
-  assert.deepEqual(
-    [...bloque.matchAll(/<div class="frase__definicion"><dt>([^<]+)<\/dt><dd>([^<]+)<\/dd><\/div>/g)].map(
-      ([, termino, texto]) => ({ termino, texto }),
-    ),
-    enUnaFrase.definiciones,
-  );
+  const llms = publica.get('llms.txt')?.toString() ?? '';
+  const bloque = /## En una frase\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1] ?? '';
+  assert.deepEqual(bloque.split('\n'), [
+    secciones.glosario.frase,
+    '',
+    ...secciones.glosario.palabras.map((/** @type {any} */ palabra) => `- ${palabra.termino}: ${palabra.texto}`),
+  ]);
+  assert.ok(bloque.includes('Garantizada quiere decir pagada.'));
+  // Y va antes de "Para quien": primero que es, luego para quien.
+  assert.ok(llms.indexOf('## En una frase') < llms.indexOf('## Para quién'));
 });
 
-test('en lugar de la tabla que comparaba con otras opciones va un antes y un despues, y nada de ella quedo', async () => {
-  const { enUnaFrase } = await leer('secciones.json');
-  const bloque = /<section class="frase" id="en-una-frase"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
-  // La tabla se fue de la pagina, de los datos y de lo que leen los modelos de lenguaje (ahi nunca estuvo).
+test('la tabla que comparaba con otras opciones no regreso: ni en la pagina, ni en los datos, ni en llms.txt', async () => {
+  const secciones = await leer('secciones.json');
   assert.doesNotMatch(html, /<table|role="(table|row|cell|columnheader|rowheader)"|compara|En qué se distingue/);
-  assert.deepEqual(
-    Object.keys(enUnaFrase).filter((clave) => clave.startsWith('compara')),
-    [],
-  );
+  assert.doesNotMatch(JSON.stringify(secciones), /"compara/);
   assert.doesNotMatch(publica.get('llms.txt')?.toString() ?? '', /Agenda en línea|Bot de WhatsApp|otras opciones/);
-
-  // Dos tarjetas: antes y despues. Solo la de despues va encendida.
-  const [antes, despues] = enUnaFrase.lados;
-  assert.equal(enUnaFrase.lados.length, 2);
-  assert.deepEqual([antes.encendido === true, despues.encendido === true], [false, true]);
-  const lados = [
-    ...bloque.matchAll(/<div class="frase__lado( frase__lado--despues)?" data-enciende>([\s\S]*?)<\/ul>\s*<\/div>/g),
-  ];
-  assert.deepEqual(
-    lados.map(([, encendido]) => Boolean(encendido)),
-    [false, true],
-  );
-  for (const [lugar, lado] of [antes, despues].entries()) {
-    const tarjeta = lados[lugar]?.[2] ?? '';
-    assert.ok(
-      tarjeta.includes(`<p class="frase__rotulo">${lado.rotulo}</p>`) &&
-        tarjeta.includes(`<h3 class="frase__dice">${lado.frase}</h3>`),
-      lado.rotulo,
-    );
-    // Sus tres renglones, cada uno con su marca: tacha antes, palomita despues.
-    assert.deepEqual(
-      [...tarjeta.matchAll(/<li><svg class="frase__marca"[^>]*><use href="#i-(\w+)"\/><\/svg>([^<]+)<\/li>/g)].map(
-        ([, marca, texto]) => [marca, texto],
-      ),
-      lado.renglones.map((/** @type {any} */ renglon) => [lugar === 0 ? 'tacha' : 'palomita', renglon.texto]),
-    );
-    // La pantalla es una ilustracion: no se le lee a quien no la ve. Trae los mismos tres mensajes en los dos lados.
-    const pantalla = /<div class="frase__pantalla" aria-hidden="true">([\s\S]*?)<\/div>/.exec(tarjeta)?.[1] ?? '';
-    assert.ok(pantalla.includes(`<b>${lado.cuenta}</b><span>${enUnaFrase.hora}</span>`), lado.cuenta);
-    for (const mensaje of enUnaFrase.mensajes) {
-      assert.ok(pantalla.includes(`<b>${mensaje.inicial}</b><span>${mensaje.texto}</span>`), mensaje.texto);
-    }
-    assert.ok(pantalla.includes(`<b>${enUnaFrase.cita.titulo}</b><span>${lado.anticipo}</span>`), lado.anticipo);
-  }
-  assert.deepEqual(
-    [antes, despues].map((lado) => [lado.rotulo, lado.frase, lado.cuenta, lado.anticipo]),
-    [
-      ['Antes', 'Tú trabajas y tu celular no para de sonar.', '7 sin contestar', 'Sin anticipo'],
-      [
-        'Con Citas Garantizadas',
-        'Te siguen escribiendo, y tu agente contesta por ti.',
-        '0 sin contestar',
-        'Anticipo $150',
-      ],
-    ],
-  );
-  assert.deepEqual(
-    [antes, despues].map((lado) => lado.renglones.map((/** @type {any} */ renglon) => renglon.texto)),
-    [
-      ['Contestas cuando puedes.', 'Apartas la hora sin anticipo.', 'Si no llega, pierdes la hora.'],
-      [
-        'Contesta a cualquier hora, con el tono de tu negocio.',
-        'Agenda solo con el anticipo pagado.',
-        'Si no llega, el anticipo se queda contigo, según tu política.',
-      ],
-    ],
-  );
-  assert.deepEqual(
-    enUnaFrase.mensajes.map((/** @type {any} */ mensaje) => [mensaje.texto, mensaje.hace]),
-    [
-      ['Hola, ¿tienes lugar el jueves?', 'hace 2 h'],
-      ['Nota de voz · 0:14', 'hace 1 h'],
-      ['¿Cuánto por este diseño?', 'hace 40 min'],
-    ],
-  );
-  // Antes, cada mensaje espera y la cita esta en duda; despues, cada uno esta contestado y la cita lleva el sello.
-  const [pantallaDeAntes = '', pantallaDeDespues = ''] = lados.map(([, , tarjeta]) => tarjeta);
-  for (const { hace } of enUnaFrase.mensajes) assert.ok(pantallaDeAntes.includes(`<small>${hace}</small>`), hace);
-  assert.ok(pantallaDeAntes.includes('<span class="frase__duda">¿Llegará?</span>'));
-  assert.ok(!pantallaDeAntes.includes('class="sello"') && !pantallaDeAntes.includes('Contestado'));
-  assert.equal(pantallaDeDespues.split('</svg>Contestado</small>').length - 1, 3);
-  assert.equal(pantallaDeDespues.split('class="sello"').length - 1, 1);
-  assert.ok(!pantallaDeDespues.includes('¿Llegará?') && !pantallaDeDespues.includes('hace '));
-  // Los mensajes son buenos (es negocio): despues siguen llegando, y eso es lo que dice la tarjeta.
-  assert.match(despues.frase, /^Te siguen escribiendo/);
-  assert.doesNotMatch(JSON.stringify(despues), /ya no|dejan de|sin mensajes|silencio/i);
 });

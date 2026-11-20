@@ -6,11 +6,11 @@ import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 /** Las secciones que cambiaron. */
-const SECCIONES = ['para-quien', 'en-una-frase', 'planes', 'preguntas'];
-/** Las dos que traen piezas que se encienden: tres retratos y el antes y el despues. */
-const CON_ENCENDIDO = ['#para-quien', '#en-una-frase'];
+const SECCIONES = ['para-quien', 'planes', 'preguntas'];
+/** La que trae piezas que se encienden: sus tres retratos. */
+const CON_ENCENDIDO = ['#para-quien'];
 // Y una mas: el boton con luz de "Citas garantizadas", que da sus dos vueltas al llegar a el.
-const PIEZAS = 1 + 3 + 2;
+const PIEZAS = 1 + 3;
 /** Los tamanos en que se revisa que nada se salga: cuatro celulares o tabletas de pie y tres computadoras. */
 const TAMANOS = /** @type {const} */ ([
   [320, 640],
@@ -87,9 +87,6 @@ function aspecto(page) {
       estados: [...document.querySelectorAll('[data-enciende]')].map((pieza) => pieza.getAttribute('data-enciende')),
       foto: estilo('#para-quien .oficio__foto').filter,
       acercada: estilo('#para-quien .oficio__foto').scale,
-      tarjeta: estilo('#en-una-frase .frase__lado--despues').translate,
-      luz: estilo('#en-una-frase .frase__lado--despues', '::before').opacity,
-      sello: estilo('#en-una-frase .frase__lado--despues .sello').opacity,
     };
   });
 }
@@ -98,9 +95,6 @@ function aspecto(page) {
 const ENCENDIDO = {
   foto: 'none',
   acercada: 'none',
-  tarjeta: 'none',
-  luz: '1',
-  sello: '1',
 };
 
 test('con movimiento, lo que falta por ver espera apagado y se enciende al llegar, una sola vez', async ({ page }) => {
@@ -113,7 +107,6 @@ test('con movimiento, lo que falta por ver espera apagado y se enciende al llega
   // Todas las piezas empiezan debajo de la pantalla: esperan apagadas.
   const apagada = await aspecto(page);
   expect(apagada.estados).toEqual(Array(PIEZAS).fill('espera'));
-  expect(apagada).toMatchObject({ tarjeta: '0px 18px', luz: '0', sello: '0' });
   expect(apagada.foto).not.toBe('none');
   expect(Number(apagada.acercada)).toBeGreaterThan(1);
   // Apagadas tampoco hay una sola falta de accesibilidad: lo que es texto nunca se esconde ni pierde contraste.
@@ -149,7 +142,7 @@ test('con movimiento, lo que falta por ver espera apagado y se enciende al llega
   await page.evaluate(() => scrollTo(0, 0));
   await expect(page.locator('#inicio')).toBeInViewport();
   await llegarA(retratos.first());
-  await llegarA(page.locator('#en-una-frase .frase__lado--despues'));
+  await llegarA(retratos.last());
   expect((await aspecto(page)).estados).toEqual(Array(PIEZAS).fill('ya'));
   const moviendose = await page.evaluate(
     (donde) => donde.flatMap((id) => document.querySelector(id)?.getAnimations({ subtree: true }) ?? []).length,
@@ -173,8 +166,28 @@ test('quien llega directo a una seccion la encuentra encendida: no se le apaga p
   expect(
     await page.evaluate(() => document.querySelector('#para-quien')?.getAnimations({ subtree: true }).length),
   ).toBe(0);
-  // Lo que sigue mas abajo, que todavia no ve, si espera su turno.
-  await expect(page.locator('#en-una-frase .frase__lado').last()).toHaveAttribute('data-enciende', 'espera');
+  // El retrato que quedo debajo de la pantalla (uno encima de otro, en celular) si espera su turno; el que se ve, no.
+  const ultimo = retratos.last();
+  const debajo = await ultimo.evaluate((retrato) => retrato.getBoundingClientRect().top >= innerHeight);
+  await expect(ultimo).toHaveAttribute('data-enciende', debajo ? 'espera' : '');
+});
+
+test('quien llega directo a una seccion de mas arriba: lo que quedo atras no se apaga y lo de abajo espera su turno', async ({
+  page,
+}) => {
+  await avisarAlMontar(page);
+  await page.goto('./#agente');
+  await yaMonto(page);
+  await expect(page.locator('#agente')).toBeInViewport();
+  // El boton con luz de "Citas garantizadas" quedo arriba: no se le apaga la luz para volver a encenderla.
+  await expect(page.locator('#citas .boton--luz')).toHaveAttribute('data-enciende', '');
+  // Los tres retratos estan mas abajo, en todos los tamanos: esperan apagados a que la visitante llegue.
+  const retratos = page.locator('#para-quien .oficio__tarjeta');
+  await expect(retratos).toHaveCount(3);
+  for (const retrato of await retratos.all()) await expect(retrato).toHaveAttribute('data-enciende', 'espera');
+  const apagada = await aspecto(page);
+  expect(apagada.foto).not.toBe('none');
+  expect(Number(apagada.acercada)).toBeGreaterThan(1);
 });
 
 test('en una pantalla muy bajita (mucho zoom) nada se queda apagado: a la pieza alta le basta con asomar', async ({
@@ -200,7 +213,8 @@ test('al imprimir o guardar en PDF todo sale encendido, aunque no se haya recorr
   // En pantalla, lo que falta por ver espera apagado.
   const enPantalla = await aspecto(page);
   expect(enPantalla.estados).toEqual(Array(PIEZAS).fill('espera'));
-  expect(enPantalla).toMatchObject({ luz: '0', sello: '0' });
+  expect(enPantalla.foto).not.toBe('none');
+  expect(Number(enPantalla.acercada)).toBeGreaterThan(1);
   // En papel no hay a donde llegar: las mismas piezas, sin tocarlas, se ven encendidas.
   await page.emulateMedia({ media: 'print' });
   const enPapel = await aspecto(page);
@@ -367,13 +381,6 @@ test.describe('sin JavaScript', () => {
     // La foto no depende del codigo: su direccion ya viene escrita en la pagina.
     await expect(foto).toHaveAttribute('src', /\/retratos\/unas-retrato-480\.webp$/);
     await expect(foto).toHaveAttribute('srcset', /unas-retrato-960\.webp 960w$/);
-    const despues = page.locator('#en-una-frase .frase__lado--despues');
-    await despues.scrollIntoViewIfNeeded();
-    await expect(despues).toHaveCSS('translate', 'none');
-    await expect(despues.locator('.sello')).toHaveCSS('opacity', '1');
-    await expect(despues.getByRole('heading', { level: 3 })).toHaveText(
-      'Te siguen escribiendo, y tu agente contesta por ti.',
-    );
     await expect(page.locator('#planes .planes__nota').last()).toContainText('La fija Mercado Pago, no nosotros.');
     // "Ver mas preguntas" es de HTML puro: funciona igual.
     const mas = page.locator('#preguntas details.preguntas__mas');
@@ -390,7 +397,7 @@ test.describe('sin JavaScript', () => {
 
 for (const [ancho, alto] of TAMANOS) {
   test(`a ${ancho} de ancho nada de las secciones se sale de la pantalla ni se encima`, async ({ page }) => {
-    // Mide cada pieza de cuatro secciones: con la maquina cargada se le da su tiempo.
+    // Mide cada pieza de tres secciones: con la maquina cargada se le da su tiempo.
     test.slow();
     await page.setViewportSize({ width: ancho, height: alto });
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -413,17 +420,6 @@ for (const [ancho, alto] of TAMANOS) {
       });
       expect(fuera, id).toEqual({ salidos: [], desborde: 0 });
     }
-
-    // El antes y el despues: ni la marca de duda ni el sello tapan el texto de su cita.
-    const citas = await page.locator('#en-una-frase .minicita').evaluateAll((lista) =>
-      lista.map((cita) => {
-        const texto = /** @type {Element} */ (cita.querySelector('.minicita__texto')).getBoundingClientRect();
-        const marca = /** @type {Element} */ (cita.querySelector('.frase__duda, .sello')).getBoundingClientRect();
-        return marca.left - texto.right;
-      }),
-    );
-    expect(citas).toHaveLength(2);
-    for (const hueco of citas) expect(hueco).toBeGreaterThanOrEqual(-2);
 
     // Los retratos: lado a lado donde caben los tres y, si no, uno debajo de otro; nunca dos y uno.
     const tarjetas = await page

@@ -244,33 +244,6 @@
     <a class="oficio__otro" href="{{sitio.contactoOficio}}" data-lugar="para-quien"><span><b>{{secciones.paraQuien.otro}}</b> {{secciones.paraQuien.otroAccion}}</span><svg class="oficio__flecha" aria-hidden="true" focusable="false"><use href="#i-flecha"/></svg></a>
   </section>
 
-  <section class="frase" id="en-una-frase" aria-labelledby="titulo-frase">
-    <div class="seccion__cabeza">
-      <p class="sobre">{{secciones.enUnaFrase.sobre}}</p>
-      <h2 class="seccion__titulo" id="titulo-frase">{{secciones.enUnaFrase.titulo}} <em>{{secciones.enUnaFrase.tituloFuerte}}</em></h2>
-    </div>
-    <div class="frase__cambio">
-{{#cada secciones.enUnaFrase.lados}}      <div class="frase__lado{{#si encendido}} frase__lado--despues{{/si}}" data-enciende>
-        <div class="frase__cabeza">
-          <p class="frase__rotulo">{{rotulo}}</p>
-          <h3 class="frase__dice">{{frase}}</h3>
-        </div>
-        <div class="frase__pantalla" aria-hidden="true">
-          <p class="frase__cuenta"><b>{{cuenta}}</b><span>{{secciones.enUnaFrase.hora}}</span></p>
-{{#cada secciones.enUnaFrase.mensajes}}          <p class="frase__msj"><b>{{inicial}}</b><span>{{texto}}</span><small>{{#si encendido}}<svg class="frase__bien" aria-hidden="true" focusable="false"><use href="#i-palomita"/></svg>{{contestado}}{{/si}}{{#no encendido}}{{hace}}{{/no}}</small></p>
-{{/cada}}          <p class="minicita{{#no encendido}} minicita--duda{{/no}}"><span class="minicita__dia"><small>{{secciones.enUnaFrase.cita.dia}}</small><b>{{secciones.enUnaFrase.cita.fecha}}</b></span><span class="minicita__texto"><b>{{secciones.enUnaFrase.cita.titulo}}</b><span>{{anticipo}}</span></span>{{#si encendido}}{{> sello}}{{/si}}{{#no encendido}}<span class="frase__duda">{{marca}}</span>{{/no}}</p>
-        </div>
-        <ul class="frase__puntos" role="list">
-{{#cada renglones}}          <li><svg class="frase__marca" aria-hidden="true" focusable="false"><use href="#i-{{#si encendido}}palomita{{/si}}{{#no encendido}}tacha{{/no}}"/></svg>{{texto}}</li>
-{{/cada}}        </ul>
-      </div>
-{{#si @primero}}      <svg class="frase__flecha" aria-hidden="true" focusable="false"><use href="#i-flecha"/></svg>
-{{/si}}{{/cada}}    </div>
-    <dl class="frase__definiciones">
-{{#cada secciones.enUnaFrase.definiciones}}      <div class="frase__definicion"><dt>{{termino}}</dt><dd>{{texto}}</dd></div>
-{{/cada}}    </dl>
-  </section>
-
   <section class="planes" id="planes" aria-labelledby="titulo-planes">
     <div class="seccion__cabeza">
       <p class="sobre">{{secciones.planes.sobre}}</p>

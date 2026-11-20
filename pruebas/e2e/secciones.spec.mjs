@@ -43,7 +43,7 @@ test('la pagina trae todas sus secciones, cada una con su titulo, y un solo h1',
   const fallas = vigilar(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
-  for (const ancla of ['inicio', 'citas', 'agente', 'para-quien', 'en-una-frase', 'planes', 'preguntas', 'empieza']) {
+  for (const ancla of ['inicio', 'citas', 'agente', 'para-quien', 'planes', 'preguntas', 'empieza']) {
     await expect(page.locator(`#${ancla}`)).toHaveCount(1);
     await expect(page.locator(`#${ancla}`).getByRole('heading').first()).toBeAttached();
   }
@@ -359,112 +359,23 @@ test('para quien: tres retratos enmarcados, con la foto completa y nitida y, deb
   await sinFaltasDeAccesibilidad(page, '#para-quien');
 });
 
-test('en una frase: la definicion, un antes y un despues en dos tarjetas, y las tres palabras, ya sin tabla', async ({
-  page,
-}) => {
-  const seccion = await abrirEn(page, 'en-una-frase');
-  await expect(seccion.getByRole('heading', { level: 2 })).toHaveText(
-    'Citas Garantizadas es un agente de WhatsApp que agenda solo con el anticipo pagado.',
-  );
-  // La tabla que comparaba con otras opciones ya no esta.
-  await expect(seccion.getByRole('table')).toHaveCount(0);
-  await expect(seccion).not.toContainText('En qué se distingue');
-  // Dos tarjetas, cada una con su rotulo, su frase y sus tres renglones.
-  const lados = seccion.locator('.frase__lado');
-  await expect(lados).toHaveCount(2);
-  const [antes, despues] = [lados.first(), lados.last()];
-  await expect(seccion.locator('.frase__rotulo')).toHaveText(['Antes', 'Con Citas Garantizadas']);
-  await expect(seccion.getByRole('heading', { level: 3 })).toHaveText([
-    'Tú trabajas y tu celular no para de sonar.',
-    'Te siguen escribiendo, y tu agente contesta por ti.',
-  ]);
-  await expect(antes.getByRole('listitem')).toHaveText([
-    'Contestas cuando puedes.',
-    'Apartas la hora sin anticipo.',
-    'Si no llega, pierdes la hora.',
-  ]);
-  await expect(despues.getByRole('listitem')).toHaveText([
-    'Contesta a cualquier hora, con el tono de tu negocio.',
-    'Agenda solo con el anticipo pagado.',
-    'Si no llega, el anticipo se queda contigo, según tu política.',
-  ]);
-  // Las pantallas son ilustraciones: los mismos tres mensajes, antes esperando y despues contestados.
-  for (const lado of [antes, despues]) {
-    const pantalla = lado.locator('.frase__pantalla');
-    await expect(pantalla).toHaveAttribute('aria-hidden', 'true');
-    await expect(pantalla.locator('.frase__msj > span')).toHaveText([
-      'Hola, ¿tienes lugar el jueves?',
-      'Nota de voz · 0:14',
-      '¿Cuánto por este diseño?',
-    ]);
-    await expect(pantalla.locator('.minicita')).toContainText('5:00 pm · Ana');
-  }
-  await expect(antes.locator('.frase__cuenta')).toHaveText('7 sin contestar4:12 pm');
-  await expect(antes.locator('.frase__msj small')).toHaveText(['hace 2 h', 'hace 1 h', 'hace 40 min']);
-  await expect(antes.locator('.minicita')).toContainText('Sin anticipo');
-  await expect(antes.locator('.frase__duda')).toHaveText('¿Llegará?');
-  await expect(antes.locator('.sello')).toHaveCount(0);
-  await expect(despues.locator('.frase__cuenta')).toHaveText('0 sin contestar4:12 pm');
-  await expect(despues.locator('.frase__msj small')).toHaveText(['Contestado', 'Contestado', 'Contestado']);
-  await expect(despues.locator('.minicita')).toContainText('Anticipo $150');
-  await expect(despues.locator('.sello')).toBeVisible();
-  // El sello no tapa el texto de la cita.
-  const sello = await despues.locator('.sello').boundingBox();
-  const cita = await despues.locator('.minicita__texto').boundingBox();
-  if (!sello || !cita) throw new Error('no encontre la cita sellada');
-  expect(sello.x).toBeGreaterThanOrEqual(cita.x + cita.width - 2);
-  // La de antes va apagada y gris; la de despues, encendida, con su borde de luz.
-  const luz = (/** @type {import('@playwright/test').Locator} */ lado) =>
-    lado.evaluate((tarjeta) => {
-      const capa = getComputedStyle(tarjeta, '::before');
-      return { capa: capa.content, borde: capa.boxShadow, se: capa.opacity };
-    });
-  expect((await luz(antes)).capa).toBe('none');
-  const encendida = await luz(despues);
-  expect(encendida.capa).not.toBe('none');
-  expect(encendida.borde).toContain('rgba(132, 151, 255, 0.75)');
-  expect(encendida.se).toBe('1');
-  await expect(antes.locator('.frase__dice')).toHaveCSS('color', 'rgb(196, 201, 228)');
-  await expect(despues.locator('.frase__dice')).toHaveCSS('color', 'rgb(245, 244, 240)');
-  // Lado a lado, con una flecha redonda en medio, donde caben; si no, una sobre otra y sin flecha.
-  const flecha = seccion.locator('.frase__flecha');
-  const izquierda = await antes.boundingBox();
-  const derecha = await despues.boundingBox();
-  if (!izquierda || !derecha) throw new Error('no encontre las dos tarjetas');
-  if (await page.evaluate(() => matchMedia('(min-width: 760px)').matches)) {
-    expect(derecha.x).toBeGreaterThan(izquierda.x + izquierda.width);
-    expect(Math.abs(derecha.y - izquierda.y)).toBeLessThanOrEqual(1);
-    expect(Math.abs(derecha.height - izquierda.height)).toBeLessThanOrEqual(1);
-    await flecha.scrollIntoViewIfNeeded();
-    await expect(flecha).toBeVisible();
-    const centro = await flecha.boundingBox();
-    if (!centro) throw new Error('no encontre la flecha');
-    const medio = (izquierda.x + izquierda.width + derecha.x) / 2;
-    expect(Math.abs(centro.x + centro.width / 2 - medio)).toBeLessThanOrEqual(1);
-    // Nada la tapa: es lo que esta encima en su propio centro.
-    expect(
-      await flecha.evaluate((el) => {
-        const { left, top, width, height } = el.getBoundingClientRect();
-        return el.contains(document.elementFromPoint(left + width / 2, top + height / 2));
-      }),
-    ).toBe(true);
-  } else {
-    expect(derecha.y).toBeGreaterThan(izquierda.y + izquierda.height);
-    expect(Math.abs(derecha.x - izquierda.x)).toBeLessThanOrEqual(1);
-    await expect(flecha).toBeHidden();
-  }
-  // Abajo, discretas, las tres palabras: el termino en chico y con la luz de la marca.
-  await expect(seccion.locator('dt')).toHaveText(['Cita garantizada', 'Anticipo', 'Agente']);
-  await expect(seccion.locator('dd').first()).toHaveText(
-    'Una cita que entra a tu calendario con su anticipo ya pagado. Garantizada quiere decir pagada.',
-  );
-  const termino = seccion.locator('dt').first();
-  await expect(termino).toHaveCSS('color', 'rgb(132, 151, 255)');
-  await expect(termino).toHaveCSS('text-transform', 'uppercase');
-  expect(Number.parseFloat(await termino.evaluate((dt) => getComputedStyle(dt).fontSize))).toBeLessThan(13);
-  const definiciones = await seccion.locator('.frase__definiciones').boundingBox();
-  expect(definiciones?.y ?? 0).toBeGreaterThan(Math.max(izquierda.y + izquierda.height, derecha.y + derecha.height));
-  await sinFaltasDeAccesibilidad(page, '#en-una-frase');
+test('la seccion "En una frase" ya no esta: despues de "Para quien" siguen los planes', async ({ page }) => {
+  // El dueno (20-nov-2026): "eliminamos toda la seccion 'En una frase', toda esa info ya la tenemos disponible en
+  // otras secciones".
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('./');
+  await expect(page.locator('#en-una-frase, .frase, [class^="frase__"]')).toHaveCount(0);
+  const orden = await page.locator('section[id]').evaluateAll((lista) => lista.map((seccion) => seccion.id));
+  expect(orden).toEqual(['inicio', 'citas', 'agente', 'para-quien', 'planes', 'preguntas', 'empieza']);
+  // Una va pegada a la otra, sin nada en medio ni un hueco de mas. Las dos se miden en el mismo instante: las fotos
+  // de arriba pueden estar llegando todavia.
+  await expect(page.locator('#para-quien + #planes')).toHaveCount(1);
+  const hueco = await page.evaluate(() => {
+    const oficio = /** @type {Element} */ (document.querySelector('#para-quien')).getBoundingClientRect();
+    const planes = /** @type {Element} */ (document.querySelector('#planes')).getBoundingClientRect();
+    return planes.top - oficio.bottom;
+  });
+  expect(Math.abs(hueco)).toBeLessThanOrEqual(1);
 });
 
 test('el cierre y el pie: el boton al alta, los enlaces legales y la nota de las marcas', async ({ page }) => {

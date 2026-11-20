@@ -1,6 +1,6 @@
 // @ts-check
-// El encendido: lo que se enciende al entrar a la vista (los retratos de "Para quien", el antes y despues y la luz
-// de los botones de empezar). La pagina llega con todo encendido y quieto, y asi se queda sin este archivo o con
+// El encendido: lo que se enciende al entrar a la vista (los retratos de "Para quien" y la luz de los botones
+// de empezar). La pagina llega con todo encendido y quieto, y asi se queda sin este archivo o con
 // movimiento reducido. Aqui solo se apaga lo que la visitante todavia no tiene enfrente, para encenderlo cuando
 // llegue, una sola vez. Como se ve apagado y como se enciende lo dicen los estilos (data-enciende="espera" y "ya",
 // y --orden: el lugar de cada pieza entre las que se encienden juntas).
@@ -45,8 +45,8 @@ export function porEncender(piezas, alto) {
 }
 
 /**
- * El turno de cada pieza entre las que entran juntas a la vista: las de un mismo grupo (las tarjetas de oficio, los
- * dos lados del antes y despues) se encienden una tras otra, en su orden, y cada grupo lleva su propia cuenta.
+ * El turno de cada pieza entre las que entran juntas a la vista: las de un mismo grupo (las tarjetas de oficio)
+ * se encienden una tras otra, en su orden, y cada grupo lleva su propia cuenta.
  * @param {unknown[]} grupos  el grupo de cada pieza que entra, en el orden de la pagina
  * @returns {number[]}  el turno de cada una, desde cero
  */
