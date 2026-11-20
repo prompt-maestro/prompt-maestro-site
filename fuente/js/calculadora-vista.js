@@ -73,10 +73,10 @@ export function montarCalculadora(raiz) {
       citas: String(cuenta.citasParaPagar),
     };
     // Si con lo que hoy le plantan no alcanza para pagar el plan, no se le dice que "ya se pago" ni se compara contra
-    // sus plantones: el titular dice cuanto es el plan en citas suyas y, abajo, lo demas que hace el agente.
+    // sus plantones ni se le hace otra cuenta: el titular dice lo que hace el agente y, abajo, el detalle y el precio.
     const [titular, pago] = cuenta.sePaga
       ? [textos.perdido, cuenta.citasParaPagar === 1 ? textos.unaCita : textos.variasCitas]
-      : [textos.equivale, textos.tiempo];
+      : [textos.contesta, textos.incluye];
     escribir([
       ...(deEjemplo
         ? /** @type {[string, string | undefined, Record<string, string>][]} */ ([

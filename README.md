@@ -204,9 +204,10 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   tarifa, se corrigen la cifra y la fecha juntas.
 - La calculadora de «Planes» hace la cuenta contra el plan más barato (`fuente/js/calculadora.js`, pura). Si lo que le
   plantan alcanza para pagarlo, dice lo que se le va al mes y con cuántas citas «ya se pagó». Si no alcanza (el dueño,
-  20-nov-2026: «¿cómo le hacemos para mantener el atractivo?»), el titular ya no enseña esa pérdida chica: dice cuánto
-  es el plan en citas suyas (`equivale`) y, abajo, lo demás que hace el agente (`tiempo`). Nunca dice «ya se pagó» si
-  no alcanza, ni afirma cuánto le plantan: puede ser poco dinero con muchas citas baratas.
+  20-nov-2026: «¿cómo le hacemos para mantener el atractivo?»), el titular ya no enseña esa pérdida chica ni
+  hace otra cuenta: dice en claro lo que hace el agente (`contesta`) y, abajo, el detalle y lo que cuesta el plan
+  (`incluye`). Así no sale nada raro mientras ella teclea el precio dígito por dígito, y nunca dice «ya se pagó» si no
+  alcanza.
 - «Qué necesitas para empezar» son cuatro fichas (`secciones.planes.requisitos`: `icono`, `titulo` y `texto`) con la
   misma joya de «Tu número, tu dinero, tus reglas» (sus estilos se comparten en `agentes.css`), y la cédula va aparte
   (`requisitosNota`), en un renglón chico, porque solo aplica en salud. Sumar o quitar una ficha es tocar los datos; si

@@ -142,8 +142,8 @@ test('cada texto de la calculadora usa los datos que la pagina le da, y ninguno 
     perdido: ['perdido'],
     unaCita: ['plan', 'mensualidad'],
     variasCitas: ['plan', 'mensualidad', 'citas'],
-    equivale: ['plan', 'citas'],
-    tiempo: [],
+    contesta: [],
+    incluye: ['plan', 'mensualidad'],
   };
   for (const [clave, esperados] of Object.entries(huecos)) {
     const usados = [...calculadora[clave].matchAll(/\{(\w+)\}/g)].map(([, hueco]) => hueco).sort();
@@ -155,19 +155,22 @@ test('cada texto de la calculadora usa los datos que la pagina le da, y ninguno 
   // Solo cuando alcanza se dice que el plan "ya se pago".
   assert.match(calculadora.variasCitas, /ya se pagó/);
   // Cuando no alcanza (el dueno, 20-nov-2026: "como le hacemos para mantener el atractivo"), el titular ya no ensena
-  // la perdida chica: dice cuanto es el plan en citas suyas y, abajo, lo demas que hace el agente. Sin "ya se pago",
-  // sin prometer ahorro y sin afirmar cuanto le plantan (puede ser poco dinero con muchas citas baratas).
-  assert.equal('soloCosto' in calculadora, false);
-  assert.equal(rellenar(calculadora.equivale, datos), 'El plan Bronce equivale a 3 de tus citas al mes.');
+  // la perdida chica ni hace otra cuenta. Primero se probo "El plan Bronce equivale a 3 de tus citas al mes", y el dueno
+  // lo vio decir "equivale a 495 de tus citas" mientras tecleaba el precio: "ese texto no se entiende, que sea claro y
+  // facil de entender". Ahora dice, en claro, lo que hace el agente y lo que cuesta el plan: sin numeros de ella, sin
+  // "ya se pago" y sin prometer ahorro.
+  for (const vieja of ['soloCosto', 'equivale', 'tiempo']) assert.equal(vieja in calculadora, false, vieja);
+  assert.equal(calculadora.contesta, 'Tu agente contesta tu WhatsApp por ti.');
   assert.equal(
-    calculadora.tiempo,
-    'Si te plantan poco, qué bueno. Tu agente también te regresa tiempo: contesta a cualquier hora, agenda y manda los recordatorios por ti.',
+    rellenar(calculadora.incluye, datos),
+    'A cualquier hora: da tus precios, agenda con el anticipo pagado y manda los recordatorios. El plan Bronce cuesta $990 al mes.',
   );
-  assert.doesNotMatch(`${calculadora.equivale} ${calculadora.tiempo}`, /pag[oó]|ahorr|gana|recuper/i);
+  const noAlcanza = `${calculadora.contesta} ${calculadora.incluye}`;
+  assert.doesNotMatch(noAlcanza, /ya se pag|ahorr|gana|recuper|equivale|\{citas\}|\{perdido\}|\{plantones\}/i);
 });
 
-test('cuando no alcanza para pagar el plan, el plan siempre equivale a dos citas o mas: "de tus citas" va en plural', () => {
-  // Si una sola cita pagara el plan, con una que le planten ya alcanza: ese caso nunca cae en el titular "equivale".
+test('cuando no alcanza para pagar el plan, lo que le plantan vale de verdad menos que el plan', () => {
+  // En ese caso la pagina ya no hace cuentas con sus numeros: asi no sale nada raro mientras teclea ("2" antes de "200").
   let vistos = 0;
   for (const precio of [1, 50, 99.5, 100, 329, 330, 494, 495, 989, 990, 991, 5000]) {
     for (const citas of [1, 2, 3, 9, 10, 19, 20, 500]) {

@@ -80,14 +80,12 @@ test('al escribir sus numeros la calculadora rehace la cuenta y ya no habla del 
   await citas.fill('4');
   await precio.fill('350,50');
   await expect(salida).toContainText('Hoy se te van cerca de $1,402 al mes.');
-  // Y los mismos centavos con coma se leen igual cuando no alcanza: $350.50 piden 3 citas para pagar el plan de $990.
+  // Con menos citas ya no alcanza: el titular cambia y deja de decir lo que se le va.
   await citas.fill('2');
-  if (BARATO.mensual === 990) {
-    await expect(salida).toContainText(`El plan ${BARATO.nombre} equivale a 3 de tus citas al mes.`);
-  }
+  if (BARATO.mensual > 701) await expect(salida).not.toContainText('Hoy se te van');
 });
 
-test('si pierde menos de lo que cuesta el plan, la calculadora no le dice que ya se pago: le dice cuanto es el plan en citas suyas', async ({
+test('si pierde menos de lo que cuesta el plan, la calculadora no le dice que ya se pago: le dice, en claro, lo que hace su agente y lo que cuesta', async ({
   page,
 }) => {
   test.skip(BARATO.mensual <= 100, 'con un plan de 100 pesos o menos este caso no existe');
@@ -95,16 +93,24 @@ test('si pierde menos de lo que cuesta el plan, la calculadora no le dice que ya
   await citas.fill('1');
   await precio.fill('100');
   await expect(calculadora).toHaveAttribute('data-estado', 'lista');
-  // El titular ya no ensena la perdida chica contra el precio del plan: dice el plan en citas suyas.
+  // El titular ya no ensena la perdida chica contra el precio del plan, ni hace otra cuenta: dice lo que hace el agente.
   const hacenFalta = Math.ceil(BARATO.mensual / 100);
-  await expect(salida.locator('.calculadora__perdido')).toHaveText(
-    `El plan ${BARATO.nombre} equivale a ${hacenFalta} de tus citas al mes.`,
-  );
-  await expect(salida.locator('.calculadora__pago')).toHaveText(
-    'Si te plantan poco, qué bueno. Tu agente también te regresa tiempo: contesta a cualquier hora, agenda y manda los recordatorios por ti.',
+  const titular = salida.locator('.calculadora__perdido');
+  const renglon = salida.locator('.calculadora__pago');
+  await expect(titular).toHaveText('Tu agente contesta tu WhatsApp por ti.');
+  await expect(renglon).toHaveText(
+    `A cualquier hora: da tus precios, agenda con el anticipo pagado y manda los recordatorios. El plan ${BARATO.nombre} cuesta ${pesos(BARATO.mensual)} al mes.`,
   );
   await expect(salida).not.toContainText('ya se pagó');
   await expect(salida).not.toContainText('Hoy se te van');
+  // Mientras teclea el precio digito por digito no sale ninguna cuenta rara (el dueno vio "equivale a 495 de tus
+  // citas" con el primer digito): con "2" y con "20" dice lo mismo, sin numeros de ella.
+  for (const aMedias of ['2', '20']) {
+    await precio.fill(aMedias);
+    await expect(titular).toHaveText('Tu agente contesta tu WhatsApp por ti.');
+    await expect(salida).not.toContainText(/equivale|de tus citas|495|\b50 /);
+  }
+  await precio.fill('100');
   // En cuanto lo que le plantan alcanza para pagar el plan, regresa la cuenta de siempre.
   await citas.fill(String(hacenFalta));
   await expect(salida.locator('.calculadora__perdido')).toHaveText(
@@ -158,7 +164,7 @@ test('que necesitas para empezar: cuatro fichas con su icono en joya, y la cedul
   );
   const fichas = bloque.locator('.requisito');
   await expect(fichas.getByRole('heading', { level: 4 })).toHaveText([
-    'Un número solo para tu negocio',
+    'Un número exclusivo para tu negocio',
     'Tu cuenta de Google',
     'Tu cuenta de Mercado Pago',
     'Tu lista de precios',

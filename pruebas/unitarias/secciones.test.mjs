@@ -329,7 +329,7 @@ test('planes: lo que hace falta para empezar va en cuatro fichas con su icono, y
     [
       [
         'celular',
-        'Un número solo para tu negocio',
+        'Un número exclusivo para tu negocio',
         'Con WhatsApp Business. Puede ser un chip aparte en tu mismo celular.',
       ],
       ['calendario', 'Tu cuenta de Google', 'Para tu calendario.'],

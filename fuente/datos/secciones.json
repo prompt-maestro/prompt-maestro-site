@@ -84,8 +84,8 @@
       "perdido": "Hoy se te van cerca de {perdido} al mes.",
       "unaCita": "El plan {plan} cuesta {mensualidad} al mes: con 1 cita que sí llegue, ya se pagó.",
       "variasCitas": "El plan {plan} cuesta {mensualidad} al mes: con {citas} citas que sí lleguen, ya se pagó.",
-      "equivale": "El plan {plan} equivale a {citas} de tus citas al mes.",
-      "tiempo": "Si te plantan poco, qué bueno. Tu agente también te regresa tiempo: contesta a cualquier hora, agenda y manda los recordatorios por ti.",
+      "contesta": "Tu agente contesta tu WhatsApp por ti.",
+      "incluye": "A cualquier hora: da tus precios, agenda con el anticipo pagado y manda los recordatorios. El plan {plan} cuesta {mensualidad} al mes.",
       "ejemplo": "Un ejemplo: te plantan {plantones} citas de {precio} al mes.",
       "ejemploCitas": "6",
       "ejemploPrecio": "400"
@@ -99,7 +99,7 @@
     "requisitos": [
       {
         "icono": "celular",
-        "titulo": "Un número solo para tu negocio",
+        "titulo": "Un número exclusivo para tu negocio",
         "texto": "Con WhatsApp Business. Puede ser un chip aparte en tu mismo celular."
       },
       {
