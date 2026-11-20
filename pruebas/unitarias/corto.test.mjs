@@ -458,6 +458,9 @@ test('cada oficio trae lo suyo completo: a donde mira la camara, su cuenta, sus 
     );
     const { cartel } = oficio;
     assert.ok(cartel.cuando && cartel.quien, `${oficio.clave}: el cartel`);
+    // Quien escribe en la conversacion de su cartel es quien quedo en su cita.
+    assert.ok(cartel.charla.quien, `${oficio.clave}: quien escribe`);
+    assert.ok(cartel.quien.startsWith(`${cartel.charla.quien} · `), `${oficio.clave}: la cita es de quien escribio`);
   }
 });
 
@@ -798,6 +801,40 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
     1,
   );
   assert.doesNotMatch(delCartel, /vida__|class="vidas"/);
+  // Junto a ella, la historia de una cita en cuatro pasos y en este orden: le escriben, contesta, cobra el anticipo y
+  // agenda. Es la conversacion de ejemplo del primer oficio, con las mismas piezas del corto.
+  const historia = /<ol class="historia">([\s\S]*?)<\/ol>/.exec(delCartel)?.[1] ?? '';
+  const [primero] = corto.oficios;
+  assert.equal(historia.match(/<li>/g)?.length, 4, 'cuatro pasos');
+  const lugares = ['class="dice"', 'class="dice dice--agente"', 'class="pago"', 'class="cita"'].map((pieza) =>
+    historia.indexOf(pieza),
+  );
+  assert.ok(
+    lugares.every((lugar, turno) => lugar >= 0 && lugar > (lugares[turno - 1] ?? -1)),
+    'en su orden',
+  );
+  for (const dicho of [
+    `<b>${primero.cartel.charla.quien}</b>`,
+    primero.cartel.charla.entra,
+    primero.cartel.charla.responde,
+    `<b>${corto.pagoAprobado}</b> ${primero.trato.pago}`,
+    primero.cartel.cuando,
+  ]) {
+    assert.ok(historia.includes(dicho), dicho);
+  }
+  // Quien no ve la pantalla sabe quien habla en cada mensaje.
+  assert.ok(historia.includes(`<span class="solo-lector">${corto.cartel.teEscriben}</span>`));
+  assert.ok(historia.includes(`<span class="solo-lector">${corto.cartel.contesta}</span>`));
+  // Y bajo los botones, con que trabaja: solo los nombres, en texto. Nunca un logotipo ni un icono.
+  assert.ok(
+    delCartel.includes(
+      `<p class="confia"><b>${corto.cartel.trabajaCon}</b>${corto.cartel.herramientas
+        .map((/** @type {string} */ nombre) => ` <span>${nombre}</span>`)
+        .join('')}</p>`,
+    ),
+    'la linea de con que trabaja',
+  );
+  assert.deepEqual(corto.cartel.herramientas, ['WhatsApp Business', 'Mercado Pago', 'Google Calendar']);
   // La pagina no adelanta ninguna foto: en celular no hace falta, y en pantallas anchas la del corto la adelanta
   // arranque.js, que es quien sabe a que oficio le toco. Su etiqueta le dice que archivos son (con un asterisco en el
   // lugar del oficio) y cuanto miden en la pantalla: lo mismo que dice la foto de cada escena.

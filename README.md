@@ -83,9 +83,14 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   ancha que alta y con 480 o más de alto) es la agente: un retrato sin marco a la derecha, tan alto como el cartel,
   que se funde con el fondo (`cartel.agenteFoto`, la misma para todos los oficios; en `originales/cartel/agente.png`).
   Es una persona que ilustra a un agente que no lo es: por eso lleva a un lado el rótulo «Tu agente virtual»
-  (`cartel.agenteVirtual`) y su texto alternativo también lo dice; con ella va la cita del primer oficio
-  (`fuente/plantillas/parciales/cartel-flota.html`). En ventanas menos anchas o casi cuadradas queda solo su rótulo.
-  En las demás pantallas más anchas que altas el cartel va solo con su texto. En celular y en tableta de pie es «Tú y tu
+  (`cartel.agenteVirtual`) y su texto alternativo también lo dice. Donde hay lugar (1200 o más de ancho, 560 o más de
+  alto y no muy cuadrada) el cartel va en tres columnas: el texto, la historia de una cita y, libre, el lugar de su
+  cara. La historia (`.historia`) cuenta en cuatro pasos unidos por una raya lo que hace el agente, con la
+  conversación de ejemplo del primer oficio y las mismas piezas del corto: le escriben, contesta, cobra el anticipo
+  y agenda (`fuente/plantillas/parciales/cartel-flota.html` es la cita). Donde no cabe quedan su rótulo y la cita y,
+  en ventanas menos anchas o casi cuadradas, solo su rótulo. Bajo los botones, `.confia` dice con qué trabaja
+  (`cartel.herramientas`): solo los nombres en texto, nunca un logotipo. Nada de esto lleva JavaScript. En las demás
+  pantallas más anchas que altas el cartel va solo con su texto. En celular y en tableta de pie es «Tú y tu
   agente»: la foto de quien trabaja (`cartel.tu`) y un celular dibujado con HTML y CSS donde su agente contesta,
   cobra el anticipo y agenda (`cartel.charla`, más la cita del oficio). Todo se dibuja con una sola unidad, el ancho
   de la imagen entre 350, así que es la misma composición en un celular angosto y en una tableta.

@@ -189,7 +189,8 @@
 
 /* La agente solo va donde corre el corto (pantallas anchas y no muy bajitas): mas abajo se le da su lugar. En las
    demas ni se pinta ni se pide su foto. */
-.agente {
+.agente,
+.confia {
   display: none;
 }
 
@@ -2445,23 +2446,26 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     display: none;
   }
 
-  /* La agente que ilustra al agente virtual: su retrato va a la derecha, tan alto como el cartel y un poco mas abajo
-     que la barra, sin marco: se funde con el fondo de la pagina por la izquierda y por abajo. */
+  /* La agente que ilustra al agente virtual: su retrato va a la derecha, un poco mas alto que el cartel y debajo de
+     la barra, sin marco: se funde con el fondo de la pagina por la izquierda, por abajo y por arriba. En una ventana
+     casi cuadrada no crece mas que lo ancho: asi siempre queda hueco entre el texto y ella. */
   .agente {
+    --lado: min(110 * var(--svh), 60vw);
     position: absolute;
-    top: 7%;
+    top: 5%;
     right: -2%;
     z-index: 0;
-    height: 100%;
-    aspect-ratio: 1;
+    width: var(--lado);
+    height: var(--lado);
     margin: 0;
   }
 
   .agente__foto {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: var(--lado);
+    height: var(--lado);
     object-fit: cover;
+
     --funde:
       linear-gradient(to right, transparent 4%, rgb(0 0 0 / 0.38) 24%, #000 50%),
       linear-gradient(to top, transparent 7%, #000 26%), linear-gradient(to bottom, transparent 0, #000 16%);
@@ -2535,6 +2539,166 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     }
   }
 
+  /* La historia de una cita, paso a paso: le escriben, contesta, cobra el anticipo y agenda. Son las mismas piezas
+     de la conversacion del corto. Donde no hay lugar para contarla entera queda solo su final, la cita garantizada. */
+  .historia {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .historia li:not(:last-child) {
+    display: none;
+  }
+
+  /* Bajo los botones, con que trabaja: solo los nombres, chicos y discretos (nunca un logotipo). */
+  .confia {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: clamp(16px, 3.6 * var(--svh), 30px);
+    color: var(--tinta-2);
+    font-size: 0.8125rem;
+  }
+
+  .confia b {
+    color: var(--tinta-3);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .confia span {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .confia span + span::before {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--tinta-3);
+    content: "";
+  }
+
+  /* Donde si hay lugar (una pantalla ancha, no muy cuadrada ni muy bajita) la historia se cuenta entera, en una
+     columna entre el texto y ella, con una raya fina que une sus cuatro pasos. El cartel pasa a tres columnas: el
+     texto, la historia y, libre, el lugar de su cara. La figura es entonces esa columna, y su foto se queda donde
+     estaba. */
+  @media (min-width: 1200px) and (min-aspect-ratio: 3 / 2) and (min-height: 560px) {
+    .cartel {
+      grid-template-columns: max-content max-content minmax(0, 1fr);
+      column-gap: clamp(44px, 4.2vw, 68px);
+    }
+
+    .agente {
+      position: static;
+      width: auto;
+      height: auto;
+    }
+
+    .agente picture {
+      position: absolute;
+      top: 5%;
+      right: -2%;
+      z-index: 0;
+    }
+
+    .agente__datos {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      z-index: 1;
+      display: block;
+      margin-bottom: 30px;
+    }
+
+    .historia {
+      position: relative;
+      display: grid;
+      justify-items: start;
+      gap: 14px;
+      margin-top: 22px;
+      font-size: 0.9375rem;
+      line-height: 1.3;
+    }
+
+    /* La raya que une los pasos, y el punto de cada uno. */
+    .historia::before {
+      position: absolute;
+      top: 16px;
+      bottom: 24px;
+      left: -20px;
+      width: 1px;
+      background: linear-gradient(
+        rgb(132 151 255 / 0),
+        rgb(132 151 255 / 0.55) 10%,
+        rgb(132 151 255 / 0.55) 90%,
+        rgb(132 151 255 / 0)
+      );
+      content: "";
+    }
+
+    .historia li:not(:last-child) {
+      display: block;
+    }
+
+    .historia li {
+      position: relative;
+    }
+
+    .historia li::before {
+      position: absolute;
+      top: 50%;
+      left: -23px;
+      width: 7px;
+      height: 7px;
+      margin-top: -3.5px;
+      border-radius: 50%;
+      background: var(--luz);
+      box-shadow: 0 0 0 4px rgb(132 151 255 / 0.16);
+      content: "";
+    }
+
+    .historia .dice {
+      max-width: 19em;
+    }
+
+    /* Quien escribe: su nombre, chico, arriba de lo que dice. */
+    .historia .dice b {
+      color: var(--tinta-3);
+      font-size: 0.8em;
+    }
+
+    /* En el corto la respuesta va a la derecha; aqui todos los pasos se alinean con la raya. */
+    .historia .dice--agente {
+      justify-self: start;
+    }
+
+    .historia .pago {
+      box-shadow:
+        inset 0 0 0 1px rgb(88 214 141 / 0.5),
+        0 10px 30px rgb(0 0 0 / 0.4);
+      font-size: 1em;
+    }
+
+    .historia .palomita {
+      width: 1.05em;
+      height: 1.05em;
+    }
+  }
+
+  /* Y ahi mismo, en una pantalla menos ancha o menos alargada, el renglon de arriba del cartel se parte en dos: asi
+     la columna del texto mide lo que su titulo, y la historia cabe entre el y ella. */
+  @media (min-width: 1200px) and (max-width: 1499px) and (min-aspect-ratio: 3 / 2) and (min-height: 560px),
+    (min-width: 1200px) and (max-aspect-ratio: 2 / 1) and (min-aspect-ratio: 3 / 2) and (min-height: 560px) {
+    .corto .sobre {
+      max-width: 30em;
+    }
+  }
+
   .cita {
     padding-right: 118px;
     font-size: 1rem;
@@ -2564,6 +2728,10 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
   .agente {
     display: block;
+  }
+
+  .confia {
+    display: flex;
   }
 
   html.con-corto .corto__cine {
@@ -2600,7 +2768,8 @@ html[data-ahorro] .corto:not([data-pedido]) .corto__cine {
      acuesta) y el cartel va solo con su texto. */
   .control,
   .otra,
-  .agente {
+  .agente,
+  .confia {
     display: none;
   }
 }

@@ -70,6 +70,8 @@
     "tuAgente": "Tu agente",
     "agenteHace": "Contesta, cobra el anticipo y agenda",
     "agenteVirtual": "Tu agente virtual",
+    "trabajaCon": "Trabaja con tu",
+    "herramientas": ["WhatsApp Business", "Mercado Pago", "Google Calendar"],
     "agenteFoto": "cartel/agente",
     "agenteAlt": "Una profesional de atención a clientes, de saco y con diadema, sonríe a la cámara: así ilustramos a tu agente virtual.",
     "whatsapp": "WhatsApp Business",
@@ -190,6 +192,7 @@
         "charla": {
           "negocio": "Studio Bella",
           "iniciales": "SB",
+          "quien": "Ana",
           "entra": "Hola, ¿tienes lugar el sábado?",
           "responde": "¡Hola, Ana! Sí, a las 11:00 am. Para apartarla, el anticipo es de $150.",
           "anticipo": "$150"
@@ -314,6 +317,7 @@
         "charla": {
           "negocio": "Dental Sonría",
           "iniciales": "DS",
+          "quien": "Carla",
           "entra": "Hola, ¿tienen cita el miércoles?",
           "responde": "¡Hola, Carla! Sí, a las 4:00 pm. Para apartarla, el anticipo es de $200.",
           "anticipo": "$200"
@@ -438,6 +442,7 @@
         "charla": {
           "negocio": "Consultorio Médico Aurora",
           "iniciales": "CA",
+          "quien": "Doña Elvira",
           "entra": "Buenas tardes, ¿tiene cita el jueves?",
           "responde": "Buenas tardes. Sí, a las 10:00 am. Para apartarla, el anticipo es de $300.",
           "anticipo": "$300"

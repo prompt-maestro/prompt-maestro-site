@@ -60,6 +60,7 @@
         <h1 class="cartel__titulo" id="titulo-inicio">{{corto.cartel.titulo}}<span class="cursor" aria-hidden="true"></span></h1>
         <p class="cartel__frase">{{corto.cartel.frase}}</p>
         <p class="cartel__acciones"><a class="boton boton--sello boton--luz" href="{{sitio.alta}}" data-lugar="pelicula">{{corto.cartel.accion}}</a> <a class="enlace" href="#citas" data-lugar="pelicula">{{corto.cartel.otra}}</a></p>
+        <p class="confia"><b>{{corto.cartel.trabajaCon}}</b>{{#cada corto.cartel.herramientas}} <span>{{este}}</span>{{/cada}}</p>
       </div>
       <figure class="agente">
         <picture>
@@ -68,7 +69,12 @@
         </picture>
         <figcaption class="agente__datos">
           <p class="agente__rotulo"><span>{{corto.cartel.agenteVirtual}}</span> <b>{{corto.cartel.agenteHace}}</b></p>
-{{#cada corto.oficios}}{{#si @primero}}          {{> cartel-flota}}
+{{#cada corto.oficios}}{{#si @primero}}          <ol class="historia">
+            <li><p class="dice"><span class="dice__cuerpo"><span class="solo-lector">{{corto.cartel.teEscriben}}</span> <b>{{cartel.charla.quien}}</b><span class="dice__texto">{{cartel.charla.entra}}</span></span></p></li>
+            <li><p class="dice dice--agente"><span><span class="solo-lector">{{corto.cartel.contesta}}</span> {{cartel.charla.responde}}</span>{{> palomitas}}</p></li>
+            <li><p class="pago">{{> palomita}}<span><b>{{corto.pagoAprobado}}</b> {{trato.pago}}</span></p></li>
+            <li>{{> cartel-flota}}</li>
+          </ol>
 {{/si}}{{/cada}}        </figcaption>
       </figure>
       <div class="duo">

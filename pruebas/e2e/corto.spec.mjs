@@ -21,13 +21,13 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  * @property {string} cartel.cuando
  * @property {string} cartel.quien
  * @property {{ foto: string, alt: string }} cartel.tu
- * @property {{ negocio: string, iniciales: string, entra: string, responde: string, anticipo: string }} cartel.charla
+ * @property {{ negocio: string, iniciales: string, quien: string, entra: string, responde: string, anticipo: string }} cartel.charla
  */
 // El guion y los textos salen del mismo archivo que la pagina: si cambian, estas pruebas siguen valiendo.
 /**
  * @type {{
  *   guion: { clave: string, dura: number, letrero: string }[],
- *   cartel: Record<string, string>,
+ *   cartel: Record<string, string> & { herramientas: string[] },
  *   marca: { nombre: string, frase: string },
  *   todos: { baja: string[] },
  *   pagoAprobado: string,
@@ -266,7 +266,7 @@ test('el cartel trae el titulo, la frase, el boton al alta, el enlace a la demos
   expect(fallas).toEqual([]);
 });
 
-test('en pantallas anchas el cartel ensena a la agente, sin marco, con su rotulo de agente virtual; y de "Tu y tu agente" no pide nada', async ({
+test('en pantallas anchas el cartel ensena a la agente, sin marco, con su rotulo de agente virtual y la historia de una cita; y de "Tu y tu agente" no pide nada', async ({
   page,
 }, info) => {
   test.skip(!esAncho(info), 'en celular el cartel ensena "Tu y tu agente"');
@@ -286,7 +286,7 @@ test('en pantallas anchas el cartel ensena a la agente, sin marco, con su rotulo
   await expect(corto.locator('.agente__rotulo b')).toHaveText(CORTO.cartel.agenteHace ?? '');
   // Su cara (la mitad derecha de su retrato, arriba) queda libre: ni el titulo, ni la frase, ni los botones, ni sus
   // propios datos la tocan. Y sus datos tampoco se enciman con el texto del cartel.
-  const retrato = await caja(corto.locator('.agente'));
+  const retrato = await caja(foto);
   const lado = retrato.derecha - retrato.izquierda;
   const cara = {
     izquierda: retrato.izquierda + lado * 0.5,
@@ -314,6 +314,34 @@ test('en pantallas anchas el cartel ensena a la agente, sin marco, con su rotulo
   }
   // Y queda debajo de la barra: su cabeza no se mete bajo los enlaces de arriba.
   expect(cara.arriba).toBeGreaterThanOrEqual((await caja(page.locator('[data-barra]'))).abajo - 4);
+  // Junto a ella, la historia de una cita en cuatro pasos, de arriba abajo: le escriben, contesta, cobra el anticipo
+  // y agenda. Cada paso se lee completo y ninguno toca su cara.
+  const [primero] = CORTO.oficios;
+  const pasos = corto.locator('.historia > li');
+  await expect(pasos).toHaveCount(4);
+  await expect(pasos.nth(0)).toContainText(primero?.cartel.charla.quien ?? '');
+  await expect(pasos.nth(0)).toContainText(primero?.cartel.charla.entra ?? '');
+  await expect(pasos.nth(1)).toContainText(primero?.cartel.charla.responde ?? '');
+  await expect(pasos.nth(2)).toHaveText(`${CORTO.pagoAprobado} ${primero?.trato.pago}`);
+  await expect(pasos.nth(3)).toContainText(primero?.cartel.cuando ?? '');
+  await expect(pasos.nth(3).getByRole('img', { name: 'Garantizada: anticipo pagado' })).toBeVisible();
+  let antes = 0;
+  for (const paso of await pasos.all()) {
+    await expect(paso).toBeInViewport({ ratio: 1 });
+    const suya = await caja(paso);
+    expect(suya.arriba, 'los pasos van de arriba abajo').toBeGreaterThanOrEqual(antes);
+    expect(seTocan(suya, cara), 'un paso de la historia tapa su cara').toBe(false);
+    antes = suya.abajo;
+  }
+  // Bajo los botones, con que trabaja: tres nombres en texto, sin logotipos, a la vista y sin encimarse con nada.
+  const confia = corto.locator('.confia');
+  await expect(confia).toBeInViewport({ ratio: 1 });
+  await expect(confia.locator('span')).toHaveText(CORTO.cartel.herramientas);
+  expect(await confia.locator('img, svg').count()).toBe(0);
+  const suLinea = await caja(confia);
+  expect(suLinea.arriba).toBeGreaterThanOrEqual((await caja(corto.locator('.cartel__acciones'))).abajo);
+  expect(seTocan(suLinea, datos), 'la linea de confianza se encima con la historia').toBe(false);
+  expect(seTocan(suLinea, await caja(corto.locator('[data-corto-ver]'))), 'se encima con "Ver el video"').toBe(false);
   // Ahi "Tu y tu agente" no existe: no se pinta y sus fotos no viajan.
   await expect(corto.locator('.duo')).toBeHidden();
   await page.waitForLoadState('load');
@@ -324,6 +352,37 @@ test('en pantallas anchas el cartel ensena a la agente, sin marco, con su rotulo
       .filter((nombre) => /-tu-\d+\.(avif|webp)$/.test(nombre)),
   );
   expect(retratos).toEqual([]);
+  expect(await desborde(page)).toBeLessThanOrEqual(0);
+});
+
+test('donde no cabe la historia entre el texto y la agente queda solo su rotulo, sin tocar su cara ni el texto', async ({
+  page,
+}, info) => {
+  test.skip(!esAncho(info), 'en celular el cartel ensena "Tu y tu agente"');
+  // Ancha (ahi corre el corto), pero casi cuadrada: no hay hueco para la columna de la historia.
+  await page.setViewportSize({ width: 1000, height: 720 });
+  const corto = await abrirCortoDetenido(page, { quieta: true });
+  await expect(corto.locator('.agente__foto')).toBeVisible();
+  const rotulo = corto.locator('.agente__rotulo span');
+  await expect(rotulo).toHaveText(CORTO.cartel.agenteVirtual ?? '');
+  await expect(rotulo).toBeInViewport({ ratio: 1 });
+  await expect(corto.locator('.historia > li').first()).toBeHidden();
+  await expect(corto.locator('.agente__datos .cita')).toBeHidden();
+  const suCaja = await caja(rotulo);
+  for (const pieza of [
+    corto.getByRole('heading', { level: 1 }),
+    corto.locator('.cartel__frase'),
+    corto.locator('.cartel__acciones'),
+    corto.locator('.confia'),
+  ]) {
+    const suya = await caja(pieza);
+    const seTocan =
+      suya.izquierda < suCaja.derecha &&
+      suCaja.izquierda < suya.derecha &&
+      suya.arriba < suCaja.abajo &&
+      suCaja.arriba < suya.abajo;
+    expect(seTocan, 'el rotulo de la agente se encima con el texto del cartel').toBe(false);
+  }
   expect(await desborde(page)).toBeLessThanOrEqual(0);
 });
 
