@@ -145,10 +145,13 @@ test('la demostracion lleva un boton por ejemplo, con el primero puesto, y los d
   );
   assert.match(
     inicio,
-    /<div class="guia__letrero" data-demo-letrero aria-live="polite" aria-atomic="true">\s*<p class="guia__rotulo">01 · Contesta<\/p>\s*<p class="guia__texto">Escucha la nota de voz y le contesta\.<\/p>/,
+    /<div class="guia__letrero" data-demo-letrero aria-live="polite" aria-atomic="true">\s*<p class="guia__rotulo">01 · Contesta<\/p>\s*<p class="guia__texto">Contesta con texto o con nota de voz, como le escriban\.<\/p>/,
   );
-  // Y la conversacion escrita, para quien no tiene JavaScript: empieza con la nota de voz y no ofrece otra salida.
-  assert.match(inicio, /<p><b>Ana \(nota de voz\):<\/b> Hola, ¿cuánto cuesta el gelish\?<\/p>/);
+  // Y la conversacion escrita, para quien no tiene JavaScript: empieza por escrito, la nota de voz llega a media
+  // conversacion, el agente la contesta con otra nota de voz y no ofrece otra salida.
+  assert.match(inicio, /<p><b>Ana:<\/b> Hola, ¿cuánto cuesta el gelish\?<\/p>/);
+  assert.match(inicio, /<p><b>Ana \(nota de voz\):<\/b> Sí, ¿tienes lugar el jueves\?<\/p>/);
+  assert.match(inicio, /<p><b>Marifer \(nota de voz\):<\/b> Le puedo ofrecer el jueves /);
   assert.doesNotMatch(inicio, /PERSONA|prefieres hablar/);
 });
 

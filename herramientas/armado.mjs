@@ -166,8 +166,8 @@ function textosDe(ejemplo) {
       throw new Error(`Demostracion: el ejemplo "${giro.clave}" no llega al cierre`);
     }
     for (const toma of tomas) {
-      // El agente redactando y el cierre no dicen nada: lo suyo va en el letrero.
-      if (toma.tipo !== 'escribe' && toma.tipo !== 'cierre') textos.add(toma.texto);
+      // El agente redactando o grabando y el cierre no dicen nada: lo suyo va en el letrero.
+      if (toma.tipo !== 'escribe' && toma.tipo !== 'graba' && toma.tipo !== 'cierre') textos.add(toma.texto);
       const { cuadro, liga } = toma;
       const dichos = [
         toma.hora,

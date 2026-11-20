@@ -111,6 +111,7 @@
                 "titulo": "Base de conocimiento",
                 "detalle": "Studio Bella · solo de este negocio",
                 "renglones": [
+                  { "nombre": "Datos del negocio", "valor": "Av. del Esmalte 234, colonia Bella Vista" },
                   { "nombre": "Servicios y precios", "valor": "Gelish $350 · Acrílicas $480" },
                   { "nombre": "Horarios", "valor": "Martes a sábado, 10 am a 7 pm" },
                   { "nombre": "Políticas", "valor": "Anticipo $150 · Tolerancia de 15 minutos" }
@@ -338,7 +339,7 @@
         },
         {
           "titulo": "Nos cuentas de tu negocio",
-          "texto": "En una página hecha para tu celular, una cosa por pantalla: tus servicios, tus precios, tus horarios y tus políticas. Se guarda sola.",
+          "texto": "En línea, una cosa por pantalla: los datos de tu negocio, tus servicios, tus precios, tus horarios y tus políticas. Se guarda sola.",
           "dura": 7,
           "alta": true,
           "pasos": [
@@ -346,8 +347,9 @@
               "en": 0.4,
               "base": {
                 "titulo": "Tu negocio",
-                "detalle": "Studio Bella · lo llenas desde tu celular",
+                "detalle": "Studio Bella · lo llenas en línea",
                 "renglones": [
+                  { "nombre": "Datos del negocio", "valor": "Av. del Esmalte 234, colonia Bella Vista" },
                   { "nombre": "Servicios y precios", "valor": "Gelish $350 · Acrílicas $480" },
                   { "nombre": "Horarios", "valor": "Martes a sábado, 10 am a 7 pm" },
                   { "nombre": "Políticas", "valor": "Anticipo $150 · Tolerancia de 15 minutos" }

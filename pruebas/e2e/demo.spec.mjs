@@ -38,7 +38,7 @@ const ESPERA_PARA_EMPEZAR = 1000;
 
 /** Las nueve paradas de la historia con menos movimiento: el paso y lo que dice el letrero en cada una. */
 const PARADAS = /** @type {const} */ ([
-  ['precio', '01 · Contesta', 'Escucha la nota de voz y le contesta.'],
+  ['precio', '01 · Contesta', 'Contesta con texto o con nota de voz, como le escriban.'],
   ['horarios', '02 · Ofrece horarios', 'Solo los horarios libres de tu Google Calendar.'],
   ['apartado', '03 · Cobra el anticipo', 'Lugar apartado unos minutos, mientras paga.'],
   ['pagado', '03 · Cobra el anticipo', '$150 de anticipo, directo a tu cuenta de Mercado Pago.'],
@@ -195,7 +195,7 @@ test('en reposo: el celular del negocio en linea, el letrero del primer momento 
   await expect(demo.locator('[data-demo-reloj]')).toHaveText('10:12');
   await expect(demo.locator('[data-demo-borrador]')).toHaveText('Mensaje');
   await expect(chatDe(demo).locator('> *')).toHaveCount(0);
-  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y le contesta.');
+  await letreroDice(demo, '01 · Contesta', 'Contesta con texto o con nota de voz, como le escriban.');
   await rayitasVan(demo, 'ffffff');
   await expect(demo.getByRole('group', { name: 'Momentos de la cita' }).getByRole('button')).toHaveCount(6);
   await expect(page.locator('.llega__rotulo')).toHaveText('Mientras tanto, a ti te llega');
@@ -235,7 +235,7 @@ test('en reposo: el celular del negocio en linea, el letrero del primer momento 
   expect(fallas).toEqual([]);
 });
 
-test('no arranca hasta estar a la vista; ya a la vista espera cerca de un segundo y empieza con la nota de voz', async ({
+test('no arranca hasta estar a la vista; ya a la vista espera cerca de un segundo y empieza por escrito; a la nota de voz de media conversacion el agente contesta con otra', async ({
   page,
 }) => {
   const fallas = vigilar(page);
@@ -253,25 +253,55 @@ test('no arranca hasta estar a la vista; ya a la vista espera cerca de un segund
   await expect(demo).toHaveAttribute('data-momento', '1');
   await expect(chatDe(demo).locator('.wa__aviso')).toHaveText('Hoy');
   await rayitasVan(demo, 'vfffff');
-  // La nota de voz: se ve como una nota, y a quien no la ve se le dice que es y que dice.
-  await page.clock.runFor(hastaLaToma(2));
-  const nota = chatDe(demo).locator('.wa__m--voz');
-  await expect(nota).toBeVisible();
-  await expect(nota.locator('.solo-lector')).toHaveText('Nota de voz de Ana: «Hola, ¿cuánto cuesta el gelish?»');
-  await expect(nota.locator('.wa__voz')).toHaveAttribute('aria-hidden', 'true');
-  await expect(nota.locator('.wa__voz')).toContainText('0:06');
-  await expect(nota.locator('.wa__voz')).toContainText('10:12 a. m.');
-  await expect(nota.locator('.wa__voz-foto')).toHaveText('A');
-  // Lo que dijo solo va en ese renglon para quien no la ve: a la vista es una nota de voz, no un texto.
-  await expect(nota.locator('.wa__voz')).not.toContainText('cuánto cuesta');
-  // El agente redacta (la cabecera lo dice) y contesta por escrito.
-  await page.clock.runFor(hastaLaToma(3) - hastaLaToma(2));
-  await expect(demo.locator('[data-demo-detalle]')).toHaveText('escribiendo…');
+  // Ana escribe su pregunta y la manda: en este ejemplo la conversacion empieza por escrito.
+  await page.clock.runFor(hastaLaToma(3));
+  await expect(chatDe(demo).locator('.wa__m--sale')).toHaveText(/^Ana: Hola, ¿cuánto cuesta el gelish/);
+  await expect(chatDe(demo).locator('.wa__m--voz')).toHaveCount(0);
+  // El agente redacta (la cabecera lo dice) y le contesta igual, con un mensaje escrito.
   await page.clock.runFor(hastaLaToma(4) - hastaLaToma(3));
+  await expect(demo.locator('[data-demo-detalle]')).toHaveText('escribiendo…');
+  await page.clock.runFor(hastaLaToma(5) - hastaLaToma(4));
   await expect(demo.locator('[data-demo-detalle]')).toHaveText('en línea');
   await expect(chatDe(demo).locator('.wa__m--entra')).toHaveText(
     /^Marifer: ¡Hola! Soy Marifer, la asistente virtual de Studio Bella\. Con mucho gusto\. El gelish semipermanente cuesta \$350/,
   );
+  // A media conversacion Ana pregunta el dia con una nota de voz: se ve como una nota, con lo que dice escrito debajo
+  // (aqui no se oye), y a quien no la ve se le dice que es y que dice.
+  await page.clock.runFor(hastaLaToma(6) - hastaLaToma(5));
+  await expect(demo).toHaveAttribute('data-momento', '2');
+  const nota = chatDe(demo).locator('.wa__m--sale.wa__m--voz');
+  await expect(nota).toBeVisible();
+  await expect(nota.locator('.solo-lector')).toHaveText('Nota de voz de Ana: «Sí, ¿tienes lugar el jueves?»');
+  await expect(nota.locator('.wa__voz')).toHaveAttribute('aria-hidden', 'true');
+  await expect(nota.locator('.wa__voz')).toContainText('0:06');
+  await expect(nota.locator('.wa__voz')).toContainText('10:13 a. m.');
+  await expect(nota.locator('.wa__voz-foto')).toHaveText('A');
+  await expect(nota.locator('.wa__tics')).toHaveCount(1);
+  // Lo que dijo no va dentro del dibujo de la nota: va debajo, escrito, y el lector de pantalla ya lo dijo arriba.
+  await expect(nota.locator('.wa__voz')).not.toContainText('tienes lugar');
+  await expect(nota.locator('.wa__dicho')).toHaveText('Sí, ¿tienes lugar el jueves?');
+  await expect(nota.locator('.wa__dicho')).toHaveAttribute('aria-hidden', 'true');
+  // La nota de voz no se teclea: la caja de Mensaje se queda como estaba.
+  await expect(demo.locator('[data-demo-borrador]')).toHaveText('Mensaje');
+  // El agente graba la suya (la cabecera lo dice) y le contesta con otra nota de voz, sin palomitas.
+  await page.clock.runFor(hastaLaToma(7) - hastaLaToma(6));
+  await expect(demo.locator('[data-demo-detalle]')).toHaveText('grabando audio…');
+  await page.clock.runFor(hastaLaToma(8) - hastaLaToma(7));
+  await expect(demo.locator('[data-demo-detalle]')).toHaveText('en línea');
+  const respuesta = chatDe(demo).locator('.wa__m--entra.wa__m--voz');
+  await expect(respuesta).toBeVisible();
+  await expect(respuesta.locator('.solo-lector')).toHaveText(
+    'Nota de voz de Marifer: «Le puedo ofrecer el jueves a las 10:00 am, 12:30 pm, 4:00 pm o 5:00 pm. ¿Cuál le acomoda?»',
+  );
+  await expect(respuesta.locator('.wa__voz')).toHaveAttribute('aria-hidden', 'true');
+  await expect(respuesta.locator('.wa__voz')).toContainText('0:11');
+  await expect(respuesta.locator('.wa__voz')).toContainText('10:13 a. m.');
+  await expect(respuesta.locator('.wa__voz-foto')).toHaveText('M');
+  await expect(respuesta.locator('.wa__tics')).toHaveCount(0);
+  await expect(respuesta.locator('.wa__dicho')).toHaveText(
+    'Le puedo ofrecer el jueves a las 10:00 am, 12:30 pm, 4:00 pm o 5:00 pm. ¿Cuál le acomoda?',
+  );
+  await expect(respuesta.locator('.wa__dicho')).toHaveAttribute('aria-hidden', 'true');
   await expect(chatDe(demo)).not.toContainText('PERSONA');
   expect(fallas).toEqual([]);
 });
@@ -282,7 +312,7 @@ test('con el reloj de verdad tambien arranca sola al quedar a la vista', async (
   await expect(demo).toHaveAttribute('data-viva', '');
   await alCentro(demo);
   await expect(demo).toHaveAttribute('data-paso', 'precio', { timeout: 15_000 });
-  await expect(chatDe(demo).locator('.wa__m--voz')).toBeVisible({ timeout: 15_000 });
+  await expect(chatDe(demo).locator('.wa__m--sale')).toBeVisible({ timeout: 15_000 });
 });
 
 test('corre sola hasta el final, sin tocar nada, en lo que dura la historia', async ({ page }) => {
@@ -409,7 +439,7 @@ test('la pausa detiene la historia donde va, y continuar la sigue desde ahi', as
   await page.clock.runFor(60_000);
   await expect(demo).toHaveAttribute('data-paso', 'precio');
   await expect(chatDe(demo).locator('> *')).toHaveCount(antes);
-  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y le contesta.');
+  await letreroDice(demo, '01 · Contesta', 'Contesta con texto o con nota de voz, como le escriban.');
   // Al continuar sigue donde iba: lo que faltaba del primer momento, y despues el segundo.
   await pausa.click();
   await expect(pausa).toHaveAccessibleName('Pausar');
@@ -470,9 +500,10 @@ test('una rayita brinca al principio de su momento, con lo anterior ya escrito, 
   await expect(rayita(demo, '04 Agenda')).toHaveAttribute('aria-current', 'step');
   await expect(demo.locator('[aria-current]')).toHaveCount(1);
   await letreroDice(demo, '04 · Agenda', 'La cita entra sola a tu calendario, ya garantizada.');
-  // Lo de los tres primeros momentos ya esta escrito: la nota de voz, el precio, los horarios y el apartado con su link.
+  // Lo de los tres primeros momentos ya esta escrito: la pregunta y el precio, la nota de voz y la del agente con los
+  // horarios, y el apartado con su link.
   const chat = chatDe(demo);
-  await expect(chat.locator('.wa__m--voz')).toHaveCount(1);
+  await expect(chat.locator('.wa__m--voz')).toHaveCount(2);
   await expect(chat.locator('.wa__m')).toHaveCount(6);
   await expect(chat).toContainText(
     'Le puedo ofrecer el jueves a las 10:00 am, 12:30 pm, 4:00 pm o 5:00 pm. ¿Cuál le acomoda?',
@@ -492,7 +523,9 @@ test('una rayita brinca al principio de su momento, con lo anterior ya escrito, 
   await rayita(demo, '02 Ofrece horarios').click();
   await expect(demo).toHaveAttribute('data-momento', '2');
   await rayitasVan(demo, 'hvffff');
-  await expect(chat.locator('.wa__m')).toHaveCount(2);
+  // El segundo momento empieza con la nota de voz de Ana: estan la pregunta, el precio y esa nota, todavia sin respuesta.
+  await expect(chat.locator('.wa__m')).toHaveCount(3);
+  await expect(chat.locator('.wa__m--voz')).toHaveCount(1);
   await expect(tarjeta(demo, 'cita').locator('[data-demo-cita-titulo]')).toHaveText('5:00 pm · Libre');
   await expect(demo.locator('.sello')).toHaveCount(0);
   await expect(tarjeta(demo, 'pago')).toHaveAttribute('data-apagada', '');
@@ -538,19 +571,21 @@ test('los recordatorios salen solos, cada uno a su hora, y el de un dia antes tr
 test('lo que manda la clienta se escribe primero en la caja de Mensaje y luego sale como globo', async ({ page }) => {
   const demo = await abrirDetenida(page);
   await aLaVista(demo);
-  await hastaElPaso(page, demo, 'horarios');
+  await hastaElPaso(page, demo, 'precio');
   const borrador = demo.locator('[data-demo-borrador]');
   const pie = demo.locator('[data-demo-pie]');
   // La caja y su microfono son de adorno: no se le leen a nadie ni se tocan.
   await expect(pie).toHaveAttribute('aria-hidden', 'true');
-  await expect(borrador).toHaveText('Sí, ¿tienes lugar el jueves?');
+  // Tras la pastilla del dia, Ana teclea su pregunta.
+  await page.clock.runFor(hastaLaToma(2));
+  await expect(borrador).toHaveText('Hola, ¿cuánto cuesta el gelish?');
   await expect(pie).toHaveAttribute('data-teclea', '');
-  await expect(chatDe(demo)).not.toContainText('¿tienes lugar el jueves?');
+  await expect(chatDe(demo)).not.toContainText('¿cuánto cuesta el gelish?');
   await page.clock.runFor(1000);
   await expect(borrador).toHaveText('Mensaje');
   await expect(pie).not.toHaveAttribute('data-teclea', /.*/);
   await expect(chatDe(demo).locator('.wa__m--sale').last()).toHaveText(
-    /^Ana: Sí, ¿tienes lugar el jueves\?10:13 a\. m\.$/,
+    /^Ana: Hola, ¿cuánto cuesta el gelish\?10:12 a\. m\.$/,
   );
 });
 
@@ -694,7 +729,7 @@ test('Ver otra vez vuelve a contar la historia desde el principio, limpia', asyn
   await expect(tarjeta(demo, 'cita')).toHaveAttribute('data-turno', '');
   await expect(tarjeta(demo, 'asistencia')).toHaveAttribute('data-estado', 'espera');
   await rayitasVan(demo, 'ffffff');
-  await letreroDice(demo, '01 · Contesta', 'Escucha la nota de voz y le contesta.');
+  await letreroDice(demo, '01 · Contesta', 'Contesta con texto o con nota de voz, como le escriban.');
   await expect(botonDePausa(demo)).toHaveAccessibleName('Pausar');
   // Y vuelve a correr sola.
   await hastaElPaso(page, demo, 'precio');
@@ -788,12 +823,10 @@ test('elegir Dentista cambia el celular, la ficha del dia y las tarjetas, y la h
   await expect(tarjeta(demo, 'cita').locator('[data-demo-cita-titulo]')).toHaveText('4:00 pm · Libre');
   await rayitasVan(demo, 'ffffff');
   await expect(botonDePausa(demo)).toHaveAccessibleName('Pausar');
-  // Y vuelve a correr sola, con su nota de voz.
-  await hastaQueAparece(page, chatDe(demo).locator('.wa__m--voz'));
-  await expect(chatDe(demo).locator('.wa__m--voz .solo-lector')).toHaveText(
-    'Nota de voz de Carla: «Hola, ¿cuánto cuesta la limpieza dental?»',
-  );
-  await expect(chatDe(demo).locator('.wa__voz-foto')).toHaveText('C');
+  // Y vuelve a correr sola: en este ejemplo toda la conversacion va por escrito, sin notas de voz.
+  await hastaQueAparece(page, chatDe(demo).locator('.wa__m--sale'));
+  await expect(chatDe(demo).locator('.wa__m--sale')).toHaveText(/^Carla: Hola, ¿cuánto cuesta la limpieza dental/);
+  await expect(chatDe(demo).locator('.wa__m--voz')).toHaveCount(0);
   // Elegir el que ya esta puesto no mueve nada.
   const van = await chatDe(demo).locator('> *').count();
   await selector.getByRole('button', { name: 'Dentista' }).click();
@@ -860,6 +893,39 @@ test('la historia de Dentista llega al pago de $200 y a su pregunta de asistenci
   await sinFaltasDeAccesibilidad(page, '#citas');
 });
 
+test('en el celular mas angosto las notas de voz caben en su globo, con lo que dicen debajo', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const demo = await abrir(page);
+  for (const [nombre, clave] of /** @type {const} */ ([
+    ['Uñas', 'unas'],
+    ['Médico', 'medico'],
+  ])) {
+    if (clave !== 'unas') await elegir(demo, nombre, clave);
+    await avanzarParadas(demo, 2);
+    const notas = chatDe(demo).locator('.wa__m--voz');
+    await expect(notas).toHaveCount(2);
+    const medidas = await notas.evaluateAll((globos) =>
+      globos.map((globo) => {
+        const caja = globo.getBoundingClientRect();
+        const hilo = /** @type {Element} */ (globo.parentElement).getBoundingClientRect();
+        const piezas = [...globo.querySelectorAll('.wa__voz, .wa__onda, .wa__voz-pie, .wa__dicho')];
+        return {
+          // Cada pieza de la nota queda dentro de su globo, y el globo dentro de la conversacion.
+          dentro: piezas.every((pieza) => {
+            const suya = pieza.getBoundingClientRect();
+            return suya.left >= caja.left - 0.5 && suya.right <= caja.right + 0.5;
+          }),
+          cabe: caja.left >= hilo.left - 0.5 && caja.right <= hilo.right + 0.5,
+        };
+      }),
+    );
+    expect(medidas, clave).toEqual([
+      { dentro: true, cabe: true },
+      { dentro: true, cabe: true },
+    ]);
+  }
+});
+
 test('la historia de Médico platica en la tarde, con su consultorio y su ficha del lunes', async ({ page }) => {
   const demo = await abrir(page);
   await elegir(demo, 'Médico', 'medico');
@@ -870,12 +936,20 @@ test('la historia de Médico platica en la tarde, con su consultorio y su ficha 
   await expect(demo.locator('[data-demo-reloj]')).toHaveText('12:42');
   await avanzarParadas(demo, 1);
   const chat = chatDe(demo);
-  await expect(chat.locator('.wa__m--voz .solo-lector')).toHaveText(
+  // Empieza con una nota de voz, y la agente le contesta con otra: se lee lo que dice cada una.
+  await expect(chat.locator('.wa__m--sale.wa__m--voz .solo-lector')).toHaveText(
     'Nota de voz de Paty: «Buenas tardes, ¿cuánto cuesta la consulta?»',
   );
-  await expect(chat).toContainText(
-    'Elena: Buenas tardes. Soy Elena, la asistente virtual del Consultorio Médico Aurora.',
+  await expect(chat.locator('.wa__m--sale.wa__m--voz .wa__dicho')).toHaveText(
+    'Buenas tardes, ¿cuánto cuesta la consulta?',
   );
+  await expect(chat.locator('.wa__m--entra.wa__m--voz .solo-lector')).toContainText(
+    'Nota de voz de Elena: «Buenas tardes. Soy Elena, la asistente virtual del Consultorio Médico Aurora.',
+  );
+  await expect(chat.locator('.wa__m--entra.wa__m--voz .wa__dicho')).toContainText('cuesta $900');
+  await expect(chat.locator('.wa__m--entra.wa__m--voz .wa__voz-foto')).toHaveText('E');
+  // Lo que sigue va por escrito: ni un globo de texto de la agente todavia, y despues de pedir el dia, si.
+  await expect(chat.locator('.wa__m--entra:not(.wa__m--voz)')).toHaveCount(0);
   await expect(chat.locator('.wa__m--entra .wa__hora')).toHaveText('12:42 p. m.');
   await rayita(demo, '04 Agenda').click();
   await expect(tarjeta(demo, 'cita').locator('[data-demo-cita-titulo]')).toHaveText('4:30 pm · Paty');
@@ -1018,10 +1092,10 @@ test('el letrero se anuncia una vez por cambio, con su rotulo, y la conversacion
   // La conversacion se lee completa: cada globo dice de quien es.
   await rayita(demo, '05 Recuerda').click();
   await expect(chatDe(demo).locator('.wa__m .solo-lector')).toHaveText([
-    'Nota de voz de Ana: «Hola, ¿cuánto cuesta el gelish?»',
-    'Marifer: ',
     'Ana: ',
     'Marifer: ',
+    'Nota de voz de Ana: «Sí, ¿tienes lugar el jueves?»',
+    'Nota de voz de Marifer: «Le puedo ofrecer el jueves a las 10:00 am, 12:30 pm, 4:00 pm o 5:00 pm. ¿Cuál le acomoda?»',
     'Ana: ',
     'Marifer: ',
     'Marifer: ',
@@ -1319,7 +1393,9 @@ test.describe('sin JavaScript', () => {
     await expect(page.getByRole('group', { name: 'Demostración con un salón de uñas de ejemplo.' })).toBeVisible();
     const escrita = page.locator('.transcripcion');
     await expect(escrita).toBeVisible();
-    await expect(escrita).toContainText('Ana (nota de voz): Hola, ¿cuánto cuesta el gelish?');
+    await expect(escrita).toContainText('Ana: Hola, ¿cuánto cuesta el gelish?');
+    await expect(escrita).toContainText('Ana (nota de voz): Sí, ¿tienes lugar el jueves?');
+    await expect(escrita).toContainText('Marifer (nota de voz): Le puedo ofrecer el jueves a las 10:00 am');
     await expect(escrita).toContainText('Marifer: ¡Hola! Soy Marifer, la asistente virtual de Studio Bella');
     await expect(escrita).toContainText('Ana: A las 5:00 pm, por favor.');
     await expect(escrita).toContainText('Pago aprobado');

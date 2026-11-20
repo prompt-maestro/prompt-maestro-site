@@ -151,6 +151,10 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
 - Sumar un oficio a la demostración casi no toca el código: su entrada en `fuente/datos/giros.json`, su guion en
   `fuente/datos/guiones/<oficio>.json` y su clave en la lista `GIROS` de `fuente/js/medicion.js` (la medición solo
   acepta valores de una lista cerrada; una prueba avisa si falta). La armada se detiene si a un ejemplo le falta un texto.
+  En el guion, `"voz"` dice cuál mensaje de quien pide la cita llega como nota de voz (`"pregunta"`, al inicio, o
+  `"pideDia"`, a media conversación); sin ella todo va por escrito. A una nota de voz el agente contesta con otra
+  nota de voz (debajo de cada una se lee lo que dice, porque en la página no se oye) y el link de pago va siempre
+  por escrito. Hoy: uñas a media conversación, médico al inicio y dentista por escrito, para que no empiecen igual.
 - Los textos de las secciones viven en `fuente/datos/secciones.json` y `preguntas.json`. Ninguno promete algo que el
   producto no hace: se revisan contra la tabla de la verdad del PRD antes de cambiarse.
 - «En una frase» conserva la frase que define el producto y sus tres palabras (de ahí leen los buscadores y los

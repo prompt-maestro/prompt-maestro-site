@@ -30,8 +30,9 @@ import {
 /**
  * Lo que cambia de un ejemplo a otro: lo que el agente redacta con su propio tono, a que hora platican, y el dia y los
  * horarios que ofrece. La historia toma la hora sugerida.
- * @typedef {{ charla: string, pregunta: string, saludo: string[], pideDia: string, dia: string, fecha: number,
- *   horas: string[], horaSugerida: string, eligeHora: string, apartado: string }} Guion
+ * "voz" dice cual de sus mensajes manda como nota de voz quien pide la cita; sin ella, todo va por escrito.
+ * @typedef {{ charla: string, voz?: 'pregunta' | 'pideDia', pregunta: string, saludo: string[], pideDia: string,
+ *   dia: string, fecha: number, horas: string[], horaSugerida: string, eligeHora: string, apartado: string }} Guion
  */
 /**
  * El negocio del ejemplo. "nombre" es con lo que se elige el ejemplo; "lugar", como se le llama a ese tipo de negocio
@@ -63,10 +64,12 @@ import {
  */
 /**
  * Lo que puede pasar en una toma. "aviso" es una pastilla al centro; "voz", "sale" y "respuesta" son globos de quien
- * tiene el celular; "entra" y "pregunta", del agente; "cambio", el paso al celular de la profesional. "escribe" (el
- * agente redacta), "teclea" (quien tiene el celular escribe en su caja) y "hoja" (el pago aprobado) solo duran
- * mientras son lo ultimo que paso, y "cierre" no pone nada: cambia el letrero.
- * @typedef {'aviso' | 'voz' | 'escribe' | 'teclea' | 'sale' | 'entra' | 'hoja' | 'cambio' | 'pregunta' | 'respuesta' | 'cierre'} TipoDeToma
+ * tiene el celular; "entra", "pregunta" y "vozDelAgente" (su nota de voz, cuando le mandaron una), del agente;
+ * "cambio", el paso al celular de la profesional. "escribe" (el agente redacta), "graba" (el agente graba su nota de
+ * voz), "teclea" (quien tiene el celular escribe en su caja) y "hoja" (el pago aprobado) solo duran mientras son lo
+ * ultimo que paso, y "cierre" no pone nada: cambia el letrero.
+ * @typedef {'aviso' | 'voz' | 'vozDelAgente' | 'escribe' | 'graba' | 'teclea' | 'sale' | 'entra' | 'hoja' | 'cambio'
+ *   | 'pregunta' | 'respuesta' | 'cierre'} TipoDeToma
  */
 /** La vista previa del link de pago. @typedef {{ titulo: string, monto: string, sitio: string }} Liga */
 /**
@@ -100,7 +103,16 @@ const DURA = {
 /** Cuanto despues de la hora de la cita llega la pregunta de asistencia, en minutos. */
 const DESPUES_DE_LA_CITA = 65;
 /** Lo que se pone en la conversacion y ahi se queda. Lo demas solo dura mientras es lo ultimo que paso. */
-const EN_LA_CONVERSACION = new Set(['aviso', 'voz', 'sale', 'entra', 'cambio', 'pregunta', 'respuesta']);
+const EN_LA_CONVERSACION = new Set([
+  'aviso',
+  'voz',
+  'vozDelAgente',
+  'sale',
+  'entra',
+  'cambio',
+  'pregunta',
+  'respuesta',
+]);
 /** Los pasos en que la cita ya termino: sus seis momentos estan completos. */
 const FINALES = new Set(['finSi', 'finNo', 'cierre']);
 
@@ -217,6 +229,9 @@ export function historiaDe(ejemplo, asistio = true) {
   if (!guion.horas.includes(guion.horaSugerida)) {
     throw new Error(`Demostracion: la hora sugerida de "${giro.clave}" no esta entre sus horarios`);
   }
+  if (guion.voz && guion.voz !== 'pregunta' && guion.voz !== 'pideDia') {
+    throw new Error(`Demostracion: la nota de voz de "${giro.clave}" solo va en su pregunta o al pedir el dia`);
+  }
   const datos = datosDe(ejemplo);
   const llenar = (/** @type {string} */ texto) => rellenar(texto, datos);
   const rotulo = rotulosDe(ejemplo);
@@ -252,40 +267,60 @@ export function historiaDe(ejemplo, asistio = true) {
     cuadro = { ...cuadro, reloj: horaDeReloj(minuto) };
     tomas.push({ tipo, dura, texto, quien: '', hora: horaDeGlobo(minuto), cuadro, ...extras });
   };
+  /** Lo ultimo que mando quien pide la cita fue una nota de voz: el agente le contesta con otra. */
+  let porVoz = false;
   /**
-   * El agente redacta y manda un mensaje.
+   * El agente contesta: redacta y manda un mensaje o, si le acaban de mandar una nota de voz, graba y manda otra. Lo
+   * que trae el link de pago va siempre por escrito.
    * @param {string} texto
    * @param {Partial<Toma>} [extras]
    */
   const agente = (texto, extras) => {
     const dicho = llenar(texto);
+    if (porVoz && !extras?.liga) {
+      pon('graba', DURA.escribe);
+      pon('vozDelAgente', paraLeer(dicho), dicho, {
+        quien: giro.asistente,
+        lector: `${rotulo('notaDeVozDelAgente')}: «${dicho}»`,
+        detalle: rotulo('duracionDeVozDelAgente'),
+      });
+      return;
+    }
+    // Lo escrito con el link cierra la platica por voz: lo que sigue (la confirmacion, el registro) va por escrito.
+    porVoz = false;
     pon('escribe', DURA.escribe);
     pon('entra', paraLeer(dicho), dicho, { quien: giro.asistente, ...extras });
   };
   /**
-   * Quien pide la cita escribe en su caja y manda un mensaje.
+   * Quien pide la cita manda un mensaje: lo escribe en su caja o, si asi lo dice el guion, lo manda como nota de voz.
    * @param {string} texto
+   * @param {boolean} [voz]
    */
-  const clienta = (texto) => {
+  const clienta = (texto, voz = false) => {
     const dicho = llenar(texto);
+    porVoz = voz;
+    if (voz) {
+      pon('voz', DURA.voz, dicho, {
+        quien: giro.cliente,
+        lector: `${rotulo('notaDeVoz')}: «${dicho}»`,
+        detalle: rotulo('duracionDeVoz'),
+      });
+      return;
+    }
     pon('teclea', DURA.teclea, dicho);
     pon('sale', DURA.sale, dicho, { quien: giro.cliente });
   };
 
-  // 01. Contesta: llega una nota de voz y el agente saluda y da el precio.
+  // 01. Contesta: llega la pregunta (escrita o como nota de voz) y el agente saluda y da el precio, de la misma forma.
   empieza(1, { paso: 'precio' });
   pon('aviso', DURA.aviso, rotulo('hoy'));
-  pon('voz', DURA.voz, llenar(guion.pregunta), {
-    quien: giro.cliente,
-    lector: rotulo('notaDeVoz'),
-    detalle: rotulo('duracionDeVoz'),
-  });
+  clienta(guion.pregunta, guion.voz === 'pregunta');
   for (const texto of guion.saludo) agente(texto);
 
   // 02. Ofrece horarios: los que hay libres ese dia, y ella elige uno.
   empieza(2, { paso: 'horarios' });
   minuto += 1;
-  clienta(guion.pideDia);
+  clienta(guion.pideDia, guion.voz === 'pideDia');
   agente(fijos.horarios);
   clienta(guion.eligeHora);
 
@@ -574,6 +609,9 @@ export function conversacionDeEjemplo(ejemplo) {
     switch (toma.tipo) {
       case 'voz':
         lineas.push({ quien: rotulo('notaDeVozEscrita'), texto: toma.texto });
+        break;
+      case 'vozDelAgente':
+        lineas.push({ quien: rotulo('notaDeVozEscritaDelAgente'), texto: toma.texto });
         break;
       case 'sale':
       case 'entra':

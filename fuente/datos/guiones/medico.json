@@ -1,5 +1,6 @@
 {
   "charla": "12:42 pm",
+  "voz": "pregunta",
   "pregunta": "Buenas tardes, ¿cuánto cuesta la consulta?",
   "saludo": [
     "Buenas tardes. Soy {asistente}, la asistente virtual del {negocio}. La consulta de primera vez con la {profesional} cuesta {precio} y dura alrededor de 45 minutos. Si lo desea, con gusto le busco un horario."

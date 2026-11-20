@@ -52,6 +52,12 @@ const unas = /** @type {Ejemplo} */ (ejemplos[0]);
 const ejemploDe = (clave) => /** @type {Ejemplo} */ (ejemplos.find((ejemplo) => ejemplo.giro.clave === clave));
 // En salud a quien se atiende se le dice paciente: asi se reconocen esos ejemplos, tambien los que se sumen despues.
 const deSalud = ejemplos.filter((ejemplo) => ejemplo.giro.persona === 'paciente');
+/** Lo que manda quien pide la cita: escrito o como nota de voz. */
+const DE_QUIEN_PIDE = ['sale', 'voz'];
+/** Lo que el agente le dice a quien pide la cita: escrito o con su nota de voz. */
+const DEL_AGENTE = ['entra', 'vozDelAgente'];
+/** Lo que solo dura mientras es lo ultimo que paso: no se queda en la conversacion. */
+const SOLO_UN_RATO = ['escribe', 'graba', 'teclea', 'hoja', 'cierre'];
 
 /** @type {Evento} */
 const SIGUE = { tipo: 'sigue' };
@@ -117,7 +123,7 @@ function todoLoQueDice(ejemplo) {
   for (const asistio of [true, false]) {
     for (const toma of historiaDe(ejemplo, asistio)) {
       // El agente redactando y el cierre no dicen nada en la conversacion: lo suyo va en el letrero.
-      if (toma.tipo !== 'escribe' && toma.tipo !== 'cierre') textos.push(toma.texto);
+      if (toma.tipo !== 'escribe' && toma.tipo !== 'graba' && toma.tipo !== 'cierre') textos.push(toma.texto);
       const sueltos = [toma.hora, toma.lector, toma.detalle, toma.monto, toma.boton, ...Object.values(toma.liga ?? {})];
       textos.push(...sueltos.filter((texto) => texto !== undefined));
       cuadros.push(toma.cuadro);
@@ -171,7 +177,7 @@ test('cada momento dice su letrero; el tercero cambia cuando el pago se aprueba,
     ...new Set(historiaDe(unas, asistio).map((toma) => `${toma.cuadro.momento}: ${toma.cuadro.letrero}`)),
   ];
   const hastaLaAsistencia = [
-    '1: Escucha la nota de voz y le contesta.',
+    '1: Contesta con texto o con nota de voz, como le escriban.',
     '2: Solo los horarios libres de tu Google Calendar.',
     '3: Lugar apartado unos minutos, mientras paga.',
     '3: $150 de anticipo, directo a tu cuenta de Mercado Pago.',
@@ -274,29 +280,114 @@ test('los dos finales: asistio y no asistio, iguales hasta la pregunta', () => {
   }
 });
 
-test('el primer mensaje es una nota de voz; lo demas que manda se escribe primero en su caja', () => {
+test('quien pide la cita manda una nota de voz donde lo dice su guion; lo demas se escribe primero en su caja', () => {
+  // Unas: empieza por escrito y la nota de voz llega a media conversacion, al preguntar por el dia.
   const tomas = historiaDe(unas);
-  const deLaClienta = tomas.filter((toma) => ['voz', 'sale'].includes(toma.tipo));
-  assert.equal(deLaClienta[0]?.tipo, 'voz');
+  const deLaClienta = tomas.filter((toma) => DE_QUIEN_PIDE.includes(toma.tipo));
   assert.deepEqual(
-    { texto: deLaClienta[0]?.texto, lector: deLaClienta[0]?.lector, detalle: deLaClienta[0]?.detalle },
-    {
-      texto: 'Hola, ¿cuánto cuesta el gelish?',
-      lector: 'Nota de voz de Ana: «Hola, ¿cuánto cuesta el gelish?»',
-      detalle: '0:06',
-    },
+    deLaClienta.map((toma) => [toma.tipo, toma.texto]),
+    [
+      ['sale', 'Hola, ¿cuánto cuesta el gelish?'],
+      ['voz', 'Sí, ¿tienes lugar el jueves?'],
+      ['sale', 'A las 5:00 pm, por favor.'],
+    ],
   );
-  assert.equal(tomas.filter((toma) => toma.tipo === 'voz').length, 1);
+  const voz = tomaQue(tomas, (toma) => toma.tipo === 'voz');
   assert.deepEqual(
-    deLaClienta.slice(1).map((toma) => toma.texto),
-    ['Sí, ¿tienes lugar el jueves?', 'A las 5:00 pm, por favor.'],
+    { quien: voz.quien, lector: voz.lector, detalle: voz.detalle, momento: voz.cuadro.momento },
+    { quien: 'Ana', lector: 'Nota de voz de Ana: «Sí, ¿tienes lugar el jueves?»', detalle: '0:06', momento: 2 },
   );
+  // La nota de voz no se teclea: llega de una vez.
+  assert.notEqual(tomas[tomas.indexOf(voz) - 1]?.tipo, 'teclea');
   for (const [indice, toma] of tomas.entries()) {
     if (toma.tipo !== 'sale') continue;
     const antes = tomas[indice - 1];
     assert.deepEqual([antes?.tipo, antes?.texto], ['teclea', toma.texto], 'se escribe antes de salir');
     assert.equal(toma.quien, 'Ana');
   }
+  // Los tres ejemplos no empiezan igual (lo pidio el dueno): uno trae la nota de voz a media conversacion, otro va
+  // todo por escrito y otro empieza con la nota de voz.
+  assert.deepEqual(
+    ejemplos.map(({ giro, guion }) => [giro.clave, guion.voz ?? 'sin voz']),
+    [
+      ['unas', 'pideDia'],
+      ['dentista', 'sin voz'],
+      ['medico', 'pregunta'],
+    ],
+  );
+  for (const ejemplo of ejemplos) {
+    const notas = historiaDe(ejemplo).filter((toma) => toma.tipo === 'voz');
+    assert.equal(notas.length, ejemplo.guion.voz ? 1 : 0, ejemplo.giro.clave);
+    const primero = tomaQue(historiaDe(ejemplo), (toma) => DE_QUIEN_PIDE.includes(toma.tipo));
+    assert.equal(primero.tipo, ejemplo.guion.voz === 'pregunta' ? 'voz' : 'sale', ejemplo.giro.clave);
+  }
+});
+
+test('a una nota de voz el agente contesta con otra nota de voz; lo demas, y siempre el link de pago, por escrito', () => {
+  for (const ejemplo of ejemplos) {
+    const { giro, guion } = ejemplo;
+    const tomas = historiaDe(ejemplo);
+    /** Lo ultimo que mando quien pide la cita fue una nota de voz. */
+    let porVoz = false;
+    for (const [indice, toma] of tomas.entries()) {
+      if (toma.tipo === 'voz') {
+        porVoz = true;
+        // Enseguida el agente graba la suya y la manda.
+        assert.deepEqual(
+          tomas.slice(indice + 1, indice + 3).map((siguiente) => siguiente.tipo),
+          ['graba', 'vozDelAgente'],
+          giro.clave,
+        );
+      }
+      if (toma.tipo === 'sale') porVoz = false;
+      if (toma.tipo === 'graba') {
+        assert.equal(toma.texto, '', 'mientras graba no dice nada');
+        assert.equal(tomas[indice + 1]?.tipo, 'vozDelAgente');
+      }
+      if (toma.tipo === 'vozDelAgente') {
+        assert.ok(porVoz, 'solo contesta con voz a una nota de voz');
+        assert.equal(tomas[indice - 1]?.tipo, 'graba', 'antes de mandarla, la graba');
+        assert.equal(toma.quien, giro.asistente);
+        assert.equal(toma.lector, `Nota de voz de ${giro.asistente}: «${toma.texto}»`);
+        assert.equal(toma.detalle, '0:11');
+        assert.equal(toma.liga, undefined, 'el link de pago nunca va en una nota de voz');
+        assert.equal(toma.cuadro.telefono, 'cliente');
+        assert.ok(toma.texto.length > 20);
+      }
+      // Lo que el agente escribe en el celular de quien pide la cita, lo escribe porque no le hablaron por voz, o
+      // porque trae el link de pago.
+      if (toma.tipo === 'entra' && toma.cuadro.telefono === 'cliente' && porVoz) {
+        assert.ok(toma.liga, `${giro.clave}: ${toma.texto}`);
+      }
+    }
+    const delAgente = tomas.filter((toma) => toma.tipo === 'vozDelAgente').map((toma) => toma.texto);
+    if (guion.voz === 'pregunta') {
+      // Le preguntaron el precio por voz: el saludo, con el precio, va en su nota de voz.
+      assert.equal(delAgente.length, guion.saludo.length);
+      assert.match(delAgente[0] ?? '', /asistente virtual/);
+    } else if (guion.voz === 'pideDia') {
+      // Le preguntaron el dia por voz: los horarios van en su nota de voz.
+      assert.equal(delAgente.length, 1);
+      assert.match(delAgente[0] ?? '', /^Le puedo ofrecer el /);
+    } else {
+      assert.deepEqual(delAgente, []);
+      assert.equal(tomas.filter((toma) => toma.tipo === 'graba').length, 0);
+    }
+    // El link de pago va siempre por escrito, en los tres.
+    const conLink = tomas.filter((toma) => toma.liga);
+    assert.equal(conLink.length, 1);
+    assert.equal(conLink[0]?.tipo, 'entra');
+  }
+  // En la version escrita (sin JavaScript) las notas de voz dicen de quien son.
+  assert.deepEqual(
+    conversacionDeEjemplo(unas)
+      .filter((linea) => /nota de voz/.test(linea.quien))
+      .map((linea) => [linea.quien, linea.texto.slice(0, 26)]),
+    [
+      ['Ana (nota de voz)', 'Sí, ¿tienes lugar el jueve'],
+      ['Marifer (nota de voz)', 'Le puedo ofrecer el jueves'],
+    ],
+  );
 });
 
 test('el agente redacta antes de cada mensaje suyo; los recordatorios llegan solos', () => {
@@ -531,7 +622,7 @@ test('de parada en parada: cada una pinta de un jalon hasta que cambia el letrer
     assert.notEqual(tomas[estado.van]?.cuadro.letrero, cuadro.letrero);
   }
   assert.deepEqual(paradas, [
-    'precio: Escucha la nota de voz y le contesta.',
+    'precio: Contesta con texto o con nota de voz, como le escriban.',
     'horarios: Solo los horarios libres de tu Google Calendar.',
     'apartado: Lugar apartado unos minutos, mientras paga.',
     'pagado: $150 de anticipo, directo a tu cuenta de Mercado Pago.',
@@ -560,19 +651,19 @@ test('la conversacion crece toma a toma y, al cambiar de celular, empieza limpia
   for (let van = 1; van <= tomas.length; van++) {
     const chat = chatEn(tomas, van);
     for (const toma of chat) {
-      assert.ok(!['escribe', 'teclea', 'hoja', 'cierre'].includes(toma.tipo), 'lo que solo dura un rato no se queda');
+      assert.ok(!SOLO_UN_RATO.includes(toma.tipo), 'lo que solo dura un rato no se queda');
       assert.ok(tomas.indexOf(toma) < van);
     }
     // Hasta el cambio esta toda la platica; desde el cambio, solo lo del celular de la profesional.
     const desde = van > cambio ? cambio : 0;
     assert.deepEqual(
       chat,
-      tomas.slice(desde, van).filter((toma) => !['escribe', 'teclea', 'hoja', 'cierre'].includes(toma.tipo)),
+      tomas.slice(desde, van).filter((toma) => !SOLO_UN_RATO.includes(toma.tipo)),
     );
   }
   assert.deepEqual(
     chatEn(tomas, cambio).map((toma) => toma.tipo),
-    ['aviso', 'voz', 'entra', 'sale', 'entra', 'sale', 'entra', 'entra', 'aviso', 'entra', 'aviso', 'entra'],
+    ['aviso', 'sale', 'entra', 'voz', 'vozDelAgente', 'sale', 'entra', 'entra', 'aviso', 'entra', 'aviso', 'entra'],
   );
   assert.deepEqual(
     chatEn(tomas, tomas.length).map((toma) => toma.tipo),
@@ -595,7 +686,7 @@ test('el reposo ensena el celular de quien pide la cita, el letrero del primer m
       { momento: 0, paso: 'reposo', telefono: 'cliente', turno: 'cita' },
     );
     assert.equal(reposo.rotulo, '01 · Contesta');
-    assert.equal(reposo.letrero, 'Escucha la nota de voz y le contesta.');
+    assert.equal(reposo.letrero, 'Contesta con texto o con nota de voz, como le escriban.');
     assert.equal(reposo.cita.estado, 'libre');
     assert.equal(reposo.cita.titulo, `${ejemplo.guion.horaSugerida} · Libre`);
     assert.equal(reposo.pago.llego, false);
@@ -719,7 +810,7 @@ test('todo rotulo de los datos se usa: en la plantilla, o en el codigo que pinta
   }
 });
 
-test('un rotulo que falta, un momento que falta o una hora sugerida que no se ofrece detienen todo', () => {
+test('un rotulo que falta, un momento que falta, una hora sugerida que no se ofrece o una nota de voz fuera de lugar detienen todo', () => {
   const { hoy: _, ...sinHoy } = unas.rotulos;
   assert.throws(() => historiaDe({ ...unas, rotulos: sinHoy }), /falta el rotulo "hoy"/);
   assert.throws(() => historiaDe({ ...unas, momentos: unas.momentos.slice(0, 5) }), /falta el momento 6/);
@@ -729,6 +820,21 @@ test('un rotulo que falta, un momento que falta o una hora sugerida que no se of
   assert.throws(
     () => historiaDe({ ...unas, guion: { ...unas.guion, horaSugerida: '9:00 pm' } }),
     /hora sugerida de "unas" no esta entre sus horarios/,
+  );
+  // La nota de voz de quien pide la cita solo va en su pregunta o al pedir el dia: una errata no la apaga en silencio.
+  for (const voz of ['eligeHora', 'Pregunta', 'si']) {
+    assert.throws(
+      () => historiaDe({ ...unas, guion: /** @type {any} */ ({ ...unas.guion, voz }) }),
+      /nota de voz de "unas" solo va en su pregunta o al pedir el dia/,
+      voz,
+    );
+  }
+  // Sin "voz" todo va por escrito, y eso si se vale.
+  const { voz: _voz, ...sinVoz } = unas.guion;
+  assert.equal(
+    historiaDe({ ...unas, guion: sinVoz }).filter((toma) => ['voz', 'vozDelAgente', 'graba'].includes(toma.tipo))
+      .length,
+    0,
   );
 });
 
@@ -765,7 +871,7 @@ for (const ejemplo of ejemplos) {
   test(`${nombre}: el agente se presenta como asistente virtual, da el precio e invita a agendar`, () => {
     const delPrimerMomento = tomas.filter(({ cuadro }) => cuadro.momento === 1);
     const dicho = delPrimerMomento
-      .filter((toma) => toma.tipo === 'entra')
+      .filter((toma) => DEL_AGENTE.includes(toma.tipo))
       .map((toma) => toma.texto)
       .join(' ');
     assert.match(dicho, /asistente virtual/);
@@ -774,24 +880,32 @@ for (const ejemplo of ejemplos) {
     assert.match(dicho, /le busco un horario/, 'invita a agendar');
     // De usted, sin un solo tuteo.
     assert.doesNotMatch(dicho, /\b(te|ti|tu|tus|quieres|deseas|animas)\b/i);
-    const voz = tomaQue(delPrimerMomento, (toma) => toma.tipo === 'voz');
-    assert.match(voz.texto, /¿cuánto cuesta/, 'la pregunta inicial es de precio');
-    assert.equal(voz.lector, `Nota de voz de ${giro.cliente}: «${guion.pregunta}»`);
-    assert.equal(voz.cuadro.telefono, 'cliente');
+    const pregunta = tomaQue(delPrimerMomento, (toma) => DE_QUIEN_PIDE.includes(toma.tipo));
+    assert.match(pregunta.texto, /¿cuánto cuesta/, 'la pregunta inicial es de precio');
+    assert.equal(pregunta.tipo, guion.voz === 'pregunta' ? 'voz' : 'sale');
+    if (pregunta.tipo === 'voz') {
+      assert.equal(pregunta.lector, `Nota de voz de ${giro.cliente}: «${guion.pregunta}»`);
+    }
+    assert.equal(pregunta.cuadro.telefono, 'cliente');
+    // Contesta como le escribieron: con su nota de voz si la pregunta fue una, y por escrito si no.
+    const saludo = tomaQue(delPrimerMomento, (toma) => DEL_AGENTE.includes(toma.tipo));
+    assert.equal(saludo.tipo, guion.voz === 'pregunta' ? 'vozDelAgente' : 'entra');
   });
 
   test(`${nombre}: ofrece a lo mas 4 horarios de un dia y la hora sugerida es una de ellas`, () => {
     assert.ok(guion.horas.length >= 2 && guion.horas.length <= 4);
     for (const hora of guion.horas) assert.match(hora, /^([1-9]|1[0-2]):[0-5]\d (am|pm)$/);
     assert.ok(guion.horas.includes(guion.horaSugerida));
-    const oferta = tomaQue(tomas, (toma) => toma.tipo === 'entra' && toma.cuadro.paso === 'horarios');
+    const oferta = tomaQue(tomas, (toma) => DEL_AGENTE.includes(toma.tipo) && toma.cuadro.paso === 'horarios');
     assert.match(oferta.texto, new RegExp(`^Le puedo ofrecer el ${guion.dia} a las? `));
     assert.match(oferta.texto, /¿Cuál le acomoda\?$/);
     for (const hora of guion.horas) assert.ok(oferta.texto.includes(hora), hora);
-    const pide = tomas.filter((toma) => toma.tipo === 'sale').map((toma) => toma.texto);
+    const pide = tomas
+      .filter((toma) => DE_QUIEN_PIDE.includes(toma.tipo) && toma.cuadro.momento === 2)
+      .map((toma) => toma.texto);
     assert.ok(pide[0]?.includes(guion.dia), 'pregunta por el dia que se ofrece');
     assert.ok(pide[1]?.includes(guion.horaSugerida), 'elige la hora sugerida');
-    // Del guion ya no se elige nada: un solo dia.
+    // Del guion ya no se elige nada: un solo dia. "voz" solo va en el ejemplo que manda una nota de voz.
     assert.deepEqual(Object.keys(guion).sort(), [
       'apartado',
       'charla',
@@ -803,6 +917,7 @@ for (const ejemplo of ejemplos) {
       'pideDia',
       'pregunta',
       'saludo',
+      ...(guion.voz ? ['voz'] : []),
     ]);
   });
 
@@ -863,8 +978,10 @@ for (const ejemplo of ejemplos) {
   test(`${nombre}: la conversacion de ejemplo cuenta la historia completa en texto`, () => {
     const lineas = conversacionDeEjemplo(ejemplo);
     assert.deepEqual(lineas[0], { quien: '', texto: 'Hoy' });
-    assert.deepEqual(lineas[1], { quien: `${giro.cliente} (nota de voz)`, texto: guion.pregunta });
-    assert.equal(lineas[2]?.quien, giro.asistente);
+    // La pregunta y el saludo: por escrito, o los dos como nota de voz si el ejemplo empieza con una.
+    const alInicio = guion.voz === 'pregunta' ? ' (nota de voz)' : '';
+    assert.deepEqual(lineas[1], { quien: `${giro.cliente}${alInicio}`, texto: guion.pregunta });
+    assert.equal(lineas[2]?.quien, `${giro.asistente}${alInicio}`);
     assert.ok(lineas.some((linea) => linea.quien === giro.cliente && linea.texto.includes(guion.horaSugerida)));
     assert.ok(lineas.some((linea) => linea.texto === `Anticipo ${giro.servicio}: ${pesos(giro.anticipo)}`));
     assert.ok(lineas.some((linea) => linea.quien === '' && linea.texto === 'Pago aprobado'));

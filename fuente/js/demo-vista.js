@@ -246,16 +246,20 @@ export function montarDemo(raiz) {
   }
 
   /**
-   * La nota de voz: se ve como en WhatsApp, y a quien no la ve se le dice que es y que dice.
+   * La nota de voz: se ve como en WhatsApp, con lo que dice escrito debajo (aqui no se oye), y a quien no la ve se le
+   * dice que es y que dice. La del agente entra en blanco y sin palomitas.
    * @param {Toma} toma
+   * @param {'entra' | 'sale'} lado
    */
-  function notaDeVoz(toma) {
-    const elemento = crear('p', 'wa__m wa__m--sale wa__m--voz');
+  function notaDeVoz(toma, lado) {
+    const elemento = crear('p', `wa__m wa__m--${lado} wa__m--voz`);
     const dibujo = copia(plantillaVoz);
     pieza(dibujo, '[data-voz-inicial]').textContent = toma.quien.charAt(0);
     pieza(dibujo, '[data-voz-dura]').textContent = toma.detalle ?? '';
-    pieza(dibujo, '[data-voz-hora]').append(toma.hora, copia(plantillaTics));
-    elemento.append(crear('span', 'solo-lector', toma.lector ?? toma.texto), dibujo);
+    pieza(dibujo, '[data-voz-hora]').append(toma.hora, ...(lado === 'sale' ? [copia(plantillaTics)] : []));
+    const dicho = crear('span', 'wa__dicho', toma.texto);
+    dicho.setAttribute('aria-hidden', 'true');
+    elemento.append(crear('span', 'solo-lector', toma.lector ?? toma.texto), dibujo, dicho);
     return elemento;
   }
 
@@ -286,7 +290,9 @@ export function montarDemo(raiz) {
       case 'cambio':
         return [crear('p', 'wa__aviso wa__aviso--tu', toma.texto)];
       case 'voz':
-        return [notaDeVoz(toma)];
+        return [notaDeVoz(toma, 'sale')];
+      case 'vozDelAgente':
+        return [notaDeVoz(toma, 'entra')];
       case 'sale':
       case 'respuesta':
         return [globo(toma, 'sale')];
@@ -408,10 +414,11 @@ export function montarDemo(raiz) {
     raiz.dataset.telefono = cuadro.telefono;
     // La cabecera: de quien es el celular, y si el agente esta redactando.
     const presentacion = presentacionDe(ejemplo, cuadro.telefono);
-    const escribe = ultima?.tipo === 'escribe';
+    const graba = ultima?.tipo === 'graba';
+    const escribe = graba || ultima?.tipo === 'escribe';
     iniciales.textContent = presentacion.iniciales;
     nombre.textContent = presentacion.nombre;
-    detalle.textContent = escribe ? rotulo('escribiendo') : presentacion.detalle;
+    detalle.textContent = escribe ? rotulo(graba ? 'grabando' : 'escribiendo') : presentacion.detalle;
     pantalla.toggleAttribute('data-escribe', escribe);
     reloj.textContent = cuadro.reloj;
     // La caja de abajo: lo que quien tiene el celular va escribiendo antes de mandarlo.

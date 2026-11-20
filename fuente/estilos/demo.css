@@ -459,6 +459,34 @@
   margin: 0;
 }
 
+/* En la demostracion la nota lleva lo que dice escrito debajo y su globo es mas ancho: la onda se estira con el. El
+   globo nunca mide mas que su parte de la conversacion, asi que en un celular angosto la nota se encoge, no se sale. */
+.wa__hilo .wa__m--voz {
+  min-width: min(229px, 84%);
+}
+
+.wa__hilo .wa__voz {
+  width: auto;
+}
+
+/* La nota de voz del agente lleva la inicial de quien atiende, en el azul de la marca. */
+.wa__m--entra .wa__voz-foto {
+  background: linear-gradient(140deg, #dfe4ff, #b9c4ff);
+  color: #1c2a8a;
+}
+
+/* Lo que dice la nota de voz, escrito debajo: en la pagina no se oye. */
+.wa__dicho {
+  display: block;
+  margin: 6px 2px 1px;
+  padding-top: 6px;
+  border-top: 1px solid rgb(0 0 0 / 0.08);
+  color: var(--wa-2-fuerte);
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.35;
+}
+
 /* La vista previa del link de pago, arriba del mensaje que lo trae. */
 .wa__liga {
   display: grid;

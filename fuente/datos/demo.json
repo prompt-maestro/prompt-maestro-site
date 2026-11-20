@@ -12,7 +12,7 @@
   "momentos": [
     {
       "rotulo": "Contesta",
-      "letrero": "Escucha la nota de voz y le contesta."
+      "letrero": "Contesta con texto o con nota de voz, como le escriban."
     },
     {
       "rotulo": "Ofrece horarios",
@@ -52,13 +52,17 @@
     "otraVez": "Ver otra vez",
     "enLinea": "en línea",
     "escribiendo": "escribiendo…",
+    "grabando": "grabando audio…",
     "mensaje": "Mensaje",
     "hoy": "Hoy",
     "unDiaAntes": "Un día antes",
     "unaHoraAntes": "Una hora antes",
-    "notaDeVoz": "Nota de voz de {cliente}: «{pregunta}»",
+    "notaDeVoz": "Nota de voz de {cliente}",
+    "notaDeVozDelAgente": "Nota de voz de {asistente}",
     "notaDeVozEscrita": "{cliente} (nota de voz)",
+    "notaDeVozEscritaDelAgente": "{asistente} (nota de voz)",
     "duracionDeVoz": "0:06",
+    "duracionDeVozDelAgente": "0:11",
     "ligaSitio": "mercadopago.com.mx",
     "pagoAprobado": "Pago aprobado",
     "pagoDetalle": "Anticipo {servicio} · {negocio}",

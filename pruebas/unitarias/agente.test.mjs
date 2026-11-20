@@ -101,7 +101,7 @@ const PASOS_APROBADOS = [
   ],
   [
     'Nos cuentas de tu negocio',
-    'En una página hecha para tu celular, una cosa por pantalla: tus servicios, tus precios, tus horarios y tus políticas. Se guarda sola.',
+    'En línea, una cosa por pantalla: los datos de tu negocio, tus servicios, tus precios, tus horarios y tus políticas. Se guarda sola.',
   ],
   [
     'Conectas tus cuentas',
@@ -666,7 +666,9 @@ test('las escenas de como empiezas dicen lo que aprobo el dueno, pieza por pieza
     ],
     [
       'Tu negocio',
-      'Studio Bella · lo llenas desde tu celular',
+      'Studio Bella · lo llenas en línea',
+      'Datos del negocio',
+      'Av. del Esmalte 234, colonia Bella Vista',
       'Servicios y precios',
       'Gelish $350 · Acrílicas $480',
       'Horarios',
@@ -714,6 +716,8 @@ test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por piez
     'Lo defines tú',
     'Base de conocimiento',
     'Studio Bella · solo de este negocio',
+    'Datos del negocio',
+    'Av. del Esmalte 234, colonia Bella Vista',
     'Servicios y precios',
     'Gelish $350 · Acrílicas $480',
     'Horarios',
