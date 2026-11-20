@@ -4,6 +4,9 @@ import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 test('el inicio abre limpio: un titulo, estilos puestos, cero errores y accesible', async ({ page }) => {
+  // Revisar la accesibilidad de la pagina ENTERA tarda: en Firefox ha llegado a 28 s con la laptop tranquila, a un
+  // paso del tope normal de 30, y con carga se pasa. Se le da mas tiempo; lo que revisa no cambia.
+  test.slow();
   const fallas = vigilar(page);
   const respuesta = await page.goto('./');
   expect(respuesta?.status()).toBe(200);
