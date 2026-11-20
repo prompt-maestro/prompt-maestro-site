@@ -183,7 +183,7 @@
         },
         {
           "titulo": "Asegura el pago antes de agendar",
-          "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo en tu Mercado Pago.",
+          "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo a tu cuenta de Mercado Pago.",
           "dura": 8,
           "pasos": [
             { "en": 0.2, "hasta": 4.4, "quien": { "de": "clienta", "texto": "Lo ve tu paciente" } },
@@ -226,7 +226,7 @@
         },
         {
           "titulo": "Ve las imágenes de referencia que le mandan",
-          "texto": "En uñas, revisa el diseño que quiere tu clienta. Si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.",
+          "texto": "Por la naturaleza de cada oficio, hoy esto aplica solo para negocios de uñas, no para dentistas ni médicos. Revisa el diseño que quiere tu clienta y, si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.",
           "dura": 7,
           "alta": true,
           "pasos": [

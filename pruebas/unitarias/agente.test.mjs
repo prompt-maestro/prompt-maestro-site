@@ -73,7 +73,7 @@ const APROBADOS = [
   ],
   [
     'Asegura el pago antes de agendar',
-    'La cita entra a tu calendario con el anticipo ya pagado, directo en tu Mercado Pago.',
+    'La cita entra a tu calendario con el anticipo ya pagado, directo a tu cuenta de Mercado Pago.',
   ],
   [
     'Entiende notas de voz y contesta con voz',
@@ -81,7 +81,7 @@ const APROBADOS = [
   ],
   [
     'Ve las imágenes de referencia que le mandan',
-    'En uñas, revisa el diseño que quiere tu clienta. Si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.',
+    'Por la naturaleza de cada oficio, hoy esto aplica solo para negocios de uñas, no para dentistas ni médicos. Revisa el diseño que quiere tu clienta y, si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.',
   ],
   [
     'Solo te contacta cuando se requiere tu intervención',
@@ -1072,7 +1072,7 @@ test('lo que tu agente no hace: ya no ofrece pasarle a la clienta, y sus seis re
       [
         'moneda',
         'Tu dinero no pasa por nosotros',
-        'Cada anticipo cae directo en tu Mercado Pago. No cobramos comisión por cita.',
+        'Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.',
       ],
       ['perillas', 'Tus reglas', 'Tú pones los precios, los horarios, el anticipo y lo que no haces.'],
     ],

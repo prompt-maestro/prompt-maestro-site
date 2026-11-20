@@ -37,7 +37,7 @@
       {
         "icono": "moneda",
         "titulo": "Tu dinero no pasa por nosotros",
-        "texto": "Cada anticipo cae directo en tu Mercado Pago. No cobramos comisión por cita."
+        "texto": "Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita."
       },
       {
         "icono": "perillas",
@@ -134,7 +134,7 @@
       },
       {
         "termino": "Anticipo",
-        "texto": "La parte del servicio que se paga por adelantado para garantizar la cita. Tú decides de cuánto es y cae directo en tu Mercado Pago."
+        "texto": "La parte del servicio que se paga por adelantado para garantizar la cita. Tú decides de cuánto es y cae directo a tu cuenta de Mercado Pago."
       },
       {
         "termino": "Agente",

@@ -41,7 +41,7 @@ const PARADAS = /** @type {const} */ ([
   ['precio', '01 · Contesta', 'Escucha la nota de voz y le contesta.'],
   ['horarios', '02 · Ofrece horarios', 'Solo los horarios libres de tu Google Calendar.'],
   ['apartado', '03 · Cobra el anticipo', 'Lugar apartado unos minutos, mientras paga.'],
-  ['pagado', '03 · Cobra el anticipo', '$150 de anticipo, directo en tu Mercado Pago.'],
+  ['pagado', '03 · Cobra el anticipo', '$150 de anticipo, directo a tu cuenta de Mercado Pago.'],
   ['pagado', '04 · Agenda', 'La cita entra sola a tu calendario, ya garantizada.'],
   ['recordatorios', '05 · Recuerda', 'Los recordatorios salen solos. Tú no haces nada.'],
   ['asistencia', '06 · Pregunta si asistió', 'Tu única tarea: tocar sí o no.'],
@@ -368,7 +368,7 @@ test('al cobrar se ve, en este orden: el link, el pago aprobado, el dinero, la c
   const hoja = demo.locator('.wa__hoja');
   await expect(hoja).toBeVisible();
   await expect(hoja).toHaveText(/Pago aprobado\s*\$150\s*Anticipo Gelish semipermanente · Studio Bella/);
-  await letreroDice(demo, '03 · Cobra el anticipo', '$150 de anticipo, directo en tu Mercado Pago.');
+  await letreroDice(demo, '03 · Cobra el anticipo', '$150 de anticipo, directo a tu cuenta de Mercado Pago.');
   await expect(tarjeta(demo, 'pago')).toHaveAttribute('data-turno', '');
   await expect(tarjeta(demo, 'pago')).toBeVisible();
   await expect(tarjeta(demo, 'pago')).toHaveText(/Tu Mercado Pago\s*Recibiste \$150\s*Anticipo de Ana · Gelish/);
@@ -825,7 +825,7 @@ test('la historia de Dentista llega al pago de $200 y a su pregunta de asistenci
   await expect(demo.locator('.wa__hoja')).toHaveText(
     /Pago aprobado\s*\$200\s*Anticipo Limpieza dental · Dental Sonría/,
   );
-  await letreroDice(demo, '03 · Cobra el anticipo', '$200 de anticipo, directo en tu Mercado Pago.');
+  await letreroDice(demo, '03 · Cobra el anticipo', '$200 de anticipo, directo a tu cuenta de Mercado Pago.');
   await expect(tarjeta(demo, 'pago')).toHaveText(/Recibiste \$200\s*Anticipo de Carla · Limpieza/);
   await avanzarParadas(demo, 1);
   await expect(chat).toContainText(

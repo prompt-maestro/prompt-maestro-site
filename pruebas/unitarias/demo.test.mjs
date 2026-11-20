@@ -174,7 +174,7 @@ test('cada momento dice su letrero; el tercero cambia cuando el pago se aprueba,
     '1: Escucha la nota de voz y le contesta.',
     '2: Solo los horarios libres de tu Google Calendar.',
     '3: Lugar apartado unos minutos, mientras paga.',
-    '3: $150 de anticipo, directo en tu Mercado Pago.',
+    '3: $150 de anticipo, directo a tu cuenta de Mercado Pago.',
     '4: La cita entra sola a tu calendario, ya garantizada.',
     '5: Los recordatorios salen solos. Tú no haces nada.',
     '6: Tu única tarea: tocar sí o no.',
@@ -534,7 +534,7 @@ test('de parada en parada: cada una pinta de un jalon hasta que cambia el letrer
     'precio: Escucha la nota de voz y le contesta.',
     'horarios: Solo los horarios libres de tu Google Calendar.',
     'apartado: Lugar apartado unos minutos, mientras paga.',
-    'pagado: $150 de anticipo, directo en tu Mercado Pago.',
+    'pagado: $150 de anticipo, directo a tu cuenta de Mercado Pago.',
     'pagado: La cita entra sola a tu calendario, ya garantizada.',
     'recordatorios: Los recordatorios salen solos. Tú no haces nada.',
     'asistencia: Tu única tarea: tocar sí o no.',
@@ -818,7 +818,7 @@ for (const ejemplo of ejemplos) {
     assert.equal(pagado[0]?.tipo, 'hoja');
     assert.equal(pagado[0]?.monto, pesos(giro.anticipo));
     assert.equal(pagado[0]?.detalle, `Anticipo ${giro.servicio} · ${giro.negocio}`);
-    assert.match(pagado[0]?.cuadro.letrero ?? '', /^\$\d+ de anticipo, directo en tu Mercado Pago\.$/);
+    assert.match(pagado[0]?.cuadro.letrero ?? '', /^\$\d+ de anticipo, directo a tu cuenta de Mercado Pago\.$/);
     assert.equal(pagado[0]?.cuadro.pago.titulo, `Recibiste ${pesos(giro.anticipo)}`);
     const confirmacion = pagado.at(-1);
     assert.match(confirmacion?.texto ?? '', /Recibimos su anticipo de \$\d+ y su cita de .+ quedó confirmada/);

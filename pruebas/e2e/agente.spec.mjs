@@ -1163,7 +1163,7 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y lo
   ]);
   await expect(tarjetas.locator('p')).toHaveText([
     'Puedes entrar a cualquier conversación cuando quieras; tu agente se hace a un lado.',
-    'Cada anticipo cae directo en tu Mercado Pago. No cobramos comisión por cita.',
+    'Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.',
     'Tú pones los precios, los horarios, el anticipo y lo que no haces.',
   ]);
   // Cada icono es de adorno, mide lo mismo y de verdad se dibuja: su figura existe en la pagina.
