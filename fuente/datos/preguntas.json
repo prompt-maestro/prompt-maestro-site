@@ -1,59 +1,59 @@
 [
   {
-    "pregunta": "¿El dinero pasa por ustedes?",
-    "respuesta": "No. Cada anticipo llega directo a tu cuenta de Mercado Pago.",
+    "pregunta": "¿El dinero de los anticipos pasa por ustedes?",
+    "respuesta": "No. Cada anticipo llega directo a tu cuenta de Mercado Pago. Nosotros no tocamos tu dinero.",
     "principal": true
   },
   {
-    "pregunta": "¿Qué pasa si no llega?",
-    "respuesta": "Tú tocas «No» y el anticipo se queda contigo, según la política que tú pones. A la persona se le ofrece agendar de nuevo.",
+    "pregunta": "¿Qué pasa si mi clienta o paciente no llega a su cita?",
+    "respuesta": "Después de la cita, tu agente te pregunta si la persona asistió. Si tocas «No», el anticipo se queda contigo, según la política que tú pones, y a esa persona se le ofrece agendar de nuevo.",
     "principal": true
   },
   {
-    "pregunta": "¿Y si no quieren pagar anticipo?",
-    "respuesta": "Tú decides cuánto se pide. Quien sí va a ir lo paga; por eso la cita queda garantizada.",
+    "pregunta": "¿Y si alguien no quiere pagar el anticipo?",
+    "respuesta": "Entonces tu agente no agenda esa cita. Tú decides de cuánto es el anticipo; quien sí piensa ir lo paga, y por eso la cita queda garantizada.",
     "principal": true
   },
   {
-    "pregunta": "¿Tengo que cambiar de número?",
-    "respuesta": "Tu número personal no se toca. Tu agente vive en el número de tu negocio, que sigue en tu celular.",
+    "pregunta": "¿Tengo que cambiar mi número de WhatsApp?",
+    "respuesta": "Tu número personal no se toca. Tu agente atiende en un número exclusivo para tu negocio, con WhatsApp Business, que sigue en tu mismo celular.",
     "principal": true
   },
   {
-    "pregunta": "¿Y si no sabe algo?",
-    "respuesta": "No inventa. Toma el recado, te avisa por WhatsApp y tú contestas desde tu app.",
+    "pregunta": "¿Qué pasa si le preguntan algo que mi agente no sabe?",
+    "respuesta": "No inventa. Toma el recado, te avisa por WhatsApp y tú le contestas a esa persona desde tu app.",
     "principal": true
   },
   {
-    "pregunta": "¿Mi clientela tiene que instalar algo?",
-    "respuesta": "No. Todo pasa en el WhatsApp de siempre."
+    "pregunta": "¿Mis clientas o pacientes tienen que instalar algo?",
+    "respuesta": "No. Te escriben por WhatsApp, como siempre."
   },
   {
-    "pregunta": "¿Puedo contestar yo?",
-    "respuesta": "Sí, desde tu app, cuando quieras. Tu agente se hace a un lado."
+    "pregunta": "¿Puedo contestar yo una conversación?",
+    "respuesta": "Sí, cuando quieras, desde tu app de WhatsApp Business. Tu agente se hace a un lado."
   },
   {
-    "pregunta": "Soy dentista o médico. ¿Va a opinar de salud?",
-    "respuesta": "Nunca. No diagnostica ni recomienda medicamentos, y una urgencia te llega a ti."
+    "pregunta": "Soy dentista o médico. ¿Mi agente opina de salud?",
+    "respuesta": "Nunca. No diagnostica ni recomienda medicamentos. Si alguien escribe por una urgencia, te avisa a ti."
   },
   {
-    "pregunta": "¿Reemplaza mi agenda o mi expediente?",
-    "respuesta": "No. Trabaja con tu Google Calendar y no guarda expedientes."
+    "pregunta": "¿Reemplaza mi agenda o mis expedientes?",
+    "respuesta": "No. Tu agente agenda en tu Google Calendar y no guarda expedientes."
   },
   {
     "pregunta": "¿Me trae clientela nueva?",
-    "respuesta": "No. Hace que quienes ya te escriben sí lleguen, y con su anticipo pagado."
+    "respuesta": "No. Hace que quienes ya te escriben sí lleguen a su cita, y con su anticipo pagado."
   },
   {
     "pregunta": "¿Cómo sé que no se va a equivocar con mis precios?",
-    "respuesta": "Antes de atender presenta un examen con tus datos, tres veces y sin errores graves. Además, tú lo pruebas antes que tu clientela."
+    "respuesta": "Cotiza solo con los precios de tu catálogo. Si algo no está ahí, no lo inventa: te avisa. Además, tú lo pruebas antes que tu clientela."
   },
   {
-    "pregunta": "¿Qué pasa con los datos de mis pacientes o clientas?",
-    "respuesta": "Los mensajes se borran a los 90 días, y los audios y las fotos no se guardan. En salud, las fotos clínicas no se analizan."
+    "pregunta": "¿Qué pasa con los mensajes y los datos de mis clientas o pacientes?",
+    "respuesta": "Los mensajes se borran a los 90 días, y los audios y las fotos que te mandan no se guardan. En salud, las fotos de pacientes no se analizan."
   },
   {
-    "pregunta": "¿Mi profesión u oficio no está?",
-    "respuesta": "Escríbenos y te avisamos cuando llegue."
+    "pregunta": "¿Y si mi profesión u oficio no está en la lista?",
+    "respuesta": "Escríbenos y lo platicamos."
   }
 ]

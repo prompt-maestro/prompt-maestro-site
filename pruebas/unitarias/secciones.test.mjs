@@ -203,11 +203,11 @@ test('preguntas: los datos marcan las cinco principales, en el orden aprobado, y
   assert.deepEqual(
     preguntas.filter((duda) => duda.principal === true).map((duda) => duda.pregunta),
     [
-      '¿El dinero pasa por ustedes?',
-      '¿Qué pasa si no llega?',
-      '¿Y si no quieren pagar anticipo?',
-      '¿Tengo que cambiar de número?',
-      '¿Y si no sabe algo?',
+      '¿El dinero de los anticipos pasa por ustedes?',
+      '¿Qué pasa si mi clienta o paciente no llega a su cita?',
+      '¿Y si alguien no quiere pagar el anticipo?',
+      '¿Tengo que cambiar mi número de WhatsApp?',
+      '¿Qué pasa si le preguntan algo que mi agente no sabe?',
     ],
   );
   // Van primero: asi la pagina, los datos estructurados y llms.txt las llevan en el mismo orden.
@@ -215,17 +215,50 @@ test('preguntas: los datos marcan las cinco principales, en el orden aprobado, y
   assert.deepEqual(
     preguntas.slice(5).map((duda) => duda.pregunta),
     [
-      '¿Mi clientela tiene que instalar algo?',
-      '¿Puedo contestar yo?',
-      'Soy dentista o médico. ¿Va a opinar de salud?',
-      '¿Reemplaza mi agenda o mi expediente?',
+      '¿Mis clientas o pacientes tienen que instalar algo?',
+      '¿Puedo contestar yo una conversación?',
+      'Soy dentista o médico. ¿Mi agente opina de salud?',
+      '¿Reemplaza mi agenda o mis expedientes?',
       '¿Me trae clientela nueva?',
       '¿Cómo sé que no se va a equivocar con mis precios?',
-      '¿Qué pasa con los datos de mis pacientes o clientas?',
-      '¿Mi profesión u oficio no está?',
+      '¿Qué pasa con los mensajes y los datos de mis clientas o pacientes?',
+      '¿Y si mi profesión u oficio no está en la lista?',
     ],
   );
   assert.ok(preguntas.slice(5).every((duda) => !('principal' in duda)));
+});
+
+test('preguntas: cada una se entiende sola, sin dejar espacio a dudas, y ninguna respuesta nombra examenes', () => {
+  // El dueno (20-nov-2026): "que todas las preguntas y respuestas sean claras y faciles de entender por cualquier
+  // persona", con este ejemplo: "¿que pasa si no llega?" no dice quien; "si no llega el paciente/cliente", si.
+  const de = (/** @type {string} */ inicio) => {
+    const duda = preguntas.find((una) => una.pregunta.startsWith(inicio));
+    assert.ok(duda, inicio);
+    return duda;
+  };
+  // Las que no decian de quien o de que hablaban, ya lo dicen.
+  assert.match(de('¿Qué pasa si mi clienta').pregunta, /clienta o paciente no llega a su cita/);
+  assert.match(de('¿El dinero').pregunta, /de los anticipos/);
+  assert.match(de('¿Y si alguien').pregunta, /el anticipo/);
+  assert.match(de('¿Tengo que cambiar').pregunta, /mi número de WhatsApp/);
+  assert.match(de('¿Qué pasa si le preguntan').pregunta, /algo que mi agente no sabe/);
+  // Ninguna pregunta se queda en dos o tres palabras sueltas.
+  for (const { pregunta } of preguntas) assert.ok(pregunta.split(' ').length >= 4, pregunta);
+  // Las respuestas, con lo que el dueno ya habia decidido: sin examenes (19-nov-2026), el oficio que falta "lo
+  // platicamos" (como en "Para quien") y, de los datos, lo que no se guarda es lo que le mandan a ella.
+  const respuestas = preguntas.map((duda) => duda.respuesta).join(' ');
+  assert.doesNotMatch(respuestas, /ex[aá]men|tres veces|errores graves|te avisamos cuando llegue/i);
+  assert.equal(de('¿Y si mi profesión').respuesta, 'Escríbenos y lo platicamos.');
+  assert.match(
+    de('¿Cómo sé').respuesta,
+    /^Cotiza solo con los precios de tu catálogo\. Si algo no está ahí, no lo inventa: te avisa\./,
+  );
+  assert.match(de('¿Qué pasa con los mensajes').respuesta, /los audios y las fotos que te mandan no se guardan/);
+  // Y las que la tabla de la verdad pide con sus palabras, ahi siguen.
+  assert.match(de('¿Qué pasa si mi clienta').respuesta, /el anticipo se queda contigo, según la política que tú pones/);
+  assert.match(de('Soy dentista').respuesta, /No diagnostica ni recomienda medicamentos/);
+  assert.match(de('¿Me trae').respuesta, /^No\. Hace que quienes ya te escriben sí lleguen/);
+  assert.match(de('¿Y si alguien').respuesta, /tu agente no agenda esa cita/);
 });
 
 test('preguntas: cinco a la vista y las demas dentro de "Ver mas preguntas", sin JavaScript y todas cerradas', () => {

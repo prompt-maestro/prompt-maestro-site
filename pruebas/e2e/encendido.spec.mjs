@@ -396,7 +396,7 @@ test.describe('sin JavaScript', () => {
     await expect(mas.locator('summary.preguntas__ver')).toHaveText('Ver menos preguntas', { useInnerText: true });
     await guardada.locator('summary').click();
     await expect(guardada).toHaveAttribute('open', '');
-    await expect(guardada.locator('p')).toHaveText('Escríbenos y te avisamos cuando llegue.');
+    await expect(guardada.locator('p')).toHaveText('Escríbenos y lo platicamos.');
   });
 });
 

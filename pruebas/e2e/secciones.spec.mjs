@@ -236,15 +236,15 @@ test('preguntas: cinco a la vista, en su orden, y las otras ocho detras de "Ver 
   const todas = preguntas.locator('details.pregunta');
   await expect(todas).toHaveCount(13);
   const aLaVista = [
-    '¿El dinero pasa por ustedes?',
-    '¿Qué pasa si no llega?',
-    '¿Y si no quieren pagar anticipo?',
-    '¿Tengo que cambiar de número?',
-    '¿Y si no sabe algo?',
+    '¿El dinero de los anticipos pasa por ustedes?',
+    '¿Qué pasa si mi clienta o paciente no llega a su cita?',
+    '¿Y si alguien no quiere pagar el anticipo?',
+    '¿Tengo que cambiar mi número de WhatsApp?',
+    '¿Qué pasa si le preguntan algo que mi agente no sabe?',
   ];
   await expect(preguntas.getByRole('heading', { level: 3 }).filter({ visible: true })).toHaveText(aLaVista);
   // Las demas existen (las abre la busqueda del navegador) pero no se ven.
-  const guardada = preguntas.getByRole('heading', { name: '¿Puedo contestar yo?' });
+  const guardada = preguntas.getByRole('heading', { name: '¿Puedo contestar yo una conversación?' });
   await expect(guardada).toBeHidden();
   const mas = preguntas.locator('details.preguntas__mas');
   const boton = mas.locator('summary.preguntas__ver');
@@ -310,11 +310,13 @@ test('cada pregunta se abre y se cierra, y la respuesta se lee: las de la vista 
   await expect(primera).not.toHaveAttribute('open', /.*/);
   // Una de las que estaban guardadas, ya desplegadas.
   await preguntas.locator('summary.preguntas__ver').click();
-  const adentro = preguntas.locator('details.pregunta').filter({ hasText: '¿Mi clientela tiene que instalar algo?' });
+  const adentro = preguntas
+    .locator('details.pregunta')
+    .filter({ hasText: '¿Mis clientas o pacientes tienen que instalar algo?' });
   await expect(adentro.locator('p')).toBeHidden();
   await adentro.locator('summary').click();
   await expect(adentro).toHaveAttribute('open', '');
-  await expect(adentro.locator('p')).toHaveText('No. Todo pasa en el WhatsApp de siempre.');
+  await expect(adentro.locator('p')).toHaveText('No. Te escriben por WhatsApp, como siempre.');
   await expect(adentro.locator('p')).toBeVisible();
   await adentro.locator('summary').click();
   await expect(adentro).not.toHaveAttribute('open', /.*/);
