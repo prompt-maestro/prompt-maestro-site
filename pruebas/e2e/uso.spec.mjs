@@ -252,29 +252,18 @@ test('los videos del corto no son una parada del teclado', async ({ page }) => {
 });
 
 test('si no llega el archivo de una sola pieza, las demas arrancan igual', async ({ page }) => {
-  // El archivo menos importante (la medicion) ya no puede tumbar el corto, la demostracion y la calculadora.
+  // El archivo menos importante (la medicion) ya no puede tumbar el corto, la demostracion ni el menu de "Tu agente".
   await page.route('**/js/medicion-vista.js', (ruta) => ruta.abort());
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('./');
   await expect(page.locator('[data-corto]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
-  await expect(page.locator('[data-calculadora]')).toHaveAttribute('data-viva', '');
+  await expect(page.locator('[data-agente]').first()).toHaveAttribute('data-viva', '');
   await expect(page.locator('html')).toHaveClass(/con-js/);
   await expect(page.locator('html')).toHaveClass(/con-corto/);
-  await expect(page.locator('html')).toHaveClass(/con-cuenta/);
 });
 
-test('si no llega la calculadora, se guarda sola y lo demas sigue vivo', async ({ page }) => {
-  await page.route('**/js/calculadora-vista.js', (ruta) => ruta.abort());
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('./');
-  await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
-  await expect(page.locator('html')).not.toHaveClass(/con-cuenta/);
-  await expect(page.locator('[data-calculadora]')).toBeHidden();
-  await expect(page.locator('.plan')).toHaveCount(3);
-});
-
-test('si no llega pagina.js, la pagina queda como sin JavaScript sin esperar a nada mas: el cartel, sin corto, y la calculadora guardada', async ({
+test('si no llega pagina.js, la pagina queda como sin JavaScript sin esperar a nada mas: el cartel, sin corto', async ({
   page,
 }) => {
   await page.route('**/js/pagina.js', (ruta) => ruta.abort());
@@ -283,40 +272,14 @@ test('si no llega pagina.js, la pagina queda como sin JavaScript sin esperar a n
   // arranque.js se entera por la falla del archivo (no escucha "load") y le quita a cada pieza su marca.
   await expect(pagina).not.toHaveClass(/con-js/);
   await expect(pagina).not.toHaveClass(/con-corto/);
-  await expect(pagina).not.toHaveClass(/con-cuenta/);
   const corto = page.locator('[data-corto]');
   await expect(corto.getByRole('heading', { level: 1 })).toHaveText('Despreocúpate');
   await expect(corto.getByRole('link', { name: 'Empieza ahora' })).toBeVisible();
   await expect(corto.locator('[data-corto-cine]')).toBeHidden();
   await expect(corto.locator('button').filter({ visible: true })).toHaveCount(0);
-  await expect(page.locator('[data-calculadora]')).toBeHidden();
   await expect(page.locator('.plan')).toHaveCount(3);
   // El oficio que le toco a la visita si quedo elegido: eso lo hace arranque.js solo.
   await expect(pagina).toHaveAttribute('data-oficio', /^(unas|dentista|medico)$/);
-});
-
-test('la calculadora no regana a medio teclear, y su aviso de error queda ligado a su casilla', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('./');
-  const calculadora = page.locator('[data-calculadora]');
-  await expect(calculadora).toHaveAttribute('data-viva', '');
-  await calculadora.scrollIntoViewIfNeeded();
-  const citas = calculadora.getByLabel('¿Cuántas citas te plantan al mes?');
-  const precio = calculadora.getByLabel('¿Cuánto cobras por cita?');
-  const salida = calculadora.locator('[data-calculadora-salida]');
-  await citas.fill('4');
-  // "350." es alguien que va a escribir los centavos: todavia no es un error.
-  await precio.fill('350.');
-  await expect(calculadora).toHaveAttribute('data-estado', 'lista');
-  await expect(precio).not.toHaveAttribute('aria-invalid', /.*/);
-  // Con centavos, la cuenta se hace con el precio exacto: 4 de $350.50 son $1,402.
-  await precio.fill('350.50');
-  await expect(salida).toContainText('Hoy se te van cerca de $1,402 al mes.');
-  await precio.fill('abc');
-  await expect(precio).toHaveAttribute('aria-invalid', 'true');
-  await expect(precio).toHaveAttribute('aria-describedby', 'calculadora-salida');
-  await precio.fill('400');
-  await expect(precio).not.toHaveAttribute('aria-describedby', /.*/);
 });
 
 test.describe('en una pantalla diminuta (zoom de 400 %, o un celular acostado)', () => {

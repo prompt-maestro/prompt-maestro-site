@@ -569,7 +569,7 @@ test('en celular las piezas de la pagina se piden cuando el cartel ya esta pinta
   const corto = page.locator('[data-corto]');
   await expect(corto).toHaveAttribute('data-viva', '');
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
-  await expect(page.locator('[data-calculadora]')).toHaveAttribute('data-viva', '');
+  await expect(page.locator('[data-agente]').first()).toHaveAttribute('data-viva', '');
   const tiempos = await page.evaluate(() => ({
     pintado: performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? 0,
     retrato: performance.getEntriesByType('element')[0]?.startTime ?? 0,
@@ -770,6 +770,8 @@ test('si el codigo del corto no llega, queda el cartel y la pagina sigue', async
   await expect(corto.locator('[data-corto-ver]')).toBeHidden();
   await expect(corto.locator('button').filter({ visible: true })).toHaveCount(0);
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
+  // Solo la pieza que fallo pierde su marca: lo demas se queda con la suya.
+  await expect(page.locator('html')).toHaveClass(/con-js/);
 });
 
 test.describe('sin JavaScript', () => {

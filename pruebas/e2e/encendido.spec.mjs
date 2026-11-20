@@ -325,8 +325,13 @@ test('si no llega el archivo del encendido, las secciones se quedan encendidas y
   expect(aspectoSinPieza.estados).toEqual(Array(PIEZAS).fill(''));
   expect(aspectoSinPieza).toMatchObject(ENCENDIDO);
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
-  await expect(page.locator('[data-calculadora]')).toHaveAttribute('data-viva', '');
+  await expect(page.locator('[data-corto]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('html')).toHaveClass(/con-js/);
+  // El menu de "Tu agente" usa una funcion de ese mismo archivo: sin el no despierta, y la pagina lo deja escrito
+  // como lista, completo y sin botones muertos.
+  const menu = page.locator('[data-agente]').first();
+  await expect(menu).toHaveAttribute('data-lista', '');
+  await expect(menu).not.toHaveAttribute('data-viva', /.*/);
 });
 
 test('recorrer las secciones no mueve nada de su lugar', async ({ page, browserName }) => {

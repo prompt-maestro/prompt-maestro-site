@@ -1,7 +1,16 @@
 // @ts-check
 import assert from 'node:assert/strict';
+import { access, readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { test } from 'node:test';
-import { planesPublicos } from '../../herramientas/planes.mjs';
+import { fileURLToPath } from 'node:url';
+import { pesos } from '../../fuente/js/redaccion.js';
+import { armarSitio } from '../../herramientas/armado.mjs';
+import { planesParaPagina, planesPublicos } from '../../herramientas/planes.mjs';
+
+const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const leer = async (/** @type {string} */ ruta) =>
+  JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', ruta), 'utf8'));
 
 const plan = (/** @type {Record<string, unknown>} */ cambios = {}) => ({
   clave: 'bronce',
@@ -71,4 +80,53 @@ test('sin nota de prueba los precios son los vigentes', () => {
 test('la copia publica se puede volver a leer y sigue marcada como de prueba', () => {
   const copia = planesPublicos({ moneda: 'mxn', nota: 'PRECIOS DE PRUEBA', planes: [plan()] });
   assert.deepEqual(planesPublicos(JSON.parse(JSON.stringify(copia))), copia);
+});
+
+test('los planes de la pagina llevan sus precios ya escritos como dinero y una sola instalacion', async () => {
+  const pagina = planesParaPagina(planesPublicos(await leer('planes.json')), pesos);
+  assert.equal(pagina.planes.length, 3);
+  for (const plan of pagina.planes) {
+    assert.equal(plan.mensualTexto, pesos(plan.mensual));
+    assert.equal(plan.anualTexto, pesos(plan.anual));
+    assert.match(plan.mensualTexto, /^\$[\d,]+$/);
+  }
+  assert.equal(pagina.instalacionTexto, pesos(pagina.planes[0]?.instalacion ?? 0));
+});
+
+test('si un dia la instalacion no es igual en todos los planes, la armada se detiene', async () => {
+  const publicos = planesPublicos(await leer('planes.json'));
+  const distintos = {
+    ...publicos,
+    planes: publicos.planes.map((plan, i) => (i === 1 ? { ...plan, instalacion: plan.instalacion + 1 } : plan)),
+  };
+  assert.throws(() => planesParaPagina(distintos, pesos), /instalacion/);
+});
+
+test('la calculadora ya no existe: ni en la pagina, ni sus archivos, ni sus textos, ni su marca, ni su medida', async () => {
+  // El dueno (20-nov-2026): "es una arma de doble filo porque como puede ayudar a vender puede hacer que un cliente se
+  // de cuenta que no necesita el servicio, entonces mejor borramos la calculadora".
+  const { archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
+  const html = archivos.get('index.html')?.toString('utf8') ?? '';
+  assert.ok(html.includes('id="planes"'), 'la prueba esta leyendo la pagina');
+  assert.doesNotMatch(html, /calculadora|plantan al mes|cobras por cita|Haz la cuenta|data-mensual/i);
+  for (const ruta of archivos.keys()) assert.doesNotMatch(ruta, /calculadora/, ruta);
+  const estilos = [...archivos.entries()].find(([ruta]) => ruta.endsWith('pagina.css'))?.[1].toString() ?? '';
+  assert.ok(estilos.length > 10_000, 'la prueba esta leyendo la hoja de estilos');
+  assert.doesNotMatch(estilos, /calculadora|con-cuenta/);
+  for (const archivo of ['calculadora.js', 'calculadora-vista.js']) {
+    await assert.rejects(access(path.join(RAIZ, 'fuente', 'js', archivo)), archivo);
+  }
+  const codigos = (await readdir(path.join(RAIZ, 'fuente', 'js'))).filter((archivo) => archivo.endsWith('.js'));
+  assert.ok(codigos.length >= 10, 'la prueba esta leyendo el codigo de la pagina');
+  for (const archivo of codigos) {
+    const codigo = await readFile(path.join(RAIZ, 'fuente', 'js', archivo), 'utf8');
+    assert.doesNotMatch(codigo, /calculadora|con-cuenta/i, archivo);
+  }
+  const secciones = await leer('secciones.json');
+  assert.equal('calculadora' in secciones.planes, false);
+  // La seccion ya no invita a hacer cuentas: invita a elegir, y dice una ventaja que es cierta, con su sujeto
+  // ("no cobramos": Mercado Pago si cobra su comision, y la pagina lo dice dos renglones abajo).
+  assert.equal(secciones.planes.titulo, 'Elige tu plan.');
+  assert.equal(secciones.planes.tituloFuerte, 'No cobramos comisión por cita.');
+  assert.ok(html.includes('>Elige tu plan. <em>No cobramos comisión por cita.</em></h2>'));
 });

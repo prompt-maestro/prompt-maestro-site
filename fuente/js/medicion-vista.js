@@ -1,9 +1,8 @@
 // @ts-check
-// La medicion en la pagina: escucha lo que pasa (los clics, las preguntas que se abren, la calculadora, los avisos
-// de la demostracion y los errores) y se lo pasa a Umami, si esta. Que se manda y con que datos lo decide medicion.js;
+// La medicion en la pagina: escucha lo que pasa (los clics, las preguntas que se abren, los avisos de la
+// demostracion y los errores) y se lo pasa a Umami, si esta. Que se manda y con que datos lo decide medicion.js;
 // aqui solo se leen de la pagina los datos sueltos que esa decision necesita.
 import {
-  calculadoraUso,
   clicEnEnlace,
   conTope,
   demoFin,
@@ -71,11 +70,6 @@ export function montarMedicion() {
     },
     true,
   );
-
-  // La calculadora: solo la primera vez que escribe en una casilla. Lo que escribe no se lee aqui.
-  document
-    .querySelector('[data-calculadora]')
-    ?.addEventListener('input', () => medir(calculadoraUso()), { once: true });
 
   // La demostracion avisa lo que pasa en su historia; de la medicion no sabe nada.
   for (const [aviso, armar] of Object.entries(AVISOS_DE_LA_DEMO)) {

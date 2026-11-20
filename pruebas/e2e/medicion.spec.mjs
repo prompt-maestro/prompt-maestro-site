@@ -301,27 +301,6 @@ test('un enlace de correo es clic_acompanar con su lugar, sin la direccion ni el
   expect(await de(page, 'clic_empieza')).toEqual([]);
 });
 
-test('la calculadora avisa una sola vez que se uso, y nunca lo que la persona escribio', async ({ page }) => {
-  await conUmami(page);
-  await abrir(page);
-  const calculadora = page.locator('[data-calculadora]');
-  await expect(calculadora).toHaveAttribute('data-viva', '');
-  expect(await de(page, 'calculadora_uso')).toEqual([]);
-  const citas = calculadora.locator('[data-calculadora-citas]');
-  const precio = calculadora.locator('[data-calculadora-precio]');
-  await citas.fill('37');
-  await expect.poll(() => de(page, 'calculadora_uso')).toHaveLength(1);
-  // Sigue escribiendo, tecla por tecla, y corrige: ya no vuelve a avisar.
-  await precio.pressSequentially('8642');
-  await citas.fill('41');
-  await expect(calculadora).toHaveAttribute('data-estado', 'lista');
-  await expect(calculadora.locator('[data-calculadora-salida]')).toContainText('$354,322');
-  // Una vez por visita, sin ninguna propiedad.
-  expect(await de(page, 'calculadora_uso')).toEqual([undefined]);
-  // Ni los numeros que escribio ni la cuenta que le salio van en ningun evento.
-  expect(JSON.stringify(await anotados(page))).not.toMatch(/\d/);
-});
-
 test('abrir una pregunta avisa su posicion; cerrarla no avisa nada', async ({ page }) => {
   await conUmami(page);
   await abrir(page);
@@ -445,7 +424,7 @@ for (const [caso, poner] of SIN_MEDICION) {
     if (poner) await page.addInitScript(poner);
     await sinSalir(page);
     const demo = await abrir(page);
-    // Todo lo que se mide, de corrido: la demostracion, el ejemplo, una pregunta, la calculadora, los enlaces y un error.
+    // Todo lo que se mide, de corrido: la demostracion, el ejemplo, una pregunta, los enlaces y un error.
     await hastaElPaso(demo, 'horarios');
     await botonDeEjemplo(demo, 'Dentista').click();
     await expect(demo).toHaveAttribute('data-ejemplo', 'dentista');
@@ -453,10 +432,6 @@ for (const [caso, poner] of SIN_MEDICION) {
     const pregunta = page.locator('details.pregunta').first();
     await pregunta.locator('summary').click();
     await expect(pregunta).toHaveAttribute('open', '');
-    const calculadora = page.locator('[data-calculadora]');
-    await calculadora.locator('[data-calculadora-citas]').fill('6');
-    await calculadora.locator('[data-calculadora-precio]').fill('400');
-    await expect(calculadora.locator('[data-calculadora-salida]')).toContainText('$2,400');
     await page.locator(`#empieza a[href="${ALTA}"]`).click();
     await page.locator('#empieza a[href^="mailto:"]').click();
     // Un error de codigo, como lo avisa el navegador (hecho a mano: uno de verdad ensuciaria la consola de la prueba).
@@ -465,9 +440,9 @@ for (const [caso, poner] of SIN_MEDICION) {
       window.dispatchEvent(new ErrorEvent('error', { message: 'x', filename, lineno: 7 }));
     });
     if (poner) {
-      // Hubo a quien mandarle y fallo cada vez: se intento con los nueve eventos de este recorrido (el inicio, dos
-      // pasos, el ejemplo, la pregunta, la calculadora, los dos enlaces y el error) y ninguno hizo ruido.
-      await expect.poll(() => page.evaluate(() => /** @type {any} */ (window).__intentos)).toBe(9);
+      // Hubo a quien mandarle y fallo cada vez: se intento con los ocho eventos de este recorrido (el inicio, dos
+      // pasos, el ejemplo, la pregunta, los dos enlaces y el error) y ninguno hizo ruido.
+      await expect.poll(() => page.evaluate(() => /** @type {any} */ (window).__intentos)).toBe(8);
     } else {
       // La medicion no inventa un Umami cuando no lo hay.
       expect(await page.evaluate(() => 'umami' in window)).toBe(false);

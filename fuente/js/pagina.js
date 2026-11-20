@@ -89,13 +89,6 @@ async function arrancar() {
       },
     ),
     pieza(
-      () => import('./calculadora-vista.js'),
-      ({ montarCalculadora }) => {
-        const calculadora = document.querySelector('[data-calculadora]');
-        if (calculadora instanceof HTMLElement) montarCalculadora(calculadora);
-      },
-    ),
-    pieza(
       () => import('./encendido.js'),
       ({ montarEncendido }) => montarEncendido(),
     ),

@@ -105,7 +105,7 @@ before(async () => {
 test('la pagina armada trae sus secciones (si no, esta prueba no estaria leyendo nada)', () => {
   for (const frase of [
     'despreocúpate',
-    'haz la cuenta',
+    'elige tu plan',
     'lo que nos preguntan',
     'tu número, tu dinero',
     'pago aprobado',

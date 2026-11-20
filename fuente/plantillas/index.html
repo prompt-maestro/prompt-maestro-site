@@ -8,8 +8,6 @@
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/demo-vista.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/demo.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/redaccion.js">
-<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/calculadora-vista.js">
-<link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/calculadora.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/medicion-vista.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/medicion.js">
 <link rel="modulepreload" media="(min-width: 900px) and (min-aspect-ratio: 1/1)" href="{{armado.activos}}js/encendido.js">
@@ -249,15 +247,8 @@
       <p class="sobre">{{secciones.planes.sobre}}</p>
       <h2 class="seccion__titulo" id="titulo-planes">{{secciones.planes.titulo}} <em>{{secciones.planes.tituloFuerte}}</em></h2>
     </div>
-    <div class="calculadora" data-calculadora data-vacia="{{secciones.planes.calculadora.vacia}}" data-fuera-citas="{{secciones.planes.calculadora.fueraCitas}}" data-fuera-precio="{{secciones.planes.calculadora.fueraPrecio}}" data-perdido="{{secciones.planes.calculadora.perdido}}" data-una-cita="{{secciones.planes.calculadora.unaCita}}" data-varias-citas="{{secciones.planes.calculadora.variasCitas}}" data-ejemplo="{{secciones.planes.calculadora.ejemplo}}" data-contesta="{{secciones.planes.calculadora.contesta}}" data-incluye="{{secciones.planes.calculadora.incluye}}">
-      <div class="calculadora__casillas">
-        <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.citas}}</span><input class="calculadora__numero" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="{{secciones.planes.calculadora.ejemploCitas}}" data-calculadora-citas></label>
-        <label class="calculadora__casilla"><span class="calculadora__pregunta">{{secciones.planes.calculadora.precio}}</span><span class="calculadora__pesos"><span aria-hidden="true">$</span><input class="calculadora__numero" type="text" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="{{secciones.planes.calculadora.ejemploPrecio}}" data-calculadora-precio></span></label>
-      </div>
-      <p class="calculadora__salida" id="calculadora-salida" data-calculadora-salida>{{secciones.planes.calculadora.vacia}}</p>
-    </div>
     <ul class="planes__lista" role="list">
-{{#cada planes.planes}}      <li class="plan{{#si destacado}} plan--destacado{{/si}}" data-plan="{{nombre}}" data-mensual="{{mensual}}">
+{{#cada planes.planes}}      <li class="plan{{#si destacado}} plan--destacado{{/si}}" data-plan="{{nombre}}">
 {{#si destacado}}        <p class="plan__marca">{{secciones.planes.recomendado}}</p>
 {{/si}}        <h3 class="plan__nombre">{{nombre}}</h3>
         <p class="plan__precio"><strong>{{mensualTexto}}</strong> <span>{{secciones.planes.alMes}}</span></p>

@@ -1,10 +1,10 @@
 // @ts-check
-// Corre antes de pintar. Marca que hay JavaScript para que el corto del inicio, la demostracion y la calculadora se
-// vean vivos desde el primer instante. Cuando pagina.js avisa que ya monto lo que pudo, a la pieza que no arranco (su
-// archivo no llego, o trono) se le quita su marca y se ensena como sin JavaScript: del inicio queda su cartel, la
-// demostracion escrita y la calculadora guardada.
+// Corre antes de pintar. Marca que hay JavaScript para que el corto del inicio y la demostracion se vean vivos desde
+// el primer instante. Cuando pagina.js avisa que ya monto lo que pudo, a la pieza que no arranco (su
+// archivo no llego, o trono) se le quita su marca y se ensena como sin JavaScript: del inicio queda su cartel y la
+// demostracion, escrita.
 const raiz = document.documentElement;
-raiz.classList.add('con-js', 'con-corto', 'con-cuenta');
+raiz.classList.add('con-js', 'con-corto');
 
 // Con ahorro de datos, o con una conexion lenta, el corto no corre solo ni se pide nada suyo: queda el cartel, con su
 // boton para verlo. Se anota en <html> desde ahora: lo leen los estilos y corto-vista.js.
@@ -73,7 +73,6 @@ function revisar() {
   soltar();
   if (!document.querySelector('[data-demo][data-viva]')) raiz.classList.remove('con-js');
   if (!document.querySelector('[data-corto][data-viva]')) raiz.classList.remove('con-corto');
-  if (!document.querySelector('[data-calculadora][data-viva]')) raiz.classList.remove('con-cuenta');
 }
 
 document.addEventListener('pagina:montada', revisar);

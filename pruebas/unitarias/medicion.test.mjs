@@ -8,7 +8,6 @@ import { historiaDe } from '../../fuente/js/demo.js';
 import {
   ALTA,
   archivoDe,
-  calculadoraUso,
   clicEnEnlace,
   conTope,
   demoFin,
@@ -137,11 +136,6 @@ test('solo cuentan el enlace del alta, tal cual, y los de correo; del correo no 
   for (const href of otros) assert.equal(clicEnEnlace({ href, lugar: 'barra' }), null, href);
 });
 
-test('calculadora_uso no lleva ninguna propiedad', () => {
-  assert.deepEqual(calculadoraUso(), { nombre: 'calculadora_uso' });
-  assert.equal('propiedades' in calculadoraUso(), false);
-});
-
 test('pregunta_abre lleva la posicion de la pregunta, de 1 en adelante', () => {
   assert.deepEqual(preguntaAbre({ id: 1 }), { nombre: 'pregunta_abre', propiedades: { id: 1 } });
   assert.deepEqual(preguntaAbre({ id: 12 })?.propiedades, { id: 12 });
@@ -214,7 +208,6 @@ test('privacidad: ningun evento lleva un texto libre, una direccion completa ni 
     clicEnEnlace(
       conDeMas({ href: `mailto:hola@prompt-maestro.com?subject=${encodeURIComponent(SECRETO)}`, lugar: 'pie' }),
     ),
-    calculadoraUso(),
     preguntaAbre(conDeMas({ id: 2 })),
     errorJs(conDeMas({ archivo: direccion, linea: 9 })),
   ];
@@ -227,7 +220,6 @@ test('privacidad: ningun evento lleva un texto libre, una direccion completa ni 
     ejemplo_cambio: ['giro'],
     clic_empieza: ['lugar', 'plan'],
     clic_acompanar: ['lugar'],
-    calculadora_uso: [],
     pregunta_abre: ['id'],
     error_js: ['archivo', 'linea'],
   };
@@ -263,8 +255,10 @@ test('conTope deja pasar cada clave una sola vez y, en total, hasta el tope', ()
 test('mandar le entrega al rastreador el nombre y las propiedades; sin propiedades, solo el nombre', () => {
   const umami = anotador();
   assert.equal(mandar(umami, demoPaso({ giro: 'unas', paso: 'precio' })), true);
-  assert.equal(mandar(umami, calculadoraUso()), true);
-  assert.deepEqual(umami.llamadas, [['demo_paso', { giro: 'unas', paso: 'precio' }], ['calculadora_uso']]);
+  // Hoy toda medida lleva propiedades (la unica que no llevaba era la de la calculadora, que ya no existe); una
+  // sin ellas se sigue mandando solo con su nombre.
+  assert.equal(mandar(umami, { nombre: 'sin_propiedades' }), true);
+  assert.deepEqual(umami.llamadas, [['demo_paso', { giro: 'unas', paso: 'precio' }], ['sin_propiedades']]);
 });
 
 test('mandar no hace nada sin evento o sin rastreador, y no lanza', () => {
@@ -272,14 +266,14 @@ test('mandar no hace nada sin evento o sin rastreador, y no lanza', () => {
   // Lo que no paso la validacion llega como null: no se manda.
   assert.equal(mandar(umami, demoPaso({ giro: 'otro', paso: 'precio' })), false);
   assert.deepEqual(umami.llamadas, []);
-  const medida = calculadoraUso();
+  const medida = demoPaso({ giro: 'unas', paso: 'precio' });
   for (const ausente of [undefined, null, {}, { track: 'no es funcion' }, 'umami', 0, []]) {
     assert.equal(mandar(ausente, medida), false);
   }
 });
 
 test('mandar se traga lo que truene en el rastreador, de inmediato o despues', async () => {
-  const medida = calculadoraUso();
+  const medida = demoPaso({ giro: 'unas', paso: 'precio' });
   const truena = {
     track() {
       throw new Error('umami roto');

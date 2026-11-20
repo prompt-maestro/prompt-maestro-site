@@ -8,7 +8,6 @@ const ALTA = 'https://alta.prompt-maestro.com/';
 // Los precios salen del mismo archivo que la pagina: el dia que cambien, estas pruebas siguen valiendo.
 /** @type {{ planes: { nombre: string, mensual: number, anual: number, instalacion: number, destacado: boolean }[] }} */
 const { planes: PLANES } = JSON.parse(readFileSync(new URL('../../fuente/datos/planes.json', import.meta.url), 'utf8'));
-const BARATO = PLANES.reduce((menor, plan) => (plan.mensual < menor.mensual ? plan : menor));
 const [PRIMERO] = PLANES;
 
 /**
@@ -23,22 +22,6 @@ async function abrirEn(page, ancla) {
   return seccion;
 }
 
-/**
- * La calculadora, ya viva, con sus dos casillas y su salida.
- * @param {import('@playwright/test').Page} page
- */
-async function abrirCalculadora(page) {
-  const planes = await abrirEn(page, 'planes');
-  const calculadora = planes.locator('[data-calculadora]');
-  await expect(calculadora).toHaveAttribute('data-viva', '');
-  return {
-    calculadora,
-    salida: calculadora.locator('[data-calculadora-salida]'),
-    citas: calculadora.getByLabel('¿Cuántas citas te plantan al mes?'),
-    precio: calculadora.getByLabel('¿Cuánto cobras por cita?'),
-  };
-}
-
 test('la pagina trae todas sus secciones, cada una con su titulo, y un solo h1', async ({ page }) => {
   const fallas = vigilar(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -51,89 +34,21 @@ test('la pagina trae todas sus secciones, cada una con su titulo, y un solo h1',
   expect(fallas).toEqual([]);
 });
 
-test('la calculadora abre con las casillas vacias y un ejemplo ya hecho, dicho que es un ejemplo', async ({ page }) => {
-  const { calculadora, salida, citas, precio } = await abrirCalculadora(page);
-  // El ejemplo va de sugerencia: quien escribe "10" obtiene 10, no "610".
-  await expect(citas).toHaveValue('');
-  await expect(precio).toHaveValue('');
-  await expect(citas).toHaveAttribute('placeholder', '6');
-  await expect(precio).toHaveAttribute('placeholder', '400');
-  await expect(calculadora).toHaveAttribute('data-estado', 'ejemplo');
-  await expect(salida).toContainText('Un ejemplo: te plantan 6 citas de $400 al mes.');
-  await expect(salida).toContainText('Hoy se te van cerca de $2,400 al mes.');
-  await expect(salida).toContainText(`El plan ${BARATO.nombre} cuesta ${pesos(BARATO.mensual)} al mes`);
-  // Lo que cambie de aqui en adelante se anuncia a quien no lo ve.
-  await expect(salida).toHaveAttribute('role', 'status');
-});
-
-test('al escribir sus numeros la calculadora rehace la cuenta y ya no habla del ejemplo', async ({ page }) => {
-  const { calculadora, salida, citas, precio } = await abrirCalculadora(page);
-  await citas.fill('10');
-  await precio.fill('1,200');
-  await expect(calculadora).toHaveAttribute('data-estado', 'lista');
-  await expect(salida).toContainText('Hoy se te van cerca de $12,000 al mes.');
-  await expect(salida).not.toContainText('Un ejemplo');
-  if (BARATO.mensual <= 1200) await expect(salida).toContainText('con 1 cita que sí llegue, ya se pagó.');
-  // Con centavos, y con coma: son 350 pesos con 50 centavos (no treinta y cinco mil), y cuatro citas son $1,402
-  // exactos (no $1,404: primero se multiplica y luego se cierra al peso). Cuatro, para que alcance a pagar el plan:
-  // con menos, el titular ya no dice lo que se le va (lo cuida la prueba de abajo).
-  await citas.fill('4');
-  await precio.fill('350,50');
-  await expect(salida).toContainText('Hoy se te van cerca de $1,402 al mes.');
-  // Con menos citas ya no alcanza: el titular cambia y deja de decir lo que se le va.
-  await citas.fill('2');
-  if (BARATO.mensual > 701) await expect(salida).not.toContainText('Hoy se te van');
-});
-
-test('si pierde menos de lo que cuesta el plan, la calculadora no le dice que ya se pago: le dice, en claro, lo que hace su agente y lo que cuesta', async ({
+test('planes ya no hace cuentas: el titulo invita a elegir y dice que nosotros no cobramos comision por cita', async ({
   page,
 }) => {
-  test.skip(BARATO.mensual <= 100, 'con un plan de 100 pesos o menos este caso no existe');
-  const { calculadora, salida, citas, precio } = await abrirCalculadora(page);
-  await citas.fill('1');
-  await precio.fill('100');
-  await expect(calculadora).toHaveAttribute('data-estado', 'lista');
-  // El titular ya no ensena la perdida chica contra el precio del plan, ni hace otra cuenta: dice lo que hace el agente.
-  const hacenFalta = Math.ceil(BARATO.mensual / 100);
-  const titular = salida.locator('.calculadora__perdido');
-  const renglon = salida.locator('.calculadora__pago');
-  await expect(titular).toHaveText('Tu agente contesta tu WhatsApp por ti.');
-  await expect(renglon).toHaveText(
-    `A cualquier hora: da tus precios, agenda con el anticipo pagado y manda los recordatorios. El plan ${BARATO.nombre} cuesta ${pesos(BARATO.mensual)} al mes.`,
-  );
-  await expect(salida).not.toContainText('ya se pagó');
-  await expect(salida).not.toContainText('Hoy se te van');
-  // Mientras teclea el precio digito por digito no sale ninguna cuenta rara (el dueno vio "equivale a 495 de tus
-  // citas" con el primer digito): con "2" y con "20" dice lo mismo, sin numeros de ella.
-  for (const aMedias of ['2', '20']) {
-    await precio.fill(aMedias);
-    await expect(titular).toHaveText('Tu agente contesta tu WhatsApp por ti.');
-    await expect(salida).not.toContainText(/equivale|de tus citas|495|\b50 /);
-  }
-  await precio.fill('100');
-  // En cuanto lo que le plantan alcanza para pagar el plan, regresa la cuenta de siempre.
-  await citas.fill(String(hacenFalta));
-  await expect(salida.locator('.calculadora__perdido')).toHaveText(
-    `Hoy se te van cerca de ${pesos(hacenFalta * 100)} al mes.`,
-  );
-  await expect(salida.locator('.calculadora__pago')).toContainText('ya se pagó.');
-});
-
-test('la calculadora avisa con amabilidad si el numero no sirve y espera si falta uno', async ({ page }) => {
-  const { calculadora, salida, citas, precio } = await abrirCalculadora(page);
-  await citas.fill('900');
-  await expect(salida).toHaveText('Escribe un número entre 1 y 500.');
-  await expect(citas).toHaveAttribute('aria-invalid', 'true');
-  // Al borrarla vuelve el ejemplo, sin marca de error.
-  await citas.fill('');
-  await expect(calculadora).toHaveAttribute('data-estado', 'ejemplo');
-  await expect(citas).not.toHaveAttribute('aria-invalid', /.*/);
-  // Con una sola casilla escrita todavia no hay cuenta.
-  await citas.fill('4');
-  await expect(salida).toHaveText('Pon tus números y haz la cuenta.');
-  await precio.fill('abc');
-  await expect(salida).toHaveText('Escribe lo que cobras por cita, en pesos.');
-  await expect(precio).toHaveAttribute('aria-invalid', 'true');
+  // El dueno (20-nov-2026): "es una arma de doble filo porque como puede ayudar a vender puede hacer que un cliente se
+  // de cuenta que no necesita el servicio, entonces mejor borramos la calculadora".
+  const planes = await abrirEn(page, 'planes');
+  await expect(planes.getByRole('heading', { level: 2 })).toHaveText('Elige tu plan. No cobramos comisión por cita.');
+  await expect(planes.locator('input, [role="status"]')).toHaveCount(0);
+  await expect(planes).not.toContainText(/plantan|cobras por cita|Haz la cuenta/);
+  // Lo primero despues del titulo son los tres planes.
+  const titulo = await planes.getByRole('heading', { level: 2 }).boundingBox();
+  const lista = await planes.locator('.planes__lista').boundingBox();
+  if (!titulo || !lista) throw new Error('no encontre el titulo o los planes');
+  expect(lista.y).toBeGreaterThan(titulo.y + titulo.height);
+  expect(lista.y - (titulo.y + titulo.height)).toBeLessThan(120);
 });
 
 test('los planes ensenan sus precios, uno solo va recomendado y todos llevan al alta', async ({ page }) => {
@@ -680,9 +595,8 @@ test('al bajar del inicio la barra toma su fondo y su raya sin cambiar de alto: 
 test.describe('sin JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('la calculadora no se ensena, pero planes, preguntas y cierre se leen completos', async ({ page }) => {
+  test('planes, preguntas y cierre se leen completos', async ({ page }) => {
     await page.goto('./');
-    await expect(page.locator('[data-calculadora]')).toBeHidden();
     await expect(page.locator('.plan')).toHaveCount(PLANES.length);
     await expect(page.locator('.plan').first()).toContainText(pesos(PRIMERO?.mensual ?? 0));
     const pregunta = page.locator('#preguntas details').first();

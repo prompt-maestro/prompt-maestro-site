@@ -295,105 +295,8 @@
 }
 
 /* ---------------------------------------------------------------------------------------------------------------
-   Planes: primero la cuenta con sus numeros, luego los planes y lo que hace falta para empezar.
+   Planes: los tres planes y lo que hace falta para empezar.
    --------------------------------------------------------------------------------------------------------------- */
-.calculadora {
-  display: grid;
-  gap: var(--e-6);
-  padding: clamp(20px, 4vw, 48px);
-  border: 1px solid var(--linea);
-  border-radius: var(--r-tarjeta);
-  background: var(--superficie);
-}
-
-/* Sin JavaScript la calculadora no puede hacer la cuenta: no se ensena. La marca la pone arranque.js antes de
-   pintar, para que la seccion no brinque al cargar. */
-html:not(.con-cuenta) .calculadora {
-  display: none;
-}
-
-.calculadora__casillas {
-  display: grid;
-  gap: var(--e-6);
-}
-
-.calculadora__casilla {
-  display: grid;
-  gap: var(--e-2);
-}
-
-.calculadora__pregunta {
-  color: var(--tinta-2);
-}
-
-.calculadora__pesos {
-  display: flex;
-  align-items: baseline;
-  gap: var(--e-2);
-  font-size: 2rem;
-  font-weight: 500;
-}
-
-.calculadora__numero {
-  width: 100%;
-  min-height: 56px;
-  padding: 0 var(--e-4);
-  /* El contorno de una casilla tiene que verse: mas luz que las lineas de adorno. */
-  border: 1.5px solid var(--tinta-3);
-  border-radius: var(--r-control);
-  background: var(--papel);
-  color: var(--tinta);
-  font: inherit;
-  font-size: 2rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-/* El ejemplo se ve como sugerencia, no como algo ya escrito. */
-.calculadora__numero::placeholder {
-  color: var(--tinta-3);
-  opacity: 0.7;
-}
-
-.calculadora__numero:focus-visible {
-  border-color: var(--luz);
-}
-
-.calculadora__numero[aria-invalid="true"] {
-  border-color: var(--error);
-}
-
-/* Alto fijo para que los planes de abajo no brinquen cada vez que cambia la cuenta. */
-.calculadora__salida {
-  display: grid;
-  gap: var(--e-2);
-  min-height: 11rem;
-  align-content: start;
-  color: var(--tinta-2);
-}
-
-.calculadora[data-estado="fuera"] .calculadora__salida {
-  color: var(--error);
-}
-
-.calculadora__ejemplo {
-  color: var(--luz);
-  font-size: var(--t-nota);
-}
-
-.calculadora__pago {
-  text-wrap: pretty;
-}
-
-.calculadora__perdido {
-  color: var(--tinta);
-  text-wrap: balance;
-  font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.25rem);
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-}
-
 .planes__lista {
   display: grid;
   gap: var(--e-4);
@@ -692,8 +595,7 @@ html:not(.con-cuenta) .calculadora {
     top: 50%;
   }
 
-  .requisitos,
-  .calculadora__casillas {
+  .requisitos {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -744,16 +646,6 @@ html:not(.con-cuenta) .calculadora {
 
   .planes__lista {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .calculadora {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: center;
-    gap: var(--e-12);
-  }
-
-  .calculadora__casillas {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 

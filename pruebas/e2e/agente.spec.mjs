@@ -1014,7 +1014,6 @@ test('si la pieza del menu no llega, la seccion se lee como lista y lo demas sig
   await expect(menu.locator('.beneficio__play').filter({ visible: true })).toHaveCount(0);
   // Lo demas de la pagina no se entera.
   await expect(page.locator('[data-demo]')).toHaveAttribute('data-viva', '');
-  await expect(page.locator('[data-calculadora]')).toHaveAttribute('data-viva', '');
   await expect(page.locator('html')).toHaveClass(/con-js/);
   await sinFaltasDeAccesibilidad(page, '#agente');
 });

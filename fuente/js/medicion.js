@@ -126,14 +126,6 @@ export function clicEnEnlace(datos) {
 }
 
 /**
- * La persona escribio en la calculadora. No lleva nada: ni que escribio ni cuanto le salio.
- * @returns {Medida}
- */
-export function calculadoraUso() {
-  return { nombre: 'calculadora_uso' };
-}
-
-/**
  * Se abrio una pregunta. "id" es su posicion en la lista, empezando en 1.
  * @param {{ id?: unknown } | null | undefined} datos
  * @returns {Medida | null}

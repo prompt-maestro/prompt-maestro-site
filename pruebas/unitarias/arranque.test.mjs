@@ -209,7 +209,7 @@ const aLaVista = (escenas) => escenas.filter((una) => !una.guardada).map((una) =
 
 test('marca que hay JavaScript antes de pintar', () => {
   const { clases } = correr({ azar: 0 });
-  assert.deepEqual([...clases].sort(), ['con-corto', 'con-cuenta', 'con-js']);
+  assert.deepEqual([...clases].sort(), ['con-corto', 'con-js']);
 });
 
 test('elige un oficio segun el azar y lo deja escrito en <html>: a cada uno le toca su parte', () => {
@@ -322,13 +322,13 @@ test('la falla de otro archivo, o una de pagina.js cuando ya habia arrancado, no
   otra.avisar('error', { target: { src: 'https://prompt-maestro.com/r/0123456789/cartel/unas-tu-540.avif' } });
   otra.avisar('error', { filename: 'https://prompt-maestro.com/a/0123456789/js/demo-vista.js', target: {} });
   otra.avisar('error', { target: null });
-  assert.deepEqual([...otra.clases].sort(), ['con-corto', 'con-cuenta', 'con-js']);
+  assert.deepEqual([...otra.clases].sort(), ['con-corto', 'con-js']);
 
   const arrancada = correr({ azar: 0.5 });
   // pagina.js llego y dejo dicho que su aviso de "ya monte" viene en camino.
   arrancada.atributos['data-arrancando'] = '';
   arrancada.avisar('error', { filename: 'https://prompt-maestro.com/a/0123456789/js/pagina.js', target: {} });
-  assert.deepEqual([...arrancada.clases].sort(), ['con-corto', 'con-cuenta', 'con-js']);
+  assert.deepEqual([...arrancada.clases].sort(), ['con-corto', 'con-js']);
 });
 
 test('si le toca el primer oficio, la pagina queda como venia escrita', () => {
