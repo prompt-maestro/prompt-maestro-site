@@ -1169,7 +1169,7 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y co
   ]);
   await expect(tarjetas.locator('p:not(.agentes__letra)')).toHaveText([
     'Puedes entrar a cualquier conversación cuando quieras; tu agente se hace a un lado.',
-    'Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.',
+    'Cada anticipo llega directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.',
     'Tú pones los precios, los horarios, el anticipo y lo que no haces.',
   ]);
   // La del dinero lleva, en letra chica y bajo su raya, lo que cobra Mercado Pago por cada pago y de cuando es.

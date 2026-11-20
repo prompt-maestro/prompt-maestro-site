@@ -51,7 +51,9 @@ const PROHIBIDO = /** @type {[RegExp, string, RegExp?][]} */ ([
   [/certificaci[oó]n|\bsoc ?2\b|\biso ?27/, 'ninguna norma de seguridad como certificacion'],
   [/lista en \d+ minutos|en \d+ minutos (queda|est[aá])/, 'no se prometen tiempos exactos de alta'],
   [/abogad|veterinari|psic[oó]log|barber|est[eé]tica|spa\b/, 'no se nombran oficios que todavia no existen'],
-  [/tu cuenta personal/, 'el anticipo cae en "tu Mercado Pago", no en "tu cuenta personal"'],
+  [/tu cuenta personal/, 'el anticipo llega a "tu Mercado Pago", no a "tu cuenta personal"'],
+  // El dueno (20-nov-2026): "cae" no suena premium. El dinero "llega directamente a tu cuenta de Mercado Pago".
+  [/(dinero|anticipo) cae\b|\bcae directo/, 'el dinero llega a su cuenta, no "cae"'],
   // El agente ya no ofrece hablar con la duena ni invita a escribir PERSONA: ningun texto se salta al agente.
   [/prefieres hablar con|escribe persona/, 'el agente no ofrece la salida PERSONA'],
   // Ni ofrece pasarle a la clienta con la profesional: lo que hace es tomar el recado y avisarle a ella.
@@ -139,6 +141,8 @@ test('nunca dice PERSONA: la palabra clave con que se pedia hablar con alguien m
 test('lo que la pagina si tiene que decir, con las palabras de la tabla de la verdad', () => {
   for (const frase of [
     'tu mercado pago',
+    'el dinero llega directamente a tu cuenta de mercado pago',
+    'cada anticipo llega directo a tu cuenta de mercado pago',
     'según la política que tú pones',
     'asistente virtual',
     // No trae clientela nueva: lo dice la pregunta que lo pregunta, y la seccion lo dice en positivo.

@@ -235,7 +235,7 @@ test('cada pregunta se abre y se cierra, y la respuesta se lee: las de la vista 
   await expect(primera).not.toHaveAttribute('open', /.*/);
   await primera.locator('summary').click();
   await expect(primera).toHaveAttribute('open', '');
-  await expect(primera).toContainText('No. Cada anticipo cae directo a tu cuenta de Mercado Pago.');
+  await expect(primera).toContainText('No. Cada anticipo llega directo a tu cuenta de Mercado Pago.');
   await primera.locator('summary').click();
   await expect(primera).not.toHaveAttribute('open', /.*/);
   // Una de las que estaban guardadas, ya desplegadas.

@@ -1121,7 +1121,7 @@ test('asi cuida tu negocio: seis compromisos dichos en positivo, y ya sin la lis
       [
         'moneda',
         'Tu dinero no pasa por nosotros',
-        'Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.',
+        'Cada anticipo llega directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.',
       ],
       ['perillas', 'Tus reglas', 'Tú pones los precios, los horarios, el anticipo y lo que no haces.'],
     ],

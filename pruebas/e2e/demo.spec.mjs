@@ -216,7 +216,7 @@ test('en reposo: el celular del negocio en linea, el letrero del primer momento 
   ]);
   await expect(page.locator('#citas .clave__texto')).toHaveText([
     'Tu agente atiende por WhatsApp, comprueba el anticipo con Mercado Pago y solo entonces agenda.',
-    'El dinero cae en tu Mercado Pago, sin pasar por nosotros. Rápido para tu clientela y con tu agenda a la segura.',
+    'El dinero llega directamente a tu cuenta de Mercado Pago, sin pasar por nosotros. Fácil para tu clientela y seguro para ti.',
   ]);
   await expect(page.locator('#citas .clave--principal')).toHaveCount(1);
   // La transferencia va aparte y dice quien revisa y quien aprueba: ella.

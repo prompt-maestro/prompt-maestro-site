@@ -15,9 +15,9 @@
       {
         "icono": "cuenta",
         "titulo": "Directo a tu cuenta",
-        "antes": "El dinero cae en ",
-        "fuerte": "tu Mercado Pago",
-        "despues": ", sin pasar por nosotros. Rápido para tu clientela y con tu agenda a la segura."
+        "antes": "El dinero llega directamente a ",
+        "fuerte": "tu cuenta de Mercado Pago",
+        "despues": ", sin pasar por nosotros. Fácil para tu clientela y seguro para ti."
       }
     ],
     "transferencia": {
@@ -37,7 +37,7 @@
       {
         "icono": "moneda",
         "titulo": "Tu dinero no pasa por nosotros",
-        "texto": "Cada anticipo cae directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.",
+        "texto": "Cada anticipo llega directo a tu cuenta de Mercado Pago. No cobramos comisión por cita.",
         "nota": "Mercado Pago cobra su comisión por cada pago: de 2.95% a 3.49% + $4, más impuestos y, si aplican, retenciones, según el plazo que elijas para disponer de tu dinero. Tarifa de Mercado Pago a noviembre de 2026."
       },
       {
@@ -127,7 +127,7 @@
       },
       {
         "termino": "Anticipo",
-        "texto": "La parte del servicio que se paga por adelantado para garantizar la cita. Tú decides de cuánto es y cae directo a tu cuenta de Mercado Pago."
+        "texto": "La parte del servicio que se paga por adelantado para garantizar la cita. Tú decides de cuánto es y llega directo a tu cuenta de Mercado Pago."
       },
       {
         "termino": "Agente",
