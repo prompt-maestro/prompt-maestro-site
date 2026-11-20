@@ -1217,7 +1217,7 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y co
   // Como cuida el negocio: seis compromisos en positivo, cada uno con su palomita encendida. Ya sin taches.
   const cuida = seccion.locator('.agentes__cuida');
   await cuida.scrollIntoViewIfNeeded();
-  await expect(cuida.getByRole('heading', { level: 3 })).toHaveText('Así cuida tu negocio');
+  await expect(cuida.getByRole('heading', { level: 3 })).toHaveText('Así cuidamos de tu negocio');
   // Su titulo manda: es mas grande que los de las tarjetas de arriba.
   await expect(cuida.getByRole('heading', { level: 3 })).toHaveCSS('font-size', '24px');
   await expect(tarjetas.getByRole('heading', { level: 4 }).first()).toHaveCSS('font-size', '20px');

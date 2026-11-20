@@ -1057,7 +1057,7 @@ test('las piezas que acepta la armada son las que la plantilla sabe dibujar, y l
 test('asi cuida tu negocio: seis compromisos dichos en positivo, y ya sin la lista de lo que no hace', () => {
   // El dueno (20-nov-2026): "cambiemos los taches rojos y el lenguaje del texto por algo que denote valor agregado y
   // creacion de valor para el negocio". Dicen lo mismo que los seis de antes, como lo que el agente si hace por ella.
-  assert.equal(agentes.cuida.titulo, 'Así cuida tu negocio');
+  assert.equal(agentes.cuida.titulo, 'Así cuidamos de tu negocio');
   assert.equal(agentes.cuida.bajada, 'Seis cosas que tu agente hace siempre, para que tú no tengas que vigilarlo.');
   assert.deepEqual(
     agentes.cuida.lista.map((/** @type {any} */ uno) => [uno.titulo, uno.texto]),
@@ -1338,7 +1338,7 @@ test('las tres tarjetas de la confianza llevan su icono (y la del dinero, su let
   ].map(([, titulo, texto]) => ({ titulo, texto }));
   assert.deepEqual(renglones, agentes.cuida.lista);
   assert.equal(renglones.length, 6);
-  assert.ok(seccion.includes('<h3 class="agentes__subtitulo">Así cuida tu negocio</h3>'));
+  assert.ok(seccion.includes('<h3 class="agentes__subtitulo">Así cuidamos de tu negocio</h3>'));
   assert.ok(seccion.includes(agentes.cuida.bajada));
   // Ya sin taches en esta seccion: ni la lista ni su titulo de antes.
   for (const viejo of ['agentes__tacha', '#i-tacha', 'agentes__limites', 'Lo que tu agente no hace']) {
@@ -1399,9 +1399,12 @@ test('llms.txt cuenta los nueve beneficios, los cuatro pasos para empezar y como
   );
   // La seccion vieja, con sus nueve pasos, ya no se cuenta. Ni se habla de examenes.
   assert.ok(!llms.includes('## Cómo funciona'));
-  assert.doesNotMatch(/## Lo que hace el agente[\s\S]*?## Así cuida tu negocio/.exec(llms)?.[0] ?? '', /ex[aá]men/i);
+  assert.doesNotMatch(
+    /## Lo que hace el agente[\s\S]*?## Así cuidamos de tu negocio/.exec(llms)?.[0] ?? '',
+    /ex[aá]men/i,
+  );
   // Los seis compromisos, cada uno con su titulo y su oracion; el titulo viejo ya no esta.
-  const cuida = /## Así cuida tu negocio\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
+  const cuida = /## Así cuidamos de tu negocio\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
   assert.deepEqual(
     cuida,
     agentes.cuida.lista.map((/** @type {any} */ uno) => `- ${uno.titulo}. ${uno.texto}`),

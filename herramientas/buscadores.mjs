@@ -198,7 +198,7 @@ export function llmsTxt({
     '',
     ...pasos.map((paso, i) => `${i + 1}. ${paso}`),
     '',
-    '## Así cuida tu negocio',
+    '## Así cuidamos de tu negocio',
     '',
     ...cuida.map((texto) => `- ${texto}`),
     '',

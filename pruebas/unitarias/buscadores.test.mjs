@@ -151,7 +151,7 @@ test('llms.txt cuenta la pagina en texto llano: que es, para quien, pasos, plane
   assert.match(texto, /producto de Prompt Maestro \(Guadalajara, México\)/);
   assert.ok(texto.includes('1. Primero.\n2. Segundo.'));
   assert.ok(texto.includes('- Entiende: Todo.'));
-  assert.ok(texto.includes('## Así cuida tu negocio\n\n- Tus precios, tal cual. Cotiza con tu catálogo.\n'));
+  assert.ok(texto.includes('## Así cuidamos de tu negocio\n\n- Tus precios, tal cual. Cotiza con tu catálogo.\n'));
   assert.ok(!texto.includes('Lo que no hace'));
   assert.ok(texto.includes('- Bronce: $990 MXN al mes o $9,900 MXN al año. Una cosa. Otra cosa.'));
   assert.ok(texto.includes('- Instalación única: $2,500 MXN.'));

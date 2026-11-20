@@ -192,7 +192,7 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   pieza no arranca o al imprimir se leen los dos capítulos como lista, cada uno con su nombre, y con movimiento
   reducido cada renglón es su último cuadro.
 - Debajo de «Tu agente» van los tres pilares («Tu número, tu dinero, tus reglas»: `secciones.confianza.lista`, cada
-  uno con su icono en una joya azul) y «Así cuida tu negocio» (`agentes.cuida`: seis compromisos dichos en positivo,
+  uno con su icono en una joya azul) y «Así cuidamos de tu negocio» (`agentes.cuida`: seis compromisos dichos en positivo,
   cada uno con su palomita). Antes era la lista de lo que el agente no hace, con taches; el dueño pidió decirlo como
   valor para el negocio (20-nov-2026), así que aquí ningún título empieza con «No»; la oración de cada uno sí dice,
   a la vista, los hechos de la tabla de la verdad (no trae clientela nueva, no diagnostica, no inventa lo que no
