@@ -184,7 +184,7 @@
     ],
     "recomendado": "Recomendado",
     "notaInstalacion": "Instalación única de",
-    "notaResto": "La mensualidad empieza el día que tu agente queda activo. Pago con tarjeta. No cobramos comisión por cita.",
+    "notaResto": "Hoy pagas la instalación y tu primer mes; ese mes empieza a contar el día que tu agente queda activo. Pago con tarjeta. No cobramos comisión por cita.",
     "notaMercadoPago": "Mercado Pago cobra su comisión por cada anticipo que recibes. La fija Mercado Pago, no nosotros."
   },
   "preguntas": {
@@ -198,8 +198,8 @@
     "titulo": "Tu próxima cita",
     "tituloFuerte": "ya puede llegar pagada.",
     "accion": "Empieza ahora",
-    "otra": "Prefiero que me acompañen",
-    "nota": "Hoy pagas solo la instalación. La mensualidad empieza cuando tu agente ya está trabajando."
+    "otra": "Necesito ayuda para empezar",
+    "nota": "Hoy pagas la instalación y tu primer mes. Ese mes empieza a contar cuando tu agente ya está trabajando."
   },
   "pie": {
     "terminos": "Términos",

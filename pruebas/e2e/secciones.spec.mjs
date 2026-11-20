@@ -462,7 +462,7 @@ test('en una frase: la definicion, un antes y un despues en dos tarjetas, y las 
 test('el cierre y el pie: el boton al alta, los enlaces legales y la nota de las marcas', async ({ page }) => {
   const cierre = await abrirEn(page, 'empieza');
   await expect(cierre.getByRole('link', { name: 'Empieza ahora' })).toHaveAttribute('href', ALTA);
-  await expect(cierre).toContainText('Hoy pagas solo la instalación.');
+  await expect(cierre).toContainText('Hoy pagas la instalación y tu primer mes.');
   const pie = page.locator('.pie');
   await pie.scrollIntoViewIfNeeded();
   await expect(pie.getByRole('link', { name: 'Términos' })).toHaveAttribute(

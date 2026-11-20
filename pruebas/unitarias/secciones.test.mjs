@@ -187,10 +187,11 @@ test('planes: bajo la nota de la instalacion, en letra chica, la comision que co
   const notas = /<div class="planes__notas">([\s\S]*?)<\/div>/.exec(bloque)?.[1] ?? '';
   const renglones = [...notas.matchAll(/<p class="planes__nota">([^<]+)<\/p>/g)].map(([, texto]) => texto);
   assert.equal(renglones.length, 2);
-  // La nota de la instalacion no cambia, con su "No cobramos comision por cita."
+  // La nota de la instalacion: hoy se paga la instalacion y el primer mes, que cuenta desde que el agente queda activo
+  // (cambio de estrategia del dueno, 20-nov-2026). Sigue con su "No cobramos comision por cita."
   assert.match(
     renglones[0] ?? '',
-    /^Instalación única de \$[\d,]+\. La mensualidad empieza el día que tu agente queda activo\. Pago con tarjeta\. No cobramos comisión por cita\.$/,
+    /^Instalación única de \$[\d,]+\. Hoy pagas la instalación y tu primer mes; ese mes empieza a contar el día que tu agente queda activo\. Pago con tarjeta\. No cobramos comisión por cita\.$/,
   );
   assert.equal(renglones[1], secciones.planes.notaMercadoPago);
   // Sin porcentajes: la comision la fija Mercado Pago.

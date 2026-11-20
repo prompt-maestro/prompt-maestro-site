@@ -315,11 +315,11 @@
       "nombre": "Cómo empiezas",
       "cuenta": "4 pasos",
       "numerado": true,
-      "arranca": "Hoy pagas solo la instalación.",
+      "arranca": "Hoy pagas la instalación y tu primer mes.",
       "videos": [
         {
           "titulo": "Eliges tu plan",
-          "texto": "Lo contratas en línea, con tarjeta. Hoy pagas solo la instalación: tu mensualidad empieza el día que tu agente queda activo.",
+          "texto": "Lo contratas en línea, con tarjeta. Hoy pagas la instalación y tu primer mes: ese mes empieza a contar el día que tu agente queda activo.",
           "dura": 7,
           "pasos": [
             {
@@ -328,8 +328,8 @@
                 "titulo": "Tu plan",
                 "detalle": "Lo contratas en línea",
                 "renglones": [
-                  { "nombre": "Hoy pagas", "valor": "Solo la instalación" },
-                  { "nombre": "Tu mensualidad", "valor": "Empieza cuando tu agente esté activo" }
+                  { "nombre": "Hoy pagas", "valor": "La instalación y tu primer mes" },
+                  { "nombre": "Tu primer mes", "valor": "Cuenta desde que tu agente queda activo" }
                 ]
               }
             },

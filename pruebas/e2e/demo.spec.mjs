@@ -1414,7 +1414,7 @@ test.describe('sin JavaScript', () => {
     await expect(page.locator('.wa')).toHaveCSS('background-color', 'rgb(239, 233, 224)');
     // El cierre de la seccion sigue en su lugar.
     await expect(
-      page.locator('.garantia__acciones').getByRole('link', { name: 'Prefiero que me acompañen' }),
+      page.locator('.garantia__acciones').getByRole('link', { name: 'Necesito ayuda para empezar' }),
     ).toBeVisible();
   });
 });

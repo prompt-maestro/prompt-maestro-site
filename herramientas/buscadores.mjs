@@ -209,7 +209,7 @@ export function llmsTxt({
       (plan) =>
         `- ${plan.nombre}: ${pesos(plan.mensual)} ${moneda} al mes o ${pesos(plan.anual)} ${moneda} al año. ${plan.incluye.join('. ')}.`,
     ),
-    `- Instalación única: ${pesos(planes.planes[0]?.instalacion ?? 0)} ${moneda}. La mensualidad empieza el día que el agente queda activo.`,
+    `- Instalación única: ${pesos(planes.planes[0]?.instalacion ?? 0)} ${moneda}. Hoy se paga la instalación y el primer mes; ese mes empieza a contar el día que el agente queda activo.`,
     '',
     '## Qué se necesita para empezar',
     '',

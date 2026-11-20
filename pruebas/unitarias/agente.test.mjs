@@ -97,7 +97,7 @@ const APROBADOS = [
 const PASOS_APROBADOS = [
   [
     'Eliges tu plan',
-    'Lo contratas en línea, con tarjeta. Hoy pagas solo la instalación: tu mensualidad empieza el día que tu agente queda activo.',
+    'Lo contratas en línea, con tarjeta. Hoy pagas la instalación y tu primer mes: ese mes empieza a contar el día que tu agente queda activo.',
   ],
   [
     'Nos cuentas de tu negocio',
@@ -434,7 +434,7 @@ test('dos capitulos: lo que hace, con sus nueve beneficios, y como empiezas, con
   );
   // Al final del primero, el paso al segundo; al final del segundo, lo que se paga hoy junto al boton de empezar.
   assert.equal(capitulos[0].sigue, 'Siguiente: cómo empiezas, en 4 pasos');
-  assert.equal(capitulos[1].arranca, 'Hoy pagas solo la instalación.');
+  assert.equal(capitulos[1].arranca, 'Hoy pagas la instalación y tu primer mes.');
   assert.equal(empieza.length, 4);
   assert.deepEqual(
     empieza.map(({ titulo, texto }) => [titulo, texto]),
@@ -470,8 +470,8 @@ test('como empiezas no promete tiempos de alta ni probar antes de pagar', () => 
   // Y dice lo que la tabla de la verdad pide decir: tarjeta, instalacion hoy, mensualidad al activar y numero exclusivo.
   for (const frase of [
     'con tarjeta',
-    'Hoy pagas solo la instalación',
-    'tu mensualidad empieza el día que tu agente queda activo',
+    'Hoy pagas la instalación y tu primer mes',
+    'ese mes empieza a contar el día que tu agente queda activo',
     'un número exclusivo de tu negocio con WhatsApp Business',
     'sigue en tu celular',
     'Tú lo puedes probar antes que nadie',
@@ -658,9 +658,9 @@ test('las escenas de como empiezas dicen lo que aprobo el dueno, pieza por pieza
       'Tu plan',
       'Lo contratas en línea',
       'Hoy pagas',
-      'Solo la instalación',
-      'Tu mensualidad',
-      'Empieza cuando tu agente esté activo',
+      'La instalación y tu primer mes',
+      'Tu primer mes',
+      'Cuenta desde que tu agente queda activo',
       'Pago con tarjeta aprobado',
       'Sin comisión por cita',
     ],
@@ -1164,7 +1164,7 @@ test('el selector de capitulos y lo que cierra cada uno vienen escritos, con los
   assert.doesNotMatch(capituloEscrito('hace').dentro, /agentes__arranca/);
   assert.match(
     capituloEscrito('empieza').dentro,
-    /<p class="agentes__arranca"><a class="boton boton--luz" href="https:\/\/alta\.prompt-maestro\.com\/" data-lugar="agente">Empieza ahora<\/a> <span>Hoy pagas solo la instalación\.<\/span><\/p>\s*$/,
+    /<p class="agentes__arranca"><a class="boton boton--luz" href="https:\/\/alta\.prompt-maestro\.com\/" data-lugar="agente">Empieza ahora<\/a> <span>Hoy pagas la instalación y tu primer mes\.<\/span><\/p>\s*$/,
   );
   assert.doesNotMatch(capituloEscrito('empieza').dentro, /agentes__sigue/);
   // La seccion vieja ya no existe, y el enlace de la barra que llevaba a ella ahora trae a esta.

@@ -1417,7 +1417,7 @@ test('el selector de capitulos son dos pestanas de verdad: se ve un capitulo a l
   const empezar = pasos.getByRole('link', { name: 'Empieza ahora' });
   await expect(empezar).toHaveAttribute('href', ALTA);
   await expect(empezar).toHaveAttribute('data-lugar', 'agente');
-  await expect(pasos.locator('.agentes__arranca')).toContainText('Hoy pagas solo la instalación.');
+  await expect(pasos.locator('.agentes__arranca')).toContainText('Hoy pagas la instalación y tu primer mes.');
   await expect(pasos.locator('.agentes__sigue')).toHaveCount(0);
   await sinFaltasDeAccesibilidad(page, '#agente');
 
@@ -1557,9 +1557,9 @@ test('los cuatro pasos de "Como empiezas": cada uno abre su oracion y su escena,
       'Tu plan',
       'Lo contratas en línea',
       'Hoy pagas',
-      'Solo la instalación',
-      'Tu mensualidad',
-      'Empieza cuando tu agente esté activo',
+      'La instalación y tu primer mes',
+      'Tu primer mes',
+      'Cuenta desde que tu agente queda activo',
       'Pago con tarjeta aprobado',
       'Sin comisión por cita',
     ],
