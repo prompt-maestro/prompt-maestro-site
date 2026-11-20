@@ -2,7 +2,7 @@
 
    El cartel (titulo, frase, botones y una imagen) SIEMPRE esta en la pagina. En celular y en tableta de pie es todo
    lo que hay, quieto desde el primer momento, y su imagen es "Tu y tu agente": ella en lo suyo y un celular donde su
-   agente contesta, cobra el anticipo y agenda. En pantallas anchas su imagen son las tres fotos de "su tiempo".
+   agente contesta, cobra el anticipo y agenda. En pantallas anchas su imagen es la agente, con la historia de una cita.
    Tambien es lo que se lee sin JavaScript, con movimiento reducido y en pantallas muy bajitas.
 
    El corto es una pelicula de unos 30 segundos que corre sola al abrir la pagina en una pantalla ancha (900 o mas, y
@@ -69,8 +69,8 @@
 
 /* ---------------------------------------------------------------------------------------------------------------
    El cartel. Arriba, el texto: el renglon chico, el titulo, la frase y los dos botones. Debajo, en celular y en
-   tableta de pie, "Tu y tu agente"; donde la pantalla es mas ancha que alta, el texto va a la izquierda y las tres
-   fotos de "su tiempo", como tarjetas, a la derecha.
+   tableta de pie, "Tu y tu agente"; donde la pantalla es mas ancha que alta, el texto va a la izquierda y la agente,
+   sin marco, a la derecha.
    --------------------------------------------------------------------------------------------------------------- */
 .cartel {
   position: relative;
@@ -2052,8 +2052,8 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
 /* ---------------------------------------------------------------------------------------------------------------
    El movimiento. La mitad fria va rapida y tensa: la camara baja de un jalon, los avisos caen seguidos. Desde el
-   barrido todo entra despacio y se va antes de que llegue lo que sigue; nada rebota. Solo se animan transform y
-   opacity.
+   barrido todo entra despacio y se va antes de que llegue lo que sigue; nada rebota. Casi todo anima solo transform
+   y opacity; la excepcion es el desenfoque de la escena, que se quita con un fundido.
    --------------------------------------------------------------------------------------------------------------- */
 
 /* La camara solo se mueve al bajar al celular (al volver a empezar regresa de golpe, sin que nadie la vea) y,
@@ -2394,8 +2394,8 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
 
 /* ---------------------------------------------------------------------------------------------------------------
    Donde la pantalla es mas ancha que alta (una computadora, una tableta o un celular acostados), el cartel pone el
-   texto a la izquierda y, en lugar de "Tu y tu agente", las fotos de "su tiempo" de los oficios como tarjetas. Las
-   medidas van con el alto de la pantalla: en una laptop bajita todo cabe.
+   texto a la izquierda y, en lugar de "Tu y tu agente", a la agente (solo donde corre el corto). Las medidas van con
+   el alto de la pantalla: en una laptop bajita todo cabe.
    --------------------------------------------------------------------------------------------------------------- */
 @media (min-width: 480px) and (min-aspect-ratio: 1 / 1) {
   .cartel {
@@ -2413,9 +2413,6 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   /* El texto va encima de su retrato, que se funde por debajo. */
   .cartel__texto {
     z-index: 1;
-  }
-
-  .cartel__texto {
     padding: 0 0 40px;
   }
 
@@ -2531,21 +2528,22 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   }
 
   /* Donde no hay hueco entre el texto y ella (una ventana menos ancha, o casi cuadrada) sus datos se guardan y queda
-     solo su rotulo, abajo y a su izquierda. */
-  @media (max-width: 999px), (max-aspect-ratio: 3 / 2) {
+     solo su rotulo, abajo y a su izquierda. Se pregunta al reves ("no es ancha y alargada") para que una ventana de
+     3:2 justo caiga de un solo lado; y la historia se guarda entera: no queda una lista vacia que leer. */
+  @media not all and (min-width: 1000px) and (min-aspect-ratio: 3 / 2) {
     .agente__datos {
       bottom: 13%;
       left: 16%;
     }
 
     .agente__rotulo b,
-    .agente__datos .cita {
+    .historia {
       display: none;
     }
   }
 
   /* En una ventana ancha pero bajita ella queda chica: sus datos se recorren un poco para no tocarla. */
-  @media (max-height: 559px) and (min-aspect-ratio: 3 / 2) {
+  @media (min-width: 1000px) and (max-height: 559px) and (min-aspect-ratio: 3 / 2) {
     .agente__datos {
       left: -2%;
     }
@@ -2603,7 +2601,9 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   @media (min-width: 1200px) and (min-aspect-ratio: 3 / 2) and (min-height: 560px) {
     .cartel {
       grid-template-columns: max-content max-content minmax(0, 1fr);
-      column-gap: clamp(44px, 4.2vw, 68px);
+      /* El hueco entre columnas es corto a proposito: la historia se arrima al texto y le deja aire a su cara, tambien
+         con la barra de scroll a la vista (que recorre la foto unos 15 px y a la historia no). */
+      column-gap: clamp(36px, 2.6vw, 48px);
     }
 
     .agente {

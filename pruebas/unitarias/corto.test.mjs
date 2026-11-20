@@ -41,7 +41,7 @@ const ANCHA = '(min-width: 900px) and (min-aspect-ratio: 1/1)';
 const GUION = corto.guion.map((/** @type {{ clave: string, dura: number }} */ { clave, dura }) => ({ clave, dura }));
 const MOMENTOS = ['presion', 'vibra', 'avalancha', 'barrido', 'marca', 'agente', 'todos'];
 /** Un espacio duro se lee igual que uno normal: solo impide que el renglon se parta ahi. */
-const leido = (/** @type {string} */ texto) => texto.replaceAll(' ', ' ');
+const leido = (/** @type {string} */ texto) => texto.replaceAll('\u00a0', ' ');
 
 /** Un guion corto para las cuentas: tres momentos de 1, 2 y 3 segundos. */
 const TRES = [
@@ -332,10 +332,10 @@ test('el guion de la pagina: siete momentos en su orden, de 26 a 32 segundos, y 
   assert.equal(GUION.at(-1)?.dura, 6000);
   // Ya no dice "Agente de <negocio>" en cada franja: ni el dato existe.
   assert.deepEqual(Object.keys(corto.todos), ['baja']);
-  // El renglon chico del cartel dice lo mismo que el cierre. Sus dos espacios duros (escritos como  , a la
+  // El renglon chico del cartel dice lo mismo que el cierre. Sus dos espacios duros (escritos como \u00a0, a la
   // vista) tienen juntas "y pronto más": donde no cabe en un renglon se parte despues de "médicos", nunca deja una
   // "y" colgada.
-  assert.equal(corto.cartel.sobre, 'Uñas, dentistas, médicos y pronto más oficios y profesiones');
+  assert.equal(corto.cartel.sobre, 'Uñas, dentistas, médicos y\u00a0pronto\u00a0más oficios y profesiones');
   // La aplicacion donde trabaja el agente se dice con su nombre, escrito asi: en el letrero de vibra, en el cierre y
   // en el rotulo de la conversacion del agente (uno solo, comun a todos los oficios).
   assert.equal(corto.canal, 'WhatsApp');
@@ -542,7 +542,7 @@ test('"Tu y tu agente": cada oficio trae su retrato y su conversacion, y cuenta 
     const hora = /\d{1,2}:\d{2} [ap]m/.exec(oficio.cartel.cuando)?.[0] ?? 'sin hora';
     assert.ok(leido(charla.responde).includes(hora), `${oficio.clave}: el agente da otra hora`);
     // Y esa hora no se parte en dos renglones ("11:00" arriba y "am" abajo): la tiene junta un espacio duro.
-    assert.match(charla.responde, /\d{1,2}:\d{2} [ap]m/, `${oficio.clave}: la hora se puede partir`);
+    assert.match(charla.responde, /\d{1,2}:\d{2}\u00a0[ap]m/, `${oficio.clave}: la hora se puede partir`);
     // El negocio y su anticipo son los del ejemplo de la demostracion de mas abajo.
     const giro = giros.find((/** @type {{ clave: string }} */ uno) => uno.clave === oficio.clave);
     assert.ok(giro, `${oficio.clave}: no tiene ejemplo en la demostracion`);

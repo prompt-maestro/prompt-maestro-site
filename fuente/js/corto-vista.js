@@ -174,6 +174,8 @@ export function montarCorto(raiz) {
   let pausada = false;
   /** Si la visitante tiene agarrada la raya de avance: mientras, el corto espera donde ella lo lleve. */
   let agarrada = false;
+  /** Los segundos que la raya ya dijo: al principio ninguno, para que diga tambien el cero. */
+  let dicho = '';
   let yaCorrio = false;
   let momento = '';
   let cuadro = 0;
@@ -331,7 +333,8 @@ export function montarCorto(raiz) {
     avance.style.transform = `scaleX(${va})`;
     riel.style.setProperty('--va', va);
     const segundos = String(Math.round((parte * total) / 1000));
-    if (riel.getAttribute('aria-valuenow') === segundos) return;
+    if (dicho === segundos) return;
+    dicho = segundos;
     riel.setAttribute('aria-valuenow', segundos);
     riel.setAttribute(
       'aria-valuetext',
@@ -501,7 +504,8 @@ export function montarCorto(raiz) {
 
   // Y con el teclado: las flechas la llevan de dos en dos segundos; Inicio y Fin, a sus extremos.
   riel.addEventListener('keydown', (suceso) => {
-    if (!corre) return;
+    // Con Alt, Ctrl o Cmd las flechas son atajos del navegador (regresar de pagina): esos no se tocan.
+    if (!corre || suceso.altKey || suceso.ctrlKey || suceso.metaKey) return;
     const va = corridos(reloj, performance.now());
     const hasta = /** @type {Record<string, number>} */ ({
       ArrowLeft: va - PASO,

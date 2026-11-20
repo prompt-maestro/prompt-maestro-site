@@ -4,7 +4,7 @@
 import { abrirCortoDetenido, hastaElCuadro, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
-/** Los perfiles con pantalla ancha: los unicos donde corre el corto (y donde el cartel ensena las tres fotos). */
+/** Los perfiles con pantalla ancha: los unicos donde corre el corto (y donde el cartel ensena a la agente). */
 const ANCHOS = ['escritorio', 'firefox'];
 
 /** @param {import('@playwright/test').TestInfo} info */

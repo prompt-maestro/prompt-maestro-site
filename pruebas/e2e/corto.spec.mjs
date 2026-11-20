@@ -353,6 +353,31 @@ test('en pantallas anchas el cartel ensena a la agente, sin marco, con su rotulo
   );
   expect(retratos).toEqual([]);
   expect(await desborde(page)).toBeLessThanOrEqual(0);
+  // En las ventanas anchas mas comunes ningun paso toca su cara, tampoco con la barra de scroll de verdad, que
+  // aqui no se pinta: recorre la foto unos 15 px hacia la historia, y se le descuentan a su cara.
+  for (const [ancho, alto] of [
+    [1280, 720],
+    [1440, 789],
+    [1536, 695],
+    [1600, 760],
+    [1920, 947],
+  ]) {
+    await page.setViewportSize({ width: ancho ?? 0, height: alto ?? 0 });
+    const suRetrato = await caja(foto);
+    const suLado = suRetrato.derecha - suRetrato.izquierda;
+    const suCara = {
+      izquierda: suRetrato.izquierda + suLado * 0.5 - 15,
+      arriba: suRetrato.arriba + suLado * 0.08,
+      derecha: suRetrato.izquierda + suLado * 0.82,
+      abajo: suRetrato.arriba + suLado * 0.45,
+    };
+    await expect(pasos.first()).toBeVisible();
+    for (const paso of await pasos.all()) {
+      expect(seTocan(await caja(paso), suCara), `a ${ancho} por ${alto} un paso de la historia toca su cara`).toBe(
+        false,
+      );
+    }
+  }
 });
 
 test('donde no cabe la historia entre el texto y la agente queda solo su rotulo, sin tocar su cara ni el texto', async ({
@@ -368,6 +393,8 @@ test('donde no cabe la historia entre el texto y la agente queda solo su rotulo,
   await expect(rotulo).toBeInViewport({ ratio: 1 });
   await expect(corto.locator('.historia > li').first()).toBeHidden();
   await expect(corto.locator('.agente__datos .cita')).toBeHidden();
+  // La historia se guarda entera: a un lector de pantalla no le queda una lista vacia que anunciar.
+  await expect(corto.locator('.historia')).toBeHidden();
   // La linea de con que trabaja solo va donde el cartel tiene sus tres columnas: aqui se guarda.
   await expect(corto.locator('.confia')).toBeHidden();
   const suCaja = await caja(rotulo);
@@ -387,6 +414,27 @@ test('donde no cabe la historia entre el texto y la agente queda solo su rotulo,
   expect(await desborde(page)).toBeLessThanOrEqual(0);
 });
 
+test('en las orillas de sus acomodos el cartel ancho cae de un solo lado: a 3:2 justo cuenta la historia entera, y ancho y bajito deja el rotulo sobre la foto', async ({
+  page,
+}, info) => {
+  test.skip(!esAncho(info), 'en celular el cartel ensena "Tu y tu agente"');
+  // Una ventana de 3:2 exacto y ancha: van las tres columnas, con sus cuatro pasos y la cita en el ultimo.
+  await page.setViewportSize({ width: 1440, height: 960 });
+  const corto = await abrirCortoDetenido(page, { quieta: true });
+  const pasos = corto.locator('.historia > li');
+  await expect(pasos).toHaveCount(4);
+  for (const paso of await pasos.all()) await expect(paso).toBeVisible();
+  await expect(pasos.nth(3).locator('.cita')).toBeVisible();
+  await expect(corto.locator('.agente__rotulo b')).toBeVisible();
+  // Menos de 1000 de ancho y bajita: queda solo el rotulo, y sobre la foto, no recorrido fuera de ella.
+  await page.setViewportSize({ width: 950, height: 540 });
+  await expect(corto.locator('.historia')).toBeHidden();
+  const rotulo = corto.locator('.agente__rotulo span');
+  await expect(rotulo).toBeInViewport({ ratio: 1 });
+  expect((await caja(rotulo)).izquierda).toBeGreaterThanOrEqual((await caja(corto.locator('.agente__foto'))).izquierda);
+  expect(await desborde(page)).toBeLessThanOrEqual(0);
+});
+
 // ---------------------------------------------------------------------------------------------------------------
 // "Tu y tu agente": el cartel en celular y en tableta de pie, con un oficio al azar en cada visita.
 // ---------------------------------------------------------------------------------------------------------------
@@ -395,7 +443,7 @@ for (const [lugar, oficio] of CORTO.oficios.entries()) {
   test(`en celular, cuando al azar le toca ${oficio.nombre}, sale completo: su foto, su negocio, la respuesta del agente, el pago y la cita`, async ({
     page,
   }, info) => {
-    test.skip(esAncho(info), 'en pantallas anchas el cartel ensena las tres fotos de "su tiempo"');
+    test.skip(esAncho(info), 'en pantallas anchas el cartel ensena a la agente, no "Tu y tu agente"');
     const fallas = vigilar(page);
     await queLeToque(page, lugar);
     const corto = await abrirCortoDetenido(page);
@@ -467,7 +515,7 @@ for (const [lugar, oficio] of CORTO.oficios.entries()) {
 test('en celular el oficio ya esta elegido antes del primer pintado: nunca se pinta uno para cambiarlo por otro', async ({
   page,
 }, info) => {
-  test.skip(esAncho(info), 'en pantallas anchas el cartel ensena las tres fotos de "su tiempo"');
+  test.skip(esAncho(info), 'en pantallas anchas el cartel ensena a la agente, no "Tu y tu agente"');
   // Le toca el ultimo: si la pagina pintara primero la escena que trae escrita (la primera), aqui se veria.
   const ultimo = CORTO.oficios.length - 1;
   const elegido = CORTO.oficios[ultimo]?.clave ?? '';
@@ -1841,12 +1889,22 @@ test.describe('el corto, en pantallas anchas', () => {
   }) => {
     const corto = await abrirCortoDetenido(page);
     const riel = corto.getByRole('slider', { name: 'Avance del video' });
+    // Desde el primer instante dice en que va con palabras, no solo con un numero.
+    await expect(riel).toHaveAttribute('aria-valuetext', /^0 de \d+ segundos$/);
     await riel.focus();
     await page.keyboard.press('ArrowRight');
     await expect(riel).toHaveAttribute('aria-valuenow', '2');
     await page.keyboard.press('ArrowRight');
     await expect(riel).toHaveAttribute('aria-valuenow', '4');
     await page.keyboard.press('ArrowLeft');
+    await expect(riel).toHaveAttribute('aria-valuenow', '2');
+    // Con Alt la flecha es un atajo del navegador (regresar de pagina): la raya no se la queda ni mueve el corto.
+    const seLaQuedo = await riel.evaluate((el) => {
+      const tecla = new KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true, cancelable: true });
+      el.dispatchEvent(tecla);
+      return tecla.defaultPrevented;
+    });
+    expect(seLaQuedo).toBe(false);
     await expect(riel).toHaveAttribute('aria-valuenow', '2');
     await page.keyboard.press('End');
     await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS.at(-1) ?? '');

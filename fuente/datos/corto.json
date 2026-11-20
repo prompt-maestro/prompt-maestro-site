@@ -194,7 +194,7 @@
           "iniciales": "SB",
           "quien": "Ana",
           "entra": "Hola, ¿tienes lugar el sábado?",
-          "responde": "¡Hola, Ana! Sí, a las 11:00 am. Para apartarla, el anticipo es de $150.",
+          "responde": "¡Hola, Ana! Sí, a las 11:00\u00a0am. Para apartarla, el anticipo es de $150.",
           "anticipo": "$150"
         }
       }
@@ -319,7 +319,7 @@
           "iniciales": "DS",
           "quien": "Carla",
           "entra": "Hola, ¿tienen cita el miércoles?",
-          "responde": "¡Hola, Carla! Sí, a las 4:00 pm. Para apartarla, el anticipo es de $200.",
+          "responde": "¡Hola, Carla! Sí, a las 4:00\u00a0pm. Para apartarla, el anticipo es de $200.",
           "anticipo": "$200"
         }
       }
@@ -444,7 +444,7 @@
           "iniciales": "CA",
           "quien": "Doña Elvira",
           "entra": "Buenas tardes, ¿tiene cita el jueves?",
-          "responde": "Buenas tardes. Sí, a las 10:00 am. Para apartarla, el anticipo es de $300.",
+          "responde": "Buenas tardes. Sí, a las 10:00\u00a0am. Para apartarla, el anticipo es de $300.",
           "anticipo": "$300"
         }
       }
