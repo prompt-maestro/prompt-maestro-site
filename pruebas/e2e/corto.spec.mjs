@@ -368,12 +368,13 @@ test('donde no cabe la historia entre el texto y la agente queda solo su rotulo,
   await expect(rotulo).toBeInViewport({ ratio: 1 });
   await expect(corto.locator('.historia > li').first()).toBeHidden();
   await expect(corto.locator('.agente__datos .cita')).toBeHidden();
+  // La linea de con que trabaja solo va donde el cartel tiene sus tres columnas: aqui se guarda.
+  await expect(corto.locator('.confia')).toBeHidden();
   const suCaja = await caja(rotulo);
   for (const pieza of [
     corto.getByRole('heading', { level: 1 }),
     corto.locator('.cartel__frase'),
     corto.locator('.cartel__acciones'),
-    corto.locator('.confia'),
   ]) {
     const suya = await caja(pieza);
     const seTocan =

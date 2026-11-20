@@ -2551,7 +2551,8 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     display: none;
   }
 
-  /* Bajo los botones, con que trabaja: solo los nombres, chicos y discretos (nunca un logotipo). */
+  /* Bajo los botones, con que trabaja: solo los nombres, chicos y discretos (nunca un logotipo). Va donde el cartel
+     tiene sus tres columnas (mas abajo): ahi nada se le encima. */
   .confia {
     flex-wrap: wrap;
     align-items: center;
@@ -2597,6 +2598,10 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
       position: static;
       width: auto;
       height: auto;
+    }
+
+    .confia {
+      display: flex;
     }
 
     .agente picture {
@@ -2662,8 +2667,9 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
       content: "";
     }
 
+    /* En una pantalla ancha la respuesta cabe en dos renglones; en una menos ancha, en tres. */
     .historia .dice {
-      max-width: 19em;
+      max-width: clamp(19em, 21vw, 21.5em);
     }
 
     /* Quien escribe: su nombre, chico, arriba de lo que dice. */
@@ -2730,10 +2736,6 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
     display: block;
   }
 
-  .confia {
-    display: flex;
-  }
-
   html.con-corto .corto__cine {
     display: block;
   }
@@ -2768,8 +2770,7 @@ html[data-ahorro] .corto:not([data-pedido]) .corto__cine {
      acuesta) y el cartel va solo con su texto. */
   .control,
   .otra,
-  .agente,
-  .confia {
+  .agente {
     display: none;
   }
 }

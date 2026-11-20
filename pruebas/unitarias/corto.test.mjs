@@ -40,6 +40,8 @@ const ANCHA = '(min-width: 900px) and (min-aspect-ratio: 1/1)';
 /** @type {import('../../fuente/js/corto.js').Momento[]} */
 const GUION = corto.guion.map((/** @type {{ clave: string, dura: number }} */ { clave, dura }) => ({ clave, dura }));
 const MOMENTOS = ['presion', 'vibra', 'avalancha', 'barrido', 'marca', 'agente', 'todos'];
+/** Un espacio duro se lee igual que uno normal: solo impide que el renglon se parta ahi. */
+const leido = (/** @type {string} */ texto) => texto.replaceAll(' ', ' ');
 
 /** Un guion corto para las cuentas: tres momentos de 1, 2 y 3 segundos. */
 const TRES = [
@@ -538,7 +540,9 @@ test('"Tu y tu agente": cada oficio trae su retrato y su conversacion, y cuenta 
     // El agente pide el mismo anticipo que despues aparece pagado, y da la hora que queda en la cita.
     assert.ok(charla.responde.includes(charla.anticipo), `${oficio.clave}: el agente pide otro anticipo`);
     const hora = /\d{1,2}:\d{2} [ap]m/.exec(oficio.cartel.cuando)?.[0] ?? 'sin hora';
-    assert.ok(charla.responde.includes(hora), `${oficio.clave}: el agente da otra hora`);
+    assert.ok(leido(charla.responde).includes(hora), `${oficio.clave}: el agente da otra hora`);
+    // Y esa hora no se parte en dos renglones ("11:00" arriba y "am" abajo): la tiene junta un espacio duro.
+    assert.match(charla.responde, /\d{1,2}:\d{2} [ap]m/, `${oficio.clave}: la hora se puede partir`);
     // El negocio y su anticipo son los del ejemplo de la demostracion de mas abajo.
     const giro = giros.find((/** @type {{ clave: string }} */ uno) => uno.clave === oficio.clave);
     assert.ok(giro, `${oficio.clave}: no tiene ejemplo en la demostracion`);
@@ -1084,7 +1088,7 @@ test('"Tu y tu agente" viaja escrito en la pagina: una escena por oficio, la pri
       oficio.cartel.cuando,
       oficio.cartel.quien,
     ]) {
-      assert.ok(texto.includes(dice), `${oficio.clave}: falta "${dice}"`);
+      assert.ok(texto.includes(leido(dice)), `${oficio.clave}: falta "${dice}"`);
     }
     assert.doesNotMatch(escena, /<(a|button|input|video)\b|tabindex/);
     assert.match(escena, /<svg class="sello"[^>]* role="img" aria-label="Garantizada: anticipo pagado"/);
