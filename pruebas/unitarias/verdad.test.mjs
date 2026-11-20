@@ -16,6 +16,13 @@ const PROHIBIDO = /** @type {[RegExp, string][]} */ ([
   [/menos de un minuto/, 'ya no se promete contestar en menos de un minuto'],
   // Una nota de voz la contesta con otra nota de voz: la pagina no puede decir tambien que la contesta por escrito.
   [/(contesta|responde) por escrito/, 'a una nota de voz le contesta con voz, no por escrito'],
+  // El dueno (19-nov-2026): "no hay descuentos, nosotros agendamos citas no definimos precios".
+  [/\bdescuentos?\b/, 'no hay descuentos: el agente agenda citas, no define precios'],
+  // El dueno (19-nov-2026): las devoluciones de dinero, en todos los casos y oficios, las gestiona el profesional.
+  [
+    /devolvemos|reembolsamos|agente (te |le )?(devuelve|reembolsa)/,
+    'las devoluciones de dinero las gestiona el profesional directamente',
+  ],
   [/\d+\s?segundos?/, 'no se promete un numero de segundos'],
   [/sin intervenci[oó]n humana/, 'la profesional siempre puede entrar'],
   // Ni siquiera en un ejemplo: la politica del salon de muestra (su retoque de garantia) se dice "sin costo".

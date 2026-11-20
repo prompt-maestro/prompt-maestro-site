@@ -740,18 +740,18 @@ test('los nueve beneficios: cada uno abre su oracion y su escena, con lo que dic
       quien: 'Lo ve tu clienta',
     },
     {
-      // Una respuesta que solo ese negocio daria, amable y de usted. Su base de conocimiento (lo que define la
-      // profesional) salio primero y ya se fue: en el celular de la clienta solo queda su conversacion.
+      // Una respuesta que solo ese negocio daria, amable y de usted, y que el agente da solo. Su base de conocimiento
+      // (lo que define la profesional) salio primero y ya se fue: en el celular de la clienta solo queda su conversacion.
       queda: [
-        'Disculpe, ¿y si se me levanta el gelish?',
-        'No se preocupe, Ana. Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándeme una foto y con gusto la agendo.',
+        'Disculpe, ¿y si llego unos minutos tarde?',
+        'No se preocupe, Ana. Tiene 15 minutos de tolerancia. Para no perder su lugar, le recomiendo llegar 5 minutos antes.',
         'Lo sabe porque es la política de tu negocio',
       ],
       seFue: [
         'Lo defines tú',
         'Base de conocimiento',
         'Studio Bella · solo de este negocio',
-        'Anticipo $150 · Retoque sin costo 3 días',
+        'Anticipo $150 · Tolerancia de 15 minutos',
       ],
       quien: 'Lo ve tu clienta',
     },
@@ -811,24 +811,30 @@ test('los nueve beneficios: cada uno abre su oracion y su escena, con lo que dic
       // Cuando hace falta la profesional: lo de la clienta ya se fue y queda el recado, en su WhatsApp personal.
       queda: [
         'Tu WhatsApp personal',
-        'Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas.',
+        'Ana te dejó un recado en el WhatsApp de Studio Bella: se le levantó el gelish que se hizo ayer y mandó una foto.',
         'Solo te busca cuando hace falta',
       ],
       seFue: [
-        'Disculpe, ¿me haría un descuento si voy con mi hermana?',
-        'Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.',
+        'Disculpe, se me levantó el gelish que me hice ayer.',
+        'Lamento lo que pasó, Ana. Eso lo revisa Bella. Mándeme una foto, por favor, y con gusto le dejo su recado.',
       ],
       quien: 'Lo ves tú',
     },
     {
-      // Los cambios: ella lo pide, el agente dice que va a cambiar y pregunta; ella ya toco que si.
+      // Los cambios, un ejemplo de cada uno: el del precio ya se fue y queda el del horario. Ella lo pide, el agente
+      // dice que va a cambiar y pregunta; ella ya toco que si.
       queda: [
-        'Sube el gelish a $380',
-        'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
-        'Sí, aplícalo',
+        'Cambio de horario',
+        'El sábado solo atiendo hasta las 3 pm',
+        'Bloqueo este sábado de 3:00 a 7:00 pm: en ese horario no agendo citas. ¿Lo aplico?',
         'Nada cambia sin tu sí',
       ],
-      seFue: [],
+      seFue: [
+        'Cambio de precio',
+        'Sube el gelish a $380',
+        'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
+        'Precio actualizado',
+      ],
       quien: 'Lo ves tú',
     },
   ];
@@ -907,13 +913,14 @@ test('con movimiento reducido nada corre solo ni hay transiciones: cada benefici
     await boton(menu, numero).click();
     await expect(boton(menu, numero)).toHaveAttribute('aria-expanded', 'true');
     await quieto();
-    expect(new Set(await pasosALaVista(menu))).toEqual(new Set(numero === AGENDA ? [0, 1] : [1]));
+    expect(new Set(await pasosALaVista(menu))).toEqual(new Set(numero === VOZ ? [1] : [0, 1]));
     await expect(video(menu)).toHaveCount(1);
     await expect(menu.locator('.mv__barra')).toBeHidden();
   }
-  // Los cambios, ya contestados: de los dos botones de respuesta, el que ella toco va en el azul de la marca.
+  // Los cambios, ya contestados: de los dos botones de respuesta que quedan a la vista (los del horario; los del
+  // precio ya se fueron), el que ella toco va en el azul de la marca.
   await boton(menu, CAMBIOS).click();
-  const respuestas = video(menu).locator('.mv__botones span');
+  const respuestas = video(menu).locator('.mv__botones').filter({ visible: true }).locator('span');
   await expect(respuestas).toHaveText(['Sí, aplícalo', 'No']);
   await expect(respuestas.first()).toHaveCSS('background-color', 'rgb(63, 92, 245)');
   await expect(respuestas.last()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
@@ -1561,7 +1568,7 @@ test('los cuatro pasos de "Como empiezas": cada uno abre su oracion y su escena,
       'Studio Bella · lo llenas desde tu celular',
       'Gelish $350 · Acrílicas $480',
       'Martes a sábado, 10 am a 7 pm',
-      'Anticipo $150 · Retoque sin costo 3 días',
+      'Anticipo $150 · Tolerancia de 15 minutos',
       'Con esto se arma su base de conocimiento',
     ],
     ['Tus cuentas', 'WhatsApp de tu negocio', 'Google Calendar', 'Mercado Pago', 'Tu número personal no se toca'],
@@ -1781,12 +1788,17 @@ test('cada conversacion dice quien la ve: oscuro lo de la clienta, y en el azul 
   await expect(rotulo().locator('.mv__de')).toHaveText('Lo ve tu clienta');
   await expect(rotulo().locator('.mv__de')).toHaveCSS('background-color', 'rgb(31, 44, 52)');
   await expect(rotulo().locator('span')).toHaveText('Después de la cita');
-  // Lo que le llega a la profesional (aqui, sus cambios) va en azul, sin momento que decir.
+  // Lo que le llega a la profesional (aqui, sus cambios) va en azul, y dice cual de sus dos ejemplos queda a la vista.
   await llegarA(boton(menu, CAMBIOS));
   await boton(menu, CAMBIOS).click();
   await expect(rotulo()).toHaveCount(1);
   await expect(rotulo().locator('.mv__de')).toHaveText('Lo ves tú');
   await expect(rotulo().locator('.mv__de')).toHaveCSS('background-color', 'rgb(63, 92, 245)');
+  await expect(rotulo().locator('span')).toHaveText('Cambio de horario');
+  // Y el recado de la profesional, tambien en azul, sin momento que decir.
+  await llegarA(boton(menu, RECADOS));
+  await boton(menu, RECADOS).click();
+  await expect(rotulo().locator('.mv__de')).toHaveText('Lo ves tú');
   await expect(rotulo().locator('span')).toHaveCount(0);
   // En salud dice "paciente", y al final de esa escena lo que queda es lo de la profesional: la cita ya pagada.
   await llegarA(boton(menu, PAGO));

@@ -480,15 +480,17 @@ test('como empiezas no promete tiempos de alta ni probar antes de pagar', () => 
   }
 });
 
-test('cada mini video dura de 6 a 8 segundos (el de la cita completa, hasta 30) y sus piezas aparecen en orden', () => {
+test('cada mini video dura de 6 a 8 segundos (los que cuentan mas de un momento, hasta 30) y sus piezas aparecen en orden', () => {
   assert.deepEqual(problemasDeBeneficios(capitulos), []);
   assert.deepEqual([DURA.minimo, DURA.maximo, DURA.largo], [6, 8, 30]);
-  // Solo uno es largo: el que cuenta la cita de principio a fin, que abre la seccion.
+  // Dos son largos: el que cuenta la cita de principio a fin, que abre la seccion, y el de los cambios, que ensena un
+  // ejemplo de precio y otro de horario (lo pidio el dueno).
   assert.deepEqual(
     todos.filter((beneficio) => beneficio.largo).map((beneficio) => beneficio.titulo),
-    ['Gestiona tus citas de principio a fin'],
+    ['Gestiona tus citas de principio a fin', 'Cambias tus precios y horarios con un mensaje'],
   );
   assert.equal(hace[0].dura, 28);
+  assert.equal(hace[lugarDe('Cambias tus precios y horarios con un mensaje')].dura, 15);
   for (const beneficio of todos) {
     assert.ok(beneficio.dura >= 6 && beneficio.dura <= (beneficio.largo ? 30 : 8), beneficio.titulo);
     /** @type {number[]} */
@@ -670,7 +672,7 @@ test('las escenas de como empiezas dicen lo que aprobo el dueno, pieza por pieza
       'Horarios',
       'Martes a sábado, 10 am a 7 pm',
       'Políticas',
-      'Anticipo $150 · Retoque sin costo 3 días',
+      'Anticipo $150 · Tolerancia de 15 minutos',
       'Con esto se arma su base de conocimiento',
     ],
     [
@@ -707,7 +709,7 @@ test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por piez
     dichos(beneficio).filter((texto) => !/^\d+:\d\d [ap]\. m\.$/.test(texto));
   const escenas = hace.slice(1).map(sinHoras);
   assert.equal(escenas.length, 8);
-  // La base de conocimiento del negocio de ejemplo y una respuesta que sale de ella.
+  // La base de conocimiento del negocio de ejemplo y una respuesta que sale de ella, y que el agente da solo.
   assert.deepEqual(escenas[0], [
     'Lo defines tú',
     'Base de conocimiento',
@@ -717,10 +719,10 @@ test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por piez
     'Horarios',
     'Martes a sábado, 10 am a 7 pm',
     'Políticas',
-    'Anticipo $150 · Retoque sin costo 3 días',
+    'Anticipo $150 · Tolerancia de 15 minutos',
     'Lo ve tu clienta',
-    'Disculpe, ¿y si se me levanta el gelish?',
-    'No se preocupe, Ana. Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándeme una foto y con gusto la agendo.',
+    'Disculpe, ¿y si llego unos minutos tarde?',
+    'No se preocupe, Ana. Tiene 15 minutos de tolerancia. Para no perder su lugar, le recomiendo llegar 5 minutos antes.',
     'Lo sabe porque es la política de tu negocio',
   ]);
   // A cualquier hora: ella escribe en tres mensajes seguidos y el agente contesta una sola vez, todo junto.
@@ -794,18 +796,27 @@ test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por piez
   // Cuando hace falta ella: primero lo que ve la clienta y despues, aparte, el recado que le llega a la profesional.
   assert.deepEqual(escenas[6], [
     'Lo ve tu clienta',
-    'Disculpe, ¿me haría un descuento si voy con mi hermana?',
-    'Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.',
+    'Disculpe, se me levantó el gelish que me hice ayer.',
+    'Lamento lo que pasó, Ana. Eso lo revisa Bella. Mándeme una foto, por favor, y con gusto le dejo su recado.',
     'Lo ves tú',
     'Tu WhatsApp personal',
-    '📩 Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas.',
+    '📩 Ana te dejó un recado en el WhatsApp de Studio Bella: se le levantó el gelish que se hizo ayer y mandó una foto.',
     'Solo te busca cuando hace falta',
   ]);
-  // Los cambios: ella lo pide, el agente dice exactamente que va a cambiar y nada se aplica hasta que ella toca que si.
+  // Los cambios, un ejemplo de cada uno: ella lo pide, el agente dice exactamente que va a cambiar y nada se aplica
+  // hasta que ella toca que si. Primero un precio y despues un horario.
   assert.deepEqual(escenas[7], [
     'Lo ves tú',
+    'Cambio de precio',
     'Sube el gelish a $380',
     'Cambio el precio del gelish de $350 a $380. ¿Lo aplico?',
+    'Sí, aplícalo',
+    'No',
+    'Precio actualizado',
+    'Lo ves tú',
+    'Cambio de horario',
+    'El sábado solo atiendo hasta las 3 pm',
+    'Bloqueo este sábado de 3:00 a 7:00 pm: en ese horario no agendo citas. ¿Lo aplico?',
     'Sí, aplícalo',
     'No',
     'Nada cambia sin tu sí',
@@ -815,7 +826,16 @@ test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por piez
 test('cuando hace falta la profesional, el agente nunca le promete a la clienta que alguien le va a escribir', () => {
   const escena = hace[lugarDe('Solo te contacta cuando se requiere tu intervención')];
   const delAgente = escena.pasos.find((/** @type {any} */ paso) => paso.entra).entra.texto;
-  assert.equal(delAgente, 'Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.');
+  assert.equal(
+    delAgente,
+    'Lamento lo que pasó, Ana. Eso lo revisa Bella. Mándeme una foto, por favor, y con gusto le dejo su recado.',
+  );
+  // Tampoco le promete lo que no le toca decidir (el dueno, 19-nov-2026: "parece que se le esta haciendo una promesa a
+  // la clienta... quitemonos la responsabilidad y mejor busquemos la aprobacion del profesional"): ni que el retoque
+  // sale sin costo, ni que aplica la garantia, ni que la agenda.
+  assert.doesNotMatch(delAgente, /sin costo|no tiene costo|garant[ií]a|agendo|aparto/i);
+  // Ni en este ni en ningun otro mini video se piden o se dan descuentos: el agente agenda citas, no define precios.
+  for (const beneficio of todos) assert.doesNotMatch(dichos(beneficio).join(' '), /descuento/i, beneficio.titulo);
   for (const promesa of [
     /\b(te|le|la) (va a |van a )?(escrib|contest|llam|busc)/i,
     /en (un momento|breve|seguida)/i,
@@ -829,7 +849,8 @@ test('cuando hace falta la profesional, el agente nunca le promete a la clienta 
 });
 
 test('las horas de los globos van como en el WhatsApp de la demostracion, y un mini video ocurre en un mismo rato', () => {
-  // El de la cita completa es el unico que cuenta varios dias: sus rotulos dicen en que momento va.
+  // Los largos cuentan mas de un rato (la cita completa, varios dias; los cambios, dos ejemplos): sus rotulos dicen
+  // en que momento van.
   for (const beneficio of todos.filter((uno) => !uno.largo)) {
     const horas = dichos(beneficio).filter((texto) => /^\d+:\d\d [ap]\. m\.$/.test(texto));
     // Quien escribe y quien contesta lo hacen en el mismo minuto, o en el siguiente.

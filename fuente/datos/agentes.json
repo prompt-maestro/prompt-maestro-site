@@ -113,16 +113,16 @@
                 "renglones": [
                   { "nombre": "Servicios y precios", "valor": "Gelish $350 · Acrílicas $480" },
                   { "nombre": "Horarios", "valor": "Martes a sábado, 10 am a 7 pm" },
-                  { "nombre": "Políticas", "valor": "Anticipo $150 · Retoque sin costo 3 días" }
+                  { "nombre": "Políticas", "valor": "Anticipo $150 · Tolerancia de 15 minutos" }
                 ]
               }
             },
             { "en": 4.6, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
-            { "en": 4.8, "sale": { "texto": "Disculpe, ¿y si se me levanta el gelish?", "hora": "10:12 a. m." } },
+            { "en": 4.8, "sale": { "texto": "Disculpe, ¿y si llego unos minutos tarde?", "hora": "10:12 a. m." } },
             {
               "en": 5.6,
               "entra": {
-                "texto": "No se preocupe, Ana. Si se levanta en los primeros 3 días, el retoque no tiene costo. Mándeme una foto y con gusto la agendo.",
+                "texto": "No se preocupe, Ana. Tiene 15 minutos de tolerancia. Para no perder su lugar, le recomiendo llegar 5 minutos antes.",
                 "hora": "10:12 a. m."
               }
             },
@@ -254,44 +254,57 @@
           "texto": "Lo de todos los días lo resuelve tu agente. Cuando algo necesita tu decisión, toma el recado y te avisa a tu WhatsApp personal.",
           "dura": 8,
           "pasos": [
-            { "en": 0.2, "hasta": 4.2, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
+            { "en": 0.2, "hasta": 4.8, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
             {
               "en": 0.5,
-              "hasta": 4.2,
-              "sale": { "texto": "Disculpe, ¿me haría un descuento si voy con mi hermana?", "hora": "6:30 p. m." }
+              "hasta": 4.8,
+              "sale": { "texto": "Disculpe, se me levantó el gelish que me hice ayer.", "hora": "6:30 p. m." }
             },
             {
-              "en": 2.1,
-              "hasta": 4.2,
+              "en": 1.6,
+              "hasta": 4.8,
               "entra": {
-                "texto": "Eso lo decide Bella, Ana. Ya le dejé su recado, con mucho gusto.",
+                "texto": "Lamento lo que pasó, Ana. Eso lo revisa Bella. Mándeme una foto, por favor, y con gusto le dejo su recado.",
                 "hora": "6:30 p. m."
               }
             },
-            { "en": 4.6, "quien": { "de": "tu", "texto": "Lo ves tú" } },
+            { "en": 5.2, "quien": { "de": "tu", "texto": "Lo ves tú" } },
             {
-              "en": 5,
+              "en": 5.5,
               "recado": {
                 "rotulo": "Tu WhatsApp personal",
-                "texto": "📩 Ana te dejó un recado en el WhatsApp de Studio Bella y espera que le escribas."
+                "texto": "📩 Ana te dejó un recado en el WhatsApp de Studio Bella: se le levantó el gelish que se hizo ayer y mandó una foto."
               }
             },
-            { "en": 6.5, "hizo": { "texto": "Solo te busca cuando hace falta" } }
+            { "en": 6.6, "hizo": { "texto": "Solo te busca cuando hace falta" } }
           ]
         },
         {
           "titulo": "Cambias tus precios y horarios con un mensaje",
           "texto": "¿Subió un precio o cambió tu horario? Se lo escribes a tu agente por WhatsApp y lo actualiza. Nada se aplica sin tu sí.",
-          "dura": 8,
+          "dura": 15,
+          "largo": true,
           "pasos": [
-            { "en": 0.2, "quien": { "de": "tu", "texto": "Lo ves tú" } },
-            { "en": 0.8, "sale": { "texto": "Sube el gelish a $380", "hora": "9:02 a. m." } },
+            { "en": 0.2, "hasta": 7, "quien": { "de": "tu", "texto": "Lo ves tú", "momento": "Cambio de precio" } },
+            { "en": 0.7, "hasta": 7, "sale": { "texto": "Sube el gelish a $380", "hora": "9:02 a. m." } },
             {
-              "en": 2.4,
+              "en": 2.1,
+              "hasta": 7,
               "entra": { "texto": "Cambio el precio del gelish de $350 a $380. ¿Lo aplico?", "hora": "9:02 a. m." }
             },
-            { "en": 4.2, "botones": [{ "texto": "Sí, aplícalo", "toca": true }, { "texto": "No" }] },
-            { "en": 5.8, "hizo": { "texto": "Nada cambia sin tu sí" } }
+            { "en": 3.7, "hasta": 7, "botones": [{ "texto": "Sí, aplícalo", "toca": true }, { "texto": "No" }] },
+            { "en": 5.1, "hasta": 7, "hizo": { "texto": "Precio actualizado" } },
+            { "en": 7.6, "quien": { "de": "tu", "texto": "Lo ves tú", "momento": "Cambio de horario" } },
+            { "en": 8.1, "sale": { "texto": "El sábado solo atiendo hasta las 3 pm", "hora": "9:03 a. m." } },
+            {
+              "en": 9.5,
+              "entra": {
+                "texto": "Bloqueo este sábado de 3:00 a 7:00 pm: en ese horario no agendo citas. ¿Lo aplico?",
+                "hora": "9:03 a. m."
+              }
+            },
+            { "en": 11.2, "botones": [{ "texto": "Sí, aplícalo", "toca": true }, { "texto": "No" }] },
+            { "en": 12.8, "hizo": { "texto": "Nada cambia sin tu sí" } }
           ]
         }
       ]
@@ -337,7 +350,7 @@
                 "renglones": [
                   { "nombre": "Servicios y precios", "valor": "Gelish $350 · Acrílicas $480" },
                   { "nombre": "Horarios", "valor": "Martes a sábado, 10 am a 7 pm" },
-                  { "nombre": "Políticas", "valor": "Anticipo $150 · Retoque sin costo 3 días" }
+                  { "nombre": "Políticas", "valor": "Anticipo $150 · Tolerancia de 15 minutos" }
                 ]
               }
             },

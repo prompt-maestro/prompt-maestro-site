@@ -163,7 +163,7 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   un archivo de video. En celular el menú es un acordeón; desde 900 de ancho el título, el selector y el menú van a
   la izquierda y un solo escenario a la derecha, que sube junto al título y se queda pegado bajo la barra mientras
   se recorre el menú (`.mv__riel`). De los datos sale todo: el título, la oración, lo que dura el mini video (`dura`,
-  de 6 a 8 segundos; hasta 30 el que lleva `"largo": true`, que hoy es solo el de la cita completa) y sus pasos. Cada
+  de 6 a 8 segundos; hasta 30 el que lleva `"largo": true`: hoy, el de la cita completa y el de los cambios) y sus pasos. Cada
   paso dice cuándo aparece (`en`, en segundos), si después se va (`hasta`) y trae UNA pieza de las que sabe dibujar
   `fuente/plantillas/parciales/mini-video.html` (un globo, la nota de voz, la base de conocimiento, la agenda, el
   pago, la cita, los botones de respuesta, las cuentas conectadas, una insignia...). Sumar o quitar un renglón es
