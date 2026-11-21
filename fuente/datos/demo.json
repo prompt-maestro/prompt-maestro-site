@@ -38,7 +38,7 @@
   ],
   "finales": {
     "si": "Cita completada.",
-    "no": "El anticipo se queda contigo, según tu política.",
+    "no": "El anticipo se queda contigo. Si quieres devolverlo, lo haces tú directamente.",
     "cierre": "Así llega una cita garantizada."
   },
   "rotulos": {

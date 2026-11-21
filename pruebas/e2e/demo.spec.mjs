@@ -669,7 +669,11 @@ test('si no asistio: el anticipo se queda con ella segun su politica', async ({ 
   await expect(chat.locator('.wa__m--entra').last()).toContainText(
     'Listo, registré que Ana no asistió a su cita de Gelish semipermanente hoy a las 5:00 pm. Su anticipo de $150 queda retenido y le ofrecí reagendar.',
   );
-  await letreroDice(demo, '06 · Pregunta si asistió', 'El anticipo se queda contigo, según tu política.');
+  await letreroDice(
+    demo,
+    '06 · Pregunta si asistió',
+    'El anticipo se queda contigo. Si quieres devolverlo, lo haces tú directamente.',
+  );
   const asistencia = tarjeta(demo, 'asistencia');
   await expect(asistencia).toHaveAttribute('data-estado', 'falto');
   await expect(asistencia.locator('.llega__fue')).toHaveText('No asistió');

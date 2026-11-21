@@ -188,7 +188,7 @@ test('cada momento dice su letrero; el tercero cambia cuando el pago se aprueba,
   assert.deepEqual(letreros(true), [...hastaLaAsistencia, '6: Cita completada.', '6: Así llega una cita garantizada.']);
   assert.deepEqual(letreros(false), [
     ...hastaLaAsistencia,
-    '6: El anticipo se queda contigo, según tu política.',
+    '6: El anticipo se queda contigo. Si quieres devolverlo, lo haces tú directamente.',
     '6: Así llega una cita garantizada.',
   ]);
 });
@@ -260,7 +260,10 @@ test('los dos finales: asistio y no asistio, iguales hasta la pregunta', () => {
   assert.deepEqual([finNo[0]?.texto, finNo[0]?.quien], ['No', 'Bella']);
   assert.match(finNo[2]?.texto ?? '', /no asistió .* Su anticipo de \$150 queda retenido y le ofrecí reagendar\.$/);
   assert.equal(finNo[0]?.cuadro.paso, 'finNo');
-  assert.equal(finNo[0]?.cuadro.letrero, 'El anticipo se queda contigo, según tu política.');
+  assert.equal(
+    finNo[0]?.cuadro.letrero,
+    'El anticipo se queda contigo. Si quieres devolverlo, lo haces tú directamente.',
+  );
   assert.deepEqual(finNo[0]?.cuadro.asistencia, {
     estado: 'falto',
     titulo: '¿Asistió Ana?',
@@ -961,7 +964,13 @@ for (const ejemplo of ejemplos) {
     const no = historiaDe(ejemplo, false).filter(({ cuadro }) => cuadro.paso === 'finNo');
     assert.deepEqual([no[0]?.quien, no[0]?.texto], [giro.profesional, 'No']);
     assert.match(no.at(-1)?.texto ?? '', /queda retenido y le ofrecí reagendar/);
-    assert.match(no[0]?.cuadro.letrero ?? '', /según tu política/, 'el anticipo se queda con ella segun SU politica');
+    // El anticipo siempre se queda con ella, y si hace falta devolverlo lo hace ella: lo mismo que dice "Preguntas"
+    // (el dueno, 20-nov-2026). Nunca que nosotros devolvemos.
+    assert.match(
+      no[0]?.cuadro.letrero ?? '',
+      /^El anticipo se queda contigo\. Si quieres devolverlo, lo haces tú directamente\.$/,
+    );
+    assert.doesNotMatch(no[0]?.cuadro.letrero ?? '', /según tu política|devolvemos/);
     assert.equal(no[0]?.cuadro.asistencia.respuesta, 'No asistió');
   });
 
