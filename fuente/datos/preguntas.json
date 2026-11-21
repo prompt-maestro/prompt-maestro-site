@@ -6,7 +6,7 @@
   },
   {
     "pregunta": "¿Qué pasa si mi clienta o paciente no llega a su cita?",
-    "respuesta": "Después de la cita, tu agente te pregunta si la persona asistió. Si tocas «No», el anticipo se queda contigo, según la política que tú pones, y a esa persona se le ofrece agendar de nuevo.",
+    "respuesta": "Después de la cita, tu agente te pregunta si la persona asistió. Si tocas «No», el anticipo se queda contigo y a esa persona se le ofrece agendar de nuevo. Nosotros no hacemos devoluciones: si alguna vez quieres devolver un anticipo, lo haces tú directamente.",
     "principal": true
   },
   {

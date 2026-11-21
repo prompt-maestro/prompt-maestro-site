@@ -149,7 +149,10 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'tu mercado pago',
     'el dinero llega directamente a tu cuenta de mercado pago',
     'cada anticipo llega directo a tu cuenta de mercado pago',
-    'según la política que tú pones',
+    // Si no llega, el anticipo se queda con ella y las devoluciones las hace ella (el dueno, 20-nov-2026).
+    'el anticipo se queda contigo',
+    'nosotros no hacemos devoluciones',
+    'lo haces tú directamente',
     'asistente virtual',
     // No trae clientela nueva: lo dice la pregunta que lo pregunta, y la seccion lo dice en positivo.
     '¿me trae clientela nueva?',

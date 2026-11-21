@@ -255,7 +255,12 @@ test('preguntas: cada una se entiende sola, sin dejar espacio a dudas, y ninguna
   );
   assert.match(de('¿Qué pasa con los mensajes').respuesta, /los audios y las fotos que te mandan no se guardan/);
   // Y las que la tabla de la verdad pide con sus palabras, ahi siguen.
-  assert.match(de('¿Qué pasa si mi clienta').respuesta, /el anticipo se queda contigo, según la política que tú pones/);
+  // El anticipo siempre se queda con ella; nosotros no devolvemos, y si hace falta devolver uno, lo hace ella (el
+  // dueno, 20-nov-2026).
+  assert.equal(
+    de('¿Qué pasa si mi clienta').respuesta,
+    'Después de la cita, tu agente te pregunta si la persona asistió. Si tocas «No», el anticipo se queda contigo y a esa persona se le ofrece agendar de nuevo. Nosotros no hacemos devoluciones: si alguna vez quieres devolver un anticipo, lo haces tú directamente.',
+  );
   assert.match(de('Soy dentista').respuesta, /No diagnostica ni recomienda medicamentos/);
   assert.match(de('¿Me trae').respuesta, /^No\. Hace que quienes ya te escriben sí lleguen/);
   assert.match(de('¿Y si alguien').respuesta, /tu agente no agenda esa cita/);
