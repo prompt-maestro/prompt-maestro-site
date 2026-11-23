@@ -5,8 +5,13 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { armarSitio } from '../../herramientas/armado.mjs';
+import { soloLoQueSeVende } from '../../herramientas/oficios.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+/** Todos los oficios de la fuente, a la venta o guardados. @type {{ clave: string, nombre: string, lugar: string }[]} */
+const TODOS = JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', 'giros.json'), 'utf8'));
+/** Los que la pagina ensena (giros.json, "aLaVenta"). @type {{ clave: string, nombre: string, lugar: string }[]} */
+const GIROS = soloLoQueSeVende({ giros: TODOS }).datos.giros;
 
 /**
  * @param {Map<string, Buffer>} archivos
@@ -98,13 +103,12 @@ test('toda pagina lleva la politica de contenido y el idioma', async () => {
   }
 });
 
-test('la demostracion lleva un boton por ejemplo, con el primero puesto, y los datos de todos', async () => {
+test('la demostracion lleva un boton por ejemplo, con el primero puesto', {
+  skip: GIROS.length < 2 && 'con un solo oficio a la venta no hay selector de ejemplos',
+}, async () => {
   const { archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
   const inicio = leer(archivos, 'index.html');
-  /** @type {{ clave: string, nombre: string, lugar: string }[]} */
-  const giros = JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', 'giros.json'), 'utf8'));
-  assert.ok(giros.length >= 3);
-  // Cada boton lleva el icono de su oficio (de adorno) y su nombre.
+  // Cada boton lleva el icono de su oficio (de adorno) y su nombre: uno por oficio a la venta, ninguno de un guardado.
   const botones = [
     ...inicio.matchAll(
       /<button class="demo__ejemplo"[^>]* data-demo-ejemplo="([^"]+)" aria-pressed="(\w+)"><svg class="demo__oficio" aria-hidden="true" focusable="false"><use href="#i-oficio-([a-z]+)"\/><\/svg>([^<]+)</g,
@@ -112,21 +116,44 @@ test('la demostracion lleva un boton por ejemplo, con el primero puesto, y los d
   ].map(([, clave, puesto, icono, nombre]) => [clave, puesto, icono, nombre]);
   assert.deepEqual(
     botones,
-    giros.map((giro, indice) => [giro.clave, String(indice === 0), giro.clave, giro.nombre]),
+    GIROS.map((giro, indice) => [giro.clave, String(indice === 0), giro.clave, giro.nombre]),
   );
-  // Y el icono de cada oficio existe en la pagina.
-  for (const { clave } of giros) assert.ok(inicio.includes(`<symbol id="i-oficio-${clave}" `), clave);
+  // Y el icono de cada oficio a la venta esta dibujado en la pagina, una sola vez.
+  for (const { clave } of GIROS) assert.equal(inicio.split(`<symbol id="i-oficio-${clave}" `).length - 1, 1, clave);
   // El selector dice para que sirve, a la vista: ese letrero es tambien el nombre del grupo.
   assert.match(inicio, /<div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">/);
   assert.ok(inicio.includes('<span class="demo__elige" id="demo-ejemplos">Mira el ejemplo de tu oficio</span>'));
+  assert.match(inicio, /<div class="demo" id="demo" data-demo /);
+});
+
+test('la demostracion trae escrito el primer ejemplo y en sus datos los de todos los oficios a la venta', async () => {
+  const { archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
+  const inicio = leer(archivos, 'index.html');
+  // La fuente guarda los tres oficios del arranque, aunque la pagina ensene menos.
+  assert.ok(TODOS.length >= 3);
+  assert.ok(GIROS.length >= 1);
+  // Con un solo oficio a la venta no hay nada que elegir: ni el selector, ni su letrero, ni los iconos de sus botones;
+  // y la demostracion lo dice en su clase (demo--uno), para que sus estilos no le guarden lugar al selector.
+  if (GIROS.length < 2) {
+    assert.ok(!inicio.includes('data-demo-ejemplo='), 'con un solo oficio no hay botones de ejemplo');
+    assert.ok(!inicio.includes('demo__ejemplos'), 'con un solo oficio no hay selector de ejemplos');
+    assert.ok(!inicio.includes('id="demo-ejemplos"'));
+    assert.ok(!inicio.includes('<symbol id="i-oficio-'), 'con un solo oficio no viajan los iconos del selector');
+    assert.match(inicio, /<div class="demo demo--uno" id="demo" data-demo /);
+  }
   // Lo que la pagina trae escrito es el primer ejemplo, en reposo. Que es un ejemplo lo dice el nombre de la
   // demostracion, para quien no la ve; los demas ejemplos viajan en los datos, cada uno con su guion.
-  assert.ok(inicio.includes(` role="group" aria-label="Demostración con ${giros[0]?.lugar} de ejemplo.">`));
-  assert.match(inicio, / data-demo data-ejemplo="unas" data-paso="reposo" data-momento="0" data-telefono="cliente" /);
+  assert.ok(inicio.includes(` role="group" aria-label="Demostración con ${GIROS[0]?.lugar} de ejemplo.">`));
+  assert.ok(
+    inicio.includes(
+      ` data-demo data-ejemplo="${GIROS[0]?.clave}" data-paso="reposo" data-momento="0" data-telefono="cliente" `,
+    ),
+  );
   const datos = JSON.parse(/<script type="application\/json" data-demo-datos>(.*?)<\/script>/s.exec(inicio)?.[1] ?? '');
+  // Solo viajan los oficios a la venta: el guion de un guardado se queda en la fuente.
   assert.deepEqual(
     datos.ejemplos.map((/** @type {{ giro: { clave: string } }} */ ejemplo) => ejemplo.giro.clave),
-    giros.map((giro) => giro.clave),
+    GIROS.map((giro) => giro.clave),
   );
   for (const ejemplo of datos.ejemplos) {
     assert.ok(ejemplo.guion.horas.includes(ejemplo.guion.horaSugerida), ejemplo.giro.clave);

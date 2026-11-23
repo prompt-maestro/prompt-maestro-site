@@ -1,11 +1,11 @@
-    <div class="demo" id="demo" data-demo data-ejemplo="{{ejemplo.clave}}" data-paso="reposo" data-momento="0" data-telefono="cliente" role="group" aria-label="{{ejemplo.leyenda}}">
-      <div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">
+    <div class="demo{{#no variosOficios}} demo--uno{{/no}}" id="demo" data-demo data-ejemplo="{{ejemplo.clave}}" data-paso="reposo" data-momento="0" data-telefono="cliente" role="group" aria-label="{{ejemplo.leyenda}}">
+{{#si variosOficios}}      <div class="demo__ejemplos" role="group" aria-labelledby="demo-ejemplos">
         <span class="demo__elige" id="demo-ejemplos">{{demo.rotulos.ejemplo}}</span>
         <div class="demo__opciones">
 {{#cada giros}}          <button class="demo__ejemplo" type="button" data-demo-ejemplo="{{clave}}" aria-pressed="{{#si @primero}}true{{/si}}{{#no @primero}}false{{/no}}"><svg class="demo__oficio" aria-hidden="true" focusable="false"><use href="#i-oficio-{{clave}}"/></svg>{{nombre}}</button>
 {{/cada}}        </div>
       </div>
-      <div class="demo__escena">
+{{/si}}      <div class="demo__escena">
         <div class="tel" data-demo-tel>
           <div class="wa" data-demo-pantalla>
             <p class="wa__estado" aria-hidden="true"><span data-demo-reloj>{{ejemplo.reposo.reloj}}</span><svg viewBox="0 0 58 12" fill="currentColor" focusable="false"><rect y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" width="3" height="12" rx="1"/><path d="M30 2.2c2.6 0 4.9 1 6.6 2.7l-1.3 1.4A7.4 7.4 0 0 0 30 4.1c-2 0-3.9.8-5.3 2.2l-1.3-1.4A9.3 9.3 0 0 1 30 2.2zm0 3.9c1.5 0 2.9.6 3.9 1.6l-1.4 1.4a3.6 3.6 0 0 0-5 0l-1.4-1.4A5.5 5.5 0 0 1 30 6.1zm0 3.7 1.5 1.5L30 12.8l-1.5-1.5z"/><rect x="42" y="1" width="14" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="43.8" y="2.8" width="9" height="6.4" rx="1.5"/></svg></p>

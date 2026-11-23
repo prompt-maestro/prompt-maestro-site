@@ -13,6 +13,7 @@ import { problemasDeBeneficios } from './beneficios.mjs';
 import { datosEstructurados, jsonParaScript, llmsTxt, robots, sitemap, TOPES } from './buscadores.mjs';
 import { guionesEn, revisarEnlacesInternos, revisarGuiones } from './comprobaciones.mjs';
 import { medicionDe } from './medicion.mjs';
+import { esDeUnGuardado, soloLoQueSeVende } from './oficios.mjs';
 import { planesParaPagina, planesPublicos } from './planes.mjs';
 import { pintar } from './plantilla.mjs';
 
@@ -198,28 +199,37 @@ function textosDe(ejemplo) {
 /**
  * Los ejemplos de la demostracion: cada giro con su guion, en el orden en que se eligen. Se detiene si a un giro le
  * falta el guion, si dos llevan la misma clave o si alguna frase de CUALQUIERA de ellos queda vacia o con un hueco sin
- * llenar, y anota como problema cualquier guion largo en lo que el JavaScript va a pintar.
- * @param {Record<string, unknown>} datos
+ * llenar, y anota como problema cualquier guion largo en lo que el JavaScript va a pintar. Revisa TODOS los giros,
+ * tambien los guardados (asi un cambio en lo compartido no los rompe sin que nadie se entere), pero en la pagina solo
+ * viajan los que estan a la venta.
+ * @param {Record<string, unknown>} datos  los datos ya con solo lo que se vende
+ * @param {unknown} todos  todos los giros de giros.json, a la venta o guardados
  * @param {string[]} problemas
  */
-function prepararDemo(datos, problemas) {
-  // La tarjeta de "Para quien" de cada giro la pinta la plantilla: a la demostracion no le hace falta y no viaja en
-  // sus datos.
-  const giros = /** @type {(import('../fuente/js/demo.js').Giro & { tarjeta?: unknown })[]} */ (datos.giros).map(
-    ({ tarjeta: _tarjeta, ...giro }) => giro,
-  );
+function prepararDemo(datos, todos, problemas) {
+  // La tarjeta de "Para quien" de cada giro la pinta la plantilla y el interruptor lo lee la armada: a la
+  // demostracion no le hacen falta y no viajan en sus datos.
+  /** @param {unknown} lista */
+  const sinLoAjeno = (lista) =>
+    /** @type {(import('../fuente/js/demo.js').Giro & { tarjeta?: unknown, aLaVenta?: unknown })[]} */ (lista).map(
+      ({ tarjeta: _tarjeta, aLaVenta: _aLaVenta, ...giro }) => giro,
+    );
   const guiones = /** @type {Record<string, import('../fuente/js/demo.js').Guion>} */ (datos.guiones);
   const { fijos, momentos, finales, rotulos } = /** @type {Omit<Ejemplo, 'giro' | 'guion'>} */ (datos.demo);
-  const ejemplos = giros.map((giro) => {
-    const guion = guiones[giro.clave];
-    if (!guion) throw new Error(`Demostracion: al ejemplo "${giro.clave}" le falta su guion`);
-    return { giro, guion };
-  });
+  /** @param {import('../fuente/js/demo.js').Giro[]} giros */
+  const ejemplosDe = (giros) =>
+    giros.map((giro) => {
+      const guion = guiones[giro.clave];
+      if (!guion) throw new Error(`Demostracion: al ejemplo "${giro.clave}" le falta su guion`);
+      return { giro, guion };
+    });
+  const revisados = ejemplosDe(sinLoAjeno(todos));
+  const ejemplos = ejemplosDe(sinLoAjeno(datos.giros));
   // El selector distingue los ejemplos por su clave.
-  if (new Set(giros.map((giro) => giro.clave)).size !== giros.length) {
+  if (new Set(revisados.map(({ giro }) => giro.clave)).size !== revisados.length) {
     throw new Error('Demostracion: dos ejemplos llevan la misma clave');
   }
-  for (const ejemplo of ejemplos) {
+  for (const ejemplo of revisados) {
     for (const texto of textosDe({ ...ejemplo, fijos, momentos, finales, rotulos })) {
       if (!texto) throw new Error(`Demostracion: al ejemplo "${ejemplo.giro.clave}" le falta un texto`);
       for (const hallazgo of guionesEn(texto)) problemas.push(`demostracion (${ejemplo.giro.clave}): ${hallazgo}`);
@@ -261,12 +271,18 @@ export async function armarSitio({ raiz, destino }) {
   /** @type {string[]} */
   const avisos = [];
 
+  // 0. Los datos, con solo los oficios a la venta (giros.json, "aLaVenta"): los guardados no se ensenan ni viajan.
+  const leidos = await leerDatos(fuente, problemas);
+  const { datos, guardados } = soloLoQueSeVende(leidos);
+
   // 1. Lo que no es HTML va en carpetas con la huella de su contenido: si algo cambia, cambia la direccion, y ningun
   //    telefono se queda con una hoja de estilos vieja. Son dos carpetas: los recursos (tipografias, imagenes, video),
   //    que pesan y casi nunca cambian, y el codigo (estilos y scripts). Corregir un estilo no vuelve a bajar un video.
+  //    Las fotos y los videos de un oficio guardado se quedan en la fuente.
   /** @type {[string, Buffer][]} */
   const recursos = [];
   for (const ruta of await listar(fuente, 'recursos', problemas)) {
+    if (esDeUnGuardado(ruta, guardados)) continue;
     recursos.push([ruta, await readFile(path.join(fuente, 'recursos', ruta))]);
   }
   const carpetaRecursos = `${base}r/${huellaDe(recursos)}/`;
@@ -288,11 +304,10 @@ export async function armarSitio({ raiz, destino }) {
     archivos.set(ruta, await readFile(path.join(fuente, 'raiz', ruta)));
   }
 
-  // 2. Los datos.
-  const datos = await leerDatos(fuente, problemas);
+  // 2. Lo que sale de los datos.
   const planes = planesPublicos(datos.planes);
   const sitio = /** @type {Record<string, unknown>} */ (datos.sitio);
-  const demo = prepararDemo(datos, problemas);
+  const demo = prepararDemo(datos, leidos.giros, problemas);
   // Los capitulos de "Tu agente" y sus mini videos: que la plantilla sepa dibujar cada paso y que duren lo que deben.
   problemas.push(...problemasDeBeneficios(/** @type {any} */ (datos.agentes)?.capitulos));
   if (planes.dePrueba) {
@@ -348,6 +363,9 @@ export async function armarSitio({ raiz, destino }) {
     ...datos,
     planes: planesParaPagina(planes, pesos),
     ejemplo: demo.ejemplo,
+    // Con un solo oficio a la venta la demostracion no lleva selector de ejemplos (ni sus iconos) y el cierre del
+    // corto no se parte en franjas: el oficio va a todo lo ancho, con la foto de su escena.
+    variosOficios: /** @type {unknown[]} */ (datos.giros).length > 1,
     conversacion: demo.conversacion,
     armado: {
       previa: destino === 'previa',
@@ -408,13 +426,14 @@ export async function armarSitio({ raiz, destino }) {
           cuida: agentes.cuida.lista.map(
             (/** @type {{ titulo: string, texto: string }} */ uno) => `${uno.titulo}. ${uno.texto}`,
           ),
-          // Lo que hace falta para empezar, cada cosa con para que es; y la cedula, que solo aplica en salud.
+          // Lo que hace falta para empezar, cada cosa con para que es; y la cedula, solo si un oficio de salud esta a la
+          // venta.
           requisitos: [
             ...secciones.planes.requisitos.map(
               (/** @type {{ titulo: string, texto: string }} */ uno) => `${uno.titulo}. ${uno.texto}`,
             ),
             secciones.planes.requisitosNota,
-          ],
+          ].filter(Boolean),
           glosario: secciones.glosario,
           paraQuien: `${secciones.paraQuien.titulo} ${secciones.paraQuien.tituloFuerte}`,
           preciosDePrueba: planes.dePrueba,

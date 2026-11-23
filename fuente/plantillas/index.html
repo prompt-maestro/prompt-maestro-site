@@ -147,9 +147,9 @@
         <p class="corto__nombre">{{corto.marca.nombre}}</p>
         <p class="corto__frase">{{corto.marca.frase}}</p>
       </div>
-      <div class="todos">
-{{#cada corto.oficios}}        <div class="franja" data-franja="{{clave}}" data-persona="{{mira.dePie}}">
-          <div class="foto"><div class="foto__vivo"><div class="foto__luz">{{> foto-trabajo}}</div></div></div>
+      <div class="todos{{#no variosOficios}} todos--uno{{/no}}">
+{{#cada corto.oficios}}        <div class="franja" data-franja="{{clave}}" data-persona="{{#si variosOficios}}{{mira.dePie}}{{/si}}{{#no variosOficios}}{{mira.persona}}{{/no}}">
+          <div class="foto"><div class="foto__vivo"><div class="foto__luz">{{#si variosOficios}}{{> foto-trabajo}}{{/si}}{{#no variosOficios}}{{> foto-escena}}{{/no}}</div></div></div>
           <p class="franja__nombre">{{nombre}}</p>
         </div>
 {{/cada}}      </div>
@@ -271,7 +271,7 @@
       <ul class="requisitos" role="list">
 {{#cada secciones.planes.requisitos}}        <li class="requisito"><span class="requisito__icono" aria-hidden="true"><svg class="requisito__trazo" focusable="false"><use href="#i-{{icono}}"/></svg></span><h4>{{titulo}}</h4><p>{{texto}}</p></li>
 {{/cada}}      </ul>
-      <p class="planes__cedula"><svg class="planes__cedula-icono" aria-hidden="true" focusable="false"><use href="#i-cedula"/></svg>{{secciones.planes.requisitosNota}}</p>
+{{#si secciones.planes.requisitosNota}}      <p class="planes__cedula"><svg class="planes__cedula-icono" aria-hidden="true" focusable="false"><use href="#i-cedula"/></svg>{{secciones.planes.requisitosNota}}</p>{{/si}}
     </div>
   </section>
 

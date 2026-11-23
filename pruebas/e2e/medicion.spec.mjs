@@ -1,6 +1,6 @@
 // @ts-check
 import { readFileSync } from 'node:fs';
-import { vigilar } from './apoyo.mjs';
+import { VENDIDO, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 const ALTA = 'https://alta.prompt-maestro.com/';
@@ -8,6 +8,18 @@ const PASOS = ['precio', 'horarios', 'apartado', 'pagado', 'recordatorios', 'asi
 // Los nombres de los planes salen del mismo archivo que la pagina.
 /** @type {{ planes: { nombre: string }[] }} */
 const { planes: PLANES } = JSON.parse(readFileSync(new URL('../../fuente/datos/planes.json', import.meta.url), 'utf8'));
+/**
+ * Los ejemplos de la demostracion: uno por oficio a la venta (giros.json, "aLaVenta"), en su orden. El primero es el
+ * que la pagina trae puesto.
+ * @type {{ clave: string, nombre: string }[]}
+ */
+const EJEMPLOS = VENDIDO.datos.giros;
+const PRIMERO = EJEMPLOS[0]?.clave ?? '';
+/** Las preguntas que ensena la pagina: las de un oficio guardado ("solo") no van. */
+const PREGUNTAS = VENDIDO.datos.preguntas.length;
+/** Con un solo oficio a la venta no hay selector de ejemplos: no hay cambio de ejemplo que medir. */
+const VARIOS = EJEMPLOS.length > 1;
+const SIN_SELECTOR = 'con un solo oficio a la venta no hay selector de ejemplos';
 
 /** Lo que le llego a Umami: el nombre del evento y sus propiedades. @typedef {[string, Record<string, string | number> | undefined]} Anotado */
 
@@ -118,10 +130,10 @@ test('la demostracion avisa su inicio al toque, cada paso una vez y su final; ve
   await botonDePausa(demo).click();
   await expect(demo).toHaveAttribute('data-paso', 'cierre');
   // "pagado" abarca dos paradas (el pago aprobado y la cita confirmada) y se avisa una sola vez.
-  const pasos = PASOS.map((paso) => ({ giro: 'unas', paso }));
+  const pasos = PASOS.map((paso) => ({ giro: PRIMERO, paso }));
   await expect.poll(() => de(page, 'demo_paso')).toEqual(pasos);
-  expect(await de(page, 'demo_inicio')).toEqual([{ giro: 'unas', modo: 'toque' }]);
-  expect(await de(page, 'demo_fin')).toEqual([{ giro: 'unas', asistio: 'si' }]);
+  expect(await de(page, 'demo_inicio')).toEqual([{ giro: PRIMERO, modo: 'toque' }]);
+  expect(await de(page, 'demo_fin')).toEqual([{ giro: PRIMERO, asistio: 'si' }]);
   // Regresar con una rayita a un momento ya visto no es otro paso ni otro inicio, y contestar distinto no es otro
   // final: la historia es la misma.
   await demo.getByRole('button', { name: '03 Cobra el anticipo', exact: true }).click();
@@ -133,15 +145,18 @@ test('la demostracion avisa su inicio al toque, cada paso una vez y su final; ve
   await expect(demo).toHaveAttribute('data-paso', 'cierre');
   expect(await de(page, 'demo_paso')).toEqual(pasos);
   expect(await de(page, 'demo_inicio')).toHaveLength(1);
-  expect(await de(page, 'demo_fin')).toEqual([{ giro: 'unas', asistio: 'si' }]);
+  expect(await de(page, 'demo_fin')).toEqual([{ giro: PRIMERO, asistio: 'si' }]);
   // Verla otra vez si es otra historia: se mide igual que la primera.
   await expect(botonDePausa(demo)).toHaveAccessibleName('Ver otra vez');
   await botonDePausa(demo).click();
   await expect(demo).toHaveAttribute('data-paso', 'precio');
-  await expect.poll(() => de(page, 'demo_paso')).toEqual([...pasos, { giro: 'unas', paso: 'precio' }]);
+  // Con un solo oficio a la venta no hay ejemplos que elegir: nunca hay un cambio de ejemplo.
+  await expect(demo.locator('[data-demo-ejemplo]')).toHaveCount(VARIOS ? EJEMPLOS.length : 0);
+  await expect(demo.locator('.demo__ejemplos')).toHaveCount(VARIOS ? 1 : 0);
+  await expect.poll(() => de(page, 'demo_paso')).toEqual([...pasos, { giro: PRIMERO, paso: 'precio' }]);
   expect(await de(page, 'demo_inicio')).toEqual([
-    { giro: 'unas', modo: 'toque' },
-    { giro: 'unas', modo: 'toque' },
+    { giro: PRIMERO, modo: 'toque' },
+    { giro: PRIMERO, modo: 'toque' },
   ]);
   expect(await de(page, 'demo_fin')).toHaveLength(1);
   expect(await de(page, 'ejemplo_cambio')).toEqual([]);
@@ -155,8 +170,8 @@ test('si nadie la toca y arranca sola al quedar a la vista, el inicio dice que f
   expect(await de(page, 'demo_inicio')).toEqual([]);
   await demo.locator('[data-demo-tel]').evaluate((tel) => tel.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await expect(demo).toHaveAttribute('data-paso', 'precio', { timeout: 30_000 });
-  await expect.poll(() => de(page, 'demo_inicio')).toEqual([{ giro: 'unas', modo: 'sola' }]);
-  expect(await de(page, 'demo_paso')).toEqual([{ giro: 'unas', paso: 'precio' }]);
+  await expect.poll(() => de(page, 'demo_inicio')).toEqual([{ giro: PRIMERO, modo: 'sola' }]);
+  expect(await de(page, 'demo_paso')).toEqual([{ giro: PRIMERO, paso: 'precio' }]);
 });
 
 test('echarla a andar con una rayita es un inicio al toque, y se avisa el paso al que llega', async ({ page }) => {
@@ -164,15 +179,15 @@ test('echarla a andar con una rayita es un inicio al toque, y se avisa el paso a
   await conUmami(page);
   const demo = await abrirConMovimiento(page);
   await demo.getByRole('button', { name: '02 Ofrece horarios', exact: true }).click();
-  await expect.poll(() => de(page, 'demo_inicio')).toEqual([{ giro: 'unas', modo: 'toque' }]);
+  await expect.poll(() => de(page, 'demo_inicio')).toEqual([{ giro: PRIMERO, modo: 'toque' }]);
   // El precio se lo brinco: no lo vio, no se avisa.
-  expect(await de(page, 'demo_paso')).toEqual([{ giro: 'unas', paso: 'horarios' }]);
+  expect(await de(page, 'demo_paso')).toEqual([{ giro: PRIMERO, paso: 'horarios' }]);
   // De ahi sigue sola, y cada paso al que llega se avisa: el siguiente es el apartado.
   await expect
     .poll(async () => (await de(page, 'demo_paso')).slice(0, 2), { timeout: 30_000 })
     .toEqual([
-      { giro: 'unas', paso: 'horarios' },
-      { giro: 'unas', paso: 'apartado' },
+      { giro: PRIMERO, paso: 'horarios' },
+      { giro: PRIMERO, paso: 'apartado' },
     ]);
   expect(await de(page, 'demo_inicio')).toHaveLength(1);
 });
@@ -187,30 +202,34 @@ test('pausarla antes de que empiece y continuar tambien es un inicio al toque', 
   await page.waitForTimeout(2500);
   expect(await de(page, 'demo_inicio')).toEqual([]);
   await botonDePausa(demo).click();
-  await expect.poll(() => de(page, 'demo_inicio'), { timeout: 30_000 }).toEqual([{ giro: 'unas', modo: 'toque' }]);
+  await expect.poll(() => de(page, 'demo_inicio'), { timeout: 30_000 }).toEqual([{ giro: PRIMERO, modo: 'toque' }]);
 });
 
 test('cambiar de ejemplo avisa cual; su historia lleva ese giro y el No se mide como no', async ({ page }) => {
+  test.skip(!VARIOS, SIN_SELECTOR);
   test.slow(); // la historia completa, a toques
+  // El segundo ejemplo y, despues, el tercero (con dos, se regresa al primero: tambien es un cambio).
+  const segundo = /** @type {{ clave: string, nombre: string }} */ (EJEMPLOS[1]);
+  const tercero = /** @type {{ clave: string, nombre: string }} */ (EJEMPLOS[2] ?? EJEMPLOS[0]);
   await conUmami(page);
   const demo = await abrir(page);
-  await botonDeEjemplo(demo, 'Dentista').click();
-  await expect(demo).toHaveAttribute('data-ejemplo', 'dentista');
+  await botonDeEjemplo(demo, segundo.nombre).click();
+  await expect(demo).toHaveAttribute('data-ejemplo', segundo.clave);
   // Tocar el que ya esta puesto no es un cambio.
-  await botonDeEjemplo(demo, 'Dentista').click();
+  await botonDeEjemplo(demo, segundo.nombre).click();
   await hastaElPaso(demo, 'asistencia');
   await demo.getByRole('button', { name: 'No', exact: true }).click();
   await expect(demo).toHaveAttribute('data-paso', 'finNo');
-  await expect.poll(() => de(page, 'demo_fin')).toEqual([{ giro: 'dentista', asistio: 'no' }]);
-  expect(await de(page, 'ejemplo_cambio')).toEqual([{ giro: 'dentista' }]);
-  expect(await de(page, 'demo_inicio')).toEqual([{ giro: 'dentista', modo: 'toque' }]);
-  expect(await de(page, 'demo_paso')).toEqual(PASOS.map((paso) => ({ giro: 'dentista', paso })));
+  await expect.poll(() => de(page, 'demo_fin')).toEqual([{ giro: segundo.clave, asistio: 'no' }]);
+  expect(await de(page, 'ejemplo_cambio')).toEqual([{ giro: segundo.clave }]);
+  expect(await de(page, 'demo_inicio')).toEqual([{ giro: segundo.clave, modo: 'toque' }]);
+  expect(await de(page, 'demo_paso')).toEqual(PASOS.map((paso) => ({ giro: segundo.clave, paso })));
   // Cambiar de ejemplo con la historia ya contada la regresa al principio: avisa el cambio y nada mas (pidio menos
   // movimiento: no vuelve a correr sola).
-  await botonDeEjemplo(demo, 'Médico').click();
-  await expect(demo).toHaveAttribute('data-ejemplo', 'medico');
+  await botonDeEjemplo(demo, tercero.nombre).click();
+  await expect(demo).toHaveAttribute('data-ejemplo', tercero.clave);
   await expect(demo).toHaveAttribute('data-paso', 'reposo');
-  await expect.poll(() => de(page, 'ejemplo_cambio')).toEqual([{ giro: 'dentista' }, { giro: 'medico' }]);
+  await expect.poll(() => de(page, 'ejemplo_cambio')).toEqual([{ giro: segundo.clave }, { giro: tercero.clave }]);
   expect(await de(page, 'demo_inicio')).toHaveLength(1);
   expect(await de(page, 'demo_paso')).toHaveLength(PASOS.length);
   expect(await de(page, 'demo_fin')).toHaveLength(1);
@@ -219,11 +238,11 @@ test('cambiar de ejemplo avisa cual; su historia lleva ese giro y el No se mide 
   await expect
     .poll(() => de(page, 'demo_inicio'))
     .toEqual([
-      { giro: 'dentista', modo: 'toque' },
-      { giro: 'medico', modo: 'toque' },
+      { giro: segundo.clave, modo: 'toque' },
+      { giro: tercero.clave, modo: 'toque' },
     ]);
   await expect.poll(() => de(page, 'demo_paso')).toHaveLength(PASOS.length + 1);
-  expect((await de(page, 'demo_paso')).at(-1)).toEqual({ giro: 'medico', paso: 'precio' });
+  expect((await de(page, 'demo_paso')).at(-1)).toEqual({ giro: tercero.clave, paso: 'precio' });
   // Ningun evento de la demostracion lleva texto de la conversacion: solo el giro y un valor de su lista.
   const deLaDemo = (await anotados(page)).filter(([nombre]) => /^(demo_|ejemplo_)/.test(nombre));
   expect(deLaDemo.length).toBeGreaterThan(10);
@@ -235,17 +254,19 @@ test('cambiar de ejemplo avisa cual; su historia lleva ese giro y el No se mide 
 test('con la historia corriendo, cambiar de ejemplo la echa a andar de nuevo: otro inicio, al toque', async ({
   page,
 }) => {
+  test.skip(!VARIOS, SIN_SELECTOR);
   test.slow(); // corre con el reloj de verdad
+  const otro = /** @type {{ clave: string, nombre: string }} */ (EJEMPLOS.at(-1));
   await conUmami(page);
   const demo = await abrirConMovimiento(page);
-  await botonDeEjemplo(demo, 'Médico').click();
-  await expect(demo).toHaveAttribute('data-ejemplo', 'medico');
+  await botonDeEjemplo(demo, otro.nombre).click();
+  await expect(demo).toHaveAttribute('data-ejemplo', otro.clave);
   await expect(demo).toHaveAttribute('data-paso', 'precio', { timeout: 30_000 });
   const inicios = await de(page, 'demo_inicio');
-  // Si alcanzo a empezar sola con el primer ejemplo, ese inicio fue suyo; el de Medico lo provoco la visitante.
-  expect(inicios.at(-1)).toEqual({ giro: 'medico', modo: 'toque' });
-  expect(inicios.filter((inicio) => inicio?.giro === 'medico')).toHaveLength(1);
-  expect(await de(page, 'ejemplo_cambio')).toEqual([{ giro: 'medico' }]);
+  // Si alcanzo a empezar sola con el primer ejemplo, ese inicio fue suyo; el del otro lo provoco la visitante.
+  expect(inicios.at(-1)).toEqual({ giro: otro.clave, modo: 'toque' });
+  expect(inicios.filter((inicio) => inicio?.giro === otro.clave)).toHaveLength(1);
+  expect(await de(page, 'ejemplo_cambio')).toEqual([{ giro: otro.clave }]);
 });
 
 test('cada enlace al alta avisa desde donde se toco y, en los planes, cual plan; los demas enlaces no cuentan', async ({
@@ -320,7 +341,7 @@ test('abrir una pregunta avisa su posicion; cerrarla no avisa nada', async ({ pa
   expect(Object.keys((await de(page, 'pregunta_abre'))[0] ?? {})).toEqual(['id']);
 });
 
-test('desplegar "Ver más preguntas" no avisa nada, y las de adentro avisan su posicion entre las trece', async ({
+test('desplegar "Ver más preguntas" no avisa nada, y las de adentro avisan su posicion entre todas', async ({
   page,
 }) => {
   await conUmami(page);
@@ -328,7 +349,8 @@ test('desplegar "Ver más preguntas" no avisa nada, y las de adentro avisan su p
   const mas = page.locator('details.preguntas__mas');
   const boton = mas.locator('summary.preguntas__ver');
   const preguntas = page.locator('details.pregunta');
-  await expect(preguntas).toHaveCount(13);
+  await expect(preguntas).toHaveCount(PREGUNTAS);
+  expect(PREGUNTAS).toBeGreaterThan(6);
   await boton.click();
   await expect(mas).toHaveAttribute('open', '');
   // La sexta es la primera de las que estaban guardadas. Su aviso es el primero que llega: el del boton no existe.
@@ -343,10 +365,10 @@ test('desplegar "Ver más preguntas" no avisa nada, y las de adentro avisan su p
   await expect(mas).toHaveAttribute('open', '');
   await expect(sexta).toHaveAttribute('open', '');
   await preguntas.last().locator('summary').click();
-  await expect.poll(() => de(page, 'pregunta_abre')).toEqual([{ id: 6 }, { id: 13 }]);
+  await expect.poll(() => de(page, 'pregunta_abre')).toEqual([{ id: 6 }, { id: PREGUNTAS }]);
   // Una de las cinco de la vista sigue contando igual que siempre.
   await preguntas.nth(4).locator('summary').click();
-  await expect.poll(() => de(page, 'pregunta_abre')).toEqual([{ id: 6 }, { id: 13 }, { id: 5 }]);
+  await expect.poll(() => de(page, 'pregunta_abre')).toEqual([{ id: 6 }, { id: PREGUNTAS }, { id: 5 }]);
   // No hay ningun evento nuevo: de las preguntas solo sale el de siempre, con su numero y nada mas.
   const nombres = (await anotados(page)).map(([nombre]) => nombre);
   expect(nombres.filter((nombre) => /pregunta|mas|ver/.test(nombre))).toEqual(Array(3).fill('pregunta_abre'));
@@ -424,11 +446,16 @@ for (const [caso, poner] of SIN_MEDICION) {
     if (poner) await page.addInitScript(poner);
     await sinSalir(page);
     const demo = await abrir(page);
-    // Todo lo que se mide, de corrido: la demostracion, el ejemplo, una pregunta, los enlaces y un error.
+    // Todo lo que se mide, de corrido: la demostracion, el ejemplo (si hay que elegir), una pregunta, los enlaces y
+    // un error.
     await hastaElPaso(demo, 'horarios');
-    await botonDeEjemplo(demo, 'Dentista').click();
-    await expect(demo).toHaveAttribute('data-ejemplo', 'dentista');
-    await expect(demo.locator('[data-demo-nombre]')).toHaveText('Dental Sonría');
+    const segundo = EJEMPLOS[1];
+    if (VARIOS && segundo) {
+      await botonDeEjemplo(demo, segundo.nombre).click();
+      await expect(demo).toHaveAttribute('data-ejemplo', segundo.clave);
+    } else {
+      await expect(demo.locator('[data-demo-ejemplo]')).toHaveCount(0);
+    }
     const pregunta = page.locator('details.pregunta').first();
     await pregunta.locator('summary').click();
     await expect(pregunta).toHaveAttribute('open', '');
@@ -440,9 +467,9 @@ for (const [caso, poner] of SIN_MEDICION) {
       window.dispatchEvent(new ErrorEvent('error', { message: 'x', filename, lineno: 7 }));
     });
     if (poner) {
-      // Hubo a quien mandarle y fallo cada vez: se intento con los ocho eventos de este recorrido (el inicio, dos
-      // pasos, el ejemplo, la pregunta, los dos enlaces y el error) y ninguno hizo ruido.
-      await expect.poll(() => page.evaluate(() => /** @type {any} */ (window).__intentos)).toBe(8);
+      // Hubo a quien mandarle y fallo cada vez: se intento con los eventos de este recorrido (el inicio, dos pasos, el
+      // ejemplo si lo hubo, la pregunta, los dos enlaces y el error) y ninguno hizo ruido.
+      await expect.poll(() => page.evaluate(() => /** @type {any} */ (window).__intentos)).toBe(VARIOS ? 8 : 7);
     } else {
       // La medicion no inventa un Umami cuando no lo hay.
       expect(await page.evaluate(() => 'umami' in window)).toBe(false);

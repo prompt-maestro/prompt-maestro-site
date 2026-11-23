@@ -1,6 +1,32 @@
 // @ts-check
+import { readFileSync } from 'node:fs';
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect } from '@playwright/test';
+import { soloLoQueSeVende } from '../../herramientas/oficios.mjs';
+
+/**
+ * Un archivo de fuente/datos, tal como esta: con lo de todos los oficios, a la venta o guardados.
+ * @param {string} ruta
+ * @returns {any}
+ */
+export const leerDatos = (ruta) =>
+  JSON.parse(readFileSync(new URL(`../../fuente/datos/${ruta}`, import.meta.url), 'utf8'));
+
+/**
+ * Lo que la pagina ensena de los datos: solo los oficios a la venta (giros.json, "aLaVenta") y lo que es de ellos.
+ * Las pruebas leen de aqui lo que esperan ver: el dia que se encienda un oficio, lo siguen solas.
+ */
+export const VENDIDO = soloLoQueSeVende({
+  giros: leerDatos('giros.json'),
+  corto: leerDatos('corto.json'),
+  preguntas: leerDatos('preguntas.json'),
+  agentes: leerDatos('agentes.json'),
+  secciones: leerDatos('secciones.json'),
+});
+/** Las claves de los oficios a la venta, en su orden. */
+export const A_LA_VENTA = [...VENDIDO.claves];
+/** Si la pagina ensena un oficio de salud. */
+export const CON_SALUD = VENDIDO.claves.has('dentista') || VENDIDO.claves.has('medico');
 
 /**
  * Junta lo que no debe pasar mientras se usa la pagina: errores de consola, errores de JavaScript y peticiones rotas.

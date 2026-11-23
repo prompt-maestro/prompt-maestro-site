@@ -49,7 +49,7 @@
   },
   "paraQuien": {
     "sobre": "Para quién",
-    "titulo": "Hoy, para uñas, dentistas y médicos.",
+    "titulo": "Hoy, para profesionales de uñas.",
     "tituloFuerte": "Pronto, más oficios y profesiones.",
     "otro": "¿No está tu negocio?",
     "otroAccion": "Escríbenos y lo platicamos."
@@ -104,6 +104,7 @@
       }
     ],
     "requisitosNota": "Si eres dentista o médico, una más: tu cédula profesional.",
+    "requisitosNotaSolo": ["dentista", "medico"],
     "recomendado": "Recomendado",
     "notaInstalacion": "Instalación única de",
     "notaResto": "Hoy pagas la instalación y tu primer mes; ese mes empieza a contar el día que tu agente queda activo. Pago con tarjeta. No cobramos comisión por cita.",

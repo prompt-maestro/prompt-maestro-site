@@ -5,8 +5,8 @@
     "principal": true
   },
   {
-    "pregunta": "¿Qué pasa si mi clienta o paciente no llega a su cita?",
-    "respuesta": "Después de la cita, tu agente te pregunta si la persona asistió. Si tocas «No», el anticipo se queda contigo y a esa persona se le ofrece agendar de nuevo. Nosotros no hacemos devoluciones: si alguna vez quieres devolver un anticipo, lo haces tú directamente.",
+    "pregunta": "¿Qué pasa si mi clienta no llega a su cita?",
+    "respuesta": "Después de la cita, tu agente te pregunta si tu clienta asistió. Si tocas «No», el anticipo se queda contigo y a ella se le ofrece agendar de nuevo. Nosotros no hacemos devoluciones: si alguna vez quieres devolver un anticipo, lo haces tú directamente.",
     "principal": true
   },
   {
@@ -25,7 +25,7 @@
     "principal": true
   },
   {
-    "pregunta": "¿Mis clientas o pacientes tienen que instalar algo?",
+    "pregunta": "¿Mis clientas tienen que instalar algo?",
     "respuesta": "No. Te escriben por WhatsApp, como siempre."
   },
   {
@@ -34,11 +34,13 @@
   },
   {
     "pregunta": "Soy dentista o médico. ¿Mi agente opina de salud?",
-    "respuesta": "Nunca. No diagnostica ni recomienda medicamentos. Si alguien escribe por una urgencia, te avisa a ti."
+    "respuesta": "Nunca. No diagnostica ni recomienda medicamentos. Si alguien escribe por una urgencia, te avisa a ti.",
+    "solo": ["dentista", "medico"]
   },
   {
     "pregunta": "¿Reemplaza mi agenda o mis expedientes?",
-    "respuesta": "No. Tu agente agenda en tu Google Calendar y no guarda expedientes."
+    "respuesta": "No. Tu agente agenda en tu Google Calendar y no guarda expedientes.",
+    "solo": ["dentista", "medico"]
   },
   {
     "pregunta": "¿Me trae clientela nueva?",
@@ -49,8 +51,8 @@
     "respuesta": "Cotiza solo con los precios de tu catálogo. Si algo no está ahí, no lo inventa: te avisa. Además, tú lo pruebas antes que tu clientela."
   },
   {
-    "pregunta": "¿Qué pasa con los mensajes y los datos de mis clientas o pacientes?",
-    "respuesta": "Los mensajes se borran a los 90 días, y los audios y las fotos que te mandan no se guardan. En salud, las fotos de pacientes no se analizan."
+    "pregunta": "¿Qué pasa con los mensajes y los datos de mis clientas?",
+    "respuesta": "Los mensajes se borran a los 90 días, y los audios y las fotos que te mandan no se guardan."
   },
   {
     "pregunta": "¿Y si mi profesión u oficio no está en la lista?",

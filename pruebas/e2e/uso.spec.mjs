@@ -1,7 +1,7 @@
 // @ts-check
 // Lo que encontro la prueba de uso real (fase 5) y ninguna prueba veia: cada falla quedo aqui para que no regrese.
 // Las del comercial viejo (que avanzaba con el scroll) quedaron adaptadas al corto del inicio, que corre solo.
-import { abrirCortoDetenido, hastaElCuadro, vigilar } from './apoyo.mjs';
+import { A_LA_VENTA, abrirCortoDetenido, hastaElCuadro, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 /** Los perfiles con pantalla ancha: los unicos donde corre el corto (y donde el cartel ensena a la agente). */
@@ -278,8 +278,8 @@ test('si no llega pagina.js, la pagina queda como sin JavaScript sin esperar a n
   await expect(corto.locator('[data-corto-cine]')).toBeHidden();
   await expect(corto.locator('button').filter({ visible: true })).toHaveCount(0);
   await expect(page.locator('.plan')).toHaveCount(3);
-  // El oficio que le toco a la visita si quedo elegido: eso lo hace arranque.js solo.
-  await expect(pagina).toHaveAttribute('data-oficio', /^(unas|dentista|medico)$/);
+  // El oficio que le toco a la visita si quedo elegido, de los que estan a la venta: eso lo hace arranque.js solo.
+  await expect(pagina).toHaveAttribute('data-oficio', new RegExp(`^(${A_LA_VENTA.join('|')})$`));
 });
 
 test.describe('en una pantalla diminuta (zoom de 400 %, o un celular acostado)', () => {

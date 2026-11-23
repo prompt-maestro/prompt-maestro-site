@@ -1,6 +1,7 @@
 [
   {
     "clave": "unas",
+    "aLaVenta": true,
     "nombre": "Uñas",
     "lugar": "un salón de uñas",
     "persona": "clienta",
@@ -21,6 +22,7 @@
   },
   {
     "clave": "dentista",
+    "aLaVenta": false,
     "nombre": "Dentista",
     "lugar": "un consultorio dental",
     "persona": "paciente",
@@ -41,6 +43,7 @@
   },
   {
     "clave": "medico",
+    "aLaVenta": false,
     "nombre": "Médico",
     "lugar": "un consultorio médico",
     "persona": "paciente",

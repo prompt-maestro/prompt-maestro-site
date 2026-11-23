@@ -5,7 +5,7 @@
 // lo repite. En celular es un acordeon y en computadora, un menu con su escenario, que sube junto al titulo y se
 // queda a la vista. Con movimiento reducido nada corre; sin JavaScript, o si su pieza no llega, se lee como lista.
 import { readFileSync } from 'node:fs';
-import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { CON_SALUD, sinFaltasDeAccesibilidad, VENDIDO, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 /** @typedef {{ titulo: string, texto: string, dura: number, alta?: boolean, largo?: boolean, pasos: any[] }} Video */
@@ -17,6 +17,12 @@ const { capitulos: CAPITULOS } = JSON.parse(
 const HACE = CAPITULOS.find(({ clave }) => clave === 'hace')?.videos ?? [];
 /** Los pasos para contratarlo: los renglones de "Como empiezas". */
 const EMPIEZA = CAPITULOS.find(({ clave }) => clave === 'empieza')?.videos ?? [];
+/**
+ * Los compromisos de "Asi cuidamos de tu negocio" que ensena la pagina: los de todos y, de los que llevan "solo", los
+ * de un oficio a la venta (lo clinico, solo con un oficio de salud).
+ * @type {{ titulo: string, texto: string }[]}
+ */
+const CUIDA = VENDIDO.datos.agentes.cuida.lista;
 const TITULOS = HACE.map(({ titulo }) => titulo);
 const ORACIONES = HACE.map(({ texto }) => texto);
 /** Los beneficios que hay. */
@@ -783,8 +789,9 @@ test('los nueve beneficios: cada uno abre su oracion y su escena, con lo que dic
       quien: 'Lo ves tú',
     },
     {
-      queda: ['Pago aprobado · $300', '10:00 am · Elvira'],
-      seFue: ['Sí, aparte el jueves a las 10, por favor.', 'Anticipo Consulta'],
+      // El anticipo, con un ejemplo de unas: lo que vio ella ya se fue; queda el pago aprobado y la cita.
+      queda: ['Pago aprobado · $150', '10:00 am · Karla'],
+      seFue: ['Sí, apárteme el jueves a las 10, por favor.', 'Anticipo Acrílicas'],
       quien: 'Lo ves tú',
     },
     {
@@ -1144,7 +1151,7 @@ test('al imprimir o guardar en PDF la seccion sale completa: los dos capitulos, 
   await expect(page.locator('#agente .mv').filter({ visible: true })).toHaveCount(0);
   await expect(menu.locator('.beneficio__play').filter({ visible: true })).toHaveCount(0);
   await expect(page.locator('#agente .agentes__cuidamos li').filter({ visible: true })).toHaveCount(3);
-  await expect(page.locator('#agente .agentes__si li').filter({ visible: true })).toHaveCount(6);
+  await expect(page.locator('#agente .agentes__si li').filter({ visible: true })).toHaveCount(CUIDA.length);
   // En papel los fondos no se imprimen: el icono y la palomita dejan su joya y se pintan de azul, para no perderse.
   for (const adorno of ['.agentes__icono', '.agentes__palomita']) {
     const primero = page.locator(`#agente ${adorno}`).first();
@@ -1213,7 +1220,8 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y co
   expect(filas).toBe(computadora ? 1 : 3);
   if (computadora) expect(new Set(cajas.map(({ height }) => Math.round(height))).size).toBe(1);
 
-  // Como cuida el negocio: seis compromisos en positivo, cada uno con su palomita encendida. Ya sin taches.
+  // Como cuida el negocio: sus compromisos en positivo, cada uno con su palomita encendida. Ya sin taches. Lo clinico
+  // solo se ensena con un oficio de salud a la venta.
   const cuida = seccion.locator('.agentes__cuida');
   await cuida.scrollIntoViewIfNeeded();
   await expect(cuida.getByRole('heading', { level: 3 })).toHaveText('Así cuidamos de tu negocio');
@@ -1221,30 +1229,19 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y co
   await expect(cuida.getByRole('heading', { level: 3 })).toHaveCSS('font-size', '24px');
   await expect(tarjetas.getByRole('heading', { level: 4 }).first()).toHaveCSS('font-size', '20px');
   await expect(cuida.locator('.agentes__cuida-cabeza p')).toHaveText(
-    'Seis cosas que tu agente hace siempre, para que tú no tengas que vigilarlo.',
+    'Lo que tu agente hace siempre, para que tú no tengas que vigilarlo.',
   );
   const renglones = cuida.getByRole('listitem');
-  await expect(renglones.getByRole('heading', { level: 4 })).toHaveText([
-    'Cada cita, con su anticipo',
-    'Tus precios, tal cual',
-    'Siempre con transparencia',
-    'Cobra solo el anticipo',
-    'Lo clínico es tuyo',
-    'Cuida a quien ya te escribe',
-  ]);
-  await expect(renglones.locator('p')).toHaveText([
-    'Confirma solo con el pago aprobado. Las excepciones las decides tú.',
-    'Cotiza con tu catálogo y, si algo no está ahí, no lo inventa: te avisa.',
-    'Desde el primer mensaje se presenta como asistente virtual.',
-    'El resto del servicio lo cobras tú, como siempre.',
-    'No diagnostica ni recomienda medicamentos: agenda y, si hay una urgencia, te llega a ti.',
-    'No busca clientela nueva: hace que quien ya te escribe sí llegue a su cita, con su anticipo pagado.',
-  ]);
+  expect(CUIDA).toHaveLength(CON_SALUD ? 6 : 5);
+  await expect(renglones.getByRole('heading', { level: 4 })).toHaveText(CUIDA.map(({ titulo }) => titulo));
+  await expect(renglones.locator('p')).toHaveText(CUIDA.map(({ texto }) => texto));
+  await expect(renglones.first().getByRole('heading')).toHaveText('Cada cita, con su anticipo');
+  await expect(cuida.getByRole('heading', { name: 'Lo clínico es tuyo' })).toHaveCount(CON_SALUD ? 1 : 0);
   await expect(cuida).not.toContainText('te la pasa');
   await expect(cuida).not.toContainText('si tu clienta lo pide');
   await expect(seccion.locator('.agentes__tacha, .agentes__limites, .agentes__no')).toHaveCount(0);
   const palomitas = cuida.locator('.agentes__palomita');
-  await expect(palomitas).toHaveCount(6);
+  await expect(palomitas).toHaveCount(CUIDA.length);
   await expect(palomitas.first()).toHaveAttribute('aria-hidden', 'true');
   await expect(palomitas.first()).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(palomitas.first().locator('use')).toHaveAttribute('href', '#i-palomita');
@@ -1258,7 +1255,7 @@ test('debajo: tu numero, tu dinero y tus reglas en tres tarjetas con icono, y co
       return [Math.round(width), Math.round(height), titulo.left >= renglon.left + width + 8];
     }),
   );
-  expect(sellos).toEqual(Array(6).fill([30, 30, true]));
+  expect(sellos).toEqual(Array(CUIDA.length).fill([30, 30, true]));
   // En dos columnas donde caben, con su titulo a la izquierda; en celular, todo en una.
   const columnas = new Set(
     await renglones.evaluateAll((lista) => lista.map((renglon) => Math.round(renglon.getBoundingClientRect().left))),
@@ -1315,7 +1312,7 @@ test.describe('sin JavaScript', () => {
     await expect(page.locator('#agente .mv__barra')).toHaveCount(0);
     // Y lo de abajo, igual que siempre.
     await expect(page.locator('#agente .agentes__cuidamos li')).toHaveCount(3);
-    await expect(page.locator('#agente .agentes__si li')).toHaveCount(6);
+    await expect(page.locator('#agente .agentes__si li')).toHaveCount(CUIDA.length);
     await expect(page.locator('#agente .agentes__si')).toContainText(
       'Desde el primer mensaje se presenta como asistente virtual.',
     );
@@ -1864,11 +1861,12 @@ test('cada conversacion dice quien la ve: oscuro lo de la clienta, y en el azul 
   await boton(menu, RECADOS).click();
   await expect(rotulo().locator('.mv__de')).toHaveText('Lo ves tú');
   await expect(rotulo().locator('span')).toHaveCount(0);
-  // En salud dice "paciente", y al final de esa escena lo que queda es lo de la profesional: la cita ya pagada.
+  // La del anticipo empieza con lo que ve la clienta, y al final lo que queda es lo de la profesional: la cita ya
+  // pagada.
   await llegarA(boton(menu, PAGO));
   await boton(menu, PAGO).click();
   await expect(rotulo().locator('.mv__de')).toHaveText('Lo ves tú');
-  await expect(video(menu).locator('.mv__quien').locator('.mv__de')).toHaveText(['Lo ve tu paciente', 'Lo ves tú']);
+  await expect(video(menu).locator('.mv__quien').locator('.mv__de')).toHaveText(['Lo ve tu clienta', 'Lo ves tú']);
   // El rotulo va arriba de lo que nombra.
   const orden = await video(menu).evaluate((pantalla) => {
     const tope = (/** @type {string} */ que) =>

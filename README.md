@@ -50,7 +50,9 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
   dónde lo sacó, el pago aprobado y el papel con su sello) y, para cerrar, todos los oficios en pantalla dividida,
   cada uno con su nombre, bajo el letrero del cierre y sus dos renglones (`todos.baja`: una oración en cada uno). El
   oficio es el mismo que eligió el azar para el cartel; «Ver de nuevo» corre el que sigue en la lista. La página
-  trae escrita una escena por oficio y solo se pinta la que toca: de las demás no se pide ni la foto.
+  trae escrita una escena por oficio y solo se pinta la que toca: de las demás no se pide ni la foto. Con un solo
+  oficio a la venta (hoy, uñas) no hay pantalla dividida: el cierre (`.todos--uno`) lo enseña a todo lo ancho con la
+  foto acostada de su escena, porque la de pie, estirada a lo ancho, le cortaría la cara.
 - A la raya de luz del barrido la mueve el navegador, no el código: es una animación de puro `transform`
   (`barre` y `destapa`, en `fuente/estilos/corto.css`) que arranca y frena suave y entra y sale fundiéndose. La caja
   de lo de antes cruza la pantalla con la raya y su contenido recorre lo mismo al revés, así que lo de antes no se
@@ -68,9 +70,9 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
 - La página dice «WhatsApp» con la palabra, escrita así y con la letra del texto que la rodea. Nunca con un
   logotipo ni con un icono que se le parezca: las reglas de marca de Meta solo dejan usar el oficial, sin cambios.
   El rótulo de la conversación del corto es un dato (`canal`), común a todos los oficios.
-- El renglón chico del cartel (`cartel.sobre`) lleva dos espacios duros, escritos a la vista como `\u00a0`: tienen
-  juntas «y pronto más», así donde no cabe en un renglón se parte después de los tres oficios y nunca deja una «y»
-  colgada.
+- El renglón chico del cartel (`cartel.sobre`) dice para quién es (hoy, «Para profesionales de uñas»). Cuando
+  nombraba tres oficios llevaba dos espacios duros escritos a la vista para que «y pronto más» no se partiera; si
+  vuelve a nombrar varios, se vuelven a poner.
 - El corto se acomoda a la ventana, solo con estilos. En una menos ancha que 16:9 la foto de la escena se recorta a
   lo ancho: cuando llega lo que hizo su agente, la cámara se corre despacio y deja a quien trabaja a la derecha, así
   la conversación cae sobre el fondo y no sobre sus manos. En una casi cuadrada (3 por 2 o menos) el celular acercado
@@ -119,6 +121,18 @@ pruebas/        unitarias (node --test) y de punta a punta (Playwright con axe)
 - Las fotos y los videos del corto y de su cartel se convierten con `herramientas/optimizar.mjs` (necesita ffmpeg en
   la laptop). Los originales, pesados, viven en `originales/` (fuera del repo); aquí solo entra lo ya optimizado, sin
   audio.
+- Qué oficios enseña la página lo dice UN dato: `aLaVenta` (true o false) de cada oficio en
+  `fuente/datos/giros.json` (`herramientas/oficios.mjs`). Hoy solo uñas dice true; dentistas y médicos están
+  guardados: sus textos, su guion, su escena del corto, sus fotos y sus videos siguen en la fuente, pero no se enseñan
+  ni viajan al sitio (un recurso es de un oficio si su nombre empieza con su clave y un guion). Lo que es de unos
+  oficios fuera de giros.json lleva `"solo": [claves]` (una pregunta, un compromiso de «Así cuidamos», la nota de la
+  cédula con `requisitosNotaSolo`); una clave de `solo` que no está en giros.json detiene la armada. Con un solo
+  oficio a la venta la demostración no lleva selector de ejemplos y el cierre del corto va a todo lo ancho
+  (`variosOficios`). Los guiones de los guardados se siguen revisando al armar. Encender otro oficio es cambiar su
+  `aLaVenta` y, además, revisar los textos que hoy nombran solo a uñas: `cartel.sobre` y `todos.baja` (corto.json),
+  `paraQuien.titulo` (secciones.json), `descripcion` (sitio.json), las preguntas que dicen «clienta» y, si es de
+  salud, devolver a «Ve las imágenes de referencia» (agentes.json) que en salud no aplica y a la pregunta de los
+  datos que en salud las fotos no se analizan (estaban así hasta el 23-nov-2026; están en la historia de git).
 - Sumar un oficio no toca el diseño ni el código: sus originales en `originales/comercial/` (`<oficio>-escena.png`,
   su escena acostada, de 16 por 9; si tiene toma viva, `<oficio>-escena-viva.mp4`, ese mismo cuadro en movimiento; y
   `<oficio>-trabajo.png`, de pie), su entrada en

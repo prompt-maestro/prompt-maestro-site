@@ -15,11 +15,17 @@ import {
   sitemap,
   TOPES,
 } from '../../herramientas/buscadores.mjs';
+import { soloLoQueSeVende } from '../../herramientas/oficios.mjs';
 import { SE_CONSERVAN } from '../../herramientas/publicacion.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const leer = async (/** @type {string} */ ruta) =>
   JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', ruta), 'utf8'));
+/**
+ * Lo que la pagina ensena de los datos: solo lo de los oficios a la venta (giros.json, "aLaVenta").
+ * @param {Record<string, any>} datos  ademas de giros.json, que siempre se lee
+ */
+const aLaVenta = async (datos) => soloLoQueSeVende({ giros: await leer('giros.json'), ...datos });
 
 const ENTRADA = {
   origen: 'https://ejemplo.mx',
@@ -224,7 +230,8 @@ test('al compartir el enlace se ve el titulo, la descripcion y una imagen propia
 test('los datos estructurados de la pagina son JSON valido y dicen lo mismo que la pagina', async () => {
   const bloque = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)?.[1] ?? '';
   const grafo = /** @type {any[]} */ (JSON.parse(bloque)['@graph']);
-  const preguntas = await leer('preguntas.json');
+  // Las preguntas que ensena la pagina: las de un oficio guardado no van ni en la pagina ni para los buscadores.
+  const { preguntas } = (await aLaVenta({ preguntas: await leer('preguntas.json') })).datos;
   const { planes } = await leer('planes.json');
   const servicio = grafo.find((nodo) => nodo['@type'] === 'Service');
   const dudas = grafo.find((nodo) => nodo['@type'] === 'FAQPage');
@@ -238,9 +245,16 @@ test('los datos estructurados de la pagina son JSON valido y dicen lo mismo que 
   );
   // Cada pregunta de los datos estructurados esta escrita tambien en la pagina, a la vista.
   for (const { pregunta } of preguntas) assert.ok(html.includes(`<h3>${pregunta}</h3>`), pregunta);
+  // Y ninguna de un oficio guardado.
+  for (const { pregunta, solo } of await leer('preguntas.json')) {
+    if (!preguntas.some((/** @type {any} */ duda) => duda.pregunta === pregunta)) {
+      assert.ok(solo, `sin "solo", la pregunta es de todos: ${pregunta}`);
+      assert.ok(!html.includes(pregunta), pregunta);
+    }
+  }
 });
 
-test('en el dominio van robots.txt, sitemap.xml y llms.txt; en la previa no, porque no se indexa', () => {
+test('en el dominio van robots.txt, sitemap.xml y llms.txt; en la previa no, porque no se indexa', async () => {
   for (const ruta of ['robots.txt', 'sitemap.xml', 'llms.txt']) {
     assert.ok(publica.has(ruta), `falta ${ruta}`);
     assert.ok(!previa.has(ruta), `${ruta} no va en la previa`);
@@ -249,7 +263,10 @@ test('en el dominio van robots.txt, sitemap.xml y llms.txt; en la previa no, por
   const llms = publica.get('llms.txt')?.toString() ?? '';
   assert.match(llms, /^# Citas Garantizadas\n/);
   assert.ok(llms.includes('https://alta.prompt-maestro.com/'));
-  assert.ok(llms.includes('Hoy, para uñas, dentistas y médicos.'));
+  assert.ok(llms.includes('Hoy, para profesionales de uñas.'));
+  // Sin un oficio de salud a la venta, llms.txt no habla de dentistas, medicos, pacientes ni cedula.
+  const { claves } = await aLaVenta({});
+  if (!claves.has('dentista') && !claves.has('medico')) assert.doesNotMatch(llms, /dentista|médic|paciente|cédula/i);
 });
 
 test('cada direccion del mapa existe: o la arma la pagina o es una legal que la publicacion conserva', () => {

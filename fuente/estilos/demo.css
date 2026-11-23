@@ -1161,6 +1161,11 @@ html:not(.con-js) .wa__pie {
     width: 100%;
   }
 
+  /* Sin selector de ejemplos (un solo oficio a la venta) el celular es la unica fila: las tarjetas no abarcan otra. */
+  .demo--uno .llega {
+    grid-row: 1;
+  }
+
   /* Se ven las tres: apagadas las que aun no pasan y, encendida con borde de luz, la del momento. */
   .llega__tarjetas {
     gap: var(--e-3);

@@ -23,6 +23,7 @@ import {
 } from '../../fuente/js/agente.js';
 import { armarSitio } from '../../herramientas/armado.mjs';
 import { DURA, PIEZAS, problemasDeBeneficios } from '../../herramientas/beneficios.mjs';
+import { soloLoQueSeVende } from '../../herramientas/oficios.mjs';
 
 /** @typedef {import('../../fuente/js/agente.js').Estado} Estado */
 /** @typedef {import('../../fuente/js/agente.js').Evento} Evento */
@@ -31,6 +32,19 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const FUENTE = path.join(RAIZ, 'fuente');
 const agentes = JSON.parse(await readFile(path.join(FUENTE, 'datos', 'agentes.json'), 'utf8'));
 const secciones = JSON.parse(await readFile(path.join(FUENTE, 'datos', 'secciones.json'), 'utf8'));
+const giros = JSON.parse(await readFile(path.join(FUENTE, 'datos', 'giros.json'), 'utf8'));
+/** Lo que la pagina ensena de esos datos: solo lo de los oficios a la venta (giros.json, "aLaVenta"). */
+const { datos: vendido, claves: aLaVenta } = soloLoQueSeVende({ giros, agentes, secciones });
+/**
+ * Los compromisos de "Asi cuidamos de tu negocio" que la pagina ensena, con su titulo y su oracion.
+ * @type {{ titulo: string, texto: string }[]}
+ */
+const cuidaALaVista = vendido.agentes.cuida.lista.map((/** @type {any} */ uno) => ({
+  titulo: uno.titulo,
+  texto: uno.texto,
+}));
+/** Si la pagina ensena un oficio de salud: con el se ensena lo clinico. */
+const conSalud = ['dentista', 'medico'].some((clave) => aLaVenta.has(clave));
 /** Los dos capitulos de la seccion: lo que hace el agente y como se empieza. @type {any[]} */
 const capitulos = agentes.capitulos;
 /**
@@ -81,7 +95,7 @@ const APROBADOS = [
   ],
   [
     'Ve las imágenes de referencia que le mandan',
-    'Por la naturaleza de cada oficio, hoy esto aplica solo para negocios de uñas, no para dentistas ni médicos. Revisa el diseño que quiere tu clienta y, si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.',
+    'Revisa el diseño que quiere tu clienta y, si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.',
   ],
   [
     'Solo te contacta cuando se requiere tu intervención',
@@ -758,19 +772,20 @@ test('las escenas de los beneficios dicen lo que aprobo el dueno, pieza por piez
     'Ana',
     'Recordatorios: un día y una hora antes',
   ]);
+  // El anticipo: un ejemplo de unas, el oficio que hoy ensena la pagina (lo pidio el dueno el 23-nov-2026).
   assert.deepEqual(escenas[3], [
-    'Lo ve tu paciente',
-    'Sí, aparte el jueves a las 10, por favor.',
-    'Anticipo Consulta',
-    '$300',
+    'Lo ve tu clienta',
+    'Sí, apárteme el jueves a las 10, por favor.',
+    'Anticipo Acrílicas',
+    '$150',
     'mercadopago.com.mx',
-    'Con mucho gusto, señora Elvira. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.',
+    'Con mucho gusto, Karla. Para apartar sus acrílicas, el anticipo es de $150. Aquí está su enlace de pago.',
     'Lo ves tú',
-    'Pago aprobado · $300',
+    'Pago aprobado · $150',
     'JUE',
     '19',
-    '10:00 am · Elvira',
-    'Consulta',
+    '10:00 am · Karla',
+    'Acrílicas',
   ]);
   // La nota de voz: ella manda una y el agente contesta con otra. Es de un salon de unas (en salud la voz no esta
   // encendida), y la hora se dice como se oye: "las cinco en punto".
@@ -1054,11 +1069,12 @@ test('las piezas que acepta la armada son las que la plantilla sabe dibujar, y l
   assert.ok(!codigo.includes('problemasDeBeneficios') && !codigo.includes('pastilla'));
 });
 
-test('asi cuida tu negocio: seis compromisos dichos en positivo, y ya sin la lista de lo que no hace', () => {
+test('asi cuida tu negocio: seis compromisos dichos en positivo (el clinico, solo con salud), y ya sin la lista de lo que no hace', () => {
   // El dueno (20-nov-2026): "cambiemos los taches rojos y el lenguaje del texto por algo que denote valor agregado y
   // creacion de valor para el negocio". Dicen lo mismo que los seis de antes, como lo que el agente si hace por ella.
+  // La bajada ya no los cuenta: cuantos se ensenan depende de los oficios a la venta (23-nov-2026).
   assert.equal(agentes.cuida.titulo, 'Así cuidamos de tu negocio');
-  assert.equal(agentes.cuida.bajada, 'Seis cosas que tu agente hace siempre, para que tú no tengas que vigilarlo.');
+  assert.equal(agentes.cuida.bajada, 'Lo que tu agente hace siempre, para que tú no tengas que vigilarlo.');
   assert.deepEqual(
     agentes.cuida.lista.map((/** @type {any} */ uno) => [uno.titulo, uno.texto]),
     [
@@ -1076,6 +1092,13 @@ test('asi cuida tu negocio: seis compromisos dichos en positivo, y ya sin la lis
       ],
     ],
   );
+  // Lo clinico es solo de los oficios de salud: con ninguno a la venta, no se ensena. Los demas son de todos.
+  assert.deepEqual(
+    agentes.cuida.lista
+      .filter((/** @type {any} */ uno) => uno.solo)
+      .map((/** @type {any} */ uno) => [uno.titulo, uno.solo]),
+    [['Lo clínico es tuyo', ['dentista', 'medico']]],
+  );
   // Ningun titulo empieza con "No", y ninguno ofrece pasarle a la clienta.
   for (const { titulo, texto } of agentes.cuida.lista) {
     assert.doesNotMatch(titulo, /^no\b/i, titulo);
@@ -1083,17 +1106,18 @@ test('asi cuida tu negocio: seis compromisos dichos en positivo, y ya sin la lis
   }
   // Lo que antes decia la lista de lo que no hace sigue a la vista, en su oracion: que no trae clientela nueva, que
   // no diagnostica y que lo que no esta en el catalogo no lo inventa (revision independiente del 20-nov-2026: en la
-  // pagina, las preguntas que lo dicen van guardadas dentro de "Ver mas preguntas").
+  // pagina, las preguntas que lo dicen van guardadas dentro de "Ver mas preguntas"). Lo de no diagnosticar se ve solo
+  // si la pagina ensena un oficio de salud.
   const oraciones = agentes.cuida.lista.map((/** @type {any} */ uno) => uno.texto).join(' ');
-  for (const hecho of [
-    'No busca clientela nueva',
-    'No diagnostica ni recomienda medicamentos',
-    'no lo inventa: te avisa',
-    'Confirma solo con el pago aprobado',
-    'se presenta como asistente virtual',
-  ]) {
+  for (const [hecho, aLaVista] of /** @type {[string, boolean][]} */ ([
+    ['No busca clientela nueva', true],
+    ['No diagnostica ni recomienda medicamentos', conSalud],
+    ['no lo inventa: te avisa', true],
+    ['Confirma solo con el pago aprobado', true],
+    ['se presenta como asistente virtual', true],
+  ])) {
     assert.ok(oraciones.includes(hecho), hecho);
-    assert.ok(seccion.includes(hecho), `a la vista en la seccion: ${hecho}`);
+    assert.equal(seccion.includes(hecho), aLaVista, `a la vista en la seccion: ${hecho}`);
   }
   // La lista vieja y sus dos renglones de mas ya no existen en los datos.
   assert.equal('noHace' in agentes, false);
@@ -1323,7 +1347,7 @@ test('ningun texto de la seccion vive en el codigo ni en los estilos: todo sale 
   for (const texto of textos) assert.ok(!codigo.includes(texto), texto);
 });
 
-test('las tres tarjetas de la confianza llevan su icono (y la del dinero, su letra chica), y los seis compromisos, su palomita', () => {
+test('las tres tarjetas de la confianza llevan su icono (y la del dinero, su letra chica), y cada compromiso a la vista, su palomita', () => {
   const tarjetas = [
     ...seccion.matchAll(
       /<li><span class="agentes__icono" aria-hidden="true"><svg class="agentes__trazo" focusable="false"><use href="#i-(\w+)"\/><\/svg><\/span><h4>([^<]+)<\/h4><p>([^<]+)<\/p>(?:<p class="agentes__letra">([^<]+)<\/p>)?<\/li>/g,
@@ -1336,8 +1360,10 @@ test('las tres tarjetas de la confianza llevan su icono (y la del dinero, su let
       /<li><span class="agentes__palomita" aria-hidden="true"><svg class="agentes__trazo" focusable="false"><use href="#i-palomita"\/><\/svg><\/span><div><h4>([^<]+)<\/h4><p>([^<]+)<\/p><\/div><\/li>/g,
     ),
   ].map(([, titulo, texto]) => ({ titulo, texto }));
-  assert.deepEqual(renglones, agentes.cuida.lista);
-  assert.equal(renglones.length, 6);
+  // Los de todos los oficios y, de los que llevan "solo", los de un oficio a la venta: sin salud, cinco.
+  assert.deepEqual(renglones, cuidaALaVista);
+  assert.equal(renglones.length, conSalud ? 6 : 5);
+  assert.equal(seccion.includes('Lo clínico es tuyo'), conSalud);
   assert.ok(seccion.includes('<h3 class="agentes__subtitulo">Así cuidamos de tu negocio</h3>'));
   assert.ok(seccion.includes(agentes.cuida.bajada));
   // Ya sin taches en esta seccion: ni la lista ni su titulo de antes.
@@ -1403,12 +1429,13 @@ test('llms.txt cuenta los nueve beneficios, los cuatro pasos para empezar y como
     /## Lo que hace el agente[\s\S]*?## Así cuidamos de tu negocio/.exec(llms)?.[0] ?? '',
     /ex[aá]men/i,
   );
-  // Los seis compromisos, cada uno con su titulo y su oracion; el titulo viejo ya no esta.
+  // Los compromisos que ensena la pagina, cada uno con su titulo y su oracion; el titulo viejo ya no esta.
   const cuida = /## Así cuidamos de tu negocio\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
   assert.deepEqual(
     cuida,
-    agentes.cuida.lista.map((/** @type {any} */ uno) => `- ${uno.titulo}. ${uno.texto}`),
+    cuidaALaVista.map((uno) => `- ${uno.titulo}. ${uno.texto}`),
   );
+  assert.equal(llms.includes('Lo clínico es tuyo'), conSalud);
   assert.ok(
     cuida?.includes('- Siempre con transparencia. Desde el primer mensaje se presenta como asistente virtual.'),
   );

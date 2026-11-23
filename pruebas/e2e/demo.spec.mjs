@@ -3,9 +3,8 @@
 // Lo que depende del tiempo (que corra sola, la pausa, lo que dura) se prueba con el reloj de la pagina en la mano:
 // puesto y detenido desde antes de cargar, solo avanza cuando la prueba lo adelanta. Lo demas se prueba pidiendo
 // menos movimiento, que es como la historia avanza a toques: una parada por cada toque, pintada de un jalon.
-import { readFileSync } from 'node:fs';
 import { duracionDe, historiaDe } from '../../fuente/js/demo.js';
-import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { leerDatos, sinFaltasDeAccesibilidad, VENDIDO, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 /** @typedef {import('@playwright/test').Page} Page */
@@ -20,15 +19,24 @@ const VERDE_DE_LO_GARANTIZADO = 'rgb(88, 214, 141)';
 const TRES_TARJETAS = '(min-width: 1240px)';
 
 // La historia sale de los mismos datos que la pagina: el dia que cambie un texto o un tiempo, estas pruebas siguen valiendo.
-const leer = (/** @type {string} */ ruta) =>
-  JSON.parse(readFileSync(new URL(`../../fuente/datos/${ruta}`, import.meta.url), 'utf8'));
-const demoDatos = leer('demo.json');
-/** @type {Ejemplo[]} */
-const EJEMPLOS = leer('giros.json').map((/** @type {Ejemplo['giro']} */ giro) => ({
+const demoDatos = leerDatos('demo.json');
+/**
+ * Los ejemplos que trae la pagina: uno por oficio a la venta (giros.json, "aLaVenta"), en su orden.
+ * @type {Ejemplo[]}
+ */
+const EJEMPLOS = VENDIDO.datos.giros.map((/** @type {Ejemplo['giro']} */ giro) => ({
   ...demoDatos,
   giro,
-  guion: leer(`guiones/${giro.clave}.json`),
+  guion: leerDatos(`guiones/${giro.clave}.json`),
 }));
+/** Con un solo oficio a la venta la demostracion no lleva selector de ejemplos: no hay nada que elegir. */
+const VARIOS = EJEMPLOS.length > 1;
+/**
+ * Si un ejemplo se puede elegir en el selector.
+ * @param {string} clave
+ */
+const sePuedeElegir = (clave) => VARIOS && EJEMPLOS.some((ejemplo) => ejemplo.giro.clave === clave);
+const SIN_SELECTOR = 'con un solo oficio a la venta no hay selector de ejemplos';
 const UNAS = /** @type {Ejemplo} */ (EJEMPLOS[0]);
 const HISTORIA = historiaDe(UNAS);
 /** Lo que tarda la historia en llegar a su toma numero "van" desde que empieza. */
@@ -189,6 +197,12 @@ test('en reposo: el celular del negocio en linea, el letrero del primer momento 
   await expect(demo).toHaveAttribute('data-telefono', 'cliente');
   // Que es un ejemplo lo dice su nombre, para quien no la ve.
   await expect(page.getByRole('group', { name: 'Demostración con un salón de uñas de ejemplo.' })).toBeVisible();
+  // El selector de ejemplos va solo si hay mas de un oficio a la venta, con un boton por cada uno. Con uno solo no hay
+  // nada que elegir, y la demostracion lo dice en su clase: sus estilos no le guardan lugar al selector.
+  await expect(demo.locator('[data-demo-ejemplo]')).toHaveCount(VARIOS ? EJEMPLOS.length : 0);
+  await expect(demo.locator('.demo__ejemplos')).toHaveCount(VARIOS ? 1 : 0);
+  if (VARIOS) await expect(demo).not.toHaveClass(/\bdemo--uno\b/);
+  else await expect(demo).toHaveClass(/\bdemo--uno\b/);
   await expect(demo.locator('[data-demo-nombre]')).toHaveText('Studio Bella');
   await expect(demo.locator('[data-demo-detalle]')).toHaveText('en línea');
   await expect(demo.locator('[data-demo-iniciales]')).toHaveText('SB');
@@ -806,12 +820,13 @@ test('con menos movimiento no hay animaciones ni transiciones, y la historia sig
 test('elegir Dentista cambia el celular, la ficha del dia y las tarjetas, y la historia corre de nuevo con el', async ({
   page,
 }) => {
+  test.skip(!sePuedeElegir('dentista'), `${SIN_SELECTOR} con Dentista`);
   const fallas = vigilar(page);
   const demo = await abrirDetenida(page);
   await aLaVista(demo);
   await hastaElPaso(page, demo, 'horarios');
   const selector = demo.getByRole('group', { name: 'Mira el ejemplo de tu oficio' });
-  await expect(selector.getByRole('button')).toHaveText(['Uñas', 'Dentista', 'Médico']);
+  await expect(selector.getByRole('button')).toHaveText(EJEMPLOS.map((ejemplo) => ejemplo.giro.nombre));
   await expect(selector.getByRole('button', { name: 'Uñas' })).toHaveAttribute('aria-pressed', 'true');
   await elegir(demo, 'Dentista', 'dentista');
   await expect(selector.getByRole('button', { name: 'Dentista' })).toHaveAttribute('aria-pressed', 'true');
@@ -842,6 +857,7 @@ test('elegir Dentista cambia el celular, la ficha del dia y las tarjetas, y la h
 test('la historia de Dentista llega al pago de $200 y a su pregunta de asistencia, sin decirle clienta a nadie', async ({
   page,
 }) => {
+  test.skip(!sePuedeElegir('dentista'), `${SIN_SELECTOR} con Dentista`);
   const demo = await abrir(page);
   await elegir(demo, 'Dentista', 'dentista');
   // Pidio menos movimiento: cambiar de ejemplo la deja en reposo, lista para reproducir.
@@ -900,11 +916,14 @@ test('la historia de Dentista llega al pago de $200 y a su pregunta de asistenci
 test('en el celular mas angosto las notas de voz caben en su globo, con lo que dicen debajo', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   const demo = await abrir(page);
-  for (const [nombre, clave] of /** @type {const} */ ([
+  // Los ejemplos con notas de voz que trae la pagina (el de Dentista va todo por escrito).
+  const conVoz = /** @type {const} */ ([
     ['Uñas', 'unas'],
     ['Médico', 'medico'],
-  ])) {
-    if (clave !== 'unas') await elegir(demo, nombre, clave);
+  ]).filter(([, clave]) => EJEMPLOS.some((ejemplo) => ejemplo.giro.clave === clave));
+  expect(conVoz.length).toBeGreaterThan(0);
+  for (const [nombre, clave] of conVoz) {
+    if (clave !== UNAS.giro.clave) await elegir(demo, nombre, clave);
     await avanzarParadas(demo, 2);
     const notas = chatDe(demo).locator('.wa__m--voz');
     await expect(notas).toHaveCount(2);
@@ -931,6 +950,7 @@ test('en el celular mas angosto las notas de voz caben en su globo, con lo que d
 });
 
 test('la historia de Médico platica en la tarde, con su consultorio y su ficha del lunes', async ({ page }) => {
+  test.skip(!sePuedeElegir('medico'), `${SIN_SELECTOR} con Médico`);
   const demo = await abrir(page);
   await elegir(demo, 'Médico', 'medico');
   await expect(page.getByRole('group', { name: 'Demostración con un consultorio médico de ejemplo.' })).toBeVisible();
@@ -972,13 +992,23 @@ test('todo se maneja con el teclado, y el foco nunca se pierde', async ({ page }
   const demo = await abrir(page);
   const selector = demo.getByRole('group', { name: 'Mira el ejemplo de tu oficio' });
   const pausa = botonDePausa(demo);
-  // El orden: los tres ejemplos, las seis rayitas y la pausa.
-  await selector.getByRole('button', { name: 'Uñas' }).focus();
-  await page.keyboard.press('Tab');
-  await expect(selector.getByRole('button', { name: 'Dentista' })).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(selector.getByRole('button', { name: 'Médico' })).toBeFocused();
-  await page.keyboard.press('Tab');
+  const nombres = EJEMPLOS.map((ejemplo) => ejemplo.giro.nombre);
+  if (VARIOS) {
+    // El orden: los ejemplos, las seis rayitas y la pausa.
+    await selector.getByRole('button', { name: nombres[0] }).focus();
+    for (const nombre of nombres.slice(1)) {
+      await page.keyboard.press('Tab');
+      await expect(selector.getByRole('button', { name: nombre, exact: true })).toBeFocused();
+    }
+    await page.keyboard.press('Tab');
+  } else {
+    // Sin selector, lo primero que se toca de la demostracion es su primera rayita: antes de ella no hay nada suyo.
+    await expect(selector).toHaveCount(0);
+    await rayita(demo, '01 Contesta').focus();
+    await page.keyboard.press('Shift+Tab');
+    expect(await demo.evaluate((raiz) => raiz.contains(document.activeElement))).toBe(false);
+    await page.keyboard.press('Tab');
+  }
   await expect(rayita(demo, '01 Contesta')).toBeFocused();
   await expect(rayita(demo, '01 Contesta')).toHaveCSS('outline-style', 'solid');
   // Una rayita se activa con Enter y conserva el foco.
@@ -1026,12 +1056,18 @@ test('todo se maneja con el teclado, y el foco nunca se pierde', async ({ page }
   await expect(demo).toHaveAttribute('data-paso', 'precio');
   await expect(pausa).toBeFocused();
   // Elegir un ejemplo con el teclado deja el foco en su boton.
-  await selector.getByRole('button', { name: 'Médico' }).focus();
+  const ultimo = EJEMPLOS.at(-1);
+  if (!VARIOS || !ultimo) return;
+  const suBoton = selector.getByRole('button', { name: ultimo.giro.nombre, exact: true });
+  await suBoton.focus();
   await page.keyboard.press('Space');
-  await expect(demo).toHaveAttribute('data-ejemplo', 'medico');
-  await expect(selector.getByRole('button', { name: 'Médico' })).toBeFocused();
-  await expect(selector.getByRole('button', { name: 'Médico' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(selector.getByRole('button', { name: 'Uñas' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(demo).toHaveAttribute('data-ejemplo', ultimo.giro.clave);
+  await expect(suBoton).toBeFocused();
+  await expect(suBoton).toHaveAttribute('aria-pressed', 'true');
+  await expect(selector.getByRole('button', { name: nombres[0], exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
 });
 
 test('con el teclado en las respuestas, la historia no contesta por ella', async ({ page }) => {
@@ -1055,8 +1091,8 @@ test('todo lo que se toca mide por lo menos 44 px', async ({ page }) => {
   await rayita(demo, '06 Pregunta si asistió').click();
   await expect(chatDe(demo).getByRole('button')).toHaveCount(2);
   const botones = await demo.getByRole('button').all();
-  // Tres ejemplos, dos respuestas, seis rayitas y la pausa.
-  expect(botones).toHaveLength(12);
+  // Un boton por ejemplo (si hay que elegir), dos respuestas, seis rayitas y la pausa.
+  expect(botones).toHaveLength((VARIOS ? EJEMPLOS.length : 0) + 2 + 6 + 1);
   for (const boton of botones) {
     const caja = await boton.boundingBox();
     const nombre = (await boton.getAttribute('aria-label')) ?? (await boton.textContent());
@@ -1263,7 +1299,7 @@ test.describe('en cada ancho', () => {
   ];
   for (const [ancho, alto] of TAMANOS) {
     test(`a ${ancho} de ancho nada se desborda, nada brinca y la cita cabe en su renglon`, async ({ page }) => {
-      test.slow(); // los tres ejemplos, parada por parada, midiendo en cada una
+      test.slow(); // cada ejemplo, parada por parada, midiendo en cada una
       await page.setViewportSize({ width: ancho, height: alto });
       const demo = await abrir(page);
       /**
@@ -1316,8 +1352,8 @@ test.describe('en cada ancho', () => {
       const alPrincipio = await medir();
       expect(alPrincipio.paso).toBe('reposo');
       expect(alPrincipio.desborde).toBeLessThanOrEqual(0);
-      for (const clave of ['unas', 'dentista', 'medico']) {
-        if (clave !== 'unas') expect((await medir(`[data-demo-ejemplo="${clave}"]`)).ejemplo).toBe(clave);
+      for (const { clave } of EJEMPLOS.map((ejemplo) => ejemplo.giro)) {
+        if (clave !== UNAS.giro.clave) expect((await medir(`[data-demo-ejemplo="${clave}"]`)).ejemplo).toBe(clave);
         for (const [paso] of PARADAS) {
           const medida = await medir('[data-demo-pausa]');
           expect(medida.paso, clave).toMatch(paso === 'finSi' ? /^fin/ : new RegExp(`^${paso}$`));
@@ -1349,6 +1385,13 @@ test.describe('en cada ancho', () => {
         // Tres columnas: el texto, el celular y las tarjetas.
         expect(texto.x + texto.width).toBeLessThanOrEqual(celular.x);
         expect(celular.x + celular.width).toBeLessThanOrEqual(tarjetas.x);
+        // Sin selector (un solo oficio a la venta) la demostracion es una sola fila: las tarjetas van junto al
+        // celular, a su altura, sin guardarle lugar a lo que no hay.
+        if (!VARIOS) {
+          expect(await demo.evaluate((raiz) => getComputedStyle(raiz).gridTemplateRows.split(' ').length)).toBe(1);
+          expect(tarjetas.y).toBeGreaterThanOrEqual(celular.y);
+          expect(tarjetas.y + tarjetas.height).toBeLessThanOrEqual(celular.y + celular.height);
+        }
       } else if (ancho >= 768) {
         // Dos columnas: el texto a la izquierda; el celular, con sus tarjetas debajo, a la derecha.
         expect(texto.x + texto.width).toBeLessThanOrEqual(celular.x);

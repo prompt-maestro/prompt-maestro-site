@@ -1835,6 +1835,12 @@ html.con-corto .corto:not([data-viva]) .corto__cine {
   min-width: 0;
 }
 
+/* Con un solo oficio a la venta no hay pantalla dividida: su franja ocupa todo lo ancho y lleva la foto acostada de su
+   escena (la de pie, estirada a lo ancho, le cortaria la cara). */
+.todos--uno .franja {
+  --forma: 1.79167;
+}
+
 .franja .foto__luz {
   filter: brightness(1.16) saturate(1.08) contrast(0.98);
 }

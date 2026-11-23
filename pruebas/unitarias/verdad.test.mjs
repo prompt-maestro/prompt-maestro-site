@@ -2,12 +2,19 @@
 // La pagina nunca promete algo que el producto no hace. Aqui se lee TODO lo que una persona ve en la pagina ya armada
 // (plantilla, datos, el corto del inicio y demostracion) y se buscan las promesas prohibidas de la tabla de la verdad del PRD.
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { armarSitio } from '../../herramientas/armado.mjs';
+import { soloLoQueSeVende } from '../../herramientas/oficios.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+/** Los oficios que ensena la pagina (giros.json, "aLaVenta"): de ellos depende lo que se dice de salud. */
+const { claves: A_LA_VENTA } = soloLoQueSeVende({
+  giros: JSON.parse(await readFile(path.join(RAIZ, 'fuente', 'datos', 'giros.json'), 'utf8')),
+});
+const CON_SALUD = A_LA_VENTA.has('dentista') || A_LA_VENTA.has('medico');
 
 /**
  * La unica oracion de la pagina que puede llevar un porcentaje: lo que cobra Mercado Pago por cada pago, dicho como
@@ -159,7 +166,6 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'no. hace que quienes ya te escriben sí lleguen',
     'cuida a quien ya te escribe',
     'no busca clientela nueva',
-    'no diagnostica ni recomienda medicamentos',
     // Los compromisos del agente, en positivo: confirma solo con el pago aprobado y se presenta como asistente virtual.
     'confirma solo con el pago aprobado',
     'desde el primer mensaje se presenta como asistente virtual',
@@ -170,11 +176,10 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'contesta a cualquier hora',
     'le contesta con otra nota de voz',
     'siempre por escrito',
-    'hoy, para uñas, dentistas y médicos',
+    'hoy, para profesionales de uñas',
     // La comision de cada anticipo la fija Mercado Pago. (La frase del antes y despues, "te siguen escribiendo, y tu
     // agente contesta por ti", se fue con la seccion "En una frase", que el dueno quito el 20-nov-2026.)
     'la fija mercado pago, no nosotros',
-    'médicos generales y especialistas',
     // "Como funciona", desde el primer mensaje hasta despues de la cita: el pago se verifica antes de agendar y ella
     // aprueba cada cambio. Y "Citas garantizadas" dice que todo pasa en WhatsApp.
     'desde el primer «hola»',
@@ -187,6 +192,13 @@ test('lo que la pagina si tiene que decir, con las palabras de la tabla de la ve
     'solo entonces agenda',
   ]) {
     assert.ok(enLaPagina.includes(frase), frase);
+  }
+  // Lo que es de un oficio de salud lo dice la pagina solo si ese oficio esta a la venta; si no, ni lo nombra.
+  for (const [frase, toca] of /** @type {[string, boolean][]} */ ([
+    ['no diagnostica ni recomienda medicamentos', CON_SALUD],
+    ['médicos generales y especialistas', A_LA_VENTA.has('medico')],
+  ])) {
+    assert.equal(enLaPagina.includes(frase), toca, frase);
   }
 });
 

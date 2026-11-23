@@ -3,8 +3,7 @@
 // previa e iphone) se comprueba que el corto NO corre y que el cartel esta completo, con "Tu y tu agente" y un oficio
 // al azar; el corto (un oficio por visita, a pantalla completa) se prueba en escritorio y en firefox. El tiempo de la
 // pagina lo lleva el reloj de Playwright: las pruebas lo detienen y lo adelantan, sin esperar el medio minuto de verdad.
-import { readFileSync } from 'node:fs';
-import { abrirCortoDetenido, hastaElCuadro, sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { abrirCortoDetenido, hastaElCuadro, sinFaltasDeAccesibilidad, VENDIDO, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 const ALTA = 'https://alta.prompt-maestro.com/';
@@ -23,7 +22,8 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  * @property {{ foto: string, alt: string }} cartel.tu
  * @property {{ negocio: string, iniciales: string, quien: string, entra: string, responde: string, anticipo: string }} cartel.charla
  */
-// El guion y los textos salen del mismo archivo que la pagina: si cambian, estas pruebas siguen valiendo.
+// El guion y los textos salen del mismo archivo que la pagina: si cambian, estas pruebas siguen valiendo. Y sus
+// oficios son los que la pagina ensena: solo los que estan a la venta (giros.json, "aLaVenta"), en su orden.
 /**
  * @type {{
  *   guion: { clave: string, dura: number, letrero: string }[],
@@ -35,7 +35,17 @@ const ALTA = 'https://alta.prompt-maestro.com/';
  *   oficios: Oficio[],
  * }}
  */
-const CORTO = JSON.parse(readFileSync(new URL('../../fuente/datos/corto.json', import.meta.url), 'utf8'));
+const CORTO = VENDIDO.datos.corto;
+/** Con un solo oficio a la venta el cierre no se parte en franjas y "Ver de nuevo" repite el mismo oficio. */
+const VARIOS = CORTO.oficios.length > 1;
+const UNO_SOLO = 'con un solo oficio a la venta';
+/**
+ * El oficio con que una prueba mide un tamano: el que eligio, si esta a la venta; si no, el primero que si lo esta.
+ * Asi los tamanos se siguen probando todos, con los oficios que la pagina ensena.
+ * @param {string} clave
+ */
+const aLaVentaO = (clave) =>
+  CORTO.oficios.some((oficio) => oficio.clave === clave) ? clave : (CORTO.oficios[0]?.clave ?? '');
 const MOMENTOS = CORTO.guion.map((momento) => momento.clave);
 /** Los dos renglones chicos del cierre, como se leen seguidos. */
 const BAJA = CORTO.todos.baja.join(' ');
@@ -225,9 +235,7 @@ test('el cartel trae el titulo, la frase, el boton al alta, el enlace a la demos
   const frase = corto.locator('.cartel__frase');
   await expect(frase).toHaveText(CORTO.cartel.frase ?? '');
   await expect(frase).toBeInViewport({ ratio: 1 });
-  await expect(corto.locator('.cartel .sobre')).toHaveText(
-    'Uñas, dentistas, médicos y pronto más oficios y profesiones',
-  );
+  await expect(corto.locator('.cartel .sobre')).toHaveText('Para profesionales de uñas');
   const empieza = corto.getByRole('link', { name: 'Empieza ahora' });
   await expect(empieza).toBeInViewport({ ratio: 1 });
   await expect(empieza).toHaveAttribute('href', ALTA);
@@ -596,14 +604,14 @@ test.describe('"Tu y tu agente" en cada tamano', () => {
   // Del celular mas chico a la tableta de pie, con el oficio que mas alto ocupa (el de nombre mas largo) en los mas
   // bajitos. Se prueba con los dos motores de celular: Chrome y Safari.
   const TAMANOS = /** @type {[number, number, string][]} */ ([
-    [320, 568, 'medico'],
-    [360, 640, 'medico'],
+    [320, 568, aLaVentaO('medico')],
+    [360, 640, aLaVentaO('medico')],
     // El iPhone mas comun con las barras de Safari a la vista.
-    [390, 664, 'medico'],
-    [390, 844, 'unas'],
-    [412, 915, 'dentista'],
-    [430, 932, 'medico'],
-    [768, 1024, 'dentista'],
+    [390, 664, aLaVentaO('medico')],
+    [390, 844, aLaVentaO('unas')],
+    [412, 915, aLaVentaO('dentista')],
+    [430, 932, aLaVentaO('medico')],
+    [768, 1024, aLaVentaO('dentista')],
   ]);
 
   for (const [ancho, alto, clave] of TAMANOS) {
@@ -621,8 +629,8 @@ test.describe('"Tu y tu agente" en cada tamano', () => {
       await expect(escena).toHaveAttribute('data-duo', clave);
       await expect(escena.locator('.duo__foto')).toHaveJSProperty('complete', true);
       await page.evaluate(() => document.fonts.ready);
-      // El renglon chico va en dos renglones y se parte donde se lee bien: arriba los tres oficios y abajo lo que
-      // viene, entero. Nunca deja una "y" colgada ni una palabra sola.
+      // El renglon chico dice para quien es hoy y cabe entero en un solo renglon: no se parte ni deja una palabra
+      // sola.
       const renglones = await corto.locator('.cartel .sobre').evaluate((sobre) => {
         const texto = sobre.firstChild;
         if (!(texto instanceof Text)) return [];
@@ -637,7 +645,7 @@ test.describe('"Tu y tu agente" en cada tamano', () => {
         }
         return [...porAltura.values()].map((palabras) => palabras.join(' '));
       });
-      expect(renglones).toEqual(['Uñas, dentistas, médicos', 'y pronto más oficios y profesiones']);
+      expect(renglones).toEqual(['Para profesionales de uñas']);
       // El cartel mide justo la pantalla y nada se sale a lo ancho.
       expect(await desborde(page)).toBeLessThanOrEqual(0);
       expect(Math.abs((await caja(corto)).abajo - alto)).toBeLessThanOrEqual(1);
@@ -1000,10 +1008,10 @@ test.describe('el corto, en pantallas anchas', () => {
 
   // De la laptop del dueño a la ventana mas chica donde corre el corto, con un oficio distinto en cada una.
   const AL_CENTRO = /** @type {[number, number, string][]} */ ([
-    [1536, 695, 'unas'],
-    [1280, 720, 'dentista'],
-    [1024, 704, 'medico'],
-    [900, 480, 'unas'],
+    [1536, 695, aLaVentaO('unas')],
+    [1280, 720, aLaVentaO('dentista')],
+    [1024, 704, aLaVentaO('medico')],
+    [900, 480, aLaVentaO('unas')],
   ]);
 
   for (const [ancho, alto, clave] of AL_CENTRO) {
@@ -1256,10 +1264,10 @@ test.describe('el corto, en pantallas anchas', () => {
   // De la laptop del dueño a la ventana mas chica donde corre el corto, con un oficio distinto en cada una (el de la
   // foto, que es la conversacion mas alta, tambien en la mas bajita).
   const VENTANAS = /** @type {[number, number, string][]} */ ([
-    [1536, 695, 'medico'],
-    [1280, 720, 'unas'],
-    [1000, 640, 'dentista'],
-    [900, 480, 'unas'],
+    [1536, 695, aLaVentaO('medico')],
+    [1280, 720, aLaVentaO('unas')],
+    [1000, 640, aLaVentaO('dentista')],
+    [900, 480, aLaVentaO('unas')],
   ]);
 
   for (const [ancho, alto, clave] of VENTANAS) {
@@ -1399,6 +1407,7 @@ test.describe('el corto, en pantallas anchas', () => {
     test(`a ${ancho} por ${alto}, el cierre ensena todos los oficios en pantalla dividida, cada uno solo con su nombre, y su letrero con sus dos renglones chicos`, async ({
       page,
     }) => {
+      test.skip(!VARIOS, `${UNO_SOLO} el cierre no se parte en franjas`);
       // El corto casi entero, con sus fotos: se le da su tiempo.
       test.slow();
       const fotos = pedidos(page, /-trabajo-\d+\.(avif|webp)$/);
@@ -1456,6 +1465,7 @@ test.describe('el corto, en pantallas anchas', () => {
         await expect(franja).not.toContainText(oficio.cartel.charla.negocio);
       }
       await expect(capa.getByText(/agente de/i)).toHaveCount(0);
+      await expect(capa).not.toHaveClass(/\btodos--uno\b/);
       expect(Math.abs(orilla - ancho)).toBeLessThanOrEqual(4);
       // El letrero, con sus renglones chicos debajo, cabe entre la barra y los nombres.
       expect(suLetrero.arriba).toBeGreaterThanOrEqual(barra.abajo);
@@ -1472,6 +1482,76 @@ test.describe('el corto, en pantallas anchas', () => {
         expect(suyo.abajo - suyo.arriba).toBeLessThanOrEqual(letra * 1.6);
         debajoDe = suyo.abajo - 1;
       }
+      expect(await desborde(page)).toBeLessThanOrEqual(0);
+    });
+
+    test(`a ${ancho} por ${alto}, con un solo oficio a la venta el cierre lo ensena a todo lo ancho, con la foto de su escena, solo con su nombre, y su letrero con sus dos renglones chicos`, async ({
+      page,
+    }) => {
+      test.skip(VARIOS, 'con varios oficios a la venta el cierre se parte en franjas');
+      // El corto casi entero: se le da su tiempo.
+      test.slow();
+      const [oficio] = CORTO.oficios;
+      if (!oficio) throw new Error('no hay oficio a la venta');
+      // La foto de pie no se pide nunca: la franja lleva la foto acostada de su escena, la misma que ya se vio.
+      const dePie = pedidos(page, /-trabajo-\d+\.(avif|webp)$/);
+      await page.setViewportSize({ width: ancho, height: alto });
+      const corto = await abrirCortoDetenido(page);
+      await hastaElCuadro(page, corto, 'todos');
+      const capa = corto.locator('.todos');
+      await expect(capa).toHaveClass(/\btodos--uno\b/);
+      await expect(capa).toHaveCSS('opacity', '1', { timeout: 15_000 });
+      // Una sola franja, la suya, de arriba abajo y de orilla a orilla.
+      const franja = capa.locator('.franja');
+      await expect(franja).toHaveCount(1);
+      await expect(franja).toHaveAttribute('data-franja', oficio.clave);
+      await expect(franja).toHaveAttribute('data-persona', oficio.mira.persona);
+      const suCaja = await caja(franja);
+      expect(suCaja.izquierda).toBeLessThanOrEqual(4);
+      expect(suCaja.derecha).toBeGreaterThanOrEqual(ancho - 4);
+      expect(suCaja.arriba).toBeLessThanOrEqual(0);
+      expect(suCaja.abajo).toBeGreaterThanOrEqual(alto);
+      // Su foto es la de su escena, llego y no se ve estirada: llena la franja sin deformarse.
+      const foto = franja.locator('.foto__toma');
+      await expect(foto).toHaveCount(1);
+      await expect(foto).toHaveJSProperty('complete', true);
+      const medidas = await foto.evaluate((img) => {
+        const { currentSrc, naturalWidth, naturalHeight } = /** @type {HTMLImageElement} */ (img);
+        const { width, height } = img.getBoundingClientRect();
+        return { currentSrc, natural: naturalWidth / naturalHeight, enPantalla: width / height, naturalWidth };
+      });
+      expect(medidas.currentSrc).toContain(`/${oficio.clave}-escena-`);
+      expect(medidas.naturalWidth).toBeGreaterThan(1);
+      expect(Math.abs(medidas.enPantalla / medidas.natural - 1)).toBeLessThan(0.02);
+      const cubre = await caja(foto);
+      expect(cubre.izquierda).toBeLessThanOrEqual(suCaja.izquierda + 1);
+      expect(cubre.derecha).toBeGreaterThanOrEqual(suCaja.derecha - 1);
+      expect(cubre.arriba).toBeLessThanOrEqual(suCaja.arriba + 1);
+      expect(cubre.abajo).toBeGreaterThanOrEqual(suCaja.abajo - 1);
+      expect(dePie).toEqual([]);
+      // El letrero, con sus dos renglones chicos, y debajo el nombre del oficio, y nada mas.
+      const letrero = corto.locator('.letrero[data-activo]');
+      await expect(letrero).toHaveText(`${CORTO.guion.at(-1)?.letrero}${BAJA}`);
+      const renglones = letrero.locator('.letrero__baja span');
+      await expect(renglones).toHaveText(CORTO.todos.baja);
+      for (const renglon of await renglones.all()) await expect(renglon).toHaveCSS('opacity', '1', { timeout: 15_000 });
+      await asentado(letrero);
+      const suLetrero = await caja(letrero);
+      const barra = await caja(page.locator('.barra'));
+      const control = await caja(corto.locator('.control__linea'));
+      expect(suLetrero.arriba).toBeGreaterThanOrEqual(barra.abajo);
+      expect(suLetrero.izquierda).toBeGreaterThanOrEqual(0);
+      expect(suLetrero.derecha).toBeLessThanOrEqual(ancho);
+      const nombre = franja.locator('.franja__nombre');
+      await expect(nombre).toHaveText(oficio.nombre);
+      await expect(nombre).toHaveCSS('opacity', '1', { timeout: 15_000 });
+      await asentado(nombre);
+      const suNombre = await caja(nombre);
+      expect(suNombre.abajo).toBeLessThanOrEqual(control.arriba);
+      expect(suNombre.arriba).toBeGreaterThanOrEqual(suLetrero.abajo + 8);
+      expect(suNombre.abajo - suNombre.arriba).toBeLessThanOrEqual(26);
+      await expect(franja).not.toContainText(oficio.cartel.charla.negocio);
+      await expect(capa.getByText(/agente de/i)).toHaveCount(0);
       expect(await desborde(page)).toBeLessThanOrEqual(0);
     });
   }
@@ -1771,7 +1851,8 @@ test.describe('el corto, en pantallas anchas', () => {
     expect(await adelantadas(page)).toEqual([actual]);
     await page.keyboard.press('Tab');
     await expect(verDeNuevo).toBeFocused();
-    expect(await adelantadas(page)).toEqual([actual, sigue]);
+    // (Con un solo oficio a la venta el que sigue es el mismo, y su foto no se adelanta otra vez.)
+    expect(await adelantadas(page)).toEqual([...new Set([actual, sigue])]);
     // Con el reloj andando, el cartel se queda: el corto no vuelve solo.
     await page.clock.runFor(20_000);
     await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
@@ -1938,6 +2019,7 @@ test.describe('el corto, en pantallas anchas', () => {
   test('"Ver de nuevo" vuelve a correr el corto desde el principio, con el oficio que sigue y el foco en la pausa', async ({
     page,
   }) => {
+    test.skip(!VARIOS, `${UNO_SOLO} no hay otro oficio que siga`);
     const fotos = pedidos(page, /-escena-\d+\.(avif|webp)$/);
     // Le toca el de en medio: asi se ve que sigue el ultimo y despues da la vuelta al primero.
     const empieza = 1;
@@ -1986,6 +2068,46 @@ test.describe('el corto, en pantallas anchas', () => {
     // El oficio de la visita no cambia: es el que ensena el cartel en celular.
     await expect(page.locator('html')).toHaveAttribute('data-oficio', CORTO.oficios[empieza]?.clave ?? '');
     // Y vuelve a recorrer su guion desde la primera toma.
+    await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
+  });
+
+  test('con un solo oficio a la venta, "Ver de nuevo" vuelve a correr el mismo oficio desde el principio, sin pedir otra vez su foto', async ({
+    page,
+  }) => {
+    test.skip(VARIOS, 'con varios oficios a la venta "Ver de nuevo" corre el que sigue');
+    const [oficio] = CORTO.oficios;
+    if (!oficio) throw new Error('no hay oficio a la venta');
+    const fotos = pedidos(page, /-escena-\d+\.(avif|webp)$/);
+    const corto = await abrirCortoDetenido(page);
+    const cine = corto.locator('[data-corto-cine]');
+    const aLaVista = corto.locator('[data-escena]').filter({ visible: true });
+    await expect(aLaVista).toHaveAttribute('data-escena', oficio.clave);
+    await hastaElCuadro(page, corto, MOMENTOS[2] ?? '');
+    const saltar = corto.getByRole('button', { name: 'Saltar' });
+    const verDeNuevo = corto.getByRole('button', { name: 'Ver de nuevo' });
+    // Dos veces seguidas: siempre el mismo oficio, y su foto (que ya llego) no se vuelve a adelantar ni a pedir.
+    await expect.poll(() => fotos.length).toBeGreaterThan(0);
+    for (let vez = 1; vez <= 2; vez++) {
+      await saltar.focus();
+      await saltar.click({ position: { x: 6, y: 6 } });
+      await expect(corto).toHaveAttribute('data-cuadro', CARTEL);
+      await expect(verDeNuevo).toBeFocused();
+      const pedidas = fotos.length;
+      await verDeNuevo.hover();
+      expect(await adelantadas(page)).toEqual([oficio.clave]);
+      await verDeNuevo.click();
+      await expect(corto).toHaveAttribute('data-cuadro', MOMENTOS[0] ?? '');
+      await expect(cine).toBeVisible();
+      await expect(cine).toHaveAttribute('data-oficio', oficio.clave);
+      await expect(aLaVista).toHaveCount(1);
+      await expect(aLaVista).toHaveAttribute('data-escena', oficio.clave);
+      await expect(verDeNuevo).toBeHidden();
+      await expect(corto.getByRole('button', { name: 'Pausar el video' })).toBeFocused();
+      await expect(corto.locator('.letrero[data-activo]')).toHaveText(CORTO.guion[0]?.letrero ?? '');
+      expect(fotos).toHaveLength(pedidas);
+      expect(new Set(fotos.map((foto) => foto.replace(/-escena-.*$/, '')))).toEqual(new Set([oficio.clave]));
+    }
+    await expect(page.locator('html')).toHaveAttribute('data-oficio', oficio.clave);
     await hastaElCuadro(page, corto, MOMENTOS[1] ?? '');
   });
 
@@ -2178,12 +2300,18 @@ test.describe('el corto, en pantallas anchas', () => {
     expect(va).toBeGreaterThan(1);
     await corto.getByRole('button', { name: 'Saltar' }).click();
     await expect(video).toHaveJSProperty('paused', true);
-    // Y al verlo de nuevo corre el del oficio que sigue, otra vez sobre su escena fria; el anterior descansa.
+    // Y al verlo de nuevo corre el del oficio que sigue, otra vez sobre su escena fria; el anterior descansa. Con un
+    // solo oficio a la venta es el mismo video, que regresa a su escena fria: en la calida ya no queda ninguno.
     const anterior = await video.getAttribute('src');
     await corto.getByRole('button', { name: 'Ver de nuevo' }).click();
     const nuevo = corto.locator('[data-escenas="fria"] [data-escena]:not([hidden]) video[src]');
     await expect(nuevo).toHaveCount(1, { timeout: 15_000 });
-    expect(await nuevo.getAttribute('src')).not.toBe(anterior);
-    await expect(corto.locator('[data-escenas="calida"] video[src]')).toHaveJSProperty('paused', true);
+    if (VARIOS) {
+      expect(await nuevo.getAttribute('src')).not.toBe(anterior);
+      await expect(corto.locator('[data-escenas="calida"] video[src]')).toHaveJSProperty('paused', true);
+    } else {
+      expect(await nuevo.getAttribute('src')).toBe(anterior);
+      await expect(corto.locator('[data-escenas="calida"] video[src]')).toHaveCount(0);
+    }
   });
 });

@@ -9,6 +9,7 @@ import { before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { achicarCss } from '../../herramientas/achicar.mjs';
 import { armarSitio } from '../../herramientas/armado.mjs';
+import { soloLoQueSeVende } from '../../herramientas/oficios.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FUENTE = path.join(RAIZ, 'fuente');
@@ -22,12 +23,22 @@ const ANCHOS = [480, 720, 960];
 /** @type {Map<string, Buffer>} */
 let archivos;
 let html = '';
-/** @type {any} */
-let secciones;
+/** Los datos tal como estan en la fuente: con lo de todos los oficios, a la venta o guardados. @type {any} */
+const secciones = await leer('secciones.json');
 /** @type {any[]} */
-let giros;
+const giros = await leer('giros.json');
 /** @type {any[]} */
-let preguntas;
+const preguntas = await leer('preguntas.json');
+/** Lo que la pagina ensena de ellos: solo lo de los oficios a la venta (giros.json, "aLaVenta"). */
+const { datos: vendido, claves: aLaVenta } = soloLoQueSeVende({ giros, preguntas, secciones });
+/** Los oficios que ensena la pagina, en su orden. @type {any[]} */
+const girosALaVista = vendido.giros;
+/** Las preguntas que ensena la pagina: las de un oficio guardado ("solo") no van. @type {any[]} */
+const preguntasALaVista = vendido.preguntas;
+/** La nota de la cedula, si la pagina la ensena (solo con un oficio de salud a la venta); si no, vacia. */
+const notaALaVista = /** @type {string} */ (vendido.secciones.planes.requisitosNota);
+/** Si la pagina ensena un oficio de salud. */
+const conSalud = ['dentista', 'medico'].some((clave) => aLaVenta.has(clave));
 
 /**
  * Una seccion de la pagina, entera.
@@ -54,9 +65,6 @@ function medidasDeWebp(foto) {
 before(async () => {
   ({ archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' }));
   html = archivos.get('index.html')?.toString('utf8') ?? '';
-  secciones = await leer('secciones.json');
-  giros = await leer('giros.json');
-  preguntas = await leer('preguntas.json');
 });
 
 test('la seccion "Como funciona" ya no existe: sus nueve pasos se cuentan en el primer mini video de "Tu agente"', () => {
@@ -106,12 +114,17 @@ test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de 
     );
   }
   const bloque = seccion('para-quien');
-  assert.ok(bloque.includes('>Hoy, para uñas, dentistas y médicos. <em>Pronto, más oficios y profesiones.</em></h2>'));
+  assert.ok(bloque.includes('>Hoy, para profesionales de uñas. <em>Pronto, más oficios y profesiones.</em></h2>'));
+  // Una tarjeta por oficio a la venta; de un guardado, ni su tarjeta ni su retrato.
   const tarjetas = [...bloque.matchAll(/<li class="oficio__tarjeta" data-enciende>([\s\S]*?)<\/li>/g)].map(
     ([, dentro]) => dentro ?? '',
   );
-  assert.equal(tarjetas.length, giros.length);
-  for (const [lugar, giro] of giros.entries()) {
+  assert.equal(tarjetas.length, girosALaVista.length);
+  for (const giro of giros.filter((uno) => !aLaVenta.has(uno.clave))) {
+    assert.ok(!bloque.includes(`<h3>${giro.tarjeta.nombre}</h3>`), giro.clave);
+    assert.ok(!bloque.includes(`retratos/${giro.clave}-`), giro.clave);
+  }
+  for (const [lugar, giro] of girosALaVista.entries()) {
     const tarjeta = tarjetas[lugar] ?? '';
     const foto = /<img class="oficio__foto"[^>]*>/.exec(tarjeta)?.[0] ?? '';
     // La foto va completa, en su marco, y el texto debajo y en limpio: primero el marco, luego el nombre y el renglon.
@@ -145,11 +158,15 @@ test('para quien: una tarjeta por oficio, con el nombre aprobado, su renglon de 
 test('los retratos publicados: tres anchos en dos formatos por oficio, cada uno de 60 KB o menos y sin recorte', async () => {
   const carpeta = path.join(FUENTE, 'recursos', 'retratos');
   const enDisco = (await readdir(carpeta)).sort();
-  const esperados = giros
-    .flatMap((giro) =>
-      ANCHOS.flatMap((ancho) => ['avif', 'webp'].map((tipo) => `${giro.clave}-retrato-${ancho}.${tipo}`)),
-    )
-    .sort();
+  /** @param {any[]} lista */
+  const retratosDe = (lista) =>
+    lista
+      .flatMap((giro) =>
+        ANCHOS.flatMap((ancho) => ['avif', 'webp'].map((tipo) => `${giro.clave}-retrato-${ancho}.${tipo}`)),
+      )
+      .sort();
+  // En la fuente estan los de todos los oficios, tambien los guardados: encender uno no pide fotos nuevas.
+  const esperados = retratosDe(giros);
   assert.deepEqual(enDisco, esperados);
   for (const nombre of enDisco) {
     const foto = await readFile(path.join(carpeta, nombre));
@@ -164,16 +181,23 @@ test('los retratos publicados: tres anchos en dos formatos por oficio, cada uno 
       assert.ok(Math.abs(alto - (ancho * 1192) / 960) <= 2, `${nombre}: mide ${anchoReal} x ${alto}`);
     }
   }
-  // Y cada una viaja en lo armado, en su carpeta con huella.
-  const armadas = [...archivos.keys()].filter((ruta) => /^r\/[0-9a-f]{10}\/retratos\//.test(ruta));
-  assert.equal(armadas.length, esperados.length);
+  // Y viajan en lo armado, en su carpeta con huella, solo los de los oficios a la venta.
+  const armadas = [...archivos.keys()]
+    .filter((ruta) => /^r\/[0-9a-f]{10}\/retratos\//.test(ruta))
+    .map((ruta) => ruta.replace(/^r\/[0-9a-f]{10}\/retratos\//, ''))
+    .sort();
+  assert.deepEqual(armadas, retratosDe(girosALaVista));
 });
 
-test('la tarjeta de cada oficio no viaja en los datos de la demostracion: a ella no le hace falta', () => {
+test('la tarjeta de cada oficio y su interruptor no viajan en los datos de la demostracion: a ella no le hacen falta', () => {
   const datos = JSON.parse(/<script type="application\/json" data-demo-datos>(.*?)<\/script>/s.exec(html)?.[1] ?? '{}');
-  assert.equal(datos.ejemplos.length, giros.length);
+  assert.deepEqual(
+    datos.ejemplos.map((/** @type {any} */ ejemplo) => ejemplo.giro.clave),
+    girosALaVista.map((giro) => giro.clave),
+  );
   for (const { giro } of datos.ejemplos) {
     assert.equal('tarjeta' in giro, false, giro.clave);
+    assert.equal('aLaVenta' in giro, false, giro.clave);
     assert.ok(giro.nombre && giro.negocio);
   }
 });
@@ -204,7 +228,7 @@ test('preguntas: los datos marcan las cinco principales, en el orden aprobado, y
     preguntas.filter((duda) => duda.principal === true).map((duda) => duda.pregunta),
     [
       '¿El dinero de los anticipos pasa por ustedes?',
-      '¿Qué pasa si mi clienta o paciente no llega a su cita?',
+      '¿Qué pasa si mi clienta no llega a su cita?',
       '¿Y si alguien no quiere pagar el anticipo?',
       '¿Tengo que cambiar mi número de WhatsApp?',
       '¿Qué pasa si le preguntan algo que mi agente no sabe?',
@@ -215,17 +239,28 @@ test('preguntas: los datos marcan las cinco principales, en el orden aprobado, y
   assert.deepEqual(
     preguntas.slice(5).map((duda) => duda.pregunta),
     [
-      '¿Mis clientas o pacientes tienen que instalar algo?',
+      '¿Mis clientas tienen que instalar algo?',
       '¿Puedo contestar yo una conversación?',
       'Soy dentista o médico. ¿Mi agente opina de salud?',
       '¿Reemplaza mi agenda o mis expedientes?',
       '¿Me trae clientela nueva?',
       '¿Cómo sé que no se va a equivocar con mis precios?',
-      '¿Qué pasa con los mensajes y los datos de mis clientas o pacientes?',
+      '¿Qué pasa con los mensajes y los datos de mis clientas?',
       '¿Y si mi profesión u oficio no está en la lista?',
     ],
   );
   assert.ok(preguntas.slice(5).every((duda) => !('principal' in duda)));
+  // Las dos de salud solo se ensenan con un oficio de salud a la venta (el dueno, 23-nov-2026: hoy solo unas). Las
+  // principales son de todos: las cinco de arriba nunca dependen del oficio.
+  assert.deepEqual(
+    preguntas.filter((duda) => duda.solo).map((duda) => [duda.pregunta, duda.solo]),
+    [
+      ['Soy dentista o médico. ¿Mi agente opina de salud?', ['dentista', 'medico']],
+      ['¿Reemplaza mi agenda o mis expedientes?', ['dentista', 'medico']],
+    ],
+  );
+  assert.ok(preguntas.filter((duda) => duda.principal).every((duda) => !duda.solo));
+  assert.equal(preguntasALaVista.length, conSalud ? 13 : 11);
 });
 
 test('preguntas: cada una se entiende sola, sin dejar espacio a dudas, y ninguna respuesta nombra examenes', () => {
@@ -237,7 +272,7 @@ test('preguntas: cada una se entiende sola, sin dejar espacio a dudas, y ninguna
     return duda;
   };
   // Las que no decian de quien o de que hablaban, ya lo dicen.
-  assert.match(de('¿Qué pasa si mi clienta').pregunta, /clienta o paciente no llega a su cita/);
+  assert.match(de('¿Qué pasa si mi clienta').pregunta, /mi clienta no llega a su cita/);
   assert.match(de('¿El dinero').pregunta, /de los anticipos/);
   assert.match(de('¿Y si alguien').pregunta, /el anticipo/);
   assert.match(de('¿Tengo que cambiar').pregunta, /mi número de WhatsApp/);
@@ -254,12 +289,19 @@ test('preguntas: cada una se entiende sola, sin dejar espacio a dudas, y ninguna
     /^Cotiza solo con los precios de tu catálogo\. Si algo no está ahí, no lo inventa: te avisa\./,
   );
   assert.match(de('¿Qué pasa con los mensajes').respuesta, /los audios y las fotos que te mandan no se guardan/);
+  // Las que ensena la pagina hablan de quien ella atiende sin nombrar un oficio que no esta a la venta: sin uno de
+  // salud, ni pacientes ni salud (la de las fotos de pacientes salio con ellos).
+  if (!conSalud) {
+    for (const { pregunta, respuesta } of preguntasALaVista) {
+      assert.doesNotMatch(`${pregunta} ${respuesta}`, /paciente|dentista|médic|salud|cédula/i, pregunta);
+    }
+  }
   // Y las que la tabla de la verdad pide con sus palabras, ahi siguen.
   // El anticipo siempre se queda con ella; nosotros no devolvemos, y si hace falta devolver uno, lo hace ella (el
   // dueno, 20-nov-2026).
   assert.equal(
     de('¿Qué pasa si mi clienta').respuesta,
-    'Después de la cita, tu agente te pregunta si la persona asistió. Si tocas «No», el anticipo se queda contigo y a esa persona se le ofrece agendar de nuevo. Nosotros no hacemos devoluciones: si alguna vez quieres devolver un anticipo, lo haces tú directamente.',
+    'Después de la cita, tu agente te pregunta si tu clienta asistió. Si tocas «No», el anticipo se queda contigo y a ella se le ofrece agendar de nuevo. Nosotros no hacemos devoluciones: si alguna vez quieres devolver un anticipo, lo haces tú directamente.',
   );
   assert.match(de('Soy dentista').respuesta, /No diagnostica ni recomienda medicamentos/);
   assert.match(de('¿Me trae').respuesta, /^No\. Hace que quienes ya te escriben sí lleguen/);
@@ -273,9 +315,13 @@ test('preguntas: cinco a la vista y las demas dentro de "Ver mas preguntas", sin
     [
       ...trozo.matchAll(/<details class="pregunta"><summary><h3>([^<]+)<\/h3><\/summary><p>([^<]+)<\/p><\/details>/g),
     ].map(([, pregunta, respuesta]) => ({ pregunta, respuesta }));
-  const sinMarca = preguntas.map(({ pregunta, respuesta }) => ({ pregunta, respuesta }));
+  // Las que ensena la pagina: sin las de un oficio guardado (hoy, sin salud, seis dentro de "Ver mas preguntas").
+  const sinMarca = preguntasALaVista.map(({ pregunta, respuesta }) => ({ pregunta, respuesta }));
   assert.deepEqual(dudas(aLaVista), sinMarca.slice(0, 5));
   assert.deepEqual(dudas(resto), sinMarca.slice(5));
+  for (const { pregunta } of preguntas.filter((duda) => !preguntasALaVista.includes(duda))) {
+    assert.ok(!html.includes(pregunta), `pregunta de un oficio guardado: ${pregunta}`);
+  }
   // El boton es el resumen de un <details>: dice una cosa cerrado y otra abierto, y lo demas va dentro de el.
   assert.match(
     resto,
@@ -284,11 +330,11 @@ test('preguntas: cinco a la vista y las demas dentro de "Ver mas preguntas", sin
   assert.equal(bloque.split('<details class="preguntas__mas">').length, 2);
   // Nada llega abierto, y no hay un solo boton que dependa de JavaScript.
   assert.doesNotMatch(bloque, /<details[^>]*\sopen|<button/);
-  // Las trece siguen en lo que leen los buscadores y los modelos de lenguaje.
+  // Las mismas siguen en lo que leen los buscadores y los modelos de lenguaje.
   const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
   assert.deepEqual(
     [...llms.matchAll(/^### (.+)$/gm)].map(([, pregunta]) => pregunta),
-    preguntas.map(({ pregunta }) => pregunta),
+    preguntasALaVista.map(({ pregunta }) => pregunta),
   );
 });
 
@@ -356,7 +402,7 @@ test('el trato de la profesional de ejemplo concuerda con su foto y con su guion
   }
 });
 
-test('planes: lo que hace falta para empezar va en cuatro fichas con su icono, y la cedula aparte', () => {
+test('planes: lo que hace falta para empezar va en cuatro fichas con su icono, y la cedula aparte, solo con salud', () => {
   // El dueno (20-nov-2026): "que la seccion 'Qué necesitas para empezar' sea mas visual y que de la impresion que es
   // super facil". Eligio las cuatro fichas del boceto.
   const { planes } = secciones;
@@ -376,6 +422,9 @@ test('planes: lo que hace falta para empezar va en cuatro fichas con su icono, y
     ],
   );
   assert.equal(planes.requisitosNota, 'Si eres dentista o médico, una más: tu cédula profesional.');
+  // La cedula solo se pide en salud: la nota se ensena solo si uno de esos oficios esta a la venta.
+  assert.deepEqual(planes.requisitosNotaSolo, ['dentista', 'medico']);
+  assert.equal(notaALaVista, conSalud ? planes.requisitosNota : '');
   // La pagina las ensena tal cual: cada ficha con su icono de adorno, su titulo y su renglon.
   const bloque = seccion('planes');
   const fichas = [
@@ -385,22 +434,29 @@ test('planes: lo que hace falta para empezar va en cuatro fichas con su icono, y
   ].map(([, icono, titulo, texto]) => ({ icono, titulo, texto }));
   assert.deepEqual(fichas, planes.requisitos);
   assert.ok(bloque.includes(`<p>${planes.requisitosBajada}</p>`));
-  assert.ok(
-    bloque.includes(
-      `<p class="planes__cedula"><svg class="planes__cedula-icono" aria-hidden="true" focusable="false"><use href="#i-cedula"/></svg>${planes.requisitosNota}</p>`,
-    ),
-  );
+  if (notaALaVista) {
+    assert.ok(
+      bloque.includes(
+        `<p class="planes__cedula"><svg class="planes__cedula-icono" aria-hidden="true" focusable="false"><use href="#i-cedula"/></svg>${notaALaVista}</p>`,
+      ),
+    );
+  } else {
+    // Sin salud a la venta no hay renglon de la cedula, ni su icono, ni su texto en ningun lado de la pagina.
+    assert.ok(!html.includes('planes__cedula'), 'sin salud no va el renglon de la cedula');
+    assert.ok(!html.includes('i-cedula'), 'sin salud no viaja el icono de la cedula');
+    assert.ok(!html.includes(planes.requisitosNota));
+  }
   // Cada icono que piden esta dibujado en la pagina, una sola vez.
-  for (const id of ['i-celular', 'i-calendario', 'i-cuenta', 'i-libreta', 'i-cedula']) {
+  for (const id of ['i-celular', 'i-calendario', 'i-cuenta', 'i-libreta', ...(notaALaVista ? ['i-cedula'] : [])]) {
     assert.equal(html.split(`<symbol id="${id}"`).length - 1, 1, id);
   }
   // Ninguna ficha promete un tiempo de alta ni dice que algo es gratis.
   assert.doesNotMatch(JSON.stringify([planes.requisitos, planes.requisitosBajada]), /minutos|hoy mismo|gratis/i);
-  // Y llms.txt las cuenta con para que es cada una, y la cedula al final.
+  // Y llms.txt las cuenta con para que es cada una, y la cedula al final (si la pagina la ensena).
   const llms = archivos.get('llms.txt')?.toString('utf8') ?? '';
   const lista = /## Qué se necesita para empezar\n\n([\s\S]*?)\n\n## /.exec(llms)?.[1]?.split('\n');
   assert.deepEqual(lista, [
     ...planes.requisitos.map((/** @type {any} */ uno) => `- ${uno.titulo}. ${uno.texto}`),
-    `- ${planes.requisitosNota}`,
+    ...(notaALaVista ? [`- ${notaALaVista}`] : []),
   ]);
 });

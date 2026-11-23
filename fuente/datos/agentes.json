@@ -187,24 +187,24 @@
           "texto": "La cita entra a tu calendario con el anticipo ya pagado, directo a tu cuenta de Mercado Pago.",
           "dura": 8,
           "pasos": [
-            { "en": 0.2, "hasta": 4.4, "quien": { "de": "clienta", "texto": "Lo ve tu paciente" } },
+            { "en": 0.2, "hasta": 4.4, "quien": { "de": "clienta", "texto": "Lo ve tu clienta" } },
             {
               "en": 0.5,
               "hasta": 4.4,
-              "sale": { "texto": "Sí, aparte el jueves a las 10, por favor.", "hora": "9:41 a. m." }
+              "sale": { "texto": "Sí, apárteme el jueves a las 10, por favor.", "hora": "9:41 a. m." }
             },
             {
               "en": 1.6,
               "hasta": 4.4,
               "entra": {
-                "liga": { "titulo": "Anticipo Consulta", "monto": "$300", "sitio": "mercadopago.com.mx" },
-                "texto": "Con mucho gusto, señora Elvira. Para apartar su consulta, el anticipo es de $300. Aquí está su enlace de pago.",
+                "liga": { "titulo": "Anticipo Acrílicas", "monto": "$150", "sitio": "mercadopago.com.mx" },
+                "texto": "Con mucho gusto, Karla. Para apartar sus acrílicas, el anticipo es de $150. Aquí está su enlace de pago.",
                 "hora": "9:41 a. m."
               }
             },
             { "en": 4.8, "quien": { "de": "tu", "texto": "Lo ves tú" } },
-            { "en": 5.1, "aprobado": { "texto": "Pago aprobado · $300" } },
-            { "en": 6.1, "cita": { "dia": "JUE", "fecha": "19", "hora": "10:00 am · Elvira", "detalle": "Consulta" } }
+            { "en": 5.1, "aprobado": { "texto": "Pago aprobado · $150" } },
+            { "en": 6.1, "cita": { "dia": "JUE", "fecha": "19", "hora": "10:00 am · Karla", "detalle": "Acrílicas" } }
           ]
         },
         {
@@ -227,7 +227,7 @@
         },
         {
           "titulo": "Ve las imágenes de referencia que le mandan",
-          "texto": "Por la naturaleza de cada oficio, hoy esto aplica solo para negocios de uñas, no para dentistas ni médicos. Revisa el diseño que quiere tu clienta y, si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.",
+          "texto": "Revisa el diseño que quiere tu clienta y, si el precio no está en tu catálogo, te pregunta a ti antes de cotizar.",
           "dura": 7,
           "alta": true,
           "pasos": [
@@ -409,7 +409,7 @@
   ],
   "cuida": {
     "titulo": "Así cuidamos de tu negocio",
-    "bajada": "Seis cosas que tu agente hace siempre, para que tú no tengas que vigilarlo.",
+    "bajada": "Lo que tu agente hace siempre, para que tú no tengas que vigilarlo.",
     "lista": [
       {
         "titulo": "Cada cita, con su anticipo",
@@ -423,7 +423,8 @@
       { "titulo": "Cobra solo el anticipo", "texto": "El resto del servicio lo cobras tú, como siempre." },
       {
         "titulo": "Lo clínico es tuyo",
-        "texto": "No diagnostica ni recomienda medicamentos: agenda y, si hay una urgencia, te llega a ti."
+        "texto": "No diagnostica ni recomienda medicamentos: agenda y, si hay una urgencia, te llega a ti.",
+        "solo": ["dentista", "medico"]
       },
       {
         "titulo": "Cuida a quien ya te escribe",

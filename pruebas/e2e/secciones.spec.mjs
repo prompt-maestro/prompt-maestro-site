@@ -1,7 +1,7 @@
 // @ts-check
 import { readFileSync } from 'node:fs';
 import { pesos } from '../../fuente/js/redaccion.js';
-import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { leerDatos, sinFaltasDeAccesibilidad, VENDIDO, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 const ALTA = 'https://alta.prompt-maestro.com/';
@@ -9,6 +9,41 @@ const ALTA = 'https://alta.prompt-maestro.com/';
 /** @type {{ planes: { nombre: string, mensual: number, anual: number, instalacion: number, destacado: boolean }[] }} */
 const { planes: PLANES } = JSON.parse(readFileSync(new URL('../../fuente/datos/planes.json', import.meta.url), 'utf8'));
 const [PRIMERO] = PLANES;
+/** Las preguntas que ensena la pagina: las de un oficio guardado ("solo") no van. @type {{ pregunta: string }[]} */
+const PREGUNTAS = VENDIDO.datos.preguntas;
+/** La nota de la cedula, solo si la pagina la ensena (con un oficio de salud a la venta); si no, vacia. */
+const NOTA_DE_LA_CEDULA = /** @type {string} */ (VENDIDO.datos.secciones.planes.requisitosNota);
+/**
+ * La tarjeta de "Para quien" de cada oficio, con las palabras que aprobo el dueno. La pagina ensena las de los
+ * oficios a la venta, en su orden.
+ */
+const TARJETAS = /** @type {Record<string, { nombre: string, alt: string, texto: string }>} */ ({
+  unas: {
+    nombre: 'Uñas',
+    alt: 'Manicurista pintando las uñas de una clienta',
+    texto:
+      'Más tiempo para tus clientas: tu agente cotiza tus diseños con tu catálogo y agenda solo con el anticipo pagado.',
+  },
+  dentista: {
+    nombre: 'Dentistas',
+    alt: 'Dentista atendiendo a un paciente',
+    texto: 'Más orden en tu agenda: limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.',
+  },
+  medico: {
+    nombre: 'Médicos generales y especialistas',
+    alt: 'Doctora auscultando a un paciente',
+    texto: 'Más tranquilidad en tu consulta: agenda con respeto y discreción, y lo clínico siempre queda en tus manos.',
+  },
+});
+/**
+ * Las tarjetas que ensena la pagina: una por oficio a la venta, en su orden.
+ * @type {{ clave: string, nombre: string, alt: string, texto: string }[]}
+ */
+const A_LA_VISTA = VENDIDO.datos.giros.map((/** @type {{ clave: string }} */ giro) => {
+  const tarjeta = TARJETAS[giro.clave];
+  if (!tarjeta) throw new Error(`falta la tarjeta aprobada de "${giro.clave}"`);
+  return { clave: giro.clave, ...tarjeta };
+});
 
 /**
  * @param {import('@playwright/test').Page} page
@@ -67,7 +102,7 @@ test('los planes ensenan sus precios, uno solo va recomendado y todos llevan al 
   await sinFaltasDeAccesibilidad(page, '#planes');
 });
 
-test('que necesitas para empezar: cuatro fichas con su icono en joya, y la cedula aparte, en un renglon chico', async ({
+test('que necesitas para empezar: cuatro fichas con su icono en joya, y la cedula aparte, en un renglon chico (solo con salud)', async ({
   page,
 }) => {
   const planes = await abrirEn(page, 'planes');
@@ -140,18 +175,24 @@ test('que necesitas para empezar: cuatro fichas con su icono en joya, y la cedul
     expect(new Set(cajas.map(({ top }) => top)).size).toBe(4);
     expect(cajas.map(({ iconoAUnLado }) => iconoAUnLado)).toEqual([true, true, true, true]);
   }
-  // La cedula va aparte y en chico: solo aplica a dentistas y medicos.
+  // La cedula va aparte y en chico: solo aplica a dentistas y medicos, y solo se ensena si alguno esta a la venta.
   const cedula = bloque.locator('.planes__cedula');
-  await expect(cedula).toHaveText('Si eres dentista o médico, una más: tu cédula profesional.');
-  await expect(cedula).toHaveCSS('font-size', '15px');
-  await expect(cedula.locator('svg')).toHaveAttribute('aria-hidden', 'true');
-  await expect(cedula.locator('use')).toHaveAttribute('href', '#i-cedula');
-  expect(await page.evaluate(() => document.querySelector('#i-cedula') instanceof SVGSymbolElement)).toBe(true);
-  const abajo = await cedula.evaluate((nota) => {
-    const lista = /** @type {Element} */ (document.querySelector('.requisitos')).getBoundingClientRect();
-    return nota.getBoundingClientRect().top >= lista.bottom;
-  });
-  expect(abajo).toBe(true);
+  if (NOTA_DE_LA_CEDULA) {
+    await expect(cedula).toHaveText('Si eres dentista o médico, una más: tu cédula profesional.');
+    await expect(cedula).toHaveCSS('font-size', '15px');
+    await expect(cedula.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+    await expect(cedula.locator('use')).toHaveAttribute('href', '#i-cedula');
+    expect(await page.evaluate(() => document.querySelector('#i-cedula') instanceof SVGSymbolElement)).toBe(true);
+    const abajo = await cedula.evaluate((nota) => {
+      const lista = /** @type {Element} */ (document.querySelector('.requisitos')).getBoundingClientRect();
+      return nota.getBoundingClientRect().top >= lista.bottom;
+    });
+    expect(abajo).toBe(true);
+  } else {
+    await expect(cedula).toHaveCount(0);
+    await expect(page.locator('#i-cedula')).toHaveCount(0);
+    await expect(planes).not.toContainText(/cédula/i);
+  }
   // Y nada se sale de la pantalla.
   const desborde = () =>
     page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -231,13 +272,16 @@ test('la letra chica de los planes dice, sin porcentajes, que Mercado Pago cobra
   // El contraste de la letra chica lo revisa, con toda la seccion, la prueba de los planes.
 });
 
-test('preguntas: cinco a la vista, en su orden, y las otras ocho detras de "Ver más preguntas"', async ({ page }) => {
+test('preguntas: cinco a la vista, en su orden, y las demas detras de "Ver más preguntas"', async ({ page }) => {
   const preguntas = await abrirEn(page, 'preguntas');
   const todas = preguntas.locator('details.pregunta');
-  await expect(todas).toHaveCount(13);
+  // Las de un oficio guardado no van (hoy, sin salud, son once: cinco a la vista y seis adentro).
+  await expect(todas).toHaveCount(PREGUNTAS.length);
+  await expect(todas.locator('summary h3')).toHaveText(PREGUNTAS.map(({ pregunta }) => pregunta));
+  expect(PREGUNTAS.length).toBeGreaterThan(6);
   const aLaVista = [
     '¿El dinero de los anticipos pasa por ustedes?',
-    '¿Qué pasa si mi clienta o paciente no llega a su cita?',
+    '¿Qué pasa si mi clienta no llega a su cita?',
     '¿Y si alguien no quiere pagar el anticipo?',
     '¿Tengo que cambiar mi número de WhatsApp?',
     '¿Qué pasa si le preguntan algo que mi agente no sabe?',
@@ -283,13 +327,13 @@ test('preguntas: cinco a la vista, en su orden, y las otras ocho detras de "Ver 
   await expect(boton).toHaveText('Ver menos preguntas', { useInnerText: true });
   await expect(boton.locator('.preguntas__ver-mas')).toBeHidden();
   await expect(boton.locator('.preguntas__ver-menos')).toBeVisible();
-  await expect(preguntas.getByRole('heading', { level: 3 }).filter({ visible: true })).toHaveCount(13);
+  await expect(preguntas.getByRole('heading', { level: 3 }).filter({ visible: true })).toHaveCount(PREGUNTAS.length);
   await expect(guardada).toBeVisible();
   // Nada brinca: el boton y las cinco de arriba se quedan donde estaban; lo que se abre, se abre debajo.
   sigueEnSuLugar(await lugarDelBoton(), antes);
   sigueEnSuLugar(await lugarDe(todas.nth(4)), quinta);
   expect((await lugarDe(todas.nth(5))).y).toBeGreaterThanOrEqual(antes.y + antes.alto);
-  // Con las trece a la vista: ni una falta de accesibilidad.
+  // Con todas a la vista: ni una falta de accesibilidad.
   await sinFaltasDeAccesibilidad(page, '#preguntas');
   // Y se vuelven a guardar.
   await boton.click();
@@ -310,9 +354,7 @@ test('cada pregunta se abre y se cierra, y la respuesta se lee: las de la vista 
   await expect(primera).not.toHaveAttribute('open', /.*/);
   // Una de las que estaban guardadas, ya desplegadas.
   await preguntas.locator('summary.preguntas__ver').click();
-  const adentro = preguntas
-    .locator('details.pregunta')
-    .filter({ hasText: '¿Mis clientas o pacientes tienen que instalar algo?' });
+  const adentro = preguntas.locator('details.pregunta').filter({ hasText: '¿Mis clientas tienen que instalar algo?' });
   await expect(adentro.locator('p')).toBeHidden();
   await adentro.locator('summary').click();
   await expect(adentro).toHaveAttribute('open', '');
@@ -346,22 +388,14 @@ test('"Ver más preguntas" se maneja con el teclado y ensena su foco', async ({ 
   await expect(boton).toBeFocused();
 });
 
-test('para quien: tres retratos enmarcados, con la foto completa y nitida y, debajo, su nombre y su renglon', async ({
+test('para quien: un retrato enmarcado por oficio a la venta, con la foto completa y nitida y, debajo, su nombre y su renglon', async ({
   page,
 }) => {
   const seccion = await abrirEn(page, 'para-quien');
   const tarjetas = seccion.locator('.oficio__tarjeta');
-  await expect(tarjetas).toHaveCount(3);
-  await expect(seccion.getByRole('heading', { level: 3 })).toHaveText([
-    'Uñas',
-    'Dentistas',
-    'Médicos generales y especialistas',
-  ]);
-  const ALTS = [
-    'Manicurista pintando las uñas de una clienta',
-    'Dentista atendiendo a un paciente',
-    'Doctora auscultando a un paciente',
-  ];
+  await expect(tarjetas).toHaveCount(A_LA_VISTA.length);
+  await expect(seccion.getByRole('heading', { level: 3 })).toHaveText(A_LA_VISTA.map(({ nombre }) => nombre));
+  const ALTS = A_LA_VISTA.map(({ alt }) => alt);
   for (const [lugar, tarjeta] of (await tarjetas.all()).entries()) {
     const foto = tarjeta.locator('img.oficio__foto');
     // Cada foto llega cuando esta cerca: se le espera en su lugar.
@@ -396,7 +430,9 @@ test('para quien: tres retratos enmarcados, con la foto completa y nitida y, deb
       };
     });
     // Es una de las fotos nuevas, en el formato moderno, y con puntos de sobra para verse nitida en esa pantalla.
-    expect(medidas.pedida).toMatch(/\/retratos\/(unas|dentista|medico)-retrato-(480|720|960)\.(avif|webp)$/);
+    expect(medidas.pedida).toMatch(
+      new RegExp(`/retratos/${A_LA_VISTA[lugar]?.clave}-retrato-(480|720|960)\\.(avif|webp)$`),
+    );
     expect(medidas.nitida).toBeGreaterThanOrEqual(1);
     expect(Math.abs(medidas.proporcion - medidas.natural)).toBeLessThan(0.01);
     expect(medidas.llenaElMarco).toBe(true);
@@ -410,13 +446,13 @@ test('para quien: tres retratos enmarcados, con la foto completa y nitida y, deb
     expect(medidas.velo).toBe('none');
   }
   // Cada renglon dice lo que gana el negocio (el dueno, 20-nov-2026: "con un angulo de crear valor").
-  await expect(tarjetas.locator('.oficio__texto p')).toHaveText([
-    'Más tiempo para tus clientas: tu agente cotiza tus diseños con tu catálogo y agenda solo con el anticipo pagado.',
-    'Más orden en tu agenda: limpiezas y valoraciones con anticipo pagado, sin que sueltes el instrumental.',
-    'Más tranquilidad en tu consulta: agenda con respeto y discreción, y lo clínico siempre queda en tus manos.',
-  ]);
+  await expect(tarjetas.locator('.oficio__texto p')).toHaveText(A_LA_VISTA.map(({ texto }) => texto));
+  // Las tarjetas aprobadas son las de los datos: si un oficio se enciende, su tarjeta ya esta escrita.
+  for (const giro of leerDatos('giros.json')) {
+    expect(giro.tarjeta, giro.clave).toMatchObject(TARJETAS[giro.clave] ?? {});
+  }
   await expect(seccion.getByRole('heading', { level: 2 })).toHaveText(
-    'Hoy, para uñas, dentistas y médicos. Pronto, más oficios y profesiones.',
+    'Hoy, para profesionales de uñas. Pronto, más oficios y profesiones.',
   );
   // Pedir un oficio nuevo lleva su propio asunto (no el de "quiero que me acompanen"), y el renglon entero es el enlace.
   const otro = seccion.getByRole('link', { name: '¿No está tu negocio? Escríbenos y lo platicamos.' });

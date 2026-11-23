@@ -24,12 +24,21 @@ import {
   zona,
 } from '../../fuente/js/corto.js';
 import { armarSitio } from '../../herramientas/armado.mjs';
+import { soloLoQueSeVende } from '../../herramientas/oficios.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FUENTE = path.join(RAIZ, 'fuente');
+/** El corto tal como esta en la fuente: con la escena de cada oficio, a la venta o guardado. */
 const corto = JSON.parse(await readFile(path.join(FUENTE, 'datos', 'corto.json'), 'utf8'));
 /** Los ejemplos de la demostracion: el cartel cuenta la misma historia que ella, con el mismo negocio y anticipo. */
 const giros = JSON.parse(await readFile(path.join(FUENTE, 'datos', 'giros.json'), 'utf8'));
+/**
+ * Las escenas que la pagina trae escritas: solo las de los oficios a la venta (giros.json, "aLaVenta"), en su orden.
+ * @type {any[]}
+ */
+const OFICIOS = soloLoQueSeVende({ giros, corto }).datos.corto.oficios;
+/** Con un solo oficio a la venta el cierre no se parte en franjas: el oficio va a todo lo ancho, con su escena. */
+const VARIOS = OFICIOS.length > 1;
 /** La forma de la foto de pie de cada oficio (1536 por 2752): de ella se recorta el retrato del cartel. */
 const FORMA_DE_LA_FOTO = 1536 / 2752;
 /** La forma de la escena de cada oficio, acostada (5504 por 3072): sobre ella va la toma viva del corto. */
@@ -324,18 +333,17 @@ test('el guion de la pagina: siete momentos en su orden, de 26 a 32 segundos, y 
   assert.equal(corto.marca.frase, 'Deja que uno de nuestros agentes virtuales conteste por ti.');
   // El cierre: debajo de su letrero van dos renglones chicos, una oracion en cada uno. Dice que el agente va a la
   // medida de lo que el negocio le da (sus servicios, sus precios y sus horarios), sin prometer mas, y en donde
-  // trabaja; y que vienen mas oficios y profesiones. Como hay mas que leer, el cierre dura seis segundos.
+  // trabaja; y para quien es hoy y que vienen mas oficios y profesiones. Como hay mas que leer, el cierre dura seis
+  // segundos.
   assert.deepEqual(corto.todos.baja, [
     'A la medida de tus servicios, tus precios y tus horarios, en el WhatsApp de tu negocio.',
-    'Hoy para uñas, dentistas y médicos; pronto, más oficios y profesiones.',
+    'Hoy para profesionales de uñas; pronto, más oficios y profesiones.',
   ]);
   assert.equal(GUION.at(-1)?.dura, 6000);
   // Ya no dice "Agente de <negocio>" en cada franja: ni el dato existe.
   assert.deepEqual(Object.keys(corto.todos), ['baja']);
-  // El renglon chico del cartel dice lo mismo que el cierre. Sus dos espacios duros (escritos como \u00a0, a la
-  // vista) tienen juntas "y pronto más": donde no cabe en un renglon se parte despues de "médicos", nunca deja una
-  // "y" colgada.
-  assert.equal(corto.cartel.sobre, 'Uñas, dentistas, médicos y\u00a0pronto\u00a0más oficios y profesiones');
+  // El renglon chico del cartel dice para quien es hoy, como el cierre (el dueno, 23-nov-2026: solo unas a la venta).
+  assert.equal(corto.cartel.sobre, 'Para profesionales de uñas');
   // La aplicacion donde trabaja el agente se dice con su nombre, escrito asi: en el letrero de vibra, en el cierre y
   // en el rotulo de la conversacion del agente (uno solo, comun a todos los oficios).
   assert.equal(corto.canal, 'WhatsApp');
@@ -768,7 +776,7 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
   assert.doesNotMatch(delCine, /<(a|button|input|h[1-6])\b/);
   // Los videos no se piden al cargar, no traen controles ni arrancan solos, y callados.
   const videos = delCine.match(/<video\b[^>]*>/g) ?? [];
-  assert.equal(videos.length, corto.oficios.filter((/** @type {{ video: boolean }} */ o) => o.video).length);
+  assert.equal(videos.length, OFICIOS.filter((/** @type {{ video: boolean }} */ o) => o.video).length);
   for (const video of videos) {
     assert.match(video, / muted /);
     assert.match(video, / playsinline /);
@@ -778,9 +786,9 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
     assert.doesNotMatch(video, / (src|autoplay|controls|loop)\b/);
   }
   // En celular el corto no existe: sus fotos no se piden si no se pintan. Son la escena de cada oficio, con luz fria
-  // y con luz calida, y su foto de pie en el cierre.
+  // y con luz calida, y su foto en el cierre (de pie, o su escena si es el unico oficio).
   const tomas = delCine.match(/<img class="foto__toma"[^>]*>/g) ?? [];
-  assert.equal(tomas.length, corto.oficios.length * 3, 'dos escenas y una franja por oficio');
+  assert.equal(tomas.length, OFICIOS.length * 3, 'dos escenas y una franja por oficio');
   for (const toma of tomas) assert.match(toma, / loading="lazy" /);
   // Lo que solo sirve con JavaScript llega guardado: sin el, no hay botones que no hacen nada. Y el cartel no trae
   // mas boton que el que corre el corto.
@@ -808,7 +816,7 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
   // Junto a ella, la historia de una cita en cuatro pasos y en este orden: le escriben, contesta, cobra el anticipo y
   // agenda. Es la conversacion de ejemplo del primer oficio, con las mismas piezas del corto.
   const historia = /<ol class="historia">([\s\S]*?)<\/ol>/.exec(delCartel)?.[1] ?? '';
-  const [primero] = corto.oficios;
+  const [primero] = OFICIOS;
   assert.equal(historia.match(/<li>/g)?.length, 4, 'cuatro pasos');
   const lugares = ['class="dice"', 'class="dice dice--agente"', 'class="pago"', 'class="cita"'].map((pieza) =>
     historia.indexOf(pieza),
@@ -847,7 +855,7 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
   const fotos = / data-escena="([^"]+)"/.exec(etiqueta)?.[1] ?? '';
   const mide = / data-escena-mide="([^"]+)"/.exec(etiqueta)?.[1] ?? '';
   assert.ok(fotos.includes('*') && mide, 'la etiqueta de arranque.js dice las fotos de la escena');
-  for (const oficio of corto.oficios) {
+  for (const oficio of OFICIOS) {
     const escenas = delCine.match(
       new RegExp(`<div class="escena" data-escena="${oficio.clave}"[\\s\\S]*?</picture>`, 'g'),
     );
@@ -857,6 +865,11 @@ test('la pagina armada trae el cartel antes que el corto, y el corto no es para 
       assert.equal(fuente?.[1], fotos.replaceAll('*', oficio.clave), `${oficio.clave}: la foto que se adelanta`);
       assert.equal(fuente?.[2], mide, `${oficio.clave}: lo que mide la foto que se adelanta`);
     }
+  }
+  // De un oficio guardado no viaja nada: ni su escena, ni sus fotos, ni su video.
+  for (const { clave } of corto.oficios.filter((/** @type {{ clave: string }} */ uno) => !OFICIOS.includes(uno))) {
+    assert.ok(!seccion.includes(`data-escena="${clave}"`), `${clave}: su escena viaja`);
+    assert.ok(!seccion.includes(`comercial/${clave}-`), `${clave}: sus fotos o su video viajan`);
   }
 });
 
@@ -868,9 +881,9 @@ test('el corto trae escrita una escena por oficio: la primera a la vista y las d
     const juego =
       new RegExp(`data-escenas="${luz}"[\\s\\S]*?(?=data-escenas=|class="corto__carro")`).exec(cine)?.[0] ?? '';
     const escenas = juego.match(/<div class="escena"[^>]*>/g) ?? [];
-    assert.equal(escenas.length, corto.oficios.length, `una escena por oficio con luz ${luz}`);
+    assert.equal(escenas.length, OFICIOS.length, `una escena por oficio a la venta con luz ${luz}`);
     for (const [lugar, escena] of escenas.entries()) {
-      const { clave, mira } = corto.oficios[lugar];
+      const { clave, mira } = OFICIOS[lugar];
       assert.ok(escena.includes(` data-escena="${clave}"`), escena);
       // Sin nadie que elija se ve la primera; las otras no se pintan.
       assert.equal(/ hidden>$/.test(escena), lugar > 0, `${clave}: ${escena}`);
@@ -886,23 +899,42 @@ test('el corto trae escrita una escena por oficio: la primera a la vista y las d
   // El video de cada oficio va en su escena fria, y la calida no trae ninguno: el mismo se muda de una a otra.
   const calida = /data-escenas="calida"[\s\S]*?data-escenas="fria"/.exec(cine)?.[0] ?? '';
   assert.doesNotMatch(calida, /<video\b/);
-  // El cierre: una franja por oficio, solo con su nombre; y su letrero, con sus dos renglones chicos.
+  // El cierre: una franja por oficio, solo con su nombre; y su letrero, con sus dos renglones chicos. Con varios
+  // oficios la pantalla se parte y cada franja lleva su foto de pie; con uno solo, su franja va a todo lo ancho
+  // (todos--uno) con la foto acostada de su escena, y la camara mira a donde mira en ella.
+  assert.ok(cine.includes(`<div class="todos${VARIOS ? '' : ' todos--uno'}">`), 'la caja del cierre');
   const franjas = cine.match(/<div class="franja"[\s\S]*?<\/p>/g) ?? [];
-  assert.equal(franjas.length, corto.oficios.length);
+  assert.equal(franjas.length, OFICIOS.length);
   for (const [lugar, franja] of franjas.entries()) {
-    const oficio = corto.oficios[lugar];
-    assert.ok(franja.includes(` data-franja="${oficio.clave}" data-persona="${oficio.mira.dePie}"`), oficio.clave);
-    assert.ok(franja.includes(`-trabajo-720.avif`), `${oficio.clave}: su foto de pie`);
+    const oficio = OFICIOS[lugar];
+    const persona = VARIOS ? oficio.mira.dePie : oficio.mira.persona;
+    assert.ok(franja.includes(` data-franja="${oficio.clave}" data-persona="${persona}"`), oficio.clave);
+    if (VARIOS) {
+      assert.ok(franja.includes(`comercial/${oficio.clave}-trabajo-720.avif`), `${oficio.clave}: su foto de pie`);
+      assert.ok(!franja.includes('-escena-'), `${oficio.clave}: en la pantalla partida va de pie`);
+    } else {
+      assert.ok(franja.includes(`comercial/${oficio.clave}-escena-1600.avif`), `${oficio.clave}: la foto de su escena`);
+      assert.ok(!franja.includes('-trabajo-'), `${oficio.clave}: la foto de pie, estirada, le cortaria la cara`);
+    }
     assert.ok(franja.endsWith(`<p class="franja__nombre">${oficio.nombre}</p>`), `${oficio.clave}: solo su nombre`);
     // El negocio de ejemplo de cada oficio ya no sale en el cierre: vive en el celular del cartel.
     assert.ok(!franja.includes(oficio.cartel.charla.negocio), `${oficio.clave}: su franja nombra un negocio`);
+  }
+  // La forma de la foto de cada franja la dicen los estilos: la de pie y, para el oficio solo, la de su escena.
+  const estilos = await readFile(path.join(FUENTE, 'estilos', 'corto.css'), 'utf8');
+  for (const [selector, forma] of /** @type {[string, number][]} */ ([
+    ['\\.franja', FORMA_DE_LA_FOTO],
+    ['\\.todos--uno \\.franja', FORMA_DE_LA_ESCENA],
+  ])) {
+    const dicha = Number(new RegExp(`(?:^|\\n)${selector} \\{[^}]*?--forma: ([\\d.]+);`).exec(estilos)?.[1]);
+    assert.ok(Math.abs(dicha / forma - 1) < 0.001, `${selector}: --forma ${dicha}`);
   }
   // "Agente de <negocio>" confundia: el inicio ya no dice "Agente de" nada, y en toda la pagina ningun negocio de
   // ejemplo lleva ese renglon (mas abajo si se lee, y esta bien, "un agente de WhatsApp").
   const inicio = /<section class="corto"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
   assert.ok(inicio.includes(cine), 'las capas del corto son parte del inicio');
   assert.doesNotMatch(inicio, /agente de\b/i);
-  for (const oficio of corto.oficios) {
+  for (const oficio of OFICIOS) {
     assert.ok(!html.includes(`Agente de ${oficio.cartel.charla.negocio}`), `${oficio.clave}: "Agente de" su negocio`);
   }
   assert.doesNotMatch(html, /franja__agente/);
@@ -930,7 +962,7 @@ test('la pagina dice "WhatsApp" con la palabra, nunca con un logotipo: en el ini
   assert.ok(cine.includes('en el WhatsApp de tu negocio.</span>'));
   assert.equal(
     cine.match(/<div class="trato"><p class="trato__canal">WhatsApp<\/p><p class="dice">/g)?.length,
-    corto.oficios.length,
+    OFICIOS.length,
     'el rotulo de la conversacion, una vez por oficio y arriba del mensaje que entro',
   );
   // En toda la pagina, cada vez que se nombra va escrita igual.
@@ -974,19 +1006,20 @@ test('el corto viaja escrito en la pagina: la marca en su halo, la cuenta de cad
   assert.ok(marca.includes(`<p class="corto__frase">${corto.marca.frase}</p>`));
   // Cada celular lleva la cuenta de su oficio, y ninguna se repite.
   const cuentas = cine.match(/<b data-corto-cuenta[^>]*>\d+<\/b>/g) ?? [];
-  assert.equal(cuentas.length, corto.oficios.length);
+  assert.equal(cuentas.length, OFICIOS.length);
   for (const [lugar, cuenta] of cuentas.entries()) {
-    const { base, tope } = corto.oficios[lugar].cuenta;
+    const { base, tope } = OFICIOS[lugar].cuenta;
     assert.equal(cuenta, `<b data-corto-cuenta data-base="${base}" data-tope="${tope}">${tope}</b>`);
   }
+  // Ninguno repite la de otro, tampoco los guardados: asi siguen bien el dia que se enciendan.
   const topes = corto.oficios.map((/** @type {{ cuenta: { tope: number } }} */ oficio) => oficio.cuenta.tope);
   assert.equal(new Set(topes).size, topes.length, 'ningun celular marca lo mismo que otro');
   // Lo que hizo el agente: una conversacion por oficio, en su orden, cada una con sus cinco piezas (el mensaje, lo
   // que contesto, el pago aprobado, el papel con lo que resolvio y el sello) y de donde salio la respuesta.
   const tratos = cine.match(/<div class="trato">[\s\S]*?<\/div>/g) ?? [];
-  assert.equal(tratos.length, corto.oficios.length);
+  assert.equal(tratos.length, OFICIOS.length);
   for (const [lugar, trato] of tratos.entries()) {
-    const oficio = corto.oficios[lugar];
+    const oficio = OFICIOS[lugar];
     const texto = trato.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
     for (const dice of [
       corto.canal,
@@ -1033,7 +1066,7 @@ test('el corto viaja escrito en la pagina: la marca en su halo, la cuenta de cad
   }
   // La foto que manda una clienta se ve en su aviso, y solo va donde el dato dice que hay foto.
   const fotos = cine.match(/class="aviso__mira"/g) ?? [];
-  const conFoto = corto.oficios.flatMap((/** @type {{ llegan: object[], avisos: object[] }} */ oficio) =>
+  const conFoto = OFICIOS.flatMap((/** @type {{ llegan: object[], avisos: object[] }} */ oficio) =>
     [...oficio.llegan, ...oficio.avisos].filter((/** @type {any} */ aviso) => aviso.foto),
   );
   assert.equal(fotos.length, conFoto.length);
@@ -1044,9 +1077,9 @@ test('"Tu y tu agente" viaja escrito en la pagina: una escena por oficio, la pri
   const { archivos } = await armarSitio({ raiz: RAIZ, destino: 'publica' });
   const html = archivos.get('index.html')?.toString('utf8') ?? '';
   const escenas = html.match(/<figure class="duo__escena"[\s\S]*?<\/figure>/g) ?? [];
-  assert.equal(escenas.length, corto.oficios.length);
+  assert.equal(escenas.length, OFICIOS.length);
   for (const [lugar, escena] of escenas.entries()) {
-    const oficio = corto.oficios[lugar];
+    const oficio = OFICIOS[lugar];
     const abre = /^<figure[^>]*>/.exec(escena)?.[0] ?? '';
     assert.ok(abre.includes(` data-duo="${oficio.clave}"`), abre);
     assert.ok(abre.includes(` aria-label="${corto.cartel.ejemplo}"`), abre);
@@ -1096,8 +1129,8 @@ test('"Tu y tu agente" viaja escrito en la pagina: una escena por oficio, la pri
   // Ya no van en el cartel: ni el contador en ceros ni los botones para cambiar de oficio.
   const cartel = /class="cartel"[\s\S]*?class="corto__cine"/.exec(html)?.[0] ?? '';
   assert.doesNotMatch(cartel, /sin contestar|data-elegir|data-cartel-oficios/);
-  // Quien elige es arranque.js, antes de pintar: su etiqueta le dice los oficios que hay, en su orden.
-  const claves = corto.oficios.map((/** @type {{ clave: string }} */ oficio) => oficio.clave).join(' ');
+  // Quien elige es arranque.js, antes de pintar: su etiqueta le dice los oficios a la venta, en su orden.
+  const claves = OFICIOS.map((/** @type {{ clave: string }} */ oficio) => oficio.clave).join(' ');
   assert.match(html, new RegExp(`<script src="[^"]*/js/arranque\\.js" data-oficios="${claves}"[^>]*></script>`));
   assert.ok(html.indexOf('js/arranque.js') < html.indexOf('rel="stylesheet"'), 'arranque.js va antes que los estilos');
 });

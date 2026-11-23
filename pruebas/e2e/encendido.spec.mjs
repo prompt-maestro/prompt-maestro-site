@@ -2,15 +2,17 @@
 // Las secciones nuevas en movimiento y en cada tamano: lo que falta por ver espera apagado y se enciende una sola vez
 // al llegar; con movimiento reducido, sin JavaScript o si su archivo no llega, todo esta encendido y quieto; y nada se
 // sale de la pantalla ni brinca, del celular mas chico a la computadora.
-import { sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
+import { A_LA_VENTA, sinFaltasDeAccesibilidad, vigilar } from './apoyo.mjs';
 import { expect, test } from './base.mjs';
 
 /** Las secciones que cambiaron. */
 const SECCIONES = ['para-quien', 'planes', 'preguntas'];
-/** La que trae piezas que se encienden: sus tres retratos. */
+/** La que trae piezas que se encienden: sus retratos, uno por oficio a la venta. */
 const CON_ENCENDIDO = ['#para-quien'];
+/** Los retratos de "Para quien": uno por oficio a la venta (giros.json, "aLaVenta"). */
+const RETRATOS = A_LA_VENTA.length;
 // Y una mas: el boton con luz de "Citas garantizadas", que da sus dos vueltas al llegar a el.
-const PIEZAS = 1 + 3;
+const PIEZAS = 1 + RETRATOS;
 /** Los tamanos en que se revisa que nada se salga: cuatro celulares o tabletas de pie y tres computadoras. */
 const TAMANOS = /** @type {const} */ ([
   [320, 640],
@@ -112,7 +114,7 @@ test('con movimiento, lo que falta por ver espera apagado y se enciende al llega
   // Apagadas tampoco hay una sola falta de accesibilidad: lo que es texto nunca se esconde ni pierde contraste.
   await sinFaltasDeAccesibilidad(page, ...CON_ENCENDIDO);
 
-  // Al llegar a los retratos se enciende lo que entra a la vista: en computadora, los tres, uno tras otro.
+  // Al llegar a los retratos se enciende lo que entra a la vista: en computadora, todos, uno tras otro.
   const retratos = page.locator('#para-quien .oficio__tarjeta');
   await llegarA(retratos.first());
   await expect(retratos.first()).toHaveAttribute('data-enciende', 'ya');
@@ -123,7 +125,9 @@ test('con movimiento, lo que falta por ver espera apagado y se enciende al llega
   );
   // Los que entraron juntos llevan turnos seguidos, desde cero: asi se encienden en orden.
   expect(turnos).toEqual(turnos.map((_, lugar) => String(lugar)));
-  if (await page.evaluate(() => matchMedia('(min-width: 900px)').matches)) expect(turnos).toEqual(['0', '1', '2']);
+  if (await page.evaluate(() => matchMedia('(min-width: 900px)').matches)) {
+    expect(turnos).toEqual(Array.from({ length: RETRATOS }, (_, lugar) => String(lugar)));
+  }
   await quieta(page);
   expect(await aspecto(page)).toMatchObject({ foto: ENCENDIDO.foto, acercada: ENCENDIDO.acercada });
 
@@ -181,9 +185,9 @@ test('quien llega directo a una seccion de mas arriba: lo que quedo atras no se 
   await expect(page.locator('#agente')).toBeInViewport();
   // El boton con luz de "Citas garantizadas" quedo arriba: no se le apaga la luz para volver a encenderla.
   await expect(page.locator('#citas .boton--luz')).toHaveAttribute('data-enciende', '');
-  // Los tres retratos estan mas abajo, en todos los tamanos: esperan apagados a que la visitante llegue.
+  // Los retratos estan mas abajo, en todos los tamanos: esperan apagados a que la visitante llegue.
   const retratos = page.locator('#para-quien .oficio__tarjeta');
-  await expect(retratos).toHaveCount(3);
+  await expect(retratos).toHaveCount(RETRATOS);
   for (const retrato of await retratos.all()) await expect(retrato).toHaveAttribute('data-enciende', 'espera');
   const apagada = await aspecto(page);
   expect(apagada.foto).not.toBe('none');
@@ -426,12 +430,13 @@ for (const [ancho, alto] of TAMANOS) {
       expect(fuera, id).toEqual({ salidos: [], desborde: 0 });
     }
 
-    // Los retratos: lado a lado donde caben los tres y, si no, uno debajo de otro; nunca dos y uno.
+    // Los retratos: lado a lado donde caben todos y, si no, uno debajo de otro; nunca dos y uno.
     const tarjetas = await page
       .locator('#para-quien .oficio__tarjeta')
       .evaluateAll((lista) => lista.map((tarjeta) => tarjeta.getBoundingClientRect().toJSON()));
     const renglones = new Set(tarjetas.map(({ top }) => Math.round(top))).size;
-    expect(renglones).toBe(ancho >= 680 ? 1 : 3);
+    expect(tarjetas).toHaveLength(RETRATOS);
+    expect(renglones).toBe(ancho >= 680 ? 1 : RETRATOS);
     for (const { width } of tarjetas) expect(width).toBeGreaterThan(150);
   });
 }
